@@ -1,2 +1,3 @@
-# Projeto_3DEV
-Repositório para versionamento do projeto do 3º Semestre ADS Senai
+<p align="center">
+  <img src="https://www.se.senai.br/assets/img/cabecalho-3SENAI.png" alt="Logo Senai"/>
+</p>
