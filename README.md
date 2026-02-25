@@ -3,6 +3,8 @@
 
 <h1>📌 Sobre o Projeto</h1>
 
+<strong>Link Milanote:</strong> https://app.milanote.com/1VVhMY1W5awS4v?p=xnqgoJHf9J8
+
 <p>O Projeto3DEVT – Manutenção Predial é uma aplicação desenvolvida para atender às demandas de gestão de manutenção predial do SENAI, oferecendo maior transparência, organização e eficiência no controle de chamados técnicos, contrinuindo para a otimização da comunicação interna assim aprimorando o ambiente</p>
 
 <p>A proposta consiste na criação do Back-End da plataforma PredialFix, responsável por: </p>
@@ -22,8 +24,6 @@
     <li>Dificuldade na organização das demandas mensais</li>
     <li>Ausência de histórico estruturado por unidade</li> 
 </ul>
-
-<strong>Link Milanote:</strong> https://app.milanote.com/1VVhMY1W5awS4v?p=xnqgoJHf9J8
 
 <h1>Equipe de Desenvolvimento</h1>
 
