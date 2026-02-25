@@ -1,3 +1,3 @@
 <p align="center">
-  <img src="https://www.se.senai.br/assets/img/cabecalho-3SENAI.png" alt="Logo Senai"/>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/8c/SENAI_S%C3%A3o_Paulo_logo.png" alt="Logo Senai"/>
 </p>
