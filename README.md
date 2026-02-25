@@ -46,7 +46,28 @@ Consulta de serviços realizados por:
 5️⃣ Notificações de Progresso (Simulado)
 <ul> <li>"Técnico a caminho"</li> <li>"Serviço em execução"</li> <li>"Chamado finalizado"</li> </ul>
 📂 Estrutura Base do Projeto
-<pre> Projeto3DEVT/ │ ├── app/ │ ├── Models/ │ ├── Http/ │ │ ├── Controllers/ │ │ ├── Requests/ │ ├── database/ │ ├── migrations/ │ ├── seeders/ │ ├── routes/ │ ├── api.php │ ├── resources/ │ ├── js/ (Vue) │ ├── views/ │ └── README.md </pre>
+<pre>
+Projeto3DEVT/
+│
+├── app/
+│   ├── Models/
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   ├── Requests/
+│
+├── database/
+│   ├── migrations/
+│   ├── seeders/
+│
+├── routes/
+│   ├── api.php
+│
+├── resources/
+│   ├── js/ (Vue)
+│   ├── views/
+│
+└── README.md
+</pre>
 
 <em>Esta estrutura será expandida conforme o avanço das sprints.</em>
 
