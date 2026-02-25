@@ -1,11 +1,10 @@
-<h1>Projeto3DEVT – Manutenção Predial</h1>
-<p align="center"> <img src="https://upload.wikimedia.org/wikipedia/commons/8/8c/SENAI_S%C3%A3o_Paulo_logo.png" alt="Logo Senai"/></p>
+🏢 Projeto3DEVT – Manutenção Predial
+<p align="center"> <img src="https://upload.wikimedia.org/wikipedia/commons/8/8c/SENAI_S%C3%A3o_Paulo_logo.png" alt="Logo Senai"/> </p>
+📌 Sobre o Projeto
 
-<h1>📌 Sobre o Projeto</h1>
+O Projeto3DEVT – Manutenção Predial é uma aplicação desenvolvida para atender às demandas de gestão de manutenção predial do SENAI, oferecendo maior transparência, organização e eficiência no controle de chamados técnicos.
 
-<p>O Projeto3DEVT – Manutenção Predial é uma aplicação desenvolvida para atender às demandas de gestão de manutenção predial do SENAI, oferecendo maior transparência, organização e eficiência no controle de chamados técnicos.</p>
-
-<p>A proposta consiste na criação do Back-End da plataforma PredialFix, responsável por: </p>
+A proposta consiste na criação do Back-End da plataforma PredialFix, responsável por:
 
 <ul>
     <li>Gerenciar solicitações de manutenção</li>
@@ -193,13 +192,7 @@ Projeto3DEVT/
 
 <h2>Planejamento:</h2>
 
-<ul>
-    <li>Padronização REST</li>
-    <li>Respostas estruturadas</li>
-    <li>Tratamento de erros</li>
-    <li>Códigos HTTP adequados</li>
-</ul>
+<ul> <li>Padronização REST</li> <li>Respostas estruturadas</li> <li>Tratamento de erros</li> <li>Códigos HTTP adequados</li> </ul>
+📌 Status do Projeto
 
-<h4>📌 Status do Projeto</h4>
-
-<p>🚧 Em desenvolvimento (Modelo por Sprints)</p>
+🚧 Em desenvolvimento (Modelo por Sprints)
