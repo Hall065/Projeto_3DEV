@@ -23,6 +23,8 @@
     <li>Ausência de histórico estruturado por unidade</li> 
 </ul>
 
+<strong>Link Milanote:</strong> https://app.milanote.com/1VVhMY1W5awS4v?p=xnqgoJHf9J8
+
 <h1>Equipe de Desenvolvimento</h1>
 
 <ul>
