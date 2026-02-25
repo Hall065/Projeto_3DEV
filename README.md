@@ -192,7 +192,13 @@ Projeto3DEVT/
 
 <h2>Planejamento:</h2>
 
-<ul> <li>Padronização REST</li> <li>Respostas estruturadas</li> <li>Tratamento de erros</li> <li>Códigos HTTP adequados</li> </ul>
-📌 Status do Projeto
+<ul>
+    <li>Padronização REST</li>
+    <li>Respostas estruturadas</li>
+    <li>Tratamento de erros</li>
+    <li>Códigos HTTP adequados</li>
+</ul>
 
-🚧 Em desenvolvimento (Modelo por Sprints)
+<h3>📌 Status do Projeto</h3>
+
+<p>🚧 Em desenvolvimento (Modelo por Sprints)</p>
