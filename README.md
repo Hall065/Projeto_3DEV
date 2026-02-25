@@ -3,7 +3,7 @@
 
 <h1>📌 Sobre o Projeto</h1>
 
-<p>O Projeto3DEVT – Manutenção Predial é uma aplicação desenvolvida para atender às demandas de gestão de manutenção predial do SENAI, oferecendo maior transparência, organização e eficiência no controle de chamados técnicos.</p>
+<p>O Projeto3DEVT – Manutenção Predial é uma aplicação desenvolvida para atender às demandas de gestão de manutenção predial do SENAI, oferecendo maior transparência, organização e eficiência no controle de chamados técnicos, contrinuindo para a otimização da comunicação interna assim aprimorando o ambiente</p>
 
 <p>A proposta consiste na criação do Back-End da plataforma PredialFix, responsável por: </p>
 
@@ -11,6 +11,7 @@
     <li>Gerenciar solicitações de manutenção</li>
     <li>Acompanhar o fluxo de atendimento</li>
     <li>Fornecer histórico completo das intervenções realizadas</li>
+    <li>Otimizar as requisições feitas por meio de planilhas exel</li>
 </ul>
 
 <p>Problemas que o sistema busca resolver: </p>
@@ -32,7 +33,7 @@
 
 <p>
     <strong>Disciplina:</strong> Desenvolvimento Back-End
-    <strong>Entrega:</strong> Por Sprints
+    <strong>Entrega:</strong> Por Sprints (Prof. Bruno Moraes)
     <strong>Repositório:</strong> Público para avaliação via GitHub
 </p>
 
@@ -51,7 +52,6 @@
 <h1>Arquitetura do Projeto</h1>
 
 <p>🔹 Back-End</p>
-
 <ul>
     <li>Laravel (PHP)</li>
     <li>API RESTful</li>
@@ -61,7 +61,6 @@
 </ul>
 
 <p>🔹 Front-End</p>
-
 <ul>
     <li>Vue.js</li>
     <li>Interface para abertura e acompanhamento de chamados</li>
@@ -69,7 +68,6 @@
 </ul>
 
 <p>🔹 Banco de Dados</p>
-
 <ul>
     <li>MySQL</li>
     <li>Modelagem relacional</li>
@@ -79,14 +77,12 @@
 <h1>Funcionalidades Essenciais</h1>
 
 <h3>1 - Gestão de Usuários (Multi-nível)</h3>
-
 <ul>
     <li>Usuários comuns → abrem chamados</li>
     <li>Responsáveis técnicos → atualizam status e gerenciam atendimento</li>
 </ul>
 
 <h3>2 - Abertura de Chamados</h3>
-
 <p>Registro contendo: </p>
 
 <ul>
@@ -97,11 +93,9 @@
 </ul>
 
 <h3>3 - Workflow de Atendimento</h3>
-
 <pre> Aberto → Em Análise → Em Execução → Concluído </pre>
 
 <h3>4 - Histórico da Unidade</h3>
-
 <p>Consulta de serviços realizados por: </p>
 
 <ul>
@@ -142,9 +136,7 @@ Projeto3DEVT/
 │
 └── README.md
 </pre>
-
 <em>Esta estrutura será expandida conforme o avanço das sprints.</em>
-
 
 <h1>Requisitos Técnicos</h1>
 
@@ -203,3 +195,5 @@ Projeto3DEVT/
 <h3>📌 Status do Projeto</h3>
 
 <p>🚧 Em desenvolvimento (Modelo por Sprints)</p>
+
+<em>Status será atualizado conforme progresso</em>
