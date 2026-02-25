@@ -1,10 +1,11 @@
 🏢 Projeto3DEVT – Manutenção Predial
-<p align="center"> <img src="https://upload.wikimedia.org/wikipedia/commons/8/8c/SENAI_S%C3%A3o_Paulo_logo.png" alt="Logo Senai"/> </p>
-📌 Sobre o Projeto
+<p align="center"> <img src="https://upload.wikimedia.org/wikipedia/commons/8/8c/SENAI_S%C3%A3o_Paulo_logo.png" alt="Logo Senai"/></p>
 
-O Projeto3DEVT – Manutenção Predial é uma aplicação desenvolvida para atender às demandas de gestão de manutenção predial do SENAI, oferecendo maior transparência, organização e eficiência no controle de chamados técnicos.
+<h1>📌 Sobre o Projeto</h1>
 
-A proposta consiste na criação do Back-End da plataforma PredialFix, responsável por:
+<p>O Projeto3DEVT – Manutenção Predial é uma aplicação desenvolvida para atender às demandas de gestão de manutenção predial do SENAI, oferecendo maior transparência, organização e eficiência no controle de chamados técnicos.</p>
+
+<p>A proposta consiste na criação do Back-End da plataforma PredialFix, responsável por: </p>
 
 <ul>
     <li>Gerenciar solicitações de manutenção</li>
