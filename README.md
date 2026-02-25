@@ -3,7 +3,7 @@
 
 <h1>📌 Sobre o Projeto</h1>
 
-<h1>📄 Links Importantes: </h1>
+<h2>📄 Links Importantes: </h2>
 
 <strong>Link Milanote:</strong> https://app.milanote.com/1VVhMY1W5awS4v?p=xnqgoJHf9J8 <br>
 <strong>Link Figma:</strong> https://www.figma.com/design/vcBrIckb4xfhyQpkjpPvZk/Gest%C3%A3o-e-Manutens%C3%A3o-Predial?node-id=0-1&t=ROfJvp1NoLPOcgoj-1
