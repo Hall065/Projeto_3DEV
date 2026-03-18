@@ -5,8 +5,9 @@
 
 <h2>📄 Links Importantes: </h2>
 
-<strong>Link Milanote:</strong> https://app.milanote.com/1VVhMY1W5awS4v?p=xnqgoJHf9J8 <br>
-<strong>Link Figma:</strong> https://www.figma.com/design/vcBrIckb4xfhyQpkjpPvZk/Gest%C3%A3o-e-Manutens%C3%A3o-Predial?node-id=0-1&t=ROfJvp1NoLPOcgoj-1
+<strong>Link:</strong> <a href="https://app.milanote.com/1VVhMY1W5awS4v?p=xnqgoJHf9J8">Milanote</a><br>
+<strong>Link:</strong> <a href="https://www.figma.com/design/vcBrIckb4xfhyQpkjpPvZk/Gest%C3%A3o-e-Manutens%C3%A3o-Predial?node-id=0-1&t=ROfJvp1NoLPOcgoj-1">Figma</a><br>
+<strong>Link:</strong> [Documentação](Documentação/Projeto_Gestão_Manutenção_Predial1.docx)
 
 <p>O Projeto3DEVT – Manutenção Predial é uma aplicação desenvolvida para atender às demandas de gestão de manutenção predial do SENAI, oferecendo maior transparência, organização e eficiência no controle de chamados técnicos, contrinuindo para a otimização da comunicação interna assim aprimorando o ambiente</p>
 
@@ -32,8 +33,8 @@
 
 <ul>
     <li>João Vitor Francisco</li>
-    <li>Integrante 2</li>
-    <li>Integrante 3</li>
+    <li>Gabriel Soares</li>
+    <li>Gabriel Gomes</li>
 </ul>
 
 <p>
@@ -54,151 +55,28 @@
     <li>Sistema de notificações simuladas</li>
 </ul>
 
-<h1>Arquitetura do Projeto</h1>
 
-<p>🔹 Back-End</p>
-<ul>
-    <li>Laravel (PHP)</li>
-    <li>API RESTful</li>
-    <li>Eloquent ORM</li>
-    <li>Validação via Form Requests</li>
-    <li>Autenticação multi-nível</li>
-</ul>
+<h2>Levantamento de Requisitos</h2>
+<p>
+Foram identificados problemas na gestão de manutenção predial, como falta de organização, demora nos atendimentos e ausência de histórico, definindo as principais funcionalidades do sistema.
+</p>
 
-<p>🔹 Front-End</p>
-<ul>
-    <li>Vue.js</li>
-    <li>Interface para abertura e acompanhamento de chamados</li>
-    <li>Consumo da API via JSON</li>
-</ul>
+<h2>Prototipagem</h2>
+<p>
+Interfaces desenvolvidas no Figma para estruturar telas como login, cadastro e dashboard, garantindo melhor visualização e experiência do usuário.
+</p>
 
-<p>🔹 Banco de Dados</p>
-<ul>
-    <li>MySQL</li>
-    <li>Modelagem relacional</li>
-    <li>Estrutura normalizada para usuários, chamados e histórico</li>
-</ul>
+<h2>Metodologias Ágeis</h2>
+<p>
+O projeto é desenvolvido por meio de sprints, permitindo entregas contínuas, organização das tarefas e evolução gradual do sistema.
+</p>
 
-<h1>Funcionalidades Essenciais</h1>
+<h2>Versionamento</h2>
+<p>
+Utilização do Git e GitHub para controle de versões, permitindo acompanhamento das alterações, colaboração entre a equipe e segurança no desenvolvimento.
+</p>
 
-<h3>1 - Gestão de Usuários (Multi-nível)</h3>
-<ul>
-    <li>Usuários comuns → abrem chamados</li>
-    <li>Responsáveis técnicos → atualizam status e gerenciam atendimento</li>
-</ul>
-
-<h3>2 - Abertura de Chamados</h3>
-<p>Registro contendo: </p>
-
-<ul>
-    <li>Tipo (Elétrica / Hidráulica / Outros)</li>
-    <li>Descrição</li>
-    <li>Localização</li>
-    <li>Data de abertura</li>
-</ul>
-
-<h3>3 - Workflow de Atendimento</h3>
-<pre> Aberto → Em Análise → Em Execução → Concluído </pre>
-
-<h3>4 - Histórico da Unidade</h3>
-<p>Consulta de serviços realizados por: </p>
-
-<ul>
-    <li>Sala</li>
-    <li>Bloco</li>
-    <li>Área comum</li>
-</ul>
-
-<h3>Notificações de Progresso (Simulado)</h3>
-
-<ul>
-    <li>"Técnico a caminho"</li>
-    <li>"Serviço em execução"</li>
-    <li>"Chamado finalizado"</li>
-</ul>
-
-<h1>📂 Estrutura Base do Projeto</h1>
-
-<pre>
-Projeto3DEVT/
-│
-├── app/
-│   ├── Models/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   ├── Requests/
-│
-├── database/
-│   ├── migrations/
-│   ├── seeders/
-│
-├── routes/
-│   ├── api.php
-│
-├── resources/
-│   ├── js/ (Vue)
-│   ├── views/
-│
-└── README.md
-</pre>
-<em>Esta estrutura será expandida conforme o avanço das sprints.</em>
-
-<h1>Requisitos Técnicos</h1>
-
-<ul>
-    <li>Back-End em Laravel</li>
-    <li>Banco de dados relacional</li>
-    <li>API RESTful com respostas JSON</li>
-    <li>Validação rigorosa de dados</li>
-    <li>Documentação clara dos endpoints</li>
-</ul>
-
-<h2>📡 Endpoints da API (Estrutura Inicial)</h2>
-
-<em>Será detalhado conforme desenvolvimento das sprints.</em>
-
-<p>🔹 Usuários</p>
-
-<ul>
-    <li>POST /api/register</li>
-    <li>POST /api/login</li>
-</ul>
-
-<p>🔹 Chamados</p>
-
-<ul>
-    <li>GET /api/chamados</li>
-    <li>POST /api/chamados</li>
-    <li>PUT /api/chamados/{id}</li>
-    <li>GET /api/unidades/{id}/historico</li>
-</ul>
-
-<h2>📊 Organização por Sprints</h2>
-
-<ul>
-    <li><strong>Sprint 1:</strong> Estrutura base da API + Autenticação</li>
-    <li><strong>Sprint 2:</strong> CRUD de Chamados + Workflow</li>
-    <li><strong>Sprint 3:</strong> Histórico por Unidade + Notificações</li>
-    <li><strong>Sprint 4:</strong> Integração completa com Vue + Ajustes finais</li>
-</ul>
-
-<em>Cronograma sujeito a ajustes conforme orientação do professor.</em>
-
-<h2>📄 Documentação da API</h2>
-
-<p>A documentação completa dos endpoints será adicionada conforme evolução do projeto.</p>
-
-<h2>Planejamento:</h2>
-
-<ul>
-    <li>Padronização REST</li>
-    <li>Respostas estruturadas</li>
-    <li>Tratamento de erros</li>
-    <li>Códigos HTTP adequados</li>
-</ul>
-
-<h3>📌 Status do Projeto</h3>
-
-<p>🚧 Em desenvolvimento (Modelo por Sprints)</p>
-
-<em>Status será atualizado conforme progresso</em>
+<h2>Documentação</h2>
+<p>
+Documentação planejada para descrever endpoints da API, padronização REST, tratamento de erros e organização das respostas em JSON.
+</p>
