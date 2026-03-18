@@ -32,8 +32,8 @@
 
 <ul>
     <li>João Vitor Francisco</li>
-    <li>Integrante 2</li>
-    <li>Integrante 3</li>
+    <li>Gabriel Soares</li>
+    <li>Gabriel Gomes</li>
 </ul>
 
 <p>
