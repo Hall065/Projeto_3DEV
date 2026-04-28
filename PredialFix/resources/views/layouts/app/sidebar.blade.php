@@ -16,6 +16,21 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Módulos')" class="grid">
+                    <flux:sidebar.item icon="layout-grid" :href="route('usuarios.index')" :current="request()->routeIs('usuarios.*')" wire:navigate>
+                        {{ __('Usuários') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="folder-git-2" :href="route('estoques.index')" :current="request()->routeIs('estoques.*')" wire:navigate>
+                        {{ __('Estoque') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="book-open-text" :href="route('chamados.index')" :current="request()->routeIs('chamados.*')" wire:navigate>
+                        {{ __('Chamados') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="chevrons-up-down" :href="route('tarefas.index')" :current="request()->routeIs('tarefas.*')" wire:navigate>
+                        {{ __('Tarefas') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />
