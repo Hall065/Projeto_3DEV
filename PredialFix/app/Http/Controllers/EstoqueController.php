@@ -2,47 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Estoque;
 use Illuminate\Http\Request;
 
 class EstoqueController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return view('pages.estoques.index');
+        $estoques = Estoque::paginate(10);
+        return view('pages.estoques.index', compact('estoques'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    public function create()
+    {
+        return view('pages.estoques.create');
+    }
+
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'categoria' => 'required|string|max:255',
+            'localizacao' => 'required|string|max:255',
+            'quantidade' => 'required|integer|min:0',
+        ]);
+
+        Estoque::create([
+            'nome' => $request->nome,
+            'categoria' => $request->categoria,
+            'localizacao' => $request->localizacao,
+            'quantidade' => $request->quantidade,
+        ]);
+
+        return redirect()->route('estoques.index')->with('success', 'Item de estoque criado com sucesso!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Estoque $estoque)
     {
-        //
+        return view('pages.estoques.show', compact('estoque'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function edit(Estoque $estoque)
     {
-        //
+        return view('pages.estoques.edit', compact('estoque'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function update(Request $request, Estoque $estoque)
     {
-        //
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'categoria' => 'required|string|max:255',
+            'localizacao' => 'required|string|max:255',
+            'quantidade' => 'required|integer|min:0',
+        ]);
+
+        $estoque->update([
+            'nome' => $request->nome,
+            'categoria' => $request->categoria,
+            'localizacao' => $request->localizacao,
+            'quantidade' => $request->quantidade,
+        ]);
+
+        return redirect()->route('estoques.index')->with('success', 'Item de estoque atualizado com sucesso!');
+    }
+
+    public function destroy(Estoque $estoque)
+    {
+        $estoque->delete();
+        return redirect()->route('estoques.index')->with('success', 'Item de estoque excluído com sucesso!');
     }
 }

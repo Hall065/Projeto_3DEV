@@ -75,7 +75,7 @@
                         <flux:table.cell>
                             <div class="flex items-center gap-2">
                                 <flux:button size="sm" wire:click="edit({{ $usuario->id }})">Editar</flux:button>
-                                <flux:button size="sm" variant="warning" wire:click="resetPasswordModal({{ $usuario->id }})">Redefinir Senha</flux:button>
+                                <flux:button size="sm" variant="outline" wire:click="resetPasswordModal({{ $usuario->id }})">Redefinir Senha</flux:button>
                                 <flux:button size="sm" variant="danger" wire:click="delete({{ $usuario->id }})" wire:confirm="Tem certeza que deseja desativar este usuário?">Desativar</flux:button>
                             </div>
                         </flux:table.cell>
