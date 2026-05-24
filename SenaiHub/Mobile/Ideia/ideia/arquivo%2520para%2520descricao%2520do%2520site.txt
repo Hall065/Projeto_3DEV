@@ -1,0 +1,122 @@
+tela de login: 
+-email,
+-senha,
+-botão para recuperar senha,
+-logo do senai no canto superior esquerdo,
+-nome da aplicao em baixo;
+
+
+tala de hub para aplicações:
+quando o usuário iserir os dados dele e acessar a apicacao na tela de hub vai aparecer uma área para ele selecionar para onde ele quer ir, para o manutenção predial ou senai connect,logico isso com base no tipo do usuário, se for professor ele so tem acesso ao senai connect, secretario há ambas aplicações, e assim por diante.
+vai ter uma barra superior com logo do senai, no canto superior esquerdo, ai no canto superior direito as informcaoes do usuário com nome e foto e quando o usuário clicar no usuário abre as opicoes de configurações, logof, etc.
+ai no centro vai ter dois "quadrados" que são o acesso para o senai connect com as imagens nesse "quadrado referente ao senai connect, ele vai ficar do lado esquerdo e a mesma coisa para a manutencar predial, ai se o usuário so tiver acesso a uma das aplicações essaaplicacao deve ficar no centro;
+
+
+senai connect
+nessa aplicação vai ter acessos laterais as áreas do site como alunos, professores, turmas, localização, etc.
+logo no canto superior esquerdo com o nome da aplicação em baixo, acesso as configurações do site pela superior direita (foto e nome do usuário e tipo do usuário e quando clica abre a janela de opções), do lado do nome do usuário tem um símbolo de sino para simbolizar as notificações que ele recebeu, ai do lado da barra lateria superior um campo de busca, no meio é onde vai aparecer o conteúdo das áreas da barra lateral que quando clicar o conteúdo daquela área vai ser visualizada no meio, do lado da logo do senai tem que ter uma opção de fechar a aba lateral para melhor visualização das informações centrais.
+
+
+conteúdo da barra lateral:
+-visão geral
+-alunos
+-professores
+-turmas
+-cursos
+-frequência
+-gerenciar frequência
+-relatório
+-localização
+-contratos
+-contrato alunos
+-salario
+-suporte na parte inferior esquerda
+(cada tipo de usuário vai visualizao suas respectivas áreas);
+
+conteúdo da aba de alunos:
+essa área vai servir de gerenciamento de alunos, vai ter uma lista de todos os alunos cadastrados, ela possui filtros para visualizar alunos (filtro de turma, nome, idade, empresa, data de nascimento, etc.), tbm é possível criar alunos com os campos de: nome, rm, email pessoal, email institucional, senha, data de nascimento, foto, turma, empresa, status, endereço, nome do responsável, curso, celular, etnia.
+
+conteúdo da aba de professores: 
+essa área é parecida com a de alunos ela possui uma lista de todos os professores, possui filtros, tbm é possível criar professore com os seguinte campos (nome, email pessoal, email institucional, senha, data de contratação, tumas que da aula, endereço, nome da mae, nom do pai, data nascimento, celular, etnia, status, tempo de contrato.
+
+conteúdo para turmas:
+uma lista de todas as turmas e quando vc clica em uma turma lista todos os alunos dessa turma, tbm é possível criar uma nova turma, editar turmas já cadastradas, e excluir turmas, ela possiu os seguintes campos para criação: 
+nome da truma, data de inicio, data de termino, status, quantidade de alunos, período (manha, tarde ou noite), campo para complementar o período sendo por horário (exemplo: 07:30 as 12:00), bloco e sala, professor responsável, alunos, dia da semana (segunda, terça, quarta, quinta ou sexta), curso.
+
+conteúdo para cursos:
+essa é uma área onde vai ser possível gerenciar todos os cursos (adicionar, editar e remover), ao clicar em um curso vc consegue ver todos os alunos desse curso, para adicionar um curso tem os seguintes campos: nome do curso, data de inicio, data de termino, status do curso, quantidade de alunos, período (turno manha, tarde ou noite e por hora tbm), alunos (automático), descrição do curso, carga horária.
+
+conteúdo para frequência:
+essa é uma área de colocar frequência, os professores entram aqui e adicionam frequência para suas respectivas turmas que ele esta ligado, quando ele clica na turma que ele esta dando aula no dia, ele vai selecionar quantas aulas ele tem com aquela turma hj (1,2,3,4,5 max de aulas no dia é 5), e ai se o aluno faltar ele coloca um X no campo de falta se n ele so passa o aluno e manda a avaliação, ai essa frequência vai ficar salva no histórico do site e tbm no histórico do aluno para ele, a empresa, o professor, a secretaria ou a coordenação poder ver a frequência dele.
+
+conteúdo para a área de gerenciar frequência:
+essa área é para a coordenação, secretaria, professor e o aluno poder ver a frequência dele, para a coordenação e a secretaria eles podem ver a frequência de todos os alunos, os professores so podem ver a frequência de seus alunos que estão na mesma turma que o professor esta cadastrado, o aluno so vai visializar a frequência dele pelo app futuramente.
+
+conteúdo para a área de relatório:
+essa é uma área onde o pessoal do senai (coordenação, secretaria, etc.) poder ver relatórios gerais, de frequência, aulas dadas na semana por professor, etc.
+
+conteúdo para a área de localização, essa área quando aberta mostra todos os cursos e quando entra no curso mostra a lista de alunos desse curso com as informcacoes dele (nome, email institucional, status, se esta na aula com base na chamada do professor ou da localização do aluno se ele esta ou n dentro do perímetro da escola (futuramente)), ai tem um botão de ver localização so vai funcionar se o aluno estiver no perímetro do senai se n a localização n funciona (vai ter futuramente no app), ai quando o aluno esta dentro do senai esse botão vela para um mapa do senai com a localização do aluno e a sala que ele esta.
+
+conteúdo para a área de contratos:
+essa área é voltado para as empresas parceiras, elas conseguem ver todos os alunos que tem contratos com elas, com os campos de carga horário (4 ou 8 horas), curso dele, nome, email pessoal e institucional, conta bancária, carteira de trabalho, documento digitalizado do contrato.
+
+conteúdo para a área de contratos alunos:
+essa área é voltado para o pessoal do senai para eles fazerem o contrato do aluno no site para as empresas verem os alunos contratados, com todos os campos necessários: nome do aluno, nome da empresam, carteira do aluno, localização da empresa, carga horaria, email pessoal e institucional do aluno, email da empresa, documento digitalizado do contrato.
+
+conteúdo para a área de salario:
+essa área é voltado para a empresa a e os alunos no app(futuramente), essa área calcula automaticamente o salario do aluno naquele mês, com base na frequência e salario liquido, essas informcoes são preenchidas pela empresa(salario liquido, etc), a frequência e faltas são puxadas altomaticamente.
+
+
+
+Senai Grid (antigo manutenção predial):
+essa é uma aplicação voltado apenas para possoas com cargos no senia, ela é uma aplicação para gerenciar manutenções e abrir chamado para manutenções de equipamentos (arcondicionado, ventilador, etc.) e tbm coisas de uso continuo como tomadas, babedouro, entre outros.
+nessa aplicação os professores conseguem abrir chamados para manutenção das coisas que já citei antes quando elas dao problema (exemplo: ar-condicionado pingando), ai o professor abre o  site ou o celular e preenche um formulário do que esta acontecendo.
+o conteúdo da tela de tela do senai grid tem os mesmo atributos do senai connect então tem uma barra lateral com acesso as áreas, tem uma barra de pesquisa superior, tem uma parte para fechar a barra lateral, tem o usuário no canto superior direito e quando clica no usuário tem as configurações e perfil e o logof, tem a área central que vai ser onde as informações das áreas da barra lateral iram aparecer.
+
+conteúdo da barra lateral: 
+-Dashboard
+-Chamados
+-Tarefas
+-Relatorios
+-Estoque
+-Mapa de tarefas
+-suporte (vai ficar no mesmo lugar do senai connect no canto inferior esquerdo)
+-usuários
+
+
+conteúdo para a área de Chamdas:
+essa área é o centro de tudo, ela é onde os professores vai abrir seus chamados para notificar o pessoal da manutenção onde tem problemas para resolver, para isso os professores eles vao abrir essa área e clicar em abrir chamado ai vai abrir um formulário para eles preencherem com os seguintes campos: titulo, descrição, sala, bloco e prioridade (baixa, media, alta e urgente).
+após os professores preencherem o formulário e enviarem eles ficam visíveis para os professores em chamados tbm mais eles n podem mais mexer e fica visíveis para eles com os seguintes campos: titulo, descrição, sala, bloco, prioridade, data de abertura, status e id.
+quando o chamado é aberto ele automaticamente tbm fica visível para o gerente de manutenção, para a equipe da secretaria do senai e para o diretor.
+todos essa visializam os chamados com os seguintes campos: id, nome de quem abriu o chamado, titulo, descrição, sala, bloco, prioridade, data de abertura, status, um campo para o gerente de manutenção atribuir essa chamados para um dos seus ajudantes, um campo para atribuir um item que sera utilizado na manutenção.
+quando o gerterente de manutenção atribui um ajudante ao chamado, o ajudante tbm consegui visualizar o chamado na área de tarefas, se o gerente n atribuir ninguém ao chamado e confirmar que recebeu o chamado vai ficar visível para ele nas tarefas pois ele que vai estar responsável por aquele chamado.
+o gerente de manutenção tbm deve adicionar um item caso seja nessecario para executar o reparo do equipamento ou reparo na estrutura do prédio, troca de equipamento e etc.
+ai ele consegue escolher o item que esta disponível no estoque ai quando ele atribuir a tarefa tbm aparece o item necessário para a manutenção que seus ajudantes conseguem ver, se o item n estiver disponível ele deve abrir uma solicitação do item a secretaria do senai se for de baixo custo (1 a 500 reais) e ao diretor do senai se for de 500 reias para cima, quando ele atribui um item ao chamado que esta disponível no estoque é colocado que o item esta reservado no estoque e se outra manutenção precisar desse item mais so tiver oq esta reservado para o outro chamado ele nem aparece no estoque pois esta reservado para o primeiro chamado.
+
+conteúdo para a área de tarefas:
+eessa é uma área onde o pessoal da manutenção consegue visualizar tarefas (chamados) que tem para fazer, vai ser separado tipo um kabam do trello com uma área de à fazer que vai ficar os chamados que o gerente de manutenção atribuiu a eles opu a ele mesmo mais que esta com o status em aberto ainda ou aguardando, uma área de Em Andamento que possiu quelas manutenções que estão com o status de em andamento ou em manutenção, e a parte de concluídas que fica aquelas manutenções que já foram finalizadas.
+os campos dessa tarefas é os mesmo que os do chamados então tem: id, nome de quem abriu o chamado, titulo, descrição, sala, bloco, status, prioridade, data de abertura, data de inicio do reparo (somente quando o chamado estiver na parte de em andamento ou em reparo), data de termino da manutenção (quando for finalizado o reparo), quem esta responsável pela aquela tarefa, e item que sera utilizado na manutenção (se no começo tiver o item na tarefa so que conseguiu realizar a manutenção sem utilizar o item do estoque basta clicar no botão retornar item ao estoque, se n ele fica como utilizado.
+o gerente de manutenção pode ver todas as tarefas em aberto ate aquelas que n são dele, para um melhor controle e ver se seus ajudantes estão executando a manutenção.
+
+conteúdo para a área de Relatório: 
+essa área é voltado para o gerente de manutenção, secretaria do senai e o diretor.
+essa é uma área onde vai ser possível visualizar quantas manutenções foram feitas no mês, quantos itens foram comprados(adicionados ao estoque), quantos e quais itens foram utilizados nas manutenções, custo por cada manutenção, custo geral de todas as manutenções, etc.
+
+conteúdo para a área de Estoque: 
+essa é uma área onde é possível gerenciar o estoque de itens, nela é possível adicionar um item ao estoque, com os seguintes campos: titulo, descrição, categoria, quantidade disponível, quantidade mínima, localização (sala e bloco), empresa de distribuição desse item, custo do item, status.
+assim que um utem é criado ele vai aparecer com todos os campos disponíveis e dois botões de adicionar e remover um item, o adicionar ele vai aparecer par vc colocar quantos itens foram comprados e o custo desses itens.
+ai eles são adicionados aos itens que já tinha somando a mais, nessa área tbm tem filtros para vc filtrar os itens por categoria, nome, custo, status, etc.
+tbm na aprte superior tem umas informacoes rápidas de quantos itens totais tem no estoque, o valor total do estoque, quantos itens estão com estoque baixo, quantos itens estão reservados, etc.
+
+
+conteúdo para a área de mapa de tarefas:
+essa área é um mapa onde mostra as tarefas a fazer e em andamento no mapa, esse mapa é o mapa do senai que tbm estará disponível no senai connect é um mapa do senai inteiro e mostra o titulo da tarefa, quem esta responsável por ela, qual a sala e o bloco, status e prioridade.
+
+conteúdo para a área de usuários:
+essa área é a responsável por cadastrar os usuários do site (professor, secretaria, manutenção e gerente de manutenção),
+nessa área na parte superior tem acesso de informcaoes rápidas como: quantos professores tem cadastrados, quantos usaurios da secretaria esta cadastrado, quantos usuários da manutenção esta cadastrado, quantos gerentes, total de usuários cadastrados, total de usuários ativos, usuários inativos, etc.
+tbm tem uma lista com todos os usuários e tbm possui filtro para os usuário: filtro por tipo de usuário, nome, status, id, etc.
+para criar um novo usuário tem os seguintes campos: nome, email institucional, telefone, senha, tipo de usuário, satã de criação (automático), data de atualização(automático), status(padrão ativo), cpf.
+ai ele fica visível na lista assim que é criado, tem botões para esconder a senha do usuário, deletar, editar o usuário.
+essa área somente o diretor e a secretario tem acesso a essa área.
+

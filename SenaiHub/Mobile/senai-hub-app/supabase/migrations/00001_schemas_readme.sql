@@ -1,0 +1,12 @@
+-- Migrações do SENAI HUB
+-- Schemas: hub (compartilhado), connect (acadêmico), grid (manutenção)
+--
+-- Aplicar via Supabase CLI:
+--   supabase db push
+--
+-- Importante (PRD §6.4):
+--   hub.usuarios.id deve ser o mesmo UUID de auth.users.id
+--   Não usar senha_hash — autenticação via Supabase Auth
+
+-- Expor schemas na API REST (Dashboard > Settings > API):
+--   GRANT USAGE ON SCHEMA hub, connect, grid TO anon, authenticated;

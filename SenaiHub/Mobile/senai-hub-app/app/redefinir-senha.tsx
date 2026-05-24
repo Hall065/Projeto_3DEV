@@ -1,0 +1,158 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import {
+  ActivityIndicator,
+  Image,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { Eye, Lock } from 'lucide-react-native';
+import { colors } from '@/constants/colors';
+import { updatePassword } from '@/lib/auth';
+import { redefinirSenhaSchema, type RedefinirSenhaFormData } from '@/utils/validators';
+
+const circuitBg = require('../assets/brand/senai-circuit-bg.png');
+const hubLogo = require('../assets/brand/senai-hub-logo-2.png');
+
+export default function RedefinirSenhaScreen() {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const { control, handleSubmit } = useForm<RedefinirSenhaFormData>({
+    resolver: zodResolver(redefinirSenhaSchema),
+    defaultValues: { password: '', confirmPassword: '' },
+  });
+
+  const onSubmit = async (data: RedefinirSenhaFormData) => {
+    setLoading(true);
+    setError(null);
+    const { error: err } = await updatePassword(data.password);
+    setLoading(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    router.replace('/login');
+  };
+
+  return (
+    <View style={styles.container}>
+      <ImageBackground source={circuitBg} style={styles.hero}>
+        <Image source={hubLogo} style={styles.logo} resizeMode="contain" />
+      </ImageBackground>
+      <View style={styles.sheet}>
+        <Text style={styles.title}>Redefinir senha</Text>
+        <Text style={styles.subtitle}>Digite uma nova senha para continuar usando o SENAI Hub.</Text>
+
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, value }, fieldState: { error: fieldError } }) => (
+            <View style={styles.field}>
+              <Text style={styles.label}>Nova senha</Text>
+              <View style={styles.inputWrap}>
+                <Lock size={17} color={colors.grayText} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor={colors.mutedText}
+                  secureTextEntry
+                  value={value}
+                  onChangeText={onChange}
+                />
+                <Eye size={17} color={colors.grayText} />
+              </View>
+              {fieldError ? <Text style={styles.error}>{fieldError.message}</Text> : null}
+            </View>
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="confirmPassword"
+          render={({ field: { onChange, value }, fieldState: { error: fieldError } }) => (
+            <View style={styles.field}>
+              <Text style={styles.label}>Confirmar senha</Text>
+              <View style={styles.inputWrap}>
+                <Lock size={17} color={colors.grayText} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor={colors.mutedText}
+                  secureTextEntry
+                  value={value}
+                  onChangeText={onChange}
+                />
+                <Eye size={17} color={colors.grayText} />
+              </View>
+              {fieldError ? <Text style={styles.error}>{fieldError.message}</Text> : null}
+            </View>
+          )}
+        />
+
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <Pressable style={styles.button} onPress={handleSubmit(onSubmit)} disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.buttonText}>Salvar nova senha</Text>
+          )}
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.white },
+  hero: {
+    minHeight: 230,
+    backgroundColor: colors.navy,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 52,
+  },
+  logo: { width: '92%', height: 90 },
+  sheet: {
+    flex: 1,
+    marginTop: -28,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    backgroundColor: colors.white,
+    padding: 28,
+  },
+  title: { color: colors.navy, fontSize: 25, fontWeight: '900' },
+  subtitle: { color: colors.grayText, fontSize: 13, lineHeight: 19, marginTop: 6, marginBottom: 24 },
+  field: { marginBottom: 14 },
+  label: { color: colors.navy, fontSize: 13, fontWeight: '800', marginBottom: 7 },
+  inputWrap: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: colors.white,
+  },
+  input: { flex: 1, color: colors.navy, fontSize: 14, paddingVertical: 12 },
+  error: { color: colors.red, fontSize: 12, marginTop: 6 },
+  button: {
+    minHeight: 52,
+    backgroundColor: colors.red,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  buttonText: { color: colors.white, fontWeight: '900', fontSize: 15 },
+});

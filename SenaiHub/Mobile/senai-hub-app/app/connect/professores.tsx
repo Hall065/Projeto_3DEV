@@ -1,0 +1,123 @@
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { GraduationCap, UserCheck, Users } from 'lucide-react-native';
+import { CrudModal, type CrudField } from '@/components/common/CrudModal';
+import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { ModuleScreen } from '@/components/screens/ModuleScreen';
+import { colors, connectTheme } from '@/constants/colors';
+import { useCrudResource } from '@/hooks/useCrudResource';
+import { connectService } from '@/services/connect.service';
+import type { Professor } from '@/types/connect.types';
+
+const fields: CrudField[] = [
+  { name: 'nome', label: 'Nome completo', required: true },
+  { name: 'email', label: 'E-mail institucional', required: true, keyboardType: 'email-address' },
+  { name: 'senha', label: 'Senha inicial', placeholder: 'Senai@123456', secureTextEntry: true },
+  { name: 'cpf', label: 'CPF', placeholder: '111.111.111-11', mask: 'cpf' },
+  { name: 'celular', label: 'Celular', placeholder: '(19) 98999-9999', mask: 'phone' },
+  { name: 'especialidade', label: 'Especialidade' },
+  { name: 'data_contratacao', label: 'Data de contratação', placeholder: 'DD/MM/AAAA', mask: 'date' },
+  { name: 'status', label: 'Status', placeholder: 'ativo' },
+];
+
+function initials(nome: string) {
+  return nome.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+}
+
+function formValues(professor: Professor): Record<string, string> {
+  return {
+    nome: professor.nome ?? '',
+    email: professor.email ?? '',
+    senha: '',
+    cpf: professor.cpf ?? '',
+    celular: professor.celular ?? '',
+    especialidade: professor.especialidade ?? '',
+    data_contratacao: professor.data_contratacao ?? '',
+    status: professor.status ?? 'ativo',
+  };
+}
+
+export default function ProfessoresScreen() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Professor | null>(null);
+  const [search, setSearch] = useState('');
+  const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
+    useCrudResource<Professor, Record<string, string>>({
+      load: connectService.listProfessores,
+      create: connectService.createProfessor,
+      update: connectService.updateProfessor,
+      remove: connectService.deleteProfessor,
+    });
+
+  const filtered = items.filter((item) =>
+    `${item.nome} ${item.email ?? ''} ${item.especialidade ?? ''}`.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <>
+      <ModuleScreen
+        kicker="SENAI Connect"
+        title="Gerenciamento de professores"
+        description="Cadastro, especialidades e status dos docentes."
+        isLoading={loading}
+        actionLabel="+ Novo professor"
+        onActionPress={() => {
+          setEditing(null);
+          setModalOpen(true);
+        }}
+      >
+        <View style={styles.metricGrid}>
+          <MetricTile label="Professores" value={items.length} accent={connectTheme.accent} icon={<Users size={16} color={connectTheme.accent} />} style={styles.metric} />
+          <MetricTile label="Ativos" value={items.filter((p) => p.status === 'ativo').length} accent={colors.green} icon={<UserCheck size={16} color={colors.green} />} style={styles.metric} />
+          <MetricTile label="Especialidades" value={new Set(items.map((p) => p.especialidade).filter(Boolean)).size} accent={colors.blue} icon={<GraduationCap size={16} color={colors.blue} />} style={styles.metric} />
+        </View>
+
+        <SearchField placeholder="Buscar por nome, e-mail ou CPF..." value={search} onChangeText={setSearch} />
+
+        <SurfaceCard title="Professores cadastrados" subtitle="Equipe docente ativa">
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {filtered.length === 0 ? <Text style={styles.empty}>Nenhum professor encontrado.</Text> : null}
+          {filtered.map((professor) => (
+            <ListRow
+              key={professor.id}
+              title={professor.nome}
+              subtitle={`${professor.especialidade ?? 'Especialidade não informada'} • ${professor.email ?? 'Sem e-mail'}`}
+              badge={professor.status === 'ativo' ? 'Ativo' : professor.status}
+              badgeVariant={professor.status === 'ativo' ? 'success' : 'neutral'}
+              meta="BD"
+              initials={initials(professor.nome)}
+              accent={colors.green}
+              onEdit={() => {
+                setEditing(professor);
+                setModalOpen(true);
+              }}
+              onDelete={() => deleteItem(professor.id, professor.nome)}
+            />
+          ))}
+        </SurfaceCard>
+      </ModuleScreen>
+
+      <CrudModal
+        visible={modalOpen}
+        title={editing ? 'Editar professor' : 'Novo professor'}
+        fields={fields}
+        initialValues={editing ? formValues(editing) : { status: 'ativo' }}
+        isSubmitting={submitting}
+        submitLabel={editing ? 'Salvar alterações' : 'Criar professor'}
+        onClose={() => setModalOpen(false)}
+        onSubmit={async (values) => {
+          if (editing) await updateItem(editing.id, values);
+          else await createItem(values);
+          setModalOpen(false);
+        }}
+      />
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
+  metric: { width: '48%' },
+  empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
+  error: { color: colors.red, fontSize: 12, fontWeight: '700', marginBottom: 8 },
+});
