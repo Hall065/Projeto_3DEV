@@ -1,0 +1,29 @@
+---
+description: Identidade visual SENAI HUB — logo black, tokens e assets
+alwaysApply: true
+---
+
+# SENAI HUB — Identidade visual
+
+## Logo
+
+- **Sempre** usar a logo **black/dark** (`Logo Senai Hub Dark.png`).
+- **Nunca** usar a versão white em telas React.
+- Import padrao no frontend:
+
+```typescript
+import { logoSenaiHub } from '@/assets/brand'
+// ou caminho relativo: '../../assets/brand'
+```
+
+- Arquivo fonte: `frontend/src/assets/auth/logo-senai-hub.png`
+- Export central: `frontend/src/assets/brand/index.ts`
+
+## Cores principais
+
+- Navy sidebar: `#021A3A` (`bg-hub-navy`)
+- Vermelho SENAI: `#e30613` (`bg-hub-red`)
+
+## Assets do usuario
+
+- Arquivos enviados pelo usuario ficam em `localArchives/` — mover para a estrutura correta ao implementar telas.

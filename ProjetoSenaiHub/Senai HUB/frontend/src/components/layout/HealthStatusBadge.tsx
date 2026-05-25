@@ -1,0 +1,34 @@
+import { Activity, AlertCircle, Loader2 } from 'lucide-react'
+
+interface HealthStatusBadgeProps {
+  loading: boolean
+  error: string | null
+  status?: string
+}
+
+export function HealthStatusBadge({ loading, error, status }: HealthStatusBadgeProps) {
+  if (loading) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Verificando API...
+      </span>
+    )
+  }
+
+  if (error) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+        <AlertCircle className="h-3.5 w-3.5" />
+        Backend offline
+      </span>
+    )
+  }
+
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+      <Activity className="h-3.5 w-3.5" />
+      API {status ?? 'ok'}
+    </span>
+  )
+}

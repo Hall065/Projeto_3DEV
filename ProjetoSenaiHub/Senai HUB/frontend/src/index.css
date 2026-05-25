@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hub-navy: #021a3a;
+  --color-hub-red: #e30613;
+  --color-hub-red-hover: #c00510;
+  --color-hub-red-link: #d90404;
+  --color-hub-bg: #f8f9fa;
+  --color-hub-text: #333333;
+  --color-hub-text-muted: #666666;
+  --color-hub-border: #d1d5db;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-hub-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes chart-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-chart-spin {
+  animation: chart-spin 0.9s linear infinite;
+}

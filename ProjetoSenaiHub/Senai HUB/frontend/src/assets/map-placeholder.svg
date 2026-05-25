@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" fill="none">
+  <rect width="800" height="450" fill="#e2e8f0"/>
+  <rect x="80" y="60" width="640" height="330" rx="8" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2"/>
+  <rect x="120" y="100" width="180" height="120" rx="4" fill="#94a3b8"/>
+  <rect x="340" y="100" width="180" height="120" rx="4" fill="#94a3b8"/>
+  <rect x="560" y="100" width="120" height="250" rx="4" fill="#64748b"/>
+  <rect x="120" y="250" width="400" height="100" rx="4" fill="#64748b"/>
+  <text x="400" y="30" text-anchor="middle" fill="#475569" font-family="Arial,sans-serif" font-size="18">Mapa Escolar — Placeholder</text>
+</svg>
