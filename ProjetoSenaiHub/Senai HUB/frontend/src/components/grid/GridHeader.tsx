@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, ChevronsLeft, ChevronsRight, LogOut, Menu, Search, Settings, User as UserIcon } from 'lucide-react'
+import {
+  Bell,
+  ChevronsLeft,
+  ChevronsRight,
+  LayoutGrid,
+  LogOut,
+  Menu,
+  Search,
+  Settings,
+  User as UserIcon,
+} from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { UserAvatar } from '../ui/UserAvatar'
@@ -36,11 +46,11 @@ export function GridHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: Grid
   const mobileMenuLabel = isMobileNavOpen ? 'Fechar menu' : 'Abrir menu'
 
   return (
-    <header className="relative flex shrink-0 items-center gap-2 border-b border-hub-border/60 bg-white px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-8 lg:py-4">
+    <header className="hub-chrome relative z-50 flex shrink-0 items-center gap-2 border-b px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-8 lg:py-4">
       <button
         type="button"
         onClick={onToggleSidebar}
-        className="absolute -left-4 top-1/2 z-30 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-hub-border bg-hub-navy text-white shadow-md transition hover:bg-[#032654] max-lg:hidden"
+        className="absolute -left-4 top-1/2 z-[60] hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-hub-navy text-white shadow-md transition hover:brightness-110 max-lg:hidden"
         aria-label={desktopCollapseLabel}
       >
         {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
@@ -49,7 +59,7 @@ export function GridHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: Grid
       <button
         type="button"
         onClick={onToggleSidebar}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hub-border text-hub-navy transition hover:bg-hub-bg lg:hidden"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/25 text-white transition hover:bg-white/10 lg:hidden"
         aria-label={mobileMenuLabel}
       >
         <Menu className="h-5 w-5" />
@@ -69,7 +79,7 @@ export function GridHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: Grid
       <div className="ml-auto flex shrink-0 items-center gap-4">
         <button
           type="button"
-          className="relative rounded-lg p-2 text-hub-text-muted transition hover:bg-hub-bg hover:text-hub-text"
+          className="relative rounded-lg p-2 text-white/75 transition hover:bg-white/10 hover:text-white"
           aria-label="Notificações"
         >
           <Bell className="h-5 w-5" />
@@ -78,23 +88,29 @@ export function GridHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: Grid
           </span>
         </button>
 
-        <div className="relative" ref={menuRef}>
+        <div className="relative z-50" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-hub-bg"
+            className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-white/10"
             aria-expanded={menuOpen}
           >
             <UserAvatar name={user?.name} avatarUrl={user?.avatar_url} />
             <div className="hidden text-left sm:block">
-              <p className="truncate text-sm font-semibold text-hub-text">{user?.name ?? 'Usuário'}</p>
-              <p className="truncate text-xs text-hub-text-muted">{user?.role_label ?? 'Perfil'}</p>
+              <p className="truncate text-sm font-semibold text-white">{user?.name ?? 'Usuário'}</p>
+              <p className="truncate text-xs text-white/70">{user?.role_label ?? 'Perfil'}</p>
             </div>
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-xl border border-hub-border bg-white py-2 shadow-xl">
-              <Link to="/hub" className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-hub-bg" onClick={() => setMenuOpen(false)}>
+            <div className="glass-panel-solid absolute right-0 top-full z-[60] mt-2 w-52 overflow-hidden rounded-xl py-2 shadow-xl">
+              <Link
+                to="/hub"
+                role="menuitem"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-hub-text transition hover:bg-hub-bg"
+                onClick={() => setMenuOpen(false)}
+              >
+                <LayoutGrid className="h-4 w-4 text-hub-text-muted" />
                 Hub de Aplicações
               </Link>
               <Link to="/perfil" className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-hub-bg" onClick={() => setMenuOpen(false)}>

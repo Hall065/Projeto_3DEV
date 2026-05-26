@@ -24,7 +24,7 @@ export function HubSidebar({ collapsed }: HubSidebarProps) {
 
   return (
     <aside
-      className={`flex min-h-screen flex-col bg-hub-navy text-white transition-all duration-300 ${
+      className={`hub-chrome-sidebar flex min-h-screen flex-col text-white transition-all duration-300 ${
         collapsed ? 'w-[88px] px-4' : 'w-[280px] px-6'
       } py-8`}
     >

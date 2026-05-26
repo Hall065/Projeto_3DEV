@@ -2,12 +2,15 @@ import {
   AlertTriangle,
   CheckCircle2,
   ClipboardList,
-  Eye,
   Package,
+  Pencil,
   Wrench,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import { GridDonutChart } from '../../components/grid/GridCharts'
 import { GridPriorityBadge, GridTicketStatusBadge } from '../../components/grid/GridBadges'
 import {
@@ -19,11 +22,12 @@ import {
   OutlineButton,
 } from '../../components/connect/ConnectShared'
 import { gridService } from '../../services/gridService'
-import type { GridDashboardData } from '../../types/grid'
+import type { GridDashboardData, GridTicket } from '../../types/grid'
 
 export function GridDashboardPage() {
   const [data, setData] = useState<GridDashboardData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [viewSnapshot, setViewSnapshot] = useState<GridTicket | null>(null)
 
   useEffect(() => {
     gridService
@@ -96,8 +100,19 @@ export function GridDashboardPage() {
                         <GridTicketStatusBadge status={t.status} />
                       </td>
                       <td className="px-4 py-3">{t.assignee}</td>
-                      <td className="px-4 py-3">
-                        <Eye className="h-4 w-4 text-hub-text-muted" />
+                      <td className="px-4 py-3 text-right">
+                        <ConnectRowActionsMenu
+                          ariaLabel={`Ações do chamado ${t.code}`}
+                          actions={[
+                            viewRowAction(() => setViewSnapshot(t)),
+                            {
+                              key: 'edit',
+                              label: 'Editar',
+                              icon: Pencil,
+                              onClick: () => window.alert(`Edição do chamado ${t.code} em breve.`),
+                            },
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -206,6 +221,14 @@ export function GridDashboardPage() {
           )}
         </ConnectCard>
       </div>
+
+      <ConnectEntityViewDrawer
+        kind="grid-ticket"
+        entityId={null}
+        open={viewSnapshot !== null}
+        onClose={() => setViewSnapshot(null)}
+        snapshot={viewSnapshot ?? undefined}
+      />
     </div>
   )
 }

@@ -5,6 +5,10 @@ alwaysApply: true
 
 # SENAI HUB — Identidade visual
 
+## - Desenvolvimento padrão
+
+- **Pesquisar** api's q possar facilitar a implementação de alguma funcionalidade visual e/ou funcional na aplicação.
+
 ## Logo
 
 - **Sempre** usar a logo **black/dark** (`Logo Senai Hub Dark.png`).
@@ -27,3 +31,4 @@ import { logoSenaiHub } from '@/assets/brand'
 ## Assets do usuario
 
 - Arquivos enviados pelo usuario ficam em `localArchives/` — mover para a estrutura correta ao implementar telas.
+

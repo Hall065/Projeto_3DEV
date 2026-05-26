@@ -1,6 +1,9 @@
-﻿import { Download, Filter, MoreVertical, Plus } from 'lucide-react'
+import { Download, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -17,6 +20,9 @@ import {
 import { UserAvatar } from '../../components/ui/UserAvatar'
 import { connectService } from '../../services/connectService'
 import type { ConnectTeacher, PaginatedMeta } from '../../types/connect'
+import { confirmDelete } from '../../utils/confirmAction'
+
+const emptyTeacherForm = { full_name: '', email: '', specialty: '', cpf: '', phone: '', status: 'active' }
 
 export function TeachersPage() {
   const [teachers, setTeachers] = useState<ConnectTeacher[]>([])
@@ -25,7 +31,9 @@ export function TeachersPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [form, setForm] = useState({ full_name: '', email: '', specialty: '', cpf: '', phone: '', status: 'active' })
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [form, setForm] = useState(emptyTeacherForm)
+  const [viewId, setViewId] = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -42,9 +50,58 @@ export function TeachersPage() {
     load()
   }, [page, search])
 
+  const openCreate = () => {
+    setEditingId(null)
+    setForm(emptyTeacherForm)
+    setDrawerOpen(true)
+  }
+
+  const openEdit = (teacher: ConnectTeacher) => {
+    setEditingId(teacher.id)
+    setForm({
+      full_name: teacher.full_name,
+      email: teacher.email ?? '',
+      specialty: teacher.specialty ?? '',
+      cpf: teacher.cpf ?? '',
+      phone: teacher.phone ?? '',
+      status: teacher.status ?? 'active',
+    })
+    setDrawerOpen(true)
+  }
+
   const handleSave = async () => {
-    await connectService.createTeacher(form)
+    if (!form.full_name.trim()) {
+      window.alert('Informe o nome completo do professor.')
+      return
+    }
+
+    if (editingId) {
+      await connectService.updateTeacher(editingId, {
+        ...form,
+        full_name: form.full_name.trim(),
+        email: form.email.trim() || undefined,
+        specialty: form.specialty.trim() || undefined,
+        cpf: form.cpf.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+      })
+    } else {
+      await connectService.createTeacher({
+        ...form,
+        full_name: form.full_name.trim(),
+        email: form.email.trim() || undefined,
+        specialty: form.specialty.trim() || undefined,
+        cpf: form.cpf.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+      })
+    }
     setDrawerOpen(false)
+    setEditingId(null)
+    load()
+  }
+
+  const handleDelete = async (teacher: ConnectTeacher) => {
+    if (!confirmDelete(`o professor "${teacher.full_name}"`)) return
+    await connectService.deleteTeacher(teacher.id)
     load()
   }
 
@@ -56,7 +113,7 @@ export function TeachersPage() {
         actions={
           <>
             <OutlineButton><Download className="h-4 w-4" /> Exportar</OutlineButton>
-            <PrimaryButton onClick={() => setDrawerOpen(true)}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
+            <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
           </>
         }
       />
@@ -82,7 +139,7 @@ export function TeachersPage() {
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-hub-bg/60 text-hub-text-muted">
+            <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3" />
                 <th className="px-4 py-3 text-left">Nome</th>
@@ -107,7 +164,22 @@ export function TeachersPage() {
                   <td className="px-4 py-3">{teacher.specialty ?? '-'}</td>
                   <td className="px-4 py-3">{teacher.classes_count ?? 0}</td>
                   <td className="px-4 py-3"><StatusBadge status={teacher.status} /></td>
-                  <td className="px-4 py-3"><MoreVertical className="h-4 w-4" /></td>
+                  <td className="px-4 py-3 text-right">
+                    <ConnectRowActionsMenu
+                      ariaLabel={`Ações de ${teacher.full_name}`}
+                      actions={[
+                        viewRowAction(() => setViewId(teacher.id)),
+                        { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(teacher) },
+                        {
+                          key: 'delete',
+                          label: 'Excluir',
+                          icon: Trash2,
+                          variant: 'danger',
+                          onClick: () => void handleDelete(teacher),
+                        },
+                      ]}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -120,13 +192,16 @@ export function TeachersPage() {
 
       <ConnectDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        title="Novo professor"
-        subtitle="Preencha os dados para cadastrar o novo professor."
+        onClose={() => {
+          setDrawerOpen(false)
+          setEditingId(null)
+        }}
+        title={editingId ? 'Editar professor' : 'Novo professor'}
+        subtitle={editingId ? 'Atualize os dados do professor.' : 'Preencha os dados para cadastrar o novo professor.'}
         footer={
           <div className="flex justify-end gap-2">
             <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
-            <PrimaryButton onClick={handleSave}>Salvar</PrimaryButton>
+            <PrimaryButton onClick={() => void handleSave()}>Salvar</PrimaryButton>
           </div>
         }
       >
@@ -139,7 +214,7 @@ export function TeachersPage() {
               placeholder="Ex: João Santos"
             />
           </FormField>
-          <FormField label="E-mail institucional" required>
+          <FormField label="E-mail institucional" hint="Opcional">
             <input
               type="email"
               className={inputClass}
@@ -180,6 +255,13 @@ export function TeachersPage() {
           </FormField>
         </div>
       </ConnectDrawer>
+
+      <ConnectEntityViewDrawer
+        kind="teacher"
+        entityId={viewId}
+        open={viewId !== null}
+        onClose={() => setViewId(null)}
+      />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { LandingPage } from '../pages/LandingPage'
 import { HubLayout } from '../layouts/HubLayout'
 import { ConnectLayout } from '../layouts/ConnectLayout'
 import { AuthLayout } from '../layouts/AuthLayout'
@@ -17,6 +18,7 @@ import { SettingsPage } from '../pages/SettingsPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { ConnectOverviewPage } from '../pages/connect/ConnectOverviewPage'
+import { PeoplePage } from '../pages/connect/PeoplePage'
 import { StudentsPage } from '../pages/connect/StudentsPage'
 import { TeachersPage } from '../pages/connect/TeachersPage'
 import { ClassesPage } from '../pages/connect/ClassesPage'
@@ -55,6 +57,7 @@ export function AppRoutes() {
 
         <Route element={<ConnectLayout />}>
           <Route path="/connect" element={<ConnectOverviewPage />} />
+          <Route path="/connect/pessoas" element={<PeoplePage />} />
           <Route path="/connect/alunos" element={<StudentsPage />} />
           <Route path="/connect/professores" element={<TeachersPage />} />
           <Route path="/connect/turmas" element={<ClassesPage />} />
@@ -68,9 +71,9 @@ export function AppRoutes() {
         </Route>
       </Route>
 
-      <Route path="/" element={<Navigate to="/hub" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/dashboard" element={<Navigate to="/hub" replace />} />
-      <Route path="*" element={<Navigate to="/hub" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

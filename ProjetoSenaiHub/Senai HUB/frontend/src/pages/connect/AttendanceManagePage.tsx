@@ -1,5 +1,9 @@
-﻿import { Download, Eye, Filter } from 'lucide-react'
+import { Download, Filter, Pencil } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -15,12 +19,14 @@ import { connectService } from '../../services/connectService'
 import type { ConnectAttendanceSession, ConnectClass, PaginatedMeta } from '../../types/connect'
 
 export function AttendanceManagePage() {
+  const navigate = useNavigate()
   const [records, setRecords] = useState<ConnectAttendanceSession[]>([])
   const [classes, setClasses] = useState<ConnectClass[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
   const [classId, setClassId] = useState('')
   const [loading, setLoading] = useState(true)
+  const [viewSnapshot, setViewSnapshot] = useState<ConnectAttendanceSession | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -72,7 +78,7 @@ export function AttendanceManagePage() {
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-hub-bg/60 text-hub-text-muted">
+            <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3 text-left">Data</th>
                 <th className="px-4 py-3 text-left">Turma</th>
@@ -112,8 +118,49 @@ export function AttendanceManagePage() {
                       {absent} ({total > 0 ? `${Math.round((absent / total) * 100)}%` : '0%'})
                     </td>
                     <td className="px-4 py-3 font-medium text-emerald-600">{pct}%</td>
-                    <td className="px-4 py-3">
-                      <Eye className="h-4 w-4 text-hub-text-muted" />
+                    <td className="px-4 py-3 text-right">
+                      <ConnectRowActionsMenu
+                        ariaLabel={`Ações da frequência de ${record.class?.name ?? 'turma'}`}
+                        actions={[
+                          viewRowAction(() => setViewSnapshot(record)),
+                          {
+                            key: 'open',
+                            label: 'Abrir em frequência',
+                            icon: Pencil,
+                            onClick: () => {
+                              const params = new URLSearchParams()
+                              if (record.connect_class_id) params.set('class', String(record.connect_class_id))
+                              if (record.session_date) params.set('date', record.session_date.slice(0, 10))
+                              navigate(`/connect/frequencia?${params.toString()}`)
+                            },
+                          },
+                          {
+                            key: 'edit',
+                            label: 'Editar registro',
+                            icon: Pencil,
+                            onClick: () => {
+                              const params = new URLSearchParams()
+                              if (record.connect_class_id) params.set('class', String(record.connect_class_id))
+                              if (record.session_date) params.set('date', record.session_date.slice(0, 10))
+                              navigate(`/connect/frequencia?${params.toString()}`)
+                            },
+                          },
+                          {
+                            key: 'export',
+                            label: 'Exportar',
+                            icon: Download,
+                            onClick: () => {
+                              const line = [
+                                record.session_date,
+                                record.class?.name,
+                                record.subject,
+                                stats?.presence_rate,
+                              ].join(';')
+                              void navigator.clipboard?.writeText(line)
+                            },
+                          },
+                        ]}
+                      />
                     </td>
                   </tr>
                 )
@@ -125,6 +172,14 @@ export function AttendanceManagePage() {
         </>
         )}
       </ConnectCard>
+
+      <ConnectEntityViewDrawer
+        kind="attendance"
+        entityId={null}
+        open={viewSnapshot !== null}
+        onClose={() => setViewSnapshot(null)}
+        snapshot={viewSnapshot ?? undefined}
+      />
     </div>
   )
 }

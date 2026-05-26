@@ -1,6 +1,9 @@
-﻿import { Filter, MapPin } from 'lucide-react'
+import { Filter, MapPin, Pencil, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -21,6 +24,8 @@ export function LocationPage() {
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<ConnectStudentLocation | null>(null)
+  const [viewSnapshot, setViewSnapshot] = useState<ConnectStudentLocation | null>(null)
+  const [viewStudentId, setViewStudentId] = useState<number | null>(null)
   const [tab, setTab] = useState<'mapa' | 'info'>('mapa')
   const [loading, setLoading] = useState(true)
 
@@ -58,7 +63,7 @@ export function LocationPage() {
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[560px] text-sm">
-            <thead className="bg-hub-bg/60 text-hub-text-muted">
+            <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3 text-left">Nome</th>
                 <th className="px-4 py-3 text-left">E-mail institucional</th>
@@ -76,10 +81,36 @@ export function LocationPage() {
                   <td className="px-4 py-3"><StatusBadge status={loc.status} /></td>
                   <td className="px-4 py-3">{loc.status === 'inside' ? 'Sim' : 'Nao'}</td>
                   <td className="px-4 py-3">{loc.status === 'inside' ? 'Sim' : 'Nao'}</td>
-                  <td className="px-4 py-3">
-                    <button type="button" onClick={() => setSelected(loc)} disabled={loc.status !== 'inside'} className="disabled:opacity-40">
-                      <MapPin className="h-4 w-4 text-hub-red" />
-                    </button>
+                  <td className="px-4 py-3 text-right">
+                    <ConnectRowActionsMenu
+                      ariaLabel={`Ações de ${loc.student?.full_name ?? 'aluno'}`}
+                      actions={[
+                        viewRowAction(() => setViewSnapshot(loc)),
+                        {
+                          key: 'map',
+                          label: 'Ver localização',
+                          icon: MapPin,
+                          disabled: loc.status !== 'inside',
+                          onClick: () => setSelected(loc),
+                        },
+                        {
+                          key: 'student',
+                          label: 'Ver aluno',
+                          icon: User,
+                          onClick: () => {
+                            if (loc.connect_student_id) setViewStudentId(loc.connect_student_id)
+                          },
+                        },
+                        {
+                          key: 'edit',
+                          label: 'Editar cadastro',
+                          icon: Pencil,
+                          onClick: () => {
+                            if (loc.connect_student_id) setViewStudentId(loc.connect_student_id)
+                          },
+                        },
+                      ]}
+                    />
                   </td>
                 </tr>
               ))}
@@ -91,7 +122,7 @@ export function LocationPage() {
         )}
       </ConnectCard>
 
-      <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+      <div className="rounded-xl border border-hub-navy/20 bg-hub-navy/10 px-4 py-3 text-sm text-blue-800">
         O botao Ver localizacao funciona apenas quando o aluno estiver dentro do perimetro do SENAI.
       </div>
 
@@ -128,6 +159,21 @@ export function LocationPage() {
           </>
         )}
       </ConnectDrawer>
+
+      <ConnectEntityViewDrawer
+        kind="location"
+        entityId={null}
+        open={viewSnapshot !== null}
+        onClose={() => setViewSnapshot(null)}
+        snapshot={viewSnapshot ?? undefined}
+      />
+
+      <ConnectEntityViewDrawer
+        kind="student"
+        entityId={viewStudentId}
+        open={viewStudentId !== null}
+        onClose={() => setViewStudentId(null)}
+      />
     </div>
   )
 }

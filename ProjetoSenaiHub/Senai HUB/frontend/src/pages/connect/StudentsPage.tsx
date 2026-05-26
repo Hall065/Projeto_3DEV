@@ -1,6 +1,9 @@
-﻿import { Download, Filter, MoreVertical, Plus, Search } from 'lucide-react'
+import { Download, Filter, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -18,6 +21,19 @@ import {
 import { UserAvatar } from '../../components/ui/UserAvatar'
 import { connectService } from '../../services/connectService'
 import type { ConnectClass, ConnectStudent, PaginatedMeta } from '../../types/connect'
+import { confirmDelete } from '../../utils/confirmAction'
+import { optionalForeignIdOrNull } from '../../utils/connectForm'
+
+const emptyStudentForm = {
+  full_name: '',
+  registration_number: '',
+  cpf: '',
+  birth_date: '',
+  email: '',
+  phone: '',
+  connect_class_id: '',
+  status: 'active',
+}
 
 export function StudentsPage() {
   const [students, setStudents] = useState<ConnectStudent[]>([])
@@ -27,17 +43,10 @@ export function StudentsPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({
-    full_name: '',
-    registration_number: '',
-    cpf: '',
-    birth_date: '',
-    email: '',
-    phone: '',
-    connect_class_id: '',
-    status: 'active',
-  })
+  const [form, setForm] = useState(emptyStudentForm)
+  const [viewId, setViewId] = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -58,19 +67,63 @@ export function StudentsPage() {
     connectService.getClasses({ per_page: 50 }).then((res) => setClasses(res.data))
   }, [])
 
+  const openCreate = () => {
+    setEditingId(null)
+    setForm(emptyStudentForm)
+    setDrawerOpen(true)
+  }
+
+  const openEdit = (student: ConnectStudent) => {
+    setEditingId(student.id)
+    setForm({
+      full_name: student.full_name,
+      registration_number: student.registration_number ?? '',
+      cpf: student.cpf ?? '',
+      birth_date: student.birth_date?.slice(0, 10) ?? '',
+      email: student.email ?? '',
+      phone: student.phone ?? '',
+      connect_class_id: String(student.connect_class_id ?? student.class?.id ?? ''),
+      status: student.status ?? 'active',
+    })
+    setDrawerOpen(true)
+  }
+
   const handleSave = async () => {
+    if (!form.full_name.trim()) {
+      window.alert('Informe o nome completo do aluno.')
+      return
+    }
+
     setSaving(true)
     try {
-      await connectService.createStudent({
+      const payload = {
         ...form,
-        connect_class_id: form.connect_class_id ? Number(form.connect_class_id) : undefined,
-      })
+        full_name: form.full_name.trim(),
+        connect_class_id: optionalForeignIdOrNull(form.connect_class_id),
+        registration_number: form.registration_number.trim() || undefined,
+        cpf: form.cpf.trim() || undefined,
+        email: form.email.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        birth_date: form.birth_date || undefined,
+      }
+      if (editingId) {
+        await connectService.updateStudent(editingId, payload)
+      } else {
+        await connectService.createStudent(payload)
+      }
       setDrawerOpen(false)
-      setForm({ full_name: '', registration_number: '', cpf: '', birth_date: '', email: '', phone: '', connect_class_id: '', status: 'active' })
+      setEditingId(null)
+      setForm(emptyStudentForm)
       load()
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleDelete = async (student: ConnectStudent) => {
+    if (!confirmDelete(`o aluno "${student.full_name}"`)) return
+    await connectService.deleteStudent(student.id)
+    load()
   }
 
   return (
@@ -82,7 +135,7 @@ export function StudentsPage() {
           <>
             <OutlineButton><Download className="h-4 w-4" /> Exportar</OutlineButton>
             <OutlineButton><Filter className="h-4 w-4" /> Filtros</OutlineButton>
-            <PrimaryButton onClick={() => setDrawerOpen(true)}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
+            <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
           </>
         }
       />
@@ -118,7 +171,7 @@ export function StudentsPage() {
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[720px] text-sm">
-            <thead className="bg-hub-bg/60 text-hub-text-muted">
+            <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3"><input type="checkbox" /></th>
                 <th className="px-4 py-3 text-left">Nome</th>
@@ -145,7 +198,22 @@ export function StudentsPage() {
                   <td className="px-4 py-3">{student.class?.course?.name ?? '-'}</td>
                   <td className="px-4 py-3">{formatDate(student.birth_date)}</td>
                   <td className="px-4 py-3"><StatusBadge status={student.status} /></td>
-                  <td className="px-4 py-3"><MoreVertical className="h-4 w-4 text-hub-text-muted" /></td>
+                  <td className="px-4 py-3 text-right">
+                    <ConnectRowActionsMenu
+                      ariaLabel={`Ações de ${student.full_name}`}
+                      actions={[
+                        viewRowAction(() => setViewId(student.id)),
+                        { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(student) },
+                        {
+                          key: 'delete',
+                          label: 'Excluir',
+                          icon: Trash2,
+                          variant: 'danger',
+                          onClick: () => void handleDelete(student),
+                        },
+                      ]}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -158,14 +226,17 @@ export function StudentsPage() {
 
       <ConnectDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        title="Novo aluno"
-        subtitle="Preencha os dados para cadastrar o novo aluno."
+        onClose={() => {
+          setDrawerOpen(false)
+          setEditingId(null)
+        }}
+        title={editingId ? 'Editar aluno' : 'Novo aluno'}
+        subtitle={editingId ? 'Atualize os dados do aluno.' : 'Preencha os dados para cadastrar o novo aluno.'}
         footer={
           <div className="flex justify-end gap-2">
             <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
             <OutlineButton>Salvar e Novo</OutlineButton>
-            <PrimaryButton onClick={handleSave} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</PrimaryButton>
+            <PrimaryButton onClick={() => void handleSave()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</PrimaryButton>
           </div>
         }
       >
@@ -176,7 +247,7 @@ export function StudentsPage() {
               <FormField label="Nome completo" required>
                 <input className={inputClass} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="Ex: Maria Silva" />
               </FormField>
-              <FormField label="RM" required>
+              <FormField label="RM" hint="Opcional">
                 <input className={inputClass} value={form.registration_number} onChange={(e) => setForm({ ...form, registration_number: e.target.value })} placeholder="Ex: RM20250130" />
               </FormField>
               <FormField label="CPF">
@@ -195,9 +266,9 @@ export function StudentsPage() {
           </section>
           <section>
             <h3 className="mb-3 font-semibold text-hub-navy">Informações acadêmicas</h3>
-            <FormField label="Turma">
+            <FormField label="Turma" hint="Opcional — matricule depois">
               <select className={selectClass} value={form.connect_class_id} onChange={(e) => setForm({ ...form, connect_class_id: e.target.value })}>
-                <option value="">Selecione a turma</option>
+                <option value="">Sem turma (definir depois)</option>
                 {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </FormField>
@@ -222,6 +293,13 @@ export function StudentsPage() {
           </section>
         </div>
       </ConnectDrawer>
+
+      <ConnectEntityViewDrawer
+        kind="student"
+        entityId={viewId}
+        open={viewId !== null}
+        onClose={() => setViewId(null)}
+      />
     </div>
   )
 }

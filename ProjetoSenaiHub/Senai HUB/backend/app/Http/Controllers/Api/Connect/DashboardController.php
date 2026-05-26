@@ -24,13 +24,9 @@ class DashboardController extends Controller
 {
     public function index(): JsonResponse
     {
-        $metrics = ConnectDashboardMetric::query()
-            ->where('key', 'kpis')
-            ->value('value') ?? [];
-
-        $totalStudents = (int) ($metrics['total_students'] ?? 2489);
         $activeClasses = ConnectClass::query()->where('status', 'active')->count();
         $totalTeachers = ConnectTeacher::query()->where('status', 'active')->count();
+        $totalStudents = ConnectStudent::query()->where('status', 'active')->count();
         $seededStudents = ConnectStudent::query()->count();
 
         $attendanceRate = $this->calculateAttendanceRate();
@@ -50,7 +46,7 @@ class DashboardController extends Controller
             ->get();
 
         $recentCadastros = ConnectStudent::query()
-            ->with('connectClass.course')
+            ->with(['connectClass.course', 'hubPerson'])
             ->orderByDesc('created_at')
             ->limit(5)
             ->get();
@@ -74,6 +70,7 @@ class DashboardController extends Controller
         $weekStart = Carbon::now()->subDays(7)->toDateString();
 
         $classesByTeacher = ConnectTeacher::query()
+            ->with('hubPerson')
             ->withCount([
                 'attendanceSessions as sessions_count' => fn ($query) => $query->whereDate('session_date', '>=', $weekStart),
             ])
@@ -89,6 +86,7 @@ class DashboardController extends Controller
 
         if ($classesByTeacher->isEmpty()) {
             $classesByTeacher = ConnectTeacher::query()
+                ->with('hubPerson')
                 ->withCount('attendanceSessions as sessions_count')
                 ->orderByDesc('sessions_count')
                 ->limit(5)
@@ -101,6 +99,7 @@ class DashboardController extends Controller
         }
 
         $kpiTrends = $this->computeKpiTrends($attendanceRate);
+        $kpiSparklines = $this->computeKpiSparklines();
 
         return response()->json([
             'data' => [
@@ -119,6 +118,7 @@ class DashboardController extends Controller
                 'students_by_course' => $studentsByCourse,
                 'classes_by_teacher' => $classesByTeacher,
                 'kpi_trends' => $kpiTrends,
+                'kpi_sparklines' => $kpiSparklines,
                 'recent_activities' => ConnectActivityResource::collection($recentActivities),
                 'alerts' => ConnectAlertResource::collection($alerts),
                 'cadastros' => ConnectStudentResource::collection($recentCadastros),
@@ -164,6 +164,84 @@ class DashboardController extends Controller
             'unjustified' => round(($unjustified / $all) * 100, 1),
             'rate' => round(($present / $all) * 100, 1),
         ];
+    }
+
+    /**
+     * Séries das últimas 8 semanas para mini-gráficos dos cards (cadastros acumulados / frequência).
+     *
+     * @return array<string, list<int|float>>
+     */
+    private function computeKpiSparklines(): array
+    {
+        $weeks = 8;
+
+        return [
+            'students' => $this->cumulativeWeeklySeries(ConnectStudent::class, $weeks),
+            'teachers' => $this->cumulativeWeeklySeries(ConnectTeacher::class, $weeks),
+            'classes' => $this->cumulativeWeeklySeries(
+                ConnectClass::class,
+                $weeks,
+                fn ($query) => $query->where('status', 'active'),
+            ),
+            'courses' => $this->cumulativeWeeklySeries(
+                ConnectCourse::class,
+                $weeks,
+                fn ($query) => $query->where('status', 'active'),
+            ),
+            'contracts' => $this->cumulativeWeeklySeries(
+                ConnectContract::class,
+                $weeks,
+                fn ($query) => $query->where('status', 'active'),
+            ),
+            'attendance' => $this->attendanceWeeklyRateSeries($weeks),
+        ];
+    }
+
+    /**
+     * @param  class-string  $model
+     * @param  callable(\Illuminate\Database\Eloquent\Builder): void|null  $scope
+     * @return list<int>
+     */
+    private function cumulativeWeeklySeries(string $model, int $weeks, ?callable $scope = null): array
+    {
+        $points = [];
+
+        for ($w = $weeks - 1; $w >= 0; $w--) {
+            $end = Carbon::now()->subWeeks($w)->endOfWeek();
+
+            $query = $model::query()->where('created_at', '<=', $end);
+
+            if ($scope !== null) {
+                $scope($query);
+            }
+
+            $points[] = (int) $query->count();
+        }
+
+        return $points;
+    }
+
+    /**
+     * @return list<float>
+     */
+    private function attendanceWeeklyRateSeries(int $weeks): array
+    {
+        $points = [];
+
+        for ($w = $weeks - 1; $w >= 0; $w--) {
+            $start = Carbon::now()->subWeeks($w)->startOfWeek();
+            $end = Carbon::now()->subWeeks($w)->endOfWeek();
+            $rate = $this->attendanceRateForPeriod($start, $end);
+            $points[] = $rate > 0 ? $rate : ($points[count($points) - 1] ?? 0.0);
+        }
+
+        if (array_sum($points) === 0.0) {
+            $current = $this->calculateAttendanceRate();
+
+            return array_fill(0, $weeks, $current);
+        }
+
+        return $points;
     }
 
     /**

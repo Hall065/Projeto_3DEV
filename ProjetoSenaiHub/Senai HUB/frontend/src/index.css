@@ -16,6 +16,10 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body,
 #root {
@@ -37,4 +41,204 @@ body {
 
 .animate-chart-spin {
   animation: chart-spin 0.9s linear infinite;
+}
+
+/* Glassmorphism — paleta SENAI, vidro mais perceptível */
+@layer components {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.38);
+    backdrop-filter: blur(24px) saturate(1.15);
+    -webkit-backdrop-filter: blur(24px) saturate(1.15);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow:
+      0 8px 32px rgba(2, 26, 58, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  }
+
+  .glass-panel-solid {
+    background: rgba(255, 255, 255, 0.52);
+    backdrop-filter: blur(28px) saturate(1.12);
+    -webkit-backdrop-filter: blur(28px) saturate(1.12);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      0 12px 40px rgba(2, 26, 58, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  /* Chrome estrutural — sidebar, header, footer (#021A3A) */
+  .hub-chrome {
+    background-color: var(--color-hub-navy);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .hub-chrome-sidebar {
+    background-color: var(--color-hub-navy);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* @deprecated — use hub-chrome em headers; mantido para painéis claros se necessário */
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.42);
+    backdrop-filter: blur(20px) saturate(1.1);
+    -webkit-backdrop-filter: blur(20px) saturate(1.1);
+    border-color: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  }
+
+  .glass-sidebar {
+    background-color: var(--color-hub-navy);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-input {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+  }
+
+  .glass-thead {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  /**
+   * Scrollbars minimalistas (WebKit + Firefox thin)
+   * — sidebar navy, área principal, painéis glass e scroll horizontal em tabelas
+   */
+
+  .scrollbar-sidebar-navy {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.38) transparent;
+  }
+
+  .scrollbar-sidebar-navy::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .scrollbar-sidebar-navy::-webkit-scrollbar-track {
+    margin: 6px 0;
+    background: transparent;
+  }
+
+  .scrollbar-sidebar-navy::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-sidebar-navy::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.42);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-sidebar-navy::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /** Coluna principal (Connect / Grid) — trilho invisível, thumb navy suave */
+  .scrollbar-app-main {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(2, 26, 58, 0.28) transparent;
+  }
+
+  .scrollbar-app-main::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .scrollbar-app-main::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-app-main::-webkit-scrollbar-thumb {
+    background: rgba(2, 26, 58, 0.18);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-app-main::-webkit-scrollbar-thumb:hover {
+    background: rgba(227, 6, 19, 0.42);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-app-main::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /** Listas / cards em fundo claro ou glass */
+  .scrollbar-glass-inset {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(2, 26, 58, 0.22) rgba(255, 255, 255, 0.2);
+  }
+
+  .scrollbar-glass-inset::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .scrollbar-glass-inset::-webkit-scrollbar-track {
+    margin: 4px 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+  }
+
+  .scrollbar-glass-inset::-webkit-scrollbar-thumb {
+    background: rgba(2, 26, 58, 0.2);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-glass-inset::-webkit-scrollbar-thumb:hover {
+    background: rgba(227, 6, 19, 0.35);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-glass-inset::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /** Scroll horizontal em tabelas */
+  .scrollbar-minimal-x {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(2, 26, 58, 0.28) transparent;
+  }
+
+  .scrollbar-minimal-x::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  .scrollbar-minimal-x::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-minimal-x::-webkit-scrollbar-thumb {
+    background: rgba(2, 26, 58, 0.18);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-minimal-x::-webkit-scrollbar-thumb:hover {
+    background: rgba(227, 6, 19, 0.38);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-minimal-x::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }

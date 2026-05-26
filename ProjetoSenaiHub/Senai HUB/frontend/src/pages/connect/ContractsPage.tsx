@@ -1,6 +1,9 @@
-﻿import { Download, Filter, MoreVertical, Plus } from 'lucide-react'
+import { Download, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -17,6 +20,16 @@ import {
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import type { ConnectContract, ConnectStudent, PaginatedMeta } from '../../types/connect'
+import { confirmDelete } from '../../utils/confirmAction'
+
+const emptyContractForm = {
+  connect_student_id: '',
+  contract_type: 'aprendizagem',
+  start_date: '',
+  monthly_value: '',
+  company_name: '',
+  status: 'active',
+}
 
 export function ContractsPage() {
   const [contracts, setContracts] = useState<ConnectContract[]>([])
@@ -25,14 +38,9 @@ export function ContractsPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [form, setForm] = useState({
-    connect_student_id: '',
-    contract_type: 'aprendizagem',
-    start_date: '',
-    monthly_value: '',
-    company_name: '',
-    status: 'active',
-  })
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [form, setForm] = useState(emptyContractForm)
+  const [viewId, setViewId] = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -50,16 +58,48 @@ export function ContractsPage() {
     connectService.getStudents({ per_page: 50 }).then((res) => setStudents(res.data))
   }, [page])
 
+  const openCreate = () => {
+    setEditingId(null)
+    setForm(emptyContractForm)
+    setDrawerOpen(true)
+  }
+
+  const openEdit = (contract: ConnectContract) => {
+    setEditingId(contract.id)
+    setForm({
+      connect_student_id: String(contract.connect_student_id ?? contract.student?.id ?? ''),
+      contract_type: contract.contract_type ?? 'aprendizagem',
+      start_date: contract.start_date?.slice(0, 10) ?? '',
+      monthly_value: String(contract.monthly_value ?? ''),
+      company_name: contract.company_name ?? '',
+      status: contract.status ?? 'active',
+    })
+    setDrawerOpen(true)
+  }
+
   const handleSave = async () => {
-    await connectService.createContract({
+    const payload = {
       connect_student_id: Number(form.connect_student_id),
       contract_type: form.contract_type,
       start_date: form.start_date,
       monthly_value: Number(form.monthly_value) || 0,
       company_name: form.company_name,
       status: form.status,
-    })
+    }
+    if (editingId) {
+      await connectService.updateContract(editingId, payload)
+    } else {
+      await connectService.createContract(payload)
+    }
     setDrawerOpen(false)
+    setEditingId(null)
+    load()
+  }
+
+  const handleDelete = async (contract: ConnectContract) => {
+    const label = contract.student?.full_name ?? 'este contrato'
+    if (!confirmDelete(`o contrato de ${label}`)) return
+    await connectService.deleteContract(contract.id)
     load()
   }
 
@@ -72,7 +112,7 @@ export function ContractsPage() {
           <>
             <OutlineButton><Filter className="h-4 w-4" /> Filtros</OutlineButton>
             <OutlineButton><Download className="h-4 w-4" /> Exportar</OutlineButton>
-            <PrimaryButton onClick={() => setDrawerOpen(true)}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
+            <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
           </>
         }
       />
@@ -84,7 +124,7 @@ export function ContractsPage() {
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-hub-bg/60 text-hub-text-muted">
+            <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3 text-left">Carga horaria</th>
                 <th className="px-4 py-3 text-left">Curso</th>
@@ -106,7 +146,22 @@ export function ContractsPage() {
                   <td className="px-4 py-3">{formatDate(contract.start_date)}</td>
                   <td className="px-4 py-3">R$ {contract.monthly_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   <td className="px-4 py-3"><StatusBadge status={contract.status} /></td>
-                  <td className="px-4 py-3"><MoreVertical className="h-4 w-4" /></td>
+                  <td className="px-4 py-3 text-right">
+                    <ConnectRowActionsMenu
+                      ariaLabel={`Ações do contrato de ${contract.student?.full_name ?? 'aluno'}`}
+                      actions={[
+                        viewRowAction(() => setViewId(contract.id)),
+                        { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(contract) },
+                        {
+                          key: 'delete',
+                          label: 'Excluir',
+                          icon: Trash2,
+                          variant: 'danger',
+                          onClick: () => void handleDelete(contract),
+                        },
+                      ]}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -122,14 +177,17 @@ export function ContractsPage() {
 
       <ConnectDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        title="Novo contrato de aluno"
-        subtitle="Preencha os dados do contrato. O painel so aparece ao clicar em Novo."
+        onClose={() => {
+          setDrawerOpen(false)
+          setEditingId(null)
+        }}
+        title={editingId ? 'Editar contrato' : 'Novo contrato de aluno'}
+        subtitle={editingId ? 'Atualize os dados do contrato.' : 'Preencha os dados do contrato. O painel só aparece ao clicar em Novo.'}
         footer={
           <div className="flex justify-end gap-2">
             <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
             <OutlineButton>Salvar e Novo</OutlineButton>
-            <PrimaryButton onClick={handleSave}>Salvar</PrimaryButton>
+            <PrimaryButton onClick={() => void handleSave()}>Salvar</PrimaryButton>
           </div>
         }
       >
@@ -188,6 +246,13 @@ export function ContractsPage() {
           </FormField>
         </div>
       </ConnectDrawer>
+
+      <ConnectEntityViewDrawer
+        kind="contract"
+        entityId={viewId}
+        open={viewId !== null}
+        onClose={() => setViewId(null)}
+      />
     </div>
   )
 }

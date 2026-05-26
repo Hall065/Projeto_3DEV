@@ -1,9 +1,10 @@
-﻿import { MoreVertical, Pencil, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { ConnectCourseCard, ConnectCourseCardSkeleton } from '../../components/connect/ConnectCourseCard'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRosterDrawer } from '../../components/connect/ConnectRosterDrawer'
 import {
-  ConnectCard,
-  ConnectLoadingSpinner,
   ConnectPageHeader,
   ConnectPagination,
   FormField,
@@ -11,7 +12,6 @@ import {
   OutlineButton,
   PrimaryButton,
   selectClass,
-  StatusBadge,
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import type { ConnectCourse, PaginatedMeta } from '../../types/connect'
@@ -27,6 +27,9 @@ export function CoursesPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyForm)
   const [loading, setLoading] = useState(true)
+  const [rosterOpen, setRosterOpen] = useState(false)
+  const [rosterCourse, setRosterCourse] = useState<ConnectCourse | null>(null)
+  const [viewId, setViewId] = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -61,17 +64,31 @@ export function CoursesPage() {
     setDrawerOpen(true)
   }
 
+  const openRoster = (course: ConnectCourse) => {
+    setRosterCourse(course)
+    setRosterOpen(true)
+  }
+
   const handleSave = async () => {
+    if (!form.name.trim()) {
+      window.alert('Informe o nome do curso.')
+      return
+    }
+
+    const payload = {
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      area: form.area.trim() || null,
+      status: form.status,
+      workload_hours: form.workload_hours ? Number(form.workload_hours) : 0,
+    }
+
     if (editingId) {
-      await connectService.updateCourse(editingId, {
-        ...form,
-        workload_hours: Number(form.workload_hours),
-      })
+      await connectService.updateCourse(editingId, payload)
     } else {
       await connectService.createCourse({
-        ...form,
-        code: form.name.substring(0, 3).toUpperCase(),
-        workload_hours: Number(form.workload_hours),
+        ...payload,
+        code: form.name.trim().substring(0, 12).replace(/\s+/g, '-').toUpperCase() || `CURSO-${Date.now().toString(36).slice(-4).toUpperCase()}`,
       })
     }
     setDrawerOpen(false)
@@ -91,48 +108,52 @@ export function CoursesPage() {
         }
       />
 
-      <ConnectCard className="p-4">
-        <div className="mb-4">
-          <input
-            className={inputClass}
-            placeholder="Buscar curso..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        {loading ? (
-          <ConnectLoadingSpinner label="Carregando cursos..." className="min-h-[320px]" />
-        ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {courses.map((course) => (
-            <div key={course.id} className="rounded-xl border border-hub-border p-4">
-              <div className="mb-2 flex items-start justify-between">
-                <h3 className="font-semibold text-hub-navy">{course.name}</h3>
-                <button type="button" onClick={() => openEdit(course)} aria-label="Editar curso">
-                  <MoreVertical className="h-4 w-4 text-hub-text-muted" />
-                </button>
-              </div>
-              <p className="text-xs text-hub-text-muted">Carga horaria: {course.workload_hours}h</p>
-              <p className="mt-2 line-clamp-2 text-sm text-hub-text-muted">{course.description}</p>
-              <div className="mt-3 flex items-center justify-between">
-                <StatusBadge status={course.status} />
-                <button type="button" onClick={() => openEdit(course)} className="text-xs font-medium text-hub-red">
-                  <Pencil className="h-3 w-3 inline" />
-                  Editar
-                </button>
-              </div>
-            </div>
+      <div className="glass-panel mb-6 rounded-2xl p-4">
+        <input
+          className={inputClass}
+          placeholder="Buscar curso..."
+          value={search}
+          onChange={(e) => {
+            setPage(1)
+            setSearch(e.target.value)
+          }}
+        />
+      </div>
+
+      {loading ? (
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ConnectCourseCardSkeleton key={i} />
           ))}
         </div>
-        )}
-        <ConnectPagination meta={meta} onPageChange={setPage} />
-      </ConnectCard>
+      ) : courses.length === 0 ? (
+        <div className="glass-panel rounded-2xl px-6 py-16 text-center text-sm text-hub-text-muted">
+          Nenhum curso encontrado.
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {courses.map((course) => (
+              <ConnectCourseCard
+                key={course.id}
+                course={course}
+                onView={() => setViewId(course.id)}
+                onEdit={() => openEdit(course)}
+                onRoster={() => openRoster(course)}
+              />
+            ))}
+          </div>
+          <div className="mt-8">
+            <ConnectPagination meta={meta} onPageChange={setPage} />
+          </div>
+        </>
+      )}
 
       <ConnectDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title={editingId ? 'Editar curso' : 'Cadastrar curso'}
-        subtitle="Preencha os dados do curso."
+        subtitle="Apenas o nome é obrigatório. Alunos e professores podem ser vinculados depois."
         footer={
           <div className="flex justify-end gap-2">
             <OutlineButton onClick={() => setForm(emptyForm)}>Limpar Campos</OutlineButton>
@@ -143,25 +164,68 @@ export function CoursesPage() {
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField label="Nome do curso" required>
-            <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Automação Industrial" />
+            <input
+              className={inputClass}
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Ex: Automação Industrial"
+            />
           </FormField>
           <FormField label="Área">
-            <input className={inputClass} value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} placeholder="Ex: Indústria 4.0" />
+            <input
+              className={inputClass}
+              value={form.area}
+              onChange={(e) => setForm({ ...form, area: e.target.value })}
+              placeholder="Ex: Indústria 4.0"
+            />
           </FormField>
-          <FormField label="Carga horária total" required>
-            <input className={inputClass} value={form.workload_hours} onChange={(e) => setForm({ ...form, workload_hours: e.target.value })} placeholder="Ex: 120 horas" />
+          <FormField label="Carga horária total" hint="Opcional">
+            <input
+              className={inputClass}
+              value={form.workload_hours}
+              onChange={(e) => setForm({ ...form, workload_hours: e.target.value })}
+              placeholder="Ex: 120 horas"
+            />
           </FormField>
-          <FormField label="Status" required>
-            <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+          <FormField label="Status">
+            <select
+              className={selectClass}
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+            >
               <option value="active">Ativo</option>
               <option value="inactive">Inativo</option>
             </select>
           </FormField>
-          <FormField label="Descrição" required>
-            <textarea className={`${inputClass} min-h-[100px] py-2 sm:col-span-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Descreva o curso, ementa e objetivos..." />
+          <FormField label="Descrição" hint="Opcional">
+            <textarea
+              className={`${inputClass} min-h-[100px] py-2 sm:col-span-2`}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Descreva o curso, ementa e objetivos..."
+            />
           </FormField>
         </div>
       </ConnectDrawer>
+
+      <ConnectRosterDrawer
+        open={rosterOpen}
+        onClose={() => {
+          setRosterOpen(false)
+          setRosterCourse(null)
+        }}
+        mode="course"
+        entityId={rosterCourse?.id ?? null}
+        entityName={rosterCourse?.name ?? ''}
+        onChanged={load}
+      />
+
+      <ConnectEntityViewDrawer
+        kind="course"
+        entityId={viewId}
+        open={viewId !== null}
+        onClose={() => setViewId(null)}
+      />
     </div>
   )
 }

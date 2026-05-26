@@ -18,9 +18,9 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
   const cover = getApplicationCover(application.slug)
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-hub-border/80 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
-      <div className="h-44 overflow-hidden bg-hub-bg">
-        <img src={cover} alt="" className="h-full w-full object-cover" />
+    <article className="glass-panel-solid flex flex-col overflow-hidden rounded-2xl shadow-[0_4px_24px_rgba(2,26,58,0.08)]">
+      <div className="overflow-hidden bg-hub-bg">
+        <img src={cover} alt="" className="block h-auto w-full" />
       </div>
 
       <div className="flex flex-1 flex-col p-6">

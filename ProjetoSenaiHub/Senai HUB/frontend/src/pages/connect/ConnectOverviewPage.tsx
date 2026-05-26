@@ -8,6 +8,7 @@ import {
   Users,
 } from 'lucide-react'
 import { QuickReportsSection } from '../../components/connect/ConnectCharts'
+import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -15,21 +16,10 @@ import {
   ConnectTableScroll,
   EMPTY,
   formatDateTime,
-  KpiCard,
   StatusBadge,
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import type { DashboardData } from '../../types/connect'
-
-function KpiSkeleton() {
-  return (
-    <div className="animate-pulse rounded-2xl border border-hub-border/60 bg-white p-5 shadow-sm">
-      <div className="mb-3 h-10 w-10 rounded-xl bg-hub-bg" />
-      <div className="mb-2 h-3 w-3/4 max-w-[140px] rounded bg-hub-bg" />
-      <div className="h-8 w-20 rounded bg-hub-bg" />
-    </div>
-  )
-}
 
 export function ConnectOverviewPage() {
   const [data, setData] = useState<DashboardData | null>(null)
@@ -43,19 +33,11 @@ export function ConnectOverviewPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const trends = data?.kpi_trends ?? {
-    students: { direction: 'neutral' as const, value: '0', label: 'novos este mes' },
-    teachers: { direction: 'neutral' as const, value: '0', label: 'vs. mes anterior' },
-    classes: { direction: 'neutral' as const, value: '0', label: 'novas turmas' },
-    courses: { direction: 'neutral' as const, value: '0', label: 'vs. mes anterior' },
-    attendance: { direction: 'neutral' as const, value: '0', label: 'vs. mes anterior' },
-    contracts: { direction: 'neutral' as const, value: '0', label: 'novos contratos' },
-  }
-
   const attendance = data?.attendance_breakdown ?? { present: 0, justified: 0, unjustified: 0, rate: 0 }
   const teachers = data?.classes_by_teacher ?? []
   const courses = data?.students_by_course ?? []
   const kpis = data?.kpis
+  const spark = data?.kpi_sparklines
 
   return (
     <div className="w-full min-w-0">
@@ -66,36 +48,68 @@ export function ConnectOverviewPage() {
 
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {loading || !kpis ? (
-          Array.from({ length: 6 }).map((_, i) => <KpiSkeleton key={i} />)
+          Array.from({ length: 6 }).map((_, i) => <KpiCardSkeleton key={i} />)
         ) : (
           <>
             <KpiCard
               icon={GraduationCap}
               label="Total de alunos cadastrados"
               value={kpis.total_students.toLocaleString('pt-BR')}
-              trend={trends.students}
+              variant="blue"
+              sparkline={spark?.students ?? []}
+              to="/connect/alunos"
             />
-            <KpiCard icon={Users} label="Professores cadastrados" value={kpis.total_teachers} trend={trends.teachers} />
-            <KpiCard icon={School} label="Turmas ativas" value={kpis.active_classes} trend={trends.classes} />
-            <KpiCard icon={BookOpen} label="Cursos ativos" value={kpis.active_courses} trend={trends.courses} />
+            <KpiCard
+              icon={Users}
+              label="Professores cadastrados"
+              value={kpis.total_teachers}
+              variant="coral"
+              sparkline={spark?.teachers ?? []}
+              to="/connect/professores"
+            />
+            <KpiCard
+              icon={School}
+              label="Turmas ativas"
+              value={kpis.active_classes}
+              variant="green"
+              sparkline={spark?.classes ?? []}
+              to="/connect/turmas"
+            />
+            <KpiCard
+              icon={BookOpen}
+              label="Cursos ativos"
+              value={kpis.active_courses}
+              variant="violet"
+              sparkline={spark?.courses ?? []}
+              to="/connect/cursos"
+            />
             <KpiCard
               icon={CalendarCheck}
               label="Frequencia media do mes"
               value={`${kpis.attendance_rate}%`}
-              trend={trends.attendance}
+              variant="senai"
+              sparkline={spark?.attendance ?? []}
+              to="/connect/frequencia"
             />
-            <KpiCard icon={FileText} label="Contratos ativos" value={kpis.active_contracts} trend={trends.contracts} />
+            <KpiCard
+              icon={FileText}
+              label="Contratos ativos"
+              value={kpis.active_contracts}
+              variant="amber"
+              sparkline={spark?.contracts ?? []}
+              to="/connect/contratos/alunos"
+            />
           </>
         )}
       </div>
 
-      <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
         <QuickReportsSection loading={loading} attendance={attendance} teachers={teachers} courses={courses} />
 
-        <ConnectCard className="min-w-0 p-4 sm:p-6 lg:col-span-1">
-          <h2 className="mb-4 text-lg font-semibold text-hub-navy sm:text-xl">Atividade Recente</h2>
+        <ConnectCard className="flex min-h-0 min-w-0 flex-col p-4 sm:p-6 lg:col-span-1 lg:h-full">
+          <h2 className="mb-4 shrink-0 text-lg font-semibold text-hub-navy sm:text-xl">Atividade Recente</h2>
           {loading ? (
-            <ul className="space-y-4">
+            <ul className="scrollbar-glass-inset min-h-[240px] flex-1 space-y-4 overflow-y-auto pr-1 lg:min-h-0">
               {Array.from({ length: 4 }).map((_, i) => (
                 <li key={i} className="animate-pulse border-b border-hub-border/50 pb-3">
                   <div className="mb-2 h-4 w-3/4 rounded bg-hub-bg" />
@@ -104,7 +118,7 @@ export function ConnectOverviewPage() {
               ))}
             </ul>
           ) : (
-            <ul className="max-h-[480px] space-y-4 overflow-y-auto pr-1">
+            <ul className="scrollbar-glass-inset min-h-[240px] flex-1 space-y-4 overflow-y-auto pr-1 lg:min-h-0">
               {data?.recent_activities.map((activity) => (
                 <li key={activity.id} className="border-b border-hub-border/50 pb-3 last:border-0">
                   <p className="text-sm font-medium text-hub-text">{activity.title}</p>
@@ -159,7 +173,7 @@ export function ConnectOverviewPage() {
           ) : data ? (
           <ConnectTableScroll>
             <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="bg-hub-bg/60 text-hub-text-muted">
+              <thead className="glass-thead text-hub-text-muted">
                 <tr>
                   <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">Tipo</th>
                   <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">Nome</th>

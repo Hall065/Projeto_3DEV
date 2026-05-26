@@ -31,7 +31,7 @@ class AttendanceController extends Controller
         $subject = $validated['subject'] ?? 'Aula regular';
 
         $class = ConnectClass::query()
-            ->with(['students', 'teacher'])
+            ->with(['students.hubPerson', 'teacher.hubPerson'])
             ->findOrFail($validated['connect_class_id']);
 
         $session = ConnectAttendanceSession::query()->firstOrCreate(
@@ -60,7 +60,7 @@ class AttendanceController extends Controller
             ]);
         });
 
-        $session->load(['connectClass.course', 'teacher', 'marks.student']);
+        $session->load(['connectClass.course', 'teacher.hubPerson', 'marks.student.hubPerson']);
 
         return response()->json([
             'data' => new ConnectAttendanceSessionResource($session),
@@ -104,7 +104,7 @@ class AttendanceController extends Controller
             'occurred_at' => now(),
         ]);
 
-        $session->load(['connectClass.course', 'teacher', 'marks.student']);
+        $session->load(['connectClass.course', 'teacher.hubPerson', 'marks.student.hubPerson']);
 
         return response()->json([
             'data' => new ConnectAttendanceSessionResource($session),

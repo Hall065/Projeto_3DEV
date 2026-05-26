@@ -1,5 +1,8 @@
-import { AlertTriangle, CheckCircle2, ClipboardList, Eye, Filter, Wrench } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ClipboardList, Filter, Pencil, Trash2, UserCheck, Wrench } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -32,6 +35,7 @@ export function GridTicketsPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [viewSnapshot, setViewSnapshot] = useState<GridTicket | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -148,10 +152,32 @@ export function GridTicketsPage() {
                         <GridTicketStatusBadge status={t.status} />
                       </td>
                       <td className="px-4 py-3">{t.assignee}</td>
-                      <td className="px-4 py-3">
-                        <button type="button" aria-label="Visualizar">
-                          <Eye className="h-4 w-4 text-hub-text-muted" />
-                        </button>
+                      <td className="px-4 py-3 text-right">
+                        <ConnectRowActionsMenu
+                          ariaLabel={`Ações do chamado ${t.code}`}
+                          actions={[
+                            viewRowAction(() => setViewSnapshot(t)),
+                            {
+                              key: 'edit',
+                              label: 'Editar',
+                              icon: Pencil,
+                              onClick: () => window.alert(`Edição do chamado ${t.code} em breve.`),
+                            },
+                            {
+                              key: 'assign',
+                              label: 'Atribuir técnico',
+                              icon: UserCheck,
+                              onClick: () => window.alert(`Atribuição do chamado ${t.code} em breve.`),
+                            },
+                            {
+                              key: 'delete',
+                              label: 'Excluir',
+                              icon: Trash2,
+                              variant: 'danger',
+                              onClick: () => window.alert(`Exclusão do chamado ${t.code} em breve.`),
+                            },
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -162,6 +188,14 @@ export function GridTicketsPage() {
           </>
         )}
       </ConnectCard>
+
+      <ConnectEntityViewDrawer
+        kind="grid-ticket"
+        entityId={null}
+        open={viewSnapshot !== null}
+        onClose={() => setViewSnapshot(null)}
+        snapshot={viewSnapshot ?? undefined}
+      />
     </div>
   )
 }

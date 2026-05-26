@@ -1,4 +1,4 @@
-﻿import { X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useEffect } from 'react'
 
 interface ConnectDrawerProps {
@@ -8,13 +8,14 @@ interface ConnectDrawerProps {
   subtitle?: string
   children: React.ReactNode
   footer?: React.ReactNode
-  width?: 'md' | 'lg' | 'xl'
+  width?: 'md' | 'lg' | 'xl' | '2xl'
 }
 
 const widthClasses = {
   md: 'w-full max-w-md',
   lg: 'w-full max-w-lg',
   xl: 'w-full max-w-xl sm:max-w-xl',
+  '2xl': 'w-full max-w-2xl sm:max-w-3xl',
 }
 
 export function ConnectDrawer({ open, onClose, title, subtitle, children, footer, width = 'xl' }: ConnectDrawerProps) {
@@ -37,7 +38,7 @@ export function ConnectDrawer({ open, onClose, title, subtitle, children, footer
     <div className="fixed inset-0 z-50 flex justify-end p-0 sm:p-2">
       <button type="button" className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="Fechar painel" />
       <div
-        className={`relative flex h-full w-full max-w-[100vw] flex-col bg-white shadow-2xl ${widthClasses[width]}`}
+        className={`glass-panel-solid relative flex h-full w-full max-w-[100vw] flex-col shadow-2xl ${widthClasses[width]}`}
         role="dialog"
         aria-modal="true"
       >
@@ -50,7 +51,7 @@ export function ConnectDrawer({ open, onClose, title, subtitle, children, footer
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">{children}</div>
+        <div className="scrollbar-glass-inset flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">{children}</div>
         {footer && (
           <div className="border-t border-hub-border px-4 py-4 sm:px-6">
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end [&_button]:w-full sm:[&_button]:w-auto">

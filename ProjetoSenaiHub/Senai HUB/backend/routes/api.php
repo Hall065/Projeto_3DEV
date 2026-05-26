@@ -5,10 +5,14 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Connect\AttendanceController;
 use App\Http\Controllers\Api\Connect\AttendanceManageController;
 use App\Http\Controllers\Api\Connect\ClassController;
+use App\Http\Controllers\Api\Connect\ClassRosterController;
 use App\Http\Controllers\Api\Connect\ContractController;
 use App\Http\Controllers\Api\Connect\CourseController;
+use App\Http\Controllers\Api\Connect\CourseRosterController;
 use App\Http\Controllers\Api\Connect\DashboardController;
 use App\Http\Controllers\Api\Connect\LocationController;
+use App\Http\Controllers\Api\Connect\PersonController;
+use App\Http\Controllers\Api\Connect\ProfileController;
 use App\Http\Controllers\Api\Connect\ReportController;
 use App\Http\Controllers\Api\Connect\SalaryController;
 use App\Http\Controllers\Api\Connect\StudentController;
@@ -44,18 +48,40 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('connect')->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'index']);
 
+        Route::get('/people/{person}/profile', [ProfileController::class, 'person']);
+        Route::get('/people', [PersonController::class, 'index']);
+        Route::post('/people', [PersonController::class, 'store']);
+        Route::put('/people/{person}', [PersonController::class, 'update']);
+        Route::delete('/people/{person}', [PersonController::class, 'destroy']);
+
+        Route::get('/students/{student}/profile', [ProfileController::class, 'student']);
         Route::get('/students', [StudentController::class, 'index']);
         Route::post('/students', [StudentController::class, 'store']);
+        Route::put('/students/{student}', [StudentController::class, 'update']);
+        Route::delete('/students/{student}', [StudentController::class, 'destroy']);
 
+        Route::get('/teachers/{teacher}/profile', [ProfileController::class, 'teacher']);
         Route::get('/teachers', [TeacherController::class, 'index']);
         Route::post('/teachers', [TeacherController::class, 'store']);
+        Route::put('/teachers/{teacher}', [TeacherController::class, 'update']);
+        Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy']);
 
+        Route::get('/classes/{connectClass}/profile', [ProfileController::class, 'classProfile']);
         Route::get('/classes', [ClassController::class, 'index']);
         Route::post('/classes', [ClassController::class, 'store']);
+        Route::put('/classes/{connectClass}', [ClassController::class, 'update']);
+        Route::delete('/classes/{connectClass}', [ClassController::class, 'destroy']);
+        Route::get('/classes/{connectClass}/roster', [ClassRosterController::class, 'index']);
+        Route::post('/classes/{connectClass}/roster', [ClassRosterController::class, 'store']);
+        Route::delete('/classes/{connectClass}/roster/{person}', [ClassRosterController::class, 'destroy']);
 
+        Route::get('/courses/{course}/profile', [ProfileController::class, 'course']);
         Route::get('/courses', [CourseController::class, 'index']);
         Route::post('/courses', [CourseController::class, 'store']);
         Route::put('/courses/{course}', [CourseController::class, 'update']);
+        Route::get('/courses/{course}/roster', [CourseRosterController::class, 'index']);
+        Route::post('/courses/{course}/roster', [CourseRosterController::class, 'store']);
+        Route::delete('/courses/{course}/roster/{person}', [CourseRosterController::class, 'destroy']);
 
         Route::get('/attendance/session', [AttendanceController::class, 'show']);
         Route::post('/attendance/sessions/{session}/marks', [AttendanceController::class, 'saveMarks']);
@@ -66,8 +92,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
         Route::get('/locations', [LocationController::class, 'index']);
 
+        Route::get('/contracts/{contract}/profile', [ProfileController::class, 'contract']);
         Route::get('/contracts', [ContractController::class, 'index']);
         Route::post('/contracts', [ContractController::class, 'store']);
+        Route::put('/contracts/{contract}', [ContractController::class, 'update']);
+        Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
 
         Route::get('/salaries', [SalaryController::class, 'index']);
         Route::post('/salaries/calculate', [SalaryController::class, 'calculate']);

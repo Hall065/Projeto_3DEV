@@ -14,7 +14,9 @@ use App\Models\Connect\ConnectSalaryRecord;
 use App\Models\Connect\ConnectStudent;
 use App\Models\Connect\ConnectStudentLocation;
 use App\Models\Connect\ConnectTeacher;
+use App\Models\HubPerson;
 use App\Models\User;
+use App\Services\Connect\ConnectEnrollmentService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -143,6 +145,16 @@ class ConnectSeeder extends Seeder
                 'end_date' => '2025-12-10',
                 'capacity' => 32,
             ],
+            [
+                'connect_course_id' => $courses[4]->id,
+                'connect_teacher_id' => $teachers[0]->id,
+                'code' => 'TURMA LOG25-01',
+                'name' => 'Turma Logística 2025 - Integrado',
+                'shift' => 'tarde',
+                'start_date' => '2025-02-15',
+                'end_date' => '2025-12-01',
+                'capacity' => 30,
+            ],
         ])->map(fn (array $class) => ConnectClass::query()->updateOrCreate(
             ['code' => $class['code']],
             [...$class, 'status' => 'active'],
@@ -181,13 +193,20 @@ class ConnectSeeder extends Seeder
             ['full_name' => 'André Luiz Figueiredo', 'email' => 'andre.figueiredo@aluno.senai.local', 'registration_number' => '2025INF0016'],
         ];
 
+        $studentNames = array_merge($studentNames, $this->generateExtraStudents($classes));
+
         $students = collect($studentNames)->map(function (array $student, int $index) use ($classes, $mainClass) {
             $class = match (true) {
                 str_contains($student['registration_number'], 'ELE') => $classes[1],
                 str_contains($student['registration_number'], 'MEC') => $classes[2],
                 str_contains($student['registration_number'], 'INF') => $classes[3],
+                str_contains($student['registration_number'], 'LOG') => $classes[4],
                 default => $mainClass,
             };
+
+            $createdAt = $index < 12
+                ? now()->subDays($index % 20)
+                : now()->subMonths(1 + ($index % 4))->subDays($index % 28);
 
             return ConnectStudent::query()->updateOrCreate(
                 ['registration_number' => $student['registration_number']],
@@ -200,47 +219,13 @@ class ConnectSeeder extends Seeder
                     'birth_date' => Carbon::now()->subYears(18 + ($index % 8))->subMonths($index % 12)->format('Y-m-d'),
                     'status' => 'active',
                     'user_id' => $student['user_id'] ?? null,
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
                 ],
             );
         });
 
-        $sessionDates = [
-            now()->subDays(2)->toDateString(),
-            now()->subDays(1)->toDateString(),
-            now()->toDateString(),
-        ];
-
-        foreach ($sessionDates as $dateIndex => $sessionDate) {
-            $session = ConnectAttendanceSession::query()->updateOrCreate(
-                [
-                    'connect_class_id' => $mainClass->id,
-                    'session_date' => $sessionDate,
-                    'subject' => 'Automação de Processos',
-                ],
-                [
-                    'connect_teacher_id' => $mainClass->connect_teacher_id,
-                    'status' => $dateIndex < 2 ? 'closed' : 'open',
-                ],
-            );
-
-            $mainClassStudents = $students->filter(
-                fn (ConnectStudent $student) => $student->connect_class_id === $mainClass->id,
-            );
-
-            foreach ($mainClassStudents as $studentIndex => $student) {
-                $statuses = ['present', 'present', 'present', 'late', 'absent', 'justified'];
-                ConnectAttendanceMark::query()->updateOrCreate(
-                    [
-                        'connect_attendance_session_id' => $session->id,
-                        'connect_student_id' => $student->id,
-                    ],
-                    [
-                        'status' => $statuses[($studentIndex + $dateIndex) % count($statuses)],
-                        'notes' => null,
-                    ],
-                );
-            }
-        }
+        $this->seedAttendanceSessions($classes, $students);
 
         $locations = [
             ['city' => 'São Paulo', 'state' => 'SP', 'lat' => -23.5505, 'lng' => -46.6333, 'status' => 'online'],
@@ -251,7 +236,7 @@ class ConnectSeeder extends Seeder
             ['city' => 'Diadema', 'state' => 'SP', 'lat' => -23.6861, 'lng' => -46.6228, 'status' => 'unknown'],
         ];
 
-        foreach ($students->take(12) as $index => $student) {
+        foreach ($students->take(24) as $index => $student) {
             $location = $locations[$index % count($locations)];
 
             ConnectStudentLocation::query()->updateOrCreate(
@@ -268,7 +253,7 @@ class ConnectSeeder extends Seeder
             );
         }
 
-        foreach ($students->take(8) as $index => $student) {
+        foreach ($students->take(18) as $index => $student) {
             ConnectContract::query()->updateOrCreate(
                 [
                     'connect_student_id' => $student->id,
@@ -284,7 +269,7 @@ class ConnectSeeder extends Seeder
             );
         }
 
-        foreach ($students->take(6) as $index => $student) {
+        foreach ($students->take(14) as $index => $student) {
             ConnectSalaryRecord::query()->updateOrCreate(
                 [
                     'connect_student_id' => $student->id,
@@ -345,8 +330,13 @@ class ConnectSeeder extends Seeder
         ];
 
         foreach ($activities as $activity) {
-            ConnectActivity::query()->create($activity);
+            ConnectActivity::query()->updateOrCreate(
+                ['title' => $activity['title'], 'occurred_at' => $activity['occurred_at']],
+                $activity,
+            );
         }
+
+        $this->seedExtraActivities($classes, $students);
 
         $alerts = [
             [
@@ -376,15 +366,19 @@ class ConnectSeeder extends Seeder
         ];
 
         foreach ($alerts as $alert) {
-            ConnectAlert::query()->create([
-                ...$alert,
-                'is_read' => false,
-            ]);
+            ConnectAlert::query()->updateOrCreate(
+                ['title' => $alert['title']],
+                [...$alert, 'is_read' => false],
+            );
         }
+
+        $this->seedStaffPeople();
+
+        $studentTotal = ConnectStudent::query()->where('status', 'active')->count();
 
         ConnectDashboardMetric::query()->updateOrCreate(
             ['key' => 'kpis'],
-            ['value' => ['total_students' => 2489]],
+            ['value' => ['total_students' => $studentTotal]],
         );
 
         ConnectDashboardMetric::query()->updateOrCreate(
@@ -405,5 +399,253 @@ class ConnectSeeder extends Seeder
                 ],
             ],
         );
+
+        $this->ensureHubPeopleAndRosterLinks();
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, ConnectClass>  $classes
+     * @return list<array{full_name: string, email: string, registration_number: string}>
+     */
+    private function generateExtraStudents(\Illuminate\Support\Collection $classes): array
+    {
+        $firstNames = [
+            'Alexandre', 'Beatriz', 'César', 'Daniela', 'Enzo', 'Fabiana', 'Guilherme', 'Heloísa',
+            'Igor', 'Jéssica', 'Kauã', 'Letícia', 'Marcelo', 'Natália', 'Otávio', 'Paula',
+            'Quésia', 'Ronaldo', 'Sabrina', 'Tatiane', 'Ulisses', 'Valéria', 'Wesley', 'Yasmin', 'Zeca',
+        ];
+        $lastNames = [
+            'Almeida', 'Barbosa', 'Cardoso', 'Dias', 'Esteves', 'Fonseca', 'Gonçalves', 'Henrique',
+            'Ibrahim', 'Junqueira', 'Klein', 'Lacerda', 'Macedo', 'Nery', 'Oliveira', 'Prado',
+        ];
+
+        $prefixByClass = [
+            0 => 'AUT',
+            1 => 'ELE',
+            2 => 'MEC',
+            3 => 'INF',
+            4 => 'LOG',
+        ];
+
+        $extra = [];
+        $seq = 50;
+
+        foreach ($prefixByClass as $classIndex => $prefix) {
+            if (! isset($classes[$classIndex])) {
+                continue;
+            }
+
+            for ($i = 0; $i < 10; $i++) {
+                $first = $firstNames[($classIndex * 3 + $i) % count($firstNames)];
+                $last = $lastNames[($seq + $i) % count($lastNames)];
+                $fullName = "{$first} {$last}";
+                $slug = strtolower(str_replace([' ', 'á', 'é', 'í', 'ó', 'ú', 'ã', 'õ', 'ç'], ['', 'a', 'e', 'i', 'o', 'u', 'a', 'o', 'c'], $first.'.'.$last));
+
+                $extra[] = [
+                    'full_name' => $fullName,
+                    'email' => "{$slug}.{$seq}@aluno.senai.local",
+                    'registration_number' => sprintf('2025%s%04d', $prefix, $seq),
+                ];
+                $seq++;
+            }
+        }
+
+        return $extra;
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, ConnectClass>  $classes
+     * @param  \Illuminate\Support\Collection<int, ConnectStudent>  $students
+     */
+    private function seedAttendanceSessions(\Illuminate\Support\Collection $classes, \Illuminate\Support\Collection $students): void
+    {
+        $subjects = [
+            'Automação de Processos',
+            'Instalações Elétricas',
+            'Usinagem CNC',
+            'Redes Industriais',
+            'Gestão de Estoques',
+            'Segurança do Trabalho',
+        ];
+
+        $statuses = ['present', 'present', 'present', 'late', 'absent', 'justified'];
+
+        foreach ($classes as $classIndex => $class) {
+            for ($day = 0; $day < 7; $day++) {
+                $sessionDate = now()->subDays($day)->toDateString();
+                $subject = $subjects[$classIndex % count($subjects)].' · '.$class->code;
+
+                $session = ConnectAttendanceSession::query()
+                    ->where('connect_class_id', $class->id)
+                    ->whereDate('session_date', $sessionDate)
+                    ->where('subject', $subject)
+                    ->first();
+
+                if ($session === null) {
+                    $session = ConnectAttendanceSession::query()->create([
+                        'connect_class_id' => $class->id,
+                        'session_date' => $sessionDate,
+                        'subject' => $subject,
+                        'connect_teacher_id' => $class->connect_teacher_id,
+                        'status' => $day === 0 ? 'open' : 'closed',
+                    ]);
+                } else {
+                    $session->update([
+                        'connect_teacher_id' => $class->connect_teacher_id,
+                        'status' => $day === 0 ? 'open' : 'closed',
+                    ]);
+                }
+
+                $classStudents = $students->filter(
+                    fn (ConnectStudent $student) => $student->connect_class_id === $class->id,
+                );
+
+                foreach ($classStudents as $studentIndex => $student) {
+                    ConnectAttendanceMark::query()->updateOrCreate(
+                        [
+                            'connect_attendance_session_id' => $session->id,
+                            'connect_student_id' => $student->id,
+                        ],
+                        [
+                            'status' => $statuses[($studentIndex + $day + $classIndex) % count($statuses)],
+                            'notes' => null,
+                        ],
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, ConnectClass>  $classes
+     * @param  \Illuminate\Support\Collection<int, ConnectStudent>  $students
+     */
+    private function seedExtraActivities(\Illuminate\Support\Collection $classes, \Illuminate\Support\Collection $students): void
+    {
+        $samples = [
+            [
+                'title' => 'Turma criada',
+                'description' => 'Nova turma '.$classes->last()?->code.' disponível para matrículas.',
+                'type' => 'cadastro',
+                'entity_type' => 'class',
+                'performed_by' => 'Administrador SENAI',
+                'occurred_at' => now()->subHours(8),
+            ],
+            [
+                'title' => 'Matrícula em lote',
+                'description' => $students->count().' alunos ativos no Connect após sincronização.',
+                'type' => 'cadastro',
+                'entity_type' => 'student',
+                'performed_by' => 'Sistema',
+                'occurred_at' => now()->subHours(12),
+            ],
+            [
+                'title' => 'Chamada semanal',
+                'description' => 'Frequência registrada em '.$classes->count().' turmas nos últimos 7 dias.',
+                'type' => 'attendance',
+                'entity_type' => 'class',
+                'performed_by' => 'Beatriz Alves Ferreira',
+                'occurred_at' => now()->subHours(18),
+            ],
+        ];
+
+        foreach ($samples as $activity) {
+            ConnectActivity::query()->updateOrCreate(
+                ['title' => $activity['title']],
+                $activity,
+            );
+        }
+    }
+
+    private function seedStaffPeople(): void
+    {
+        $staff = [
+            [
+                'kind' => 'staff',
+                'full_name' => 'Ana Souza',
+                'email' => 'ana.grid@senai.local',
+                'phone' => '(11) 98888-1001',
+                'specialty' => 'Secretaria acadêmica',
+                'registration_number' => 'FUNC-0001',
+            ],
+            [
+                'kind' => 'staff',
+                'full_name' => 'Roberto Nunes',
+                'email' => 'roberto.nunes@senai.local',
+                'phone' => '(11) 98888-1002',
+                'specialty' => 'Coordenação pedagógica',
+                'registration_number' => 'FUNC-0002',
+            ],
+            [
+                'kind' => 'staff',
+                'full_name' => 'Cláudia Mendes',
+                'email' => 'claudia.mendes@senai.local',
+                'phone' => '(11) 98888-1003',
+                'specialty' => 'RH / Estágios',
+                'registration_number' => 'FUNC-0003',
+            ],
+            [
+                'kind' => 'other',
+                'full_name' => 'Parceiro Indústria ABC',
+                'email' => 'contato@industriaabc.com.br',
+                'phone' => '(11) 4000-2000',
+                'specialty' => 'Empresa conveniada',
+                'registration_number' => 'EXT-0001',
+            ],
+        ];
+
+        foreach ($staff as $person) {
+            HubPerson::query()->updateOrCreate(
+                ['email' => $person['email']],
+                [...$person, 'status' => 'active'],
+            );
+        }
+    }
+
+    private function ensureHubPeopleAndRosterLinks(): void
+    {
+        foreach (ConnectTeacher::query()->whereNull('hub_person_id')->cursor() as $teacher) {
+            $person = HubPerson::query()->create([
+                'kind' => 'teacher',
+                'user_id' => $teacher->user_id,
+                'full_name' => $teacher->full_name,
+                'cpf' => $teacher->cpf,
+                'registration_number' => null,
+                'email' => $teacher->email,
+                'phone' => $teacher->phone,
+                'birth_date' => null,
+                'specialty' => $teacher->specialty,
+                'status' => $teacher->status,
+            ]);
+            $teacher->forceFill(['hub_person_id' => $person->id])->save();
+        }
+
+        foreach (ConnectStudent::query()->whereNull('hub_person_id')->cursor() as $student) {
+            $person = HubPerson::query()->create([
+                'kind' => 'student',
+                'user_id' => $student->user_id,
+                'full_name' => $student->full_name,
+                'cpf' => $student->cpf,
+                'registration_number' => $student->registration_number,
+                'email' => $student->email,
+                'phone' => $student->phone,
+                'birth_date' => $student->birth_date,
+                'specialty' => null,
+                'status' => $student->status,
+            ]);
+            $student->forceFill(['hub_person_id' => $person->id])->save();
+        }
+
+        $enrollment = app(ConnectEnrollmentService::class);
+
+        foreach (ConnectStudent::query()->with('hubPerson')->cursor() as $student) {
+            if ($student->hubPerson) {
+                $enrollment->syncPivotsForStudent($student);
+            }
+        }
+
+        foreach (ConnectClass::query()->cursor() as $class) {
+            $enrollment->syncTeacherCourseFromClass($class);
+        }
     }
 }

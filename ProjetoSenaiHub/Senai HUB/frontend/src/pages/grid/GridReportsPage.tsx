@@ -92,7 +92,7 @@ export function GridReportsPage() {
               {months.map((m, i) => (
                 <div key={m} className="flex flex-1 flex-col items-center gap-2">
                   <div
-                    className="w-full max-w-[40px] rounded-t-lg bg-blue-500 transition-all"
+                    className="w-full max-w-[40px] rounded-t-lg bg-hub-navy transition-all"
                     style={{ height: `${barHeights[i]}%` }}
                   />
                   <span className="text-[10px] text-hub-text-muted">{m}</span>
@@ -117,7 +117,7 @@ export function GridReportsPage() {
           ) : (
             <div className="flex h-44 items-end gap-1">
               {barHeights.map((h, i) => (
-                <div key={i} className="flex-1 rounded-t bg-blue-400/80" style={{ height: `${h}%` }} />
+                <div key={i} className="flex-1 rounded-t bg-hub-navy/80" style={{ height: `${h}%` }} />
               ))}
             </div>
           )}

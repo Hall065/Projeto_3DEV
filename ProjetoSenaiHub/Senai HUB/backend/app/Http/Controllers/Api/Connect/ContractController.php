@@ -15,7 +15,7 @@ class ContractController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = ConnectContract::query()
-            ->with(['student.connectClass'])
+            ->with(['student.hubPerson', 'student.connectClass'])
             ->orderByDesc('start_date');
 
         if ($request->filled('connect_student_id')) {
@@ -69,5 +69,33 @@ class ContractController extends Controller
             'data' => new ConnectContractResource($contract),
             'message' => 'Contrato cadastrado com sucesso.',
         ], 201);
+    }
+
+    public function update(Request $request, ConnectContract $contract): JsonResponse
+    {
+        $validated = $request->validate([
+            'connect_student_id' => ['sometimes', 'exists:connect_students,id'],
+            'contract_type' => ['sometimes', Rule::in(['estagio', 'aprendizagem', 'clt', 'temporario'])],
+            'start_date' => ['sometimes', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'monthly_value' => ['nullable', 'numeric', 'min:0'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', Rule::in(['active', 'inactive', 'finished'])],
+        ]);
+
+        $contract->update($validated);
+        $contract->load('student.connectClass');
+
+        return response()->json([
+            'data' => new ConnectContractResource($contract),
+            'message' => 'Contrato atualizado com sucesso.',
+        ]);
+    }
+
+    public function destroy(ConnectContract $contract): JsonResponse
+    {
+        $contract->delete();
+
+        return response()->json(['message' => 'Contrato excluído com sucesso.']);
     }
 }

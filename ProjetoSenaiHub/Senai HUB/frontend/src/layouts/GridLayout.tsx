@@ -39,7 +39,7 @@ export function GridLayout() {
         onMobileClose={() => setMobileNavOpen(false)}
       />
 
-      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="relative z-50 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <GridHeader
           collapsed={collapsed}
           onToggleSidebar={() => {
@@ -51,7 +51,7 @@ export function GridLayout() {
           }}
           isMobileNavOpen={mobileNavOpen}
         />
-        <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <main className="scrollbar-app-main relative z-0 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1600px] min-w-0">
             <Outlet />
           </div>

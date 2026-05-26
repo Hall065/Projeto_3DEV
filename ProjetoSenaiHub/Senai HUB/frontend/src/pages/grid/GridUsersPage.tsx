@@ -1,6 +1,9 @@
-import { Eye, Filter, Pencil, Plus, Trash2, UserPlus, Users } from 'lucide-react'
+import { Filter, Pencil, Plus, Trash2, UserPlus, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -29,6 +32,7 @@ export function GridUsersPage() {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [viewSnapshot, setViewSnapshot] = useState<GridUser | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -132,12 +136,26 @@ export function GridUsersPage() {
                         <StatusBadge status={u.status} />
                       </td>
                       <td className="px-4 py-3">{u.cpf}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2">
-                          <Eye className="h-4 w-4 text-hub-text-muted" />
-                          <Pencil className="h-4 w-4 text-hub-text-muted" />
-                          <Trash2 className="h-4 w-4 text-hub-text-muted" />
-                        </div>
+                      <td className="px-4 py-3 text-right">
+                        <ConnectRowActionsMenu
+                          ariaLabel={`Ações de ${u.name}`}
+                          actions={[
+                            viewRowAction(() => setViewSnapshot(u)),
+                            {
+                              key: 'edit',
+                              label: 'Editar',
+                              icon: Pencil,
+                              onClick: () => window.alert(`Edição de "${u.name}" será disponibilizada em breve.`),
+                            },
+                            {
+                              key: 'delete',
+                              label: 'Excluir',
+                              icon: Trash2,
+                              variant: 'danger',
+                              onClick: () => window.alert(`Exclusão de "${u.name}" será disponibilizada em breve.`),
+                            },
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -201,6 +219,14 @@ export function GridUsersPage() {
           </FormField>
         </div>
       </ConnectDrawer>
+
+      <ConnectEntityViewDrawer
+        kind="grid-user"
+        entityId={null}
+        open={viewSnapshot !== null}
+        onClose={() => setViewSnapshot(null)}
+        snapshot={viewSnapshot ?? undefined}
+      />
     </div>
   )
 }

@@ -2,9 +2,11 @@
 
 namespace App\Models\Connect;
 
+use App\Models\HubPerson;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
@@ -50,5 +52,14 @@ class ConnectClass extends Model
     public function attendanceSessions(): HasMany
     {
         return $this->hasMany(ConnectAttendanceSession::class, 'connect_class_id');
+    }
+
+    /** Matrículas na turma (via cadastro global hub_people). */
+    /** @return BelongsToMany<HubPerson, $this> */
+    public function enrolledPeople(): BelongsToMany
+    {
+        return $this->belongsToMany(HubPerson::class, 'connect_class_hub_person', 'connect_class_id', 'hub_person_id')
+            ->withPivot(['role', 'status', 'joined_at'])
+            ->withTimestamps();
     }
 }

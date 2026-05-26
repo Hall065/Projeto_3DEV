@@ -13,7 +13,7 @@ class LocationController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = ConnectStudentLocation::query()
-            ->with(['student.connectClass'])
+            ->with(['student.hubPerson', 'student.connectClass'])
             ->orderByDesc('last_seen_at');
 
         if ($request->filled('status')) {
@@ -22,8 +22,7 @@ class LocationController extends Controller
 
         if ($search = $request->string('search')->trim()->toString()) {
             $query->whereHas('student', function ($builder) use ($search): void {
-                $builder->where('full_name', 'like', "%{$search}%")
-                    ->orWhere('registration_number', 'like', "%{$search}%");
+                $builder->whereProfileMatches($search, ['full_name', 'registration_number', 'cpf']);
             });
         }
 

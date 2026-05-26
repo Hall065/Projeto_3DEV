@@ -1,6 +1,10 @@
-﻿import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -19,6 +23,8 @@ import {
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import type { ConnectClass, ConnectCourse, ConnectTeacher, PaginatedMeta } from '../../types/connect'
+import { confirmDelete } from '../../utils/confirmAction'
+import { optionalForeignIdOrNull, slugClassCode } from '../../utils/connectForm'
 
 const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const emptyForm = {
@@ -35,6 +41,7 @@ const emptyForm = {
 }
 
 export function ClassesPage() {
+  const navigate = useNavigate()
   const [classes, setClasses] = useState<ConnectClass[]>([])
   const [courses, setCourses] = useState<ConnectCourse[]>([])
   const [teachers, setTeachers] = useState<ConnectTeacher[]>([])
@@ -43,6 +50,8 @@ export function ClassesPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [viewId, setViewId] = useState<number | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyForm)
 
   const load = () => {
@@ -66,24 +75,63 @@ export function ClassesPage() {
   }, [])
 
   const openCreate = () => {
+    setEditingId(null)
     setForm(emptyForm)
     setDrawerOpen(true)
   }
 
-  const handleCreate = async () => {
-    await connectService.createClass({
-      name: form.name,
-      connect_course_id: Number(form.connect_course_id),
-      connect_teacher_id: form.connect_teacher_id ? Number(form.connect_teacher_id) : undefined,
-      shift: form.shift,
-      start_date: form.start_date,
-      end_date: form.end_date,
-      capacity: Number(form.capacity),
-      status: form.status,
-      code: form.name.replace(/\s+/g, '-').toUpperCase(),
+  const openEdit = (turma: ConnectClass) => {
+    setEditingId(turma.id)
+    setForm({
+      name: turma.name,
+      connect_course_id: String(turma.connect_course_id ?? turma.course?.id ?? ''),
+      connect_teacher_id: String(turma.connect_teacher_id ?? turma.teacher?.id ?? ''),
+      shift: turma.shift ?? 'noite',
+      start_date: turma.start_date?.slice(0, 10) ?? '',
+      end_date: turma.end_date?.slice(0, 10) ?? '',
+      capacity: String(turma.capacity ?? 30),
+      status: turma.status ?? 'active',
+      schedule: '',
+      description: '',
     })
+    setDrawerOpen(true)
+  }
+
+  const handleSave = async () => {
+    if (!form.name.trim()) {
+      window.alert('Informe o nome da turma.')
+      return
+    }
+
+    const payload: Record<string, unknown> = {
+      name: form.name.trim(),
+      connect_course_id: optionalForeignIdOrNull(form.connect_course_id),
+      connect_teacher_id: optionalForeignIdOrNull(form.connect_teacher_id),
+      shift: form.shift,
+      start_date: form.start_date || null,
+      end_date: form.end_date || null,
+      capacity: Number(form.capacity) || 30,
+      status: form.status,
+      code: slugClassCode(form.name),
+    }
+    if (editingId) {
+      await connectService.updateClass(editingId, payload)
+    } else {
+      await connectService.createClass(payload)
+    }
     setDrawerOpen(false)
+    setEditingId(null)
     load()
+  }
+
+  const handleDelete = async (turma: ConnectClass) => {
+    if (!confirmDelete(`a turma "${turma.name}"`)) return
+    try {
+      await connectService.deleteClass(turma.id)
+      load()
+    } catch {
+      window.alert('Não foi possível excluir a turma. Verifique se há alunos matriculados.')
+    }
   }
 
   return (
@@ -114,7 +162,7 @@ export function ClassesPage() {
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[720px] text-sm">
-            <thead className="bg-hub-bg/60 text-hub-text-muted">
+            <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3 text-left">Nome da turma</th>
                 <th className="px-4 py-3 text-left">Curso</th>
@@ -138,11 +186,27 @@ export function ClassesPage() {
                   <td className="px-4 py-3">
                     <StatusBadge status={turma.status} />
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <Pencil className="h-4 w-4 text-hub-text-muted" />
-                      <Trash2 className="h-4 w-4 text-hub-text-muted" />
-                    </div>
+                  <td className="px-4 py-3 text-right">
+                    <ConnectRowActionsMenu
+                      ariaLabel={`Ações da turma ${turma.name}`}
+                      actions={[
+                        viewRowAction(() => setViewId(turma.id)),
+                        {
+                          key: 'students',
+                          label: 'Ver alunos',
+                          icon: Users,
+                          onClick: () => navigate(`/connect/alunos?class=${turma.id}`),
+                        },
+                        { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(turma) },
+                        {
+                          key: 'delete',
+                          label: 'Excluir',
+                          icon: Trash2,
+                          variant: 'danger',
+                          onClick: () => void handleDelete(turma),
+                        },
+                      ]}
+                    />
                   </td>
                 </tr>
               ))}
@@ -156,14 +220,21 @@ export function ClassesPage() {
 
       <ConnectDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        title="Cadastrar nova turma"
-        subtitle="Preencha os dados para criar uma nova turma."
+        onClose={() => {
+          setDrawerOpen(false)
+          setEditingId(null)
+        }}
+        title={editingId ? 'Editar turma' : 'Cadastrar nova turma'}
+        subtitle={
+          editingId
+            ? 'Curso, professor e datas são opcionais — vincule quando quiser.'
+            : 'Apenas o nome é obrigatório. Curso, professor e alunos podem ser definidos depois.'
+        }
         footer={
           <div className="flex justify-end gap-2">
             <OutlineButton onClick={() => setForm(emptyForm)}>Limpar Campos</OutlineButton>
             <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
-            <PrimaryButton onClick={handleCreate}>Criar</PrimaryButton>
+            <PrimaryButton onClick={() => void handleSave()}>{editingId ? 'Salvar' : 'Criar'}</PrimaryButton>
           </div>
         }
       >
@@ -176,26 +247,26 @@ export function ClassesPage() {
               placeholder="Ex: TURMA AUT25-02"
             />
           </FormField>
-          <FormField label="Período" required>
+          <FormField label="Período">
             <select className={selectClass} value={form.shift} onChange={(e) => setForm({ ...form, shift: e.target.value })}>
               <option value="manha">Manhã</option>
               <option value="tarde">Tarde</option>
               <option value="noite">Noite</option>
             </select>
           </FormField>
-          <FormField label="Data de início" required hint="Clique para abrir o calendário">
+          <FormField label="Data de início" hint="Opcional">
             <input type="date" className={inputClass} value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
           </FormField>
-          <FormField label="Data de término" required hint="Clique para abrir o calendário">
+          <FormField label="Data de término" hint="Opcional">
             <input type="date" className={inputClass} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
           </FormField>
-          <FormField label="Status" required>
+          <FormField label="Status">
             <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
               <option value="active">Ativa</option>
               <option value="inactive">Inativa</option>
             </select>
           </FormField>
-          <FormField label="Quantidade de alunos" required>
+          <FormField label="Capacidade máxima" hint="Opcional">
             <input
               type="number"
               className={inputClass}
@@ -208,9 +279,9 @@ export function ClassesPage() {
           <FormField label="Complemento do período (horário)">
             <input className={inputClass} value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} placeholder="Ex: 19h00 - 22h30" />
           </FormField>
-          <FormField label="Professor responsável" required>
+          <FormField label="Professor responsável" hint="Opcional — vincule depois">
             <select className={selectClass} value={form.connect_teacher_id} onChange={(e) => setForm({ ...form, connect_teacher_id: e.target.value })}>
-              <option value="">Selecione o professor</option>
+              <option value="">Sem professor (definir depois)</option>
               {teachers.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.full_name}
@@ -218,9 +289,9 @@ export function ClassesPage() {
               ))}
             </select>
           </FormField>
-          <FormField label="Curso" required>
+          <FormField label="Curso" hint="Opcional — vincule depois">
             <select className={selectClass} value={form.connect_course_id} onChange={(e) => setForm({ ...form, connect_course_id: e.target.value })}>
-              <option value="">Selecione o curso</option>
+              <option value="">Sem curso (definir depois)</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -246,6 +317,13 @@ export function ClassesPage() {
           </div>
         </FormField>
       </ConnectDrawer>
+
+      <ConnectEntityViewDrawer
+        kind="class"
+        entityId={viewId}
+        open={viewId !== null}
+        onClose={() => setViewId(null)}
+      />
     </div>
   )
 }

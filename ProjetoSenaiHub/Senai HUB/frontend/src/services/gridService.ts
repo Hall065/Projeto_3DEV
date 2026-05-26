@@ -155,7 +155,7 @@ export const gridService = {
       },
       recent_tickets: tickets,
       maintenance_breakdown: [
-        { label: 'Preventiva', value: 38, color: '#3b82f6' },
+        { label: 'Preventiva', value: 38, color: '#021a3a' },
         { label: 'Corretiva', value: 32, color: '#e30613' },
         { label: 'Preditiva', value: 18, color: '#22c55e' },
         { label: 'Outros', value: 12, color: '#94a3b8' },

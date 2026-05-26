@@ -13,7 +13,7 @@ class AttendanceManageController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = ConnectAttendanceSession::query()
-            ->with(['connectClass.course', 'teacher', 'marks'])
+            ->with(['connectClass.course', 'teacher.hubPerson', 'connectClass.teacher.hubPerson', 'marks.student.hubPerson'])
             ->withCount('marks')
             ->orderByDesc('session_date');
 

@@ -18,7 +18,7 @@ export function AuthSidebar() {
   }, [supportOpen])
 
   return (
-    <aside className="relative flex min-h-screen w-[34%] min-w-[300px] max-w-[440px] flex-col items-center justify-start bg-hub-navy px-10 py-10 text-white">
+    <aside className="hub-chrome-sidebar relative flex min-h-screen w-[34%] min-w-[300px] max-w-[440px] flex-col items-center justify-start px-10 py-10 text-white">
       <img
         src={logoSenaiHub}
         alt="SENAI HUB"

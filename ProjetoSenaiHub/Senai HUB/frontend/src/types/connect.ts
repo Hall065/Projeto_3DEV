@@ -12,6 +12,41 @@ export interface PaginatedResponse<T> {
   meta: PaginatedMeta
 }
 
+export type HubPersonKind = 'student' | 'teacher' | 'staff' | 'other'
+
+export type CourseRosterRole = 'student' | 'teacher' | 'coordinator'
+
+export interface HubPersonPivot {
+  role?: CourseRosterRole | 'student'
+  status?: string
+  enrolled_at?: string | null
+  joined_at?: string | null
+}
+
+export interface HubPerson {
+  id: number
+  kind: HubPersonKind
+  user_id?: number | null
+  full_name: string
+  cpf?: string | null
+  registration_number?: string | null
+  email?: string | null
+  phone?: string | null
+  birth_date?: string | null
+  specialty?: string | null
+  status: string
+  pivot?: HubPersonPivot
+  created_at?: string
+}
+
+export interface CourseRoster {
+  course_id: number
+  course_name: string
+  students: HubPerson[]
+  teachers: HubPerson[]
+  coordinators: HubPerson[]
+}
+
 export interface ConnectCourse {
   id: number
   code: string
@@ -25,15 +60,21 @@ export interface ConnectCourse {
 
 export interface ConnectTeacher {
   id: number
+  hub_person_id?: number | null
+  hub_person?: HubPerson
   full_name: string
   email: string
   specialty?: string
+  cpf?: string
+  phone?: string
   status: string
   classes_count?: number
 }
 
 export interface ConnectClass {
   id: number
+  connect_course_id?: number
+  connect_teacher_id?: number | null
   code: string
   name: string
   shift?: string
@@ -48,6 +89,9 @@ export interface ConnectClass {
 
 export interface ConnectStudent {
   id: number
+  hub_person_id?: number | null
+  connect_class_id?: number | null
+  hub_person?: HubPerson
   full_name: string
   cpf?: string
   registration_number?: string
@@ -147,6 +191,15 @@ export interface KpiTrend {
   label: string
 }
 
+export interface DashboardKpiSparklines {
+  students: number[]
+  teachers: number[]
+  classes: number[]
+  courses: number[]
+  attendance: number[]
+  contracts: number[]
+}
+
 export interface DashboardData {
   kpis: {
     total_students: number
@@ -157,7 +210,8 @@ export interface DashboardData {
     attendance_rate: number
     pending_alerts: number
   }
-  kpi_trends: {
+  kpi_sparklines?: DashboardKpiSparklines
+  kpi_trends?: {
     students: KpiTrend
     teachers: KpiTrend
     classes: KpiTrend

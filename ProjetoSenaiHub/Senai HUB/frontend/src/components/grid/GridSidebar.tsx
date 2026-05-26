@@ -54,7 +54,7 @@ export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: Gr
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex h-[100dvh] max-h-screen shrink-0 flex-col bg-hub-navy text-white transition-all duration-300 lg:sticky lg:top-0 lg:z-auto lg:h-screen ${
+      className={`hub-chrome-sidebar fixed inset-y-0 left-0 z-40 flex h-[100dvh] max-h-screen shrink-0 flex-col text-white transition-all duration-300 lg:sticky lg:top-0 lg:z-30 lg:h-screen ${
         mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } ${isCollapsed ? 'w-[88px] px-4 lg:w-[88px]' : 'w-[85vw] max-w-[280px] px-6 lg:w-[280px]'} py-6 sm:py-8`}
     >
@@ -83,7 +83,7 @@ export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: Gr
         )}
       </div>
 
-      <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain pr-1">
+      <nav className="scrollbar-sidebar-navy flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain pr-1">
         {mainNav.map((item) => (
           <NavLink
             key={item.to}

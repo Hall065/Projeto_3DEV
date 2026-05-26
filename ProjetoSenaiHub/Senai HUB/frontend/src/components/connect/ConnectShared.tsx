@@ -1,4 +1,5 @@
-﻿import type { LucideIcon } from 'lucide-react'
+import type { CSSProperties } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import { ChevronLeft, ChevronRight, Minus, TrendingDown, TrendingUp } from 'lucide-react'
 
 export const EMPTY = '-'
@@ -32,7 +33,7 @@ export function ConnectPageHeader({
 /** Envolve tabelas para scroll horizontal em telas pequenas */
 export function ConnectTableScroll({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full min-w-0 overflow-x-auto">
+    <div className="scrollbar-minimal-x w-full min-w-0 overflow-x-auto">
       <div className="inline-block min-w-full align-middle">{children}</div>
     </div>
   )
@@ -66,7 +67,7 @@ export function ConnectLoadingSpinner({
 }
 
 export function ConnectCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-2xl border border-hub-border/60 bg-white shadow-sm ${className}`}>{children}</div>
+  return <div className={`glass-panel rounded-2xl ${className}`}>{children}</div>
 }
 
 export function StatusBadge({ status }: { status: string }) {
@@ -93,13 +94,13 @@ export function StatusBadge({ status }: { status: string }) {
   return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${classes}`}>{label}</span>
 }
 
-function TrendIndicator({ trend }: { trend: KpiTrend }) {
+function TrendIndicator({ trend, className = '' }: { trend: KpiTrend; className?: string }) {
   const Icon = trend.direction === 'up' ? TrendingUp : trend.direction === 'down' ? TrendingDown : Minus
   const color =
     trend.direction === 'up' ? 'text-emerald-600' : trend.direction === 'down' ? 'text-red-600' : 'text-hub-text-muted'
 
   return (
-    <p className={`mt-2 flex items-center gap-1 text-xs font-medium ${color}`}>
+    <p className={`mt-1.5 flex items-center gap-1 text-[11px] font-medium sm:text-xs ${color} ${className}`}>
       <Icon className="h-3.5 w-3.5 shrink-0" />
       <span>
         {trend.value} {trend.label}
@@ -108,26 +109,119 @@ function TrendIndicator({ trend }: { trend: KpiTrend }) {
   )
 }
 
-export function KpiCard({
+export type ConnectAccent = 'navy' | 'red'
+
+/** Ícone de fundo visível (neutro), sumindo da esquerda para a direita */
+export const accentWatermarkMask: CSSProperties = {
+  WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.45) 48%, transparent 100%)',
+  maskImage: 'linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.45) 48%, transparent 100%)',
+}
+
+function accentStyles(accent: ConnectAccent) {
+  return accent === 'red'
+    ? {
+        stripe: 'bg-hub-red',
+        glow: 'bg-[radial-gradient(ellipse_110%_90%_at_0%_50%,rgba(227,6,19,0.16),transparent_58%)]',
+        wash: 'bg-gradient-to-r from-hub-red/[0.07] via-transparent to-transparent',
+      }
+    : {
+        stripe: 'bg-hub-navy',
+        glow: 'bg-[radial-gradient(ellipse_110%_90%_at_0%_50%,rgba(2,26,58,0.14),transparent_58%)]',
+        wash: 'bg-gradient-to-r from-hub-navy/[0.08] via-transparent to-transparent',
+      }
+}
+
+/** Card com faixa colorida SENAI; ícone neutro em watermark (cor fica no card, não no ícone) */
+export function ConnectAccentCard({
+  accent = 'navy',
   icon: Icon,
+  children,
+  className = '',
+  watermark = 'md',
+}: {
+  accent?: ConnectAccent
+  icon: LucideIcon
+  children: React.ReactNode
+  className?: string
+  /** md = KPI; lg = cards de curso (ícone maior) */
+  watermark?: 'md' | 'lg'
+}) {
+  const styles = accentStyles(accent)
+  const watermarkBox =
+    watermark === 'lg'
+      ? 'h-[150px] w-[62%] max-w-[220px] sm:h-[148px]'
+      : 'h-[132px] w-[55%] max-w-[190px] sm:h-[128px]'
+  const watermarkIcon =
+    watermark === 'lg'
+      ? 'h-[125%] min-h-[118px] sm:min-h-[120px]'
+      : 'h-[118%] min-h-[104px] sm:min-h-[112px]'
+
+  return (
+    <ConnectCard
+      className={`relative isolate overflow-hidden border-hub-border/50 ${className}`}
+    >
+      <div className={`absolute inset-y-0 left-0 z-0 w-1 ${styles.stripe}`} aria-hidden />
+      <div className={`pointer-events-none absolute inset-0 z-0 ${styles.glow}`} aria-hidden />
+      <div className={`pointer-events-none absolute inset-0 z-0 ${styles.wash}`} aria-hidden />
+      <div
+        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-br from-white via-white to-hub-bg/30"
+        aria-hidden
+      />
+      <div
+        className={`pointer-events-none absolute -bottom-3 left-0 z-0 flex items-end justify-start ${watermarkBox}`}
+        style={accentWatermarkMask}
+        aria-hidden
+      >
+        <Icon
+          className={`${watermarkIcon} w-auto -translate-x-1 text-slate-400/55`}
+          strokeWidth={1.15}
+        />
+      </div>
+      <div className="relative z-[1] min-w-0">{children}</div>
+    </ConnectCard>
+  )
+}
+
+export function KpiCard({
+  icon,
   label,
   value,
   trend,
+  accent = 'navy',
 }: {
   icon: LucideIcon
   label: string
   value: string | number
   trend?: KpiTrend
+  accent?: ConnectAccent
 }) {
   return (
-    <ConnectCard className="p-5">
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-hub-bg text-hub-navy">
-        <Icon className="h-5 w-5" />
+    <ConnectAccentCard accent={accent} icon={icon} className="min-h-[120px] p-4 sm:min-h-[118px] sm:p-4">
+      <div className="pl-2 sm:pl-3">
+        <p className="text-xs font-medium leading-snug text-hub-text-muted sm:text-[13px]">{label}</p>
+        <p className="mt-0.5 text-2xl font-bold tracking-tight text-hub-navy sm:text-[1.65rem]">{value}</p>
+        {trend && <TrendIndicator trend={trend} />}
       </div>
-      <p className="text-sm text-hub-text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-hub-navy">{value}</p>
-      {trend && <TrendIndicator trend={trend} />}
-    </ConnectCard>
+    </ConnectAccentCard>
+  )
+}
+
+export function ConnectAccentCardSkeleton({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`relative isolate min-h-[120px] animate-pulse overflow-hidden rounded-2xl border border-hub-border/50 bg-gradient-to-br from-white to-hub-bg/40 shadow-sm sm:min-h-[118px] ${className}`}
+    >
+      <div className="absolute inset-y-0 left-0 w-1 bg-hub-border/80" />
+      <div
+        className="pointer-events-none absolute -bottom-2 left-2 h-24 w-24 rounded-full bg-slate-200/40"
+        aria-hidden
+      />
+      <div className="relative z-[1] p-4 pl-5">
+        <div className="mb-2 h-3 w-[72%] max-w-[160px] rounded bg-hub-bg" />
+        <div className="h-8 w-24 max-w-[45%] rounded bg-hub-bg/90" />
+        <div className="mt-2 h-2.5 w-[55%] rounded bg-hub-bg/70" />
+      </div>
+    </div>
   )
 }
 
@@ -203,7 +297,7 @@ export function FormField({
 }
 
 export const inputClass =
-  'h-11 w-full rounded-xl border border-hub-border bg-white px-3 text-sm text-hub-text placeholder:text-hub-text-muted/70 outline-none transition focus:border-hub-red focus:ring-2 focus:ring-hub-red/15'
+  'glass-input h-11 w-full rounded-xl px-3 text-sm text-hub-text placeholder:text-hub-text-muted/70 outline-none transition focus:border-hub-red focus:ring-2 focus:ring-hub-red/15'
 
 export const selectClass = inputClass
 
@@ -246,7 +340,7 @@ export function OutlineButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-hub-border bg-white px-5 text-sm font-medium text-hub-text transition hover:bg-hub-bg disabled:opacity-60"
+      className="glass-input inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium text-hub-text transition hover:bg-white/60 disabled:opacity-60"
     >
       {children}
     </button>

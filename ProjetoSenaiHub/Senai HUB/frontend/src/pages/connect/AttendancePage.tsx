@@ -1,4 +1,4 @@
-﻿import { Download, Pencil, Save } from 'lucide-react'
+import { Download, Pencil, Save } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
   ConnectCard,
@@ -146,7 +146,7 @@ export function AttendancePage() {
         ) : (
         <ConnectTableScroll>
           <table className="w-full min-w-[560px] text-sm">
-            <thead className="bg-hub-bg/60 text-hub-text-muted">
+            <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3 text-left">No</th>
                 <th className="px-4 py-3 text-left">Aluno</th>

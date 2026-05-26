@@ -1,5 +1,8 @@
-﻿import { Download, MoreVertical } from 'lucide-react'
+import { Calculator, Download } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -26,6 +29,7 @@ export function SalaryPage() {
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
   const [result, setResult] = useState<SalaryCalculationResult | null>(null)
   const [loading, setLoading] = useState(true)
+  const [viewSnapshot, setViewSnapshot] = useState<ConnectSalaryRecord | null>(null)
 
   const loadRecords = () => {
     setLoading(true)
@@ -171,7 +175,7 @@ export function SalaryPage() {
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-hub-bg/60 text-hub-text-muted">
+            <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3 text-left">Aluno</th>
                 <th className="px-4 py-3 text-left">Curso</th>
@@ -196,8 +200,40 @@ export function SalaryPage() {
                   <td className="px-4 py-3">
                     <StatusBadge status={record.status} />
                   </td>
-                  <td className="px-4 py-3">
-                    <MoreVertical className="h-4 w-4" />
+                  <td className="px-4 py-3 text-right">
+                    <ConnectRowActionsMenu
+                      ariaLabel={`Ações do salário de ${record.student?.full_name ?? 'aluno'}`}
+                      actions={[
+                        viewRowAction(() => setViewSnapshot(record)),
+                        {
+                          key: 'recalc',
+                          label: 'Recalcular',
+                          icon: Calculator,
+                          onClick: () => {
+                            if (record.connect_student_id) {
+                              setSelectedStudent(String(record.connect_student_id))
+                              setMonth(record.reference_month?.slice(0, 7) ?? month)
+                              setResult(null)
+                            }
+                          },
+                        },
+                        {
+                          key: 'export',
+                          label: 'Exportar linha',
+                          icon: Download,
+                          onClick: () => {
+                            const line = [
+                              record.student?.full_name,
+                              record.student?.class?.course?.name,
+                              record.base_amount,
+                              record.net_amount,
+                              record.status,
+                            ].join(';')
+                            void navigator.clipboard?.writeText(line)
+                          },
+                        },
+                      ]}
+                    />
                   </td>
                 </tr>
               ))}
@@ -208,6 +244,14 @@ export function SalaryPage() {
         </>
         )}
       </ConnectCard>
+
+      <ConnectEntityViewDrawer
+        kind="salary"
+        entityId={null}
+        open={viewSnapshot !== null}
+        onClose={() => setViewSnapshot(null)}
+        snapshot={viewSnapshot ?? undefined}
+      />
     </div>
   )
 }

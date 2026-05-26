@@ -18,7 +18,7 @@ class SalaryController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = ConnectSalaryRecord::query()
-            ->with(['student.connectClass'])
+            ->with(['student.hubPerson', 'student.connectClass'])
             ->orderByDesc('reference_month');
 
         if ($request->filled('connect_student_id')) {

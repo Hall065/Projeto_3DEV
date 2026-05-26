@@ -1,6 +1,9 @@
 import { Filter, Minus, Package, Pencil, Plus, TrendingDown, TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -24,6 +27,7 @@ export function GridInventoryPage() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [viewSnapshot, setViewSnapshot] = useState<GridInventoryItem | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -127,18 +131,31 @@ export function GridInventoryPage() {
                       <td className="px-4 py-3">
                         <GridInventoryStatusBadge status={item.status} />
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-1">
-                          <button type="button" className="rounded border border-hub-border p-1.5" aria-label="Adicionar">
-                            <Plus className="h-3.5 w-3.5" />
-                          </button>
-                          <button type="button" className="rounded border border-hub-border p-1.5" aria-label="Remover">
-                            <Minus className="h-3.5 w-3.5" />
-                          </button>
-                          <button type="button" className="rounded border border-hub-border p-1.5" aria-label="Editar">
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
+                      <td className="px-4 py-3 text-right">
+                        <ConnectRowActionsMenu
+                          ariaLabel={`Ações de ${item.title}`}
+                          actions={[
+                            viewRowAction(() => setViewSnapshot(item)),
+                            {
+                              key: 'add',
+                              label: 'Adicionar quantidade',
+                              icon: Plus,
+                              onClick: () => window.alert(`Entrada de estoque para "${item.title}" em breve.`),
+                            },
+                            {
+                              key: 'remove',
+                              label: 'Remover quantidade',
+                              icon: Minus,
+                              onClick: () => window.alert(`Saída de estoque para "${item.title}" em breve.`),
+                            },
+                            {
+                              key: 'edit',
+                              label: 'Editar item',
+                              icon: Pencil,
+                              onClick: () => window.alert(`Edição de "${item.title}" em breve.`),
+                            },
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -205,6 +222,14 @@ export function GridInventoryPage() {
           </FormField>
         </div>
       </ConnectDrawer>
+
+      <ConnectEntityViewDrawer
+        kind="grid-inventory"
+        entityId={null}
+        open={viewSnapshot !== null}
+        onClose={() => setViewSnapshot(null)}
+        snapshot={viewSnapshot ?? undefined}
+      />
     </div>
   )
 }

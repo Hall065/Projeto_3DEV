@@ -15,7 +15,7 @@ import type { GridTaskCard, GridTaskColumn } from '../../types/grid'
 import { UserAvatar } from '../../components/ui/UserAvatar'
 
 const columns: { key: GridTaskColumn; label: string; dot: string; headerBg: string; count: number }[] = [
-  { key: 'a_fazer', label: 'A fazer', dot: 'bg-blue-500', headerBg: 'bg-blue-50', count: 18 },
+  { key: 'a_fazer', label: 'A fazer', dot: 'bg-hub-navy', headerBg: 'bg-hub-navy/10', count: 18 },
   { key: 'em_andamento', label: 'Em andamento', dot: 'bg-amber-500', headerBg: 'bg-amber-50', count: 12 },
   { key: 'concluidas', label: 'Concluídas', dot: 'bg-emerald-500', headerBg: 'bg-emerald-50', count: 46 },
 ]
@@ -26,7 +26,7 @@ function TaskCard({ task }: { task: GridTaskCard }) {
       ? 'bg-emerald-500 text-white border-emerald-500'
       : task.column === 'em_andamento'
         ? 'border-amber-200 bg-amber-50 text-amber-700'
-        : 'border-blue-200 bg-blue-50 text-blue-700'
+        : 'border-hub-navy/25 bg-hub-navy/10 text-blue-700'
 
   return (
     <article className="rounded-xl border border-hub-border/60 bg-white p-4 shadow-sm">

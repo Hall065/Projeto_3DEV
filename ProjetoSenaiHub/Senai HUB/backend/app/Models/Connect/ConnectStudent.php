@@ -2,6 +2,8 @@
 
 namespace App\Models\Connect;
 
+use App\Models\Concerns\ResolvesProfileFromHubPerson;
+use App\Models\HubPerson;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
+    'hub_person_id',
     'user_id',
     'connect_class_id',
     'full_name',
@@ -22,11 +25,19 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 ])]
 class ConnectStudent extends Model
 {
+    use ResolvesProfileFromHubPerson;
+
     protected function casts(): array
     {
         return [
             'birth_date' => 'date',
         ];
+    }
+
+    /** @return BelongsTo<HubPerson, $this> */
+    public function hubPerson(): BelongsTo
+    {
+        return $this->belongsTo(HubPerson::class, 'hub_person_id');
     }
 
     /** @return BelongsTo<User, $this> */

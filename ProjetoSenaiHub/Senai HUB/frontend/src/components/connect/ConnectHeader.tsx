@@ -1,7 +1,8 @@
-﻿import { useEffect, useRef, useState } from 'react'
-import { Bell, ChevronsLeft, ChevronsRight, LogOut, Menu, Search, Settings, User as UserIcon } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Bell, LayoutGrid, LogOut, Menu, Search, Settings, User as UserIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { SidebarRailToggle } from '../layout/SidebarRailToggle'
 import { UserAvatar } from '../ui/UserAvatar'
 
 interface ConnectHeaderProps {
@@ -32,19 +33,15 @@ export function ConnectHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: C
     navigate('/login')
   }
 
-  const desktopCollapseLabel = collapsed ? 'Expandir menu' : 'Recolher menu'
   const mobileMenuLabel = isMobileNavOpen ? 'Fechar menu' : 'Abrir menu'
 
   return (
-    <header className="relative flex shrink-0 items-center gap-2 border-b border-hub-border/60 bg-white px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-8 lg:py-4">
-      <button
-        type="button"
+    <header className="glass-nav relative z-50 flex shrink-0 items-center gap-2 border-b px-4 py-4 sm:gap-4 sm:px-6 lg:px-8">
+      <SidebarRailToggle
+        collapsed={collapsed}
         onClick={onToggleSidebar}
-        className="absolute -left-4 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-hub-border bg-hub-navy text-white shadow-md transition hover:bg-[#032654] max-lg:hidden"
-        aria-label={desktopCollapseLabel}
-      >
-        {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
-      </button>
+        className="max-lg:hidden"
+      />
 
       <button
         type="button"
@@ -56,7 +53,7 @@ export function ConnectHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: C
       </button>
 
       <div className="flex min-w-0 flex-1 items-center justify-center px-1 sm:px-4">
-        <div className="flex w-full max-w-2xl min-w-0 items-center gap-2 rounded-full border border-hub-border bg-hub-bg/50 px-3 py-2">
+        <div className="glass-input flex w-full max-w-2xl min-w-0 items-center gap-2 rounded-full border border-white/50 px-3 py-2">
           <Search className="h-4 w-4 shrink-0 text-hub-text-muted" />
           <input
             type="search"
@@ -75,7 +72,7 @@ export function ConnectHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: C
           <Bell className="h-5 w-5" />
         </button>
 
-        <div className="relative" ref={menuRef}>
+        <div className="relative z-50" ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
@@ -93,14 +90,15 @@ export function ConnectHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: C
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-xl border border-hub-border bg-white py-2 shadow-xl"
+              className="glass-panel-solid absolute right-0 top-full z-[60] mt-2 w-52 overflow-hidden rounded-xl py-2 shadow-xl"
             >
               <Link
                 to="/hub"
                 role="menuitem"
-                className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-hub-bg"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-hub-text transition hover:bg-hub-bg"
                 onClick={() => setMenuOpen(false)}
               >
+                <LayoutGrid className="h-4 w-4 text-hub-text-muted" />
                 Hub de Aplicacoes
               </Link>
               <Link

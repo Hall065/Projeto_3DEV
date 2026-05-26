@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Connect;
 
+use App\Http\Resources\HubPersonResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,6 +16,8 @@ class ConnectStudentResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'hub_person_id' => $this->hub_person_id,
+            'hub_person' => new HubPersonResource($this->whenLoaded('hubPerson')),
             'user_id' => $this->user_id,
             'connect_class_id' => $this->connect_class_id,
             'full_name' => $this->full_name,

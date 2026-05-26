@@ -71,7 +71,7 @@ export function GridTaskMapPage() {
             {loading ? (
               <ConnectLoadingSpinner label="Carregando tarefas..." className="min-h-[280px]" />
             ) : (
-              <ul className="max-h-[360px] space-y-3 overflow-y-auto pr-1">
+              <ul className="scrollbar-glass-inset max-h-[360px] space-y-3 overflow-y-auto pr-1">
                 {tasks.map((task) => (
                   <li key={task.id} className="rounded-xl border border-hub-border/60 p-3">
                     <div className="mb-2 flex items-start gap-2">
@@ -86,7 +86,7 @@ export function GridTaskMapPage() {
                           Sala {task.room} · Bloco {task.block}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+                          <span className="rounded-full border border-hub-navy/25 bg-hub-navy/10 px-2 py-0.5 text-xs text-blue-700">
                             A fazer
                           </span>
                           <GridPriorityBadge priority={task.priority} />
