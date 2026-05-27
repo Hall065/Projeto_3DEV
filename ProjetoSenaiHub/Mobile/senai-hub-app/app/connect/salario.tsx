@@ -1,25 +1,38 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Calculator, DollarSign, Percent, WalletCards } from 'lucide-react-native';
-import { CrudModal, type CrudField } from '@/components/common/CrudModal';
+import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, ProgressBar, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
+import { TIPO_PAGAMENTO_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { connectService } from '@/services/connect.service';
 import type { SalarioAluno } from '@/types/connect.types';
 
-const fields: CrudField[] = [
-  { name: 'aluno_id', label: 'ID do aluno' },
-  { name: 'empresa_id', label: 'ID da empresa' },
-  { name: 'contrato_id', label: 'ID do contrato' },
-  { name: 'tipo_pagamento', label: 'Tipo de pagamento', placeholder: 'mensal ou por_hora', required: true },
+const salarioOptionLoaders = {
+  alunos: connectService.listAlunoOptions,
+  empresas: connectService.listEmpresaOptions,
+  contratos: connectService.listContratoOptions,
+};
+
+type SalarioOptionKey = keyof typeof salarioOptionLoaders;
+type SalarioOptions = Record<SalarioOptionKey, CrudOption[]>;
+
+function getFields(options: Partial<SalarioOptions>): CrudField[] {
+  return [
+  { name: 'aluno_id', label: 'Aluno', required: true, options: options.alunos ?? [] },
+  { name: 'empresa_id', label: 'Empresa', options: options.empresas ?? [], emptyOptionLabel: 'Sem empresa' },
+  { name: 'contrato_id', label: 'Contrato', options: options.contratos ?? [], emptyOptionLabel: 'Sem contrato' },
+  { name: 'tipo_pagamento', label: 'Tipo de pagamento', required: true, options: TIPO_PAGAMENTO_OPTIONS },
   { name: 'salario_base', label: 'Salário base', placeholder: '1200,00', keyboardType: 'decimal-pad', mask: 'currency', required: true },
   { name: 'valor_hora', label: 'Valor hora', placeholder: '12,50', keyboardType: 'decimal-pad', mask: 'currency' },
   { name: 'carga_diaria_horas', label: 'Carga diária', placeholder: '6', keyboardType: 'decimal-pad', mask: 'decimal' },
   { name: 'dias_uteis_mes', label: 'Dias úteis do mês', placeholder: '22', keyboardType: 'numeric', mask: 'integer' },
   { name: 'mes_referencia', label: 'Mês de referência', placeholder: 'MM/AAAA', mask: 'month', required: true },
-];
+  ];
+}
 
 function formValues(salario: SalarioAluno): Record<string, string> {
   return {
@@ -38,6 +51,8 @@ function formValues(salario: SalarioAluno): Record<string, string> {
 export default function SalarioScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<SalarioAluno | null>(null);
+  const { options, error: optionsError } = useSelectOptions(salarioOptionLoaders);
+  const fields = getFields(options);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<SalarioAluno, Record<string, string>>({
       load: connectService.listSalarios,
@@ -78,7 +93,7 @@ export default function SalarioScreen() {
         </SurfaceCard>
 
         <SurfaceCard title="Alunos calculados" subtitle="Fechamento mensal por status">
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
           {items.length === 0 ? <Text style={styles.empty}>Nenhum cálculo encontrado.</Text> : null}
           {items.map((salario) => (
             <ListRow

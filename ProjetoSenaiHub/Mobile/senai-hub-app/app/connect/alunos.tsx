@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { UserCheck, UserPlus, Users } from 'lucide-react-native';
-import { CrudModal, type CrudField } from '@/components/common/CrudModal';
+import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
 import {
   ListRow,
   MetricTile,
@@ -10,12 +10,23 @@ import {
 } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
+import { USER_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { connectService } from '@/services/connect.service';
 import { useFilterStore } from '@/stores/filter.store';
 import type { Aluno } from '@/types/connect.types';
 
-const fields: CrudField[] = [
+const alunoOptionLoaders = {
+  cursos: connectService.listCursoOptions,
+  turmas: connectService.listTurmaOptions,
+};
+
+type AlunoOptionKey = keyof typeof alunoOptionLoaders;
+type AlunoOptions = Record<AlunoOptionKey, CrudOption[]>;
+
+function getFields(options: Partial<AlunoOptions>): CrudField[] {
+  return [
   { name: 'nome', label: 'Nome completo', required: true },
   { name: 'email', label: 'E-mail institucional', required: true, keyboardType: 'email-address' },
   { name: 'senha', label: 'Senha inicial', placeholder: 'Senai@123456', secureTextEntry: true },
@@ -23,11 +34,14 @@ const fields: CrudField[] = [
   { name: 'rm', label: 'RM', required: true, mask: 'integer', keyboardType: 'numeric' },
   { name: 'cpf', label: 'CPF', placeholder: '111.111.111-11', mask: 'cpf' },
   { name: 'telefone', label: 'Telefone/Celular', placeholder: '(19) 98999-9999', mask: 'phone' },
+  { name: 'curso_id', label: 'Curso', options: options.cursos ?? [], emptyOptionLabel: 'Sem curso' },
+  { name: 'turma_id', label: 'Turma', options: options.turmas ?? [], emptyOptionLabel: 'Sem turma' },
   { name: 'data_nascimento', label: 'Data de nascimento', placeholder: 'DD/MM/AAAA', mask: 'date' },
   { name: 'nome_responsavel', label: 'Responsável' },
   { name: 'empresa_nome', label: 'Nome da Empresa' },
-  { name: 'status', label: 'Status', placeholder: 'ativo' },
-];
+  { name: 'status', label: 'Status', required: true, options: USER_STATUS_OPTIONS },
+  ];
+}
 
 function initials(nome: string) {
   return nome
@@ -50,6 +64,8 @@ function formValues(aluno: Aluno): Record<string, string> {
     rm: aluno.rm ?? '',
     cpf: aluno.cpf ?? '',
     telefone: aluno.telefone ?? '',
+    curso_id: aluno.curso_id ?? '',
+    turma_id: aluno.turma_id ?? '',
     data_nascimento: aluno.data_nascimento ?? '',
     nome_responsavel: aluno.nome_responsavel ?? '',
     empresa_nome: aluno.empresa_nome ?? '',
@@ -61,6 +77,8 @@ export default function AlunosScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Aluno | null>(null);
   const { search, setSearch } = useFilterStore();
+  const { options, error: optionsError } = useSelectOptions(alunoOptionLoaders);
+  const fields = getFields(options);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<Aluno, Record<string, string>>({
       load: connectService.listAlunos,
@@ -125,7 +143,7 @@ export default function AlunosScreen() {
         />
 
         <SurfaceCard title="Lista de alunos" subtitle="Dados principais e situação acadêmica">
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhum aluno encontrado.</Text> : null}
           {filtered.map((aluno) => (
             <ListRow

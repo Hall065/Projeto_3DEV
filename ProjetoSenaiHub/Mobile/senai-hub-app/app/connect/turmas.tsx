@@ -1,25 +1,37 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BookOpen, CalendarDays, GraduationCap, Users } from 'lucide-react-native';
-import { CrudModal, type CrudField } from '@/components/common/CrudModal';
+import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
+import { PERIODO_OPTIONS, TURMA_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { connectService } from '@/services/connect.service';
 import type { Turma } from '@/types/connect.types';
 
-const fields: CrudField[] = [
+const turmaOptionLoaders = {
+  cursos: connectService.listCursoOptions,
+  professores: connectService.listProfessorOptions,
+};
+
+type TurmaOptionKey = keyof typeof turmaOptionLoaders;
+type TurmaOptions = Record<TurmaOptionKey, CrudOption[]>;
+
+function getFields(options: Partial<TurmaOptions>): CrudField[] {
+  return [
   { name: 'nome', label: 'Nome da turma', required: true },
-  { name: 'curso_id', label: 'ID do curso' },
-  { name: 'professor_responsavel_id', label: 'ID do professor responsável' },
-  { name: 'periodo', label: 'Período', placeholder: 'manha, tarde, noite ou integral', required: true },
+  { name: 'curso_id', label: 'Curso', options: options.cursos ?? [], emptyOptionLabel: 'Sem curso' },
+  { name: 'professor_responsavel_id', label: 'Professor responsavel', options: options.professores ?? [], emptyOptionLabel: 'Sem professor' },
+  { name: 'periodo', label: 'Periodo', required: true, options: PERIODO_OPTIONS },
   { name: 'data_inicio', label: 'Data de início', placeholder: 'DD/MM/AAAA', mask: 'date' },
   { name: 'data_termino', label: 'Data de término', placeholder: 'DD/MM/AAAA', mask: 'date' },
   { name: 'horario_inicio', label: 'Horário início', placeholder: '08:00', mask: 'time' },
   { name: 'horario_fim', label: 'Horário fim', placeholder: '12:00', mask: 'time' },
-  { name: 'status', label: 'Status', placeholder: 'ativa' },
-];
+  { name: 'status', label: 'Status', required: true, options: TURMA_STATUS_OPTIONS },
+  ];
+}
 
 function formValues(turma: Turma): Record<string, string> {
   return {
@@ -39,6 +51,8 @@ export default function TurmasScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Turma | null>(null);
   const [search, setSearch] = useState('');
+  const { options, error: optionsError } = useSelectOptions(turmaOptionLoaders);
+  const fields = getFields(options);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<Turma, Record<string, string>>({
       load: connectService.listTurmas,
@@ -74,7 +88,7 @@ export default function TurmasScreen() {
         <SearchField placeholder="Pesquisar turma, curso, professor ou período..." value={search} onChangeText={setSearch} />
 
         <SurfaceCard title="Turmas" subtitle="Turmas ativas e período de aulas">
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhuma turma encontrada.</Text> : null}
           {filtered.map((turma) => (
             <ListRow

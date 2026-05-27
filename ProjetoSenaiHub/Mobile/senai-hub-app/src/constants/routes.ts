@@ -11,6 +11,7 @@ export const ROUTES = {
     professores: '/connect/professores',
     turmas: '/connect/turmas',
     cursos: '/connect/cursos',
+    empresas: '/connect/empresas',
     frequencia: '/connect/frequencia',
     gerenciarFrequencia: '/connect/gerenciar-frequencia',
     relatorios: '/connect/relatorios',

@@ -5,6 +5,7 @@ import { CrudModal, type CrudField } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
+import { CURSO_MODALIDADE_OPTIONS, PERIODO_OPTIONS, USER_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
 import { connectService } from '@/services/connect.service';
 import type { Curso } from '@/types/connect.types';
@@ -12,17 +13,19 @@ import type { Curso } from '@/types/connect.types';
 const fields: CrudField[] = [
   { name: 'nome', label: 'Nome do curso', required: true },
   { name: 'descricao', label: 'Descrição', multiline: true },
-  { name: 'periodo', label: 'Período', placeholder: 'manha, tarde, noite ou integral', required: true },
+  { name: 'modalidade', label: 'Modalidade', required: true, options: CURSO_MODALIDADE_OPTIONS },
+  { name: 'periodo', label: 'Periodo', required: true, options: PERIODO_OPTIONS },
   { name: 'carga_horaria', label: 'Carga horária', keyboardType: 'numeric', mask: 'integer' },
   { name: 'data_inicio', label: 'Data de início', placeholder: 'DD/MM/AAAA', mask: 'date' },
   { name: 'data_termino', label: 'Data de término', placeholder: 'DD/MM/AAAA', mask: 'date' },
-  { name: 'status', label: 'Status', placeholder: 'ativo' },
+  { name: 'status', label: 'Status', required: true, options: USER_STATUS_OPTIONS },
 ];
 
 function formValues(curso: Curso): Record<string, string> {
   return {
     nome: curso.nome ?? '',
     descricao: curso.descricao ?? '',
+    modalidade: curso.modalidade ?? 'tecnico',
     periodo: curso.periodo ?? 'manha',
     carga_horaria: curso.carga_horaria ? String(curso.carga_horaria) : '',
     data_inicio: curso.data_inicio ?? '',
@@ -98,7 +101,7 @@ export default function CursosScreen() {
         visible={modalOpen}
         title={editing ? 'Editar curso' : 'Novo curso'}
         fields={fields}
-        initialValues={editing ? formValues(editing) : { periodo: 'manha', status: 'ativo' }}
+        initialValues={editing ? formValues(editing) : { modalidade: 'tecnico', periodo: 'manha', status: 'ativo' }}
         isSubmitting={submitting}
         submitLabel={editing ? 'Salvar alterações' : 'Criar curso'}
         onClose={() => setModalOpen(false)}

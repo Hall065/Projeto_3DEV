@@ -15,10 +15,20 @@ import type { HubUsuario } from '@/types/auth.types';
 const schema = 'grid';
 type Row = Record<string, any>;
 type FormValues = Record<string, string>;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function nullIfEmpty(value?: string | null) {
   const normalized = value?.trim();
   return normalized ? normalized : null;
+}
+
+function uuidOrNull(value: string | null | undefined, label: string) {
+  const normalized = nullIfEmpty(value);
+  if (!normalized) return null;
+  if (!UUID_PATTERN.test(normalized)) {
+    throw new Error(`Selecione um ${label} valido.`);
+  }
+  return normalized;
 }
 
 function numberOrZero(value?: string | number | null) {
@@ -36,14 +46,93 @@ function relation(row: Row, key: string) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-async function selectRows(table: string, select = '*') {
-  const { data, error } = await supabase.schema(schema).from(table).select(select);
+async function selectRows(table: string, select = '*', targetSchema = schema): Promise<Row[]> {
+  const { data, error } = await supabase.schema(targetSchema).from(table).select(select);
   if (error) {
-    const fallback = await supabase.schema(schema).from(table).select('*');
+    const fallback = await supabase.schema(targetSchema).from(table).select('*');
     if (fallback.error) throw error;
-    return fallback.data ?? [];
+    return (fallback.data ?? []) as Row[];
   }
-  return data ?? [];
+  return (data ?? []) as Row[];
+}
+
+function uniqueIds(values: (string | null | undefined)[]) {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))];
+}
+
+function indexById(rows: Row[]) {
+  return new Map(rows.map((row) => [row.id, row]));
+}
+
+async function selectRowsByIds(table: string, ids: string[], select = '*', targetSchema = schema): Promise<Row[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase.schema(targetSchema).from(table).select(select).in('id', ids);
+  if (error) throw error;
+  return (data ?? []) as Row[];
+}
+
+async function hydrateChamados(rows: Row[]) {
+  const categorias = indexById(
+    await selectRowsByIds('categorias_manutencao', uniqueIds(rows.map((row) => row.categoria_id)), 'id,nome')
+  );
+  const blocos = indexById(await selectRowsByIds('blocos', uniqueIds(rows.map((row) => row.bloco_id)), 'id,nome', 'hub'));
+  const salas = indexById(await selectRowsByIds('salas', uniqueIds(rows.map((row) => row.sala_id)), 'id,nome', 'hub'));
+  const usuarios = indexById(
+    await selectRowsByIds(
+      'usuarios',
+      uniqueIds([
+        ...rows.map((row) => row.aberto_por),
+        ...rows.map((row) => row.solicitante_id),
+        ...rows.map((row) => row.responsavel_id),
+      ]),
+      'id,nome,email,email_institucional,tipo_usuario,status',
+      'hub'
+    )
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    categoria: row.categoria ?? categorias.get(row.categoria_id),
+    bloco: row.bloco ?? blocos.get(row.bloco_id),
+    sala: row.sala ?? salas.get(row.sala_id),
+    solicitante: row.solicitante ?? usuarios.get(row.aberto_por ?? row.solicitante_id),
+    responsavel: row.responsavel ?? usuarios.get(row.responsavel_id),
+  }));
+}
+
+async function hydrateTarefas(rows: Row[]) {
+  const chamados = indexById(
+    await hydrateChamados(await selectRowsByIds('chamados', uniqueIds(rows.map((row) => row.chamado_id)), '*'))
+  );
+  const usuarios = indexById(
+    await selectRowsByIds(
+      'usuarios',
+      uniqueIds(rows.map((row) => row.responsavel_id)),
+      'id,nome,email,email_institucional,tipo_usuario,status',
+      'hub'
+    )
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    chamado: row.chamado ?? chamados.get(row.chamado_id),
+    responsavel: row.responsavel ?? usuarios.get(row.responsavel_id),
+  }));
+}
+
+async function hydrateEstoque(rows: Row[]) {
+  const categorias = indexById(
+    await selectRowsByIds('categorias_manutencao', uniqueIds(rows.map((row) => row.categoria_id)), 'id,nome')
+  );
+  const fornecedores = indexById(
+    await selectRowsByIds('fornecedores', uniqueIds(rows.map((row) => row.fornecedor_id)), 'id,nome')
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    categoria: row.categoria ?? categorias.get(row.categoria_id),
+    fornecedor: row.fornecedor ?? fornecedores.get(row.fornecedor_id),
+  }));
 }
 
 async function insertWithFallback(table: string, payloads: Row[]) {
@@ -130,8 +219,10 @@ function mapTarefa(row: Row): Tarefa {
 
 function mapItem(row: Row): ItemEstoque {
   const categoria = relation(row, 'categoria') ?? relation(row, 'categorias_manutencao') ?? {};
+  const fornecedor = relation(row, 'fornecedor') ?? relation(row, 'fornecedores') ?? {};
   return {
     id: row.id,
+    fornecedor_id: row.fornecedor_id,
     titulo: row.titulo,
     descricao: row.descricao,
     quantidade_disponivel: Number(row.quantidade_disponivel ?? 0),
@@ -142,6 +233,7 @@ function mapItem(row: Row): ItemEstoque {
     status: row.status ?? 'disponivel',
     categoria_id: row.categoria_id,
     categoria_nome: categoria.nome,
+    fornecedor_nome: fornecedor.nome,
     custo: row.custo == null ? null : Number(row.custo),
   };
 }
@@ -241,10 +333,7 @@ async function deleteHubUsuario(id: string) {
 
 export const gridService = {
   async listChamados(): Promise<Chamado[]> {
-    const rows = await selectRows(
-      'chamados',
-      '*, categoria:categoria_id(id,nome), bloco:bloco_id(id,nome), sala:sala_id(id,nome), solicitante:aberto_por(id,nome)'
-    );
+    const rows = await hydrateChamados(await selectRows('chamados'));
     return rows.map(mapChamado);
   },
 
@@ -252,12 +341,12 @@ export const gridService = {
     return insertWithFallback('chamados', [
       {
         codigo: nullIfEmpty(values.codigo) ?? makeCodigo(),
-        aberto_por: userId ?? nullIfEmpty(values.aberto_por),
-        categoria_id: nullIfEmpty(values.categoria_id),
+        aberto_por: uuidOrNull(userId ?? values.aberto_por, 'solicitante'),
+        categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao) ?? '',
-        bloco_id: nullIfEmpty(values.bloco_id),
-        sala_id: nullIfEmpty(values.sala_id),
+        bloco_id: uuidOrNull(values.bloco_id, 'bloco'),
+        sala_id: uuidOrNull(values.sala_id, 'sala'),
         prioridade: normalizeStatus(values.prioridade, 'media') as ChamadoPrioridade,
         status: normalizeStatus(values.status, 'aberto') as ChamadoStatus,
       },
@@ -266,7 +355,7 @@ export const gridService = {
         descricao: nullIfEmpty(values.descricao) ?? '',
         prioridade: normalizeStatus(values.prioridade, 'media'),
         status: normalizeStatus(values.status, 'aberto'),
-        solicitante_id: userId ?? nullIfEmpty(values.solicitante_id),
+        solicitante_id: uuidOrNull(userId ?? values.solicitante_id, 'solicitante'),
       },
     ]);
   },
@@ -275,11 +364,11 @@ export const gridService = {
     return updateWithFallback('chamados', id, [
       {
         codigo: nullIfEmpty(values.codigo),
-        categoria_id: nullIfEmpty(values.categoria_id),
+        categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao) ?? '',
-        bloco_id: nullIfEmpty(values.bloco_id),
-        sala_id: nullIfEmpty(values.sala_id),
+        bloco_id: uuidOrNull(values.bloco_id, 'bloco'),
+        sala_id: uuidOrNull(values.sala_id, 'sala'),
         prioridade: normalizeStatus(values.prioridade, 'media') as ChamadoPrioridade,
         status: normalizeStatus(values.status, 'aberto') as ChamadoStatus,
       },
@@ -295,15 +384,12 @@ export const gridService = {
   deleteChamado: (id: string) => deleteRow('chamados', id),
 
   async listTarefas(): Promise<Tarefa[]> {
-    const rows = await selectRows(
-      'tarefas',
-      '*, chamado:chamado_id(id,codigo,titulo,descricao,prioridade), responsavel:responsavel_id(id,nome)'
-    );
+    const rows = await hydrateTarefas(await selectRows('tarefas'));
     return rows.map(mapTarefa);
   },
 
   async createTarefa(values: FormValues, userId?: string | null) {
-    let chamadoId = nullIfEmpty(values.chamado_id);
+    let chamadoId = uuidOrNull(values.chamado_id, 'chamado');
     if (!chamadoId) {
       const chamado = await gridService.createChamado(
         {
@@ -321,8 +407,8 @@ export const gridService = {
     return insertWithFallback('tarefas', [
       {
         chamado_id: chamadoId,
-        responsavel_id: nullIfEmpty(values.responsavel_id),
-        atribuido_por: userId ?? nullIfEmpty(values.atribuido_por),
+        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
+        atribuido_por: uuidOrNull(userId ?? values.atribuido_por, 'usuario'),
         status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
         observacao: nullIfEmpty(values.observacao ?? values.descricao),
       },
@@ -331,7 +417,7 @@ export const gridService = {
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao),
         prioridade: normalizeStatus(values.prioridade, 'media'),
-        responsavel_id: nullIfEmpty(values.responsavel_id),
+        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
         status: normalizeStatus(values.status, 'a_fazer'),
       },
     ]);
@@ -340,7 +426,7 @@ export const gridService = {
   updateTarefa(id: string, values: FormValues) {
     return updateWithFallback('tarefas', id, [
       {
-        responsavel_id: nullIfEmpty(values.responsavel_id),
+        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
         status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
         observacao: nullIfEmpty(values.observacao ?? values.descricao),
       },
@@ -348,7 +434,7 @@ export const gridService = {
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao),
         prioridade: normalizeStatus(values.prioridade, 'media'),
-        responsavel_id: nullIfEmpty(values.responsavel_id),
+        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
         status: normalizeStatus(values.status, 'a_fazer'),
       },
     ]);
@@ -357,10 +443,7 @@ export const gridService = {
   deleteTarefa: (id: string) => deleteRow('tarefas', id),
 
   async listEstoque(): Promise<ItemEstoque[]> {
-    const rows = await selectRows(
-      'itens_estoque',
-      '*, categoria:categoria_id(id,nome)'
-    );
+    const rows = await hydrateEstoque(await selectRows('itens_estoque'));
     return rows.map(mapItem);
   },
 
@@ -371,7 +454,8 @@ export const gridService = {
       {
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao),
-        categoria_id: nullIfEmpty(values.categoria_id),
+        categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
+        fornecedor_id: uuidOrNull(values.fornecedor_id, 'fornecedor'),
         quantidade_disponivel: quantidade,
         quantidade_minima: minima,
         unidade: nullIfEmpty(values.unidade) ?? 'un',
@@ -390,7 +474,8 @@ export const gridService = {
       {
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao),
-        categoria_id: nullIfEmpty(values.categoria_id),
+        categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
+        fornecedor_id: uuidOrNull(values.fornecedor_id, 'fornecedor'),
         quantidade_disponivel: quantidade,
         quantidade_minima: minima,
         unidade: nullIfEmpty(values.unidade),
@@ -412,6 +497,63 @@ export const gridService = {
   async listFornecedores(): Promise<GridFornecedor[]> {
     const rows = await selectRows('fornecedores');
     return rows.map(mapFornecedor);
+  },
+
+  async listCategoriaOptions() {
+    const categorias = await gridService.listCategoriasEstoque();
+    return categorias.map((categoria) => ({
+      value: categoria.id,
+      label: categoria.nome,
+      description: categoria.status ?? undefined,
+    }));
+  },
+
+  async listFornecedorOptions() {
+    const fornecedores = await gridService.listFornecedores();
+    return fornecedores.map((fornecedor) => ({
+      value: fornecedor.id,
+      label: fornecedor.nome,
+      description: fornecedor.cnpj ?? fornecedor.email ?? undefined,
+    }));
+  },
+
+  async listUsuarioOptions() {
+    const usuarios = await gridService.listUsuarios();
+    return usuarios.map((usuario) => ({
+      value: usuario.id,
+      label: usuario.nome,
+      description: usuario.tipo ?? usuario.email_institucional,
+    }));
+  },
+
+  async listChamadoOptions() {
+    const chamados = await gridService.listChamados();
+    return chamados.map((chamado) => ({
+      value: chamado.id,
+      label: `${chamado.codigo ?? 'CH'} - ${chamado.titulo}`,
+      description: chamado.status,
+    }));
+  },
+
+  async listBlocoOptions() {
+    const rows = await selectRows('blocos', '*', 'hub');
+    return rows.map((bloco) => ({
+      value: bloco.id,
+      label: bloco.nome,
+      description: bloco.descricao ?? undefined,
+    }));
+  },
+
+  async listSalaOptions() {
+    const rows = await selectRows('salas', '*, bloco:bloco_id(id,nome)', 'hub');
+    return rows.map((sala) => {
+      const bloco = relation(sala, 'bloco') ?? relation(sala, 'blocos') ?? {};
+      return {
+        value: sala.id,
+        label: `${bloco.nome ? `${bloco.nome} - ` : ''}${sala.nome}`,
+        description: sala.tipo ?? undefined,
+      };
+    });
   },
 
   listUsuarios: listHubUsuarios,

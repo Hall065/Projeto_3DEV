@@ -5,6 +5,7 @@ import { CrudModal, type CrudField } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
+import { USER_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
 import { connectService } from '@/services/connect.service';
 import type { Professor } from '@/types/connect.types';
@@ -17,7 +18,9 @@ const fields: CrudField[] = [
   { name: 'celular', label: 'Celular', placeholder: '(19) 98999-9999', mask: 'phone' },
   { name: 'especialidade', label: 'Especialidade' },
   { name: 'data_contratacao', label: 'Data de contratação', placeholder: 'DD/MM/AAAA', mask: 'date' },
-  { name: 'status', label: 'Status', placeholder: 'ativo' },
+  { name: 'data_nascimento', label: 'Data de nascimento', placeholder: 'DD/MM/AAAA', mask: 'date' },
+  { name: 'endereco', label: 'Endereco' },
+  { name: 'status', label: 'Status', required: true, options: USER_STATUS_OPTIONS },
 ];
 
 function initials(nome: string) {
@@ -33,6 +36,8 @@ function formValues(professor: Professor): Record<string, string> {
     celular: professor.celular ?? '',
     especialidade: professor.especialidade ?? '',
     data_contratacao: professor.data_contratacao ?? '',
+    data_nascimento: professor.data_nascimento ?? '',
+    endereco: professor.endereco ?? '',
     status: professor.status ?? 'ativo',
   };
 }

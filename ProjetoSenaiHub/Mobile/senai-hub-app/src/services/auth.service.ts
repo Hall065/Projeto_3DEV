@@ -65,8 +65,18 @@ export async function login(email: string, password: string): Promise<{ session:
             email: normalizedEmail,
             perfil: tempPerfil as any,
             aplicacoes: [
-              { id: '1', usuario_id: authData.user.id, aplicacao_id: 'connect', aplicacao_codigo: 'senai_connect' },
-              { id: '2', usuario_id: authData.user.id, aplicacao_id: 'grid', aplicacao_codigo: 'senai_grid' }
+              {
+                id: '00000000-0000-4000-8000-000000000001',
+                usuario_id: authData.user.id,
+                aplicacao_id: '00000000-0000-4000-8000-000000000101',
+                aplicacao_codigo: 'senai_connect',
+              },
+              {
+                id: '00000000-0000-4000-8000-000000000002',
+                usuario_id: authData.user.id,
+                aplicacao_id: '00000000-0000-4000-8000-000000000102',
+                aplicacao_codigo: 'senai_grid',
+              }
             ],
           },
           error: null,

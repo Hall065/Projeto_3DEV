@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AlertTriangle, CheckCircle2, ClipboardList, Wrench } from 'lucide-react-native';
-import {
-  ListRow,
-  MetricTile,
-  MiniBars,
-  ProgressBar,
-  RingMetric,
-  SurfaceCard,
-} from '@/components/common/VisualPrimitives';
+import { ListRow, MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { gridService } from '@/services/grid.service';
+import type { Chamado, ItemEstoque } from '@/types/grid.types';
 
 export default function GridDashboard() {
   const [loading, setLoading] = useState(true);
@@ -19,161 +13,91 @@ export default function GridDashboard() {
     chamadosAbertos: 0,
     chamadosEmAndamento: 0,
     itensEstoqueBaixo: 0,
+    chamadosConcluidos: 0,
   });
+  const [chamados, setChamados] = useState<Chamado[]>([]);
+  const [estoque, setEstoque] = useState<ItemEstoque[]>([]);
 
   useEffect(() => {
-    gridService
-      .getDashboardMetrics()
-      .then(setMetrics)
-      .catch(() =>
-        setMetrics({ chamadosAbertos: 0, chamadosEmAndamento: 0, itensEstoqueBaixo: 0 })
-      )
+    Promise.all([
+      gridService.getDashboardMetrics(),
+      gridService.listChamados(),
+      gridService.listEstoque(),
+    ])
+      .then(([dashboardMetrics, chamadosData, estoqueData]) => {
+        setMetrics(dashboardMetrics);
+        setChamados(chamadosData);
+        setEstoque(estoqueData);
+      })
+      .catch(() => {
+        setMetrics({
+          chamadosAbertos: 0,
+          chamadosEmAndamento: 0,
+          itensEstoqueBaixo: 0,
+          chamadosConcluidos: 0,
+        });
+        setChamados([]);
+        setEstoque([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  const chamadosAbertos = metrics.chamadosAbertos || 128;
-  const emAndamento = metrics.chamadosEmAndamento || 64;
-  const estoqueBaixo = metrics.itensEstoqueBaixo || 23;
+  const itensCriticos = estoque.filter(
+    (item) => item.status === 'estoque_baixo' || item.status === 'esgotado' || item.quantidade_disponivel <= item.quantidade_minima
+  );
+  const prioridades = [
+    { label: 'Baixa', value: chamados.filter((c) => c.prioridade === 'baixa').length, color: colors.green },
+    { label: 'Media', value: chamados.filter((c) => c.prioridade === 'media').length, color: colors.blue },
+    { label: 'Alta', value: chamados.filter((c) => c.prioridade === 'alta').length, color: colors.orange },
+    { label: 'Urgente', value: chamados.filter((c) => c.prioridade === 'urgente').length, color: colors.red },
+  ];
 
   return (
     <ModuleScreen
       kicker="SENAI Grid"
       title="Dashboard"
-      description="Resumo operacional da manutenção e infraestrutura."
+      description="Resumo operacional da manutencao e infraestrutura."
       isLoading={loading}
     >
       <View style={styles.metricGrid}>
-        <MetricTile
-          label="Chamados abertos"
-          value={chamadosAbertos}
-          hint="+12%"
-          accent={gridTheme.accent}
-          icon={<ClipboardList size={16} color={gridTheme.accent} />}
-          style={styles.metric}
-        />
-        <MetricTile
-          label="Em andamento"
-          value={emAndamento}
-          hint="24h"
-          accent={colors.orange}
-          icon={<Wrench size={16} color={colors.orange} />}
-          style={styles.metric}
-        />
-        <MetricTile
-          label="Concluídos no mês"
-          value="342"
-          hint="+8%"
-          accent={colors.green}
-          icon={<CheckCircle2 size={16} color={colors.green} />}
-          style={styles.metric}
-        />
-        <MetricTile
-          label="Estoque crítico"
-          value={estoqueBaixo}
-          hint="Atenção"
-          accent={colors.red}
-          icon={<AlertTriangle size={16} color={colors.red} />}
-          style={styles.metric}
-        />
+        <MetricTile label="Chamados abertos" value={metrics.chamadosAbertos} accent={gridTheme.accent} icon={<ClipboardList size={16} color={gridTheme.accent} />} style={styles.metric} />
+        <MetricTile label="Em andamento" value={metrics.chamadosEmAndamento} accent={colors.orange} icon={<Wrench size={16} color={colors.orange} />} style={styles.metric} />
+        <MetricTile label="Concluidos" value={metrics.chamadosConcluidos} accent={colors.green} icon={<CheckCircle2 size={16} color={colors.green} />} style={styles.metric} />
+        <MetricTile label="Estoque critico" value={itensCriticos.length} accent={colors.red} icon={<AlertTriangle size={16} color={colors.red} />} style={styles.metric} />
       </View>
 
-      <SurfaceCard title="Chamados recentes" subtitle="Últimas solicitações registradas">
-        <ListRow
-          title="FCH-1024 - Lâmpada queimada"
-          subtitle="Bloco B • Sala 203 • Prioridade média"
-          badge="Aberto"
-          badgeVariant="warning"
-          meta="10 min"
-          initials="B2"
-          accent={colors.orange}
-        />
-        <ListRow
-          title="FCH-1025 - Vazamento no laboratório"
-          subtitle="Laboratório 04 • Hidráulica"
-          badge="Crítico"
-          badgeVariant="danger"
-          meta="18 min"
-          initials="L4"
-          accent={colors.red}
-        />
-        <ListRow
-          title="FCH-1026 - Ar-condicionado"
-          subtitle="Administração • Manutenção preventiva"
-          badge="Andamento"
-          badgeVariant="info"
-          meta="1h"
-          initials="AD"
-          accent={colors.blue}
-        />
-      </SurfaceCard>
-
-      <View style={styles.split}>
-        <SurfaceCard title="Resumo de manutenção" style={styles.splitCard}>
-          <View style={styles.ringRow}>
-            <RingMetric value="342" label="Concluídas" accent={gridTheme.accent} />
-            <View style={styles.progressStack}>
-              <ProgressBar value={82} accent={gridTheme.accent} />
-              <ProgressBar value={46} accent={colors.orange} />
-              <ProgressBar value={28} accent={colors.red} />
-            </View>
-          </View>
-        </SurfaceCard>
-        <SurfaceCard title="Tarefas por prioridade" style={styles.splitCard}>
-          <MiniBars
-            data={[
-              { label: 'Baixa', value: 32, color: colors.green },
-              { label: 'Média', value: 54, color: colors.blue },
-              { label: 'Alta', value: 42, color: colors.orange },
-              { label: 'Crítica', value: 23, color: colors.red },
-            ]}
+      <SurfaceCard title="Chamados recentes" subtitle="Ultimas solicitacoes registradas">
+        {chamados.length === 0 ? <Text style={styles.emptyDark}>Nenhum dado cadastrado ainda.</Text> : null}
+        {chamados.slice(0, 5).map((chamado) => (
+          <ListRow
+            key={chamado.id}
+            title={`${chamado.codigo ?? 'CH'} - ${chamado.titulo}`}
+            subtitle={`${chamado.sala_nome ?? chamado.bloco_nome ?? 'Local nao informado'} - ${chamado.prioridade}`}
+            badge={chamado.status}
+            badgeVariant={chamado.status === 'concluido' ? 'success' : chamado.prioridade === 'urgente' ? 'danger' : 'warning'}
+            initials="CH"
+            accent={chamado.prioridade === 'urgente' ? colors.red : colors.orange}
           />
-        </SurfaceCard>
-      </View>
-
-      <SurfaceCard title="Itens com estoque baixo" subtitle="Peças que exigem reposição">
-        <ListRow
-          title="Lâmpada LED tubular"
-          subtitle="12 unidades disponíveis"
-          badge="Baixo"
-          badgeVariant="warning"
-          initials="LE"
-          accent={colors.orange}
-        />
-        <ListRow
-          title="Disjuntor bipolar 20A"
-          subtitle="5 unidades disponíveis"
-          badge="Crítico"
-          badgeVariant="danger"
-          initials="DJ"
-          accent={colors.red}
-        />
-        <ListRow
-          title="Filtro de ar condicionado"
-          subtitle="8 unidades disponíveis"
-          badge="Baixo"
-          badgeVariant="warning"
-          initials="FA"
-          accent={colors.orange}
-        />
+        ))}
       </SurfaceCard>
 
-      <SurfaceCard title="Movimentações recentes" subtitle="Equipe e ordens de serviço">
-        <ListRow
-          title="Manutenção preventiva concluída"
-          subtitle="Oficina de soldagem • Roberto Almeida"
-          badge="Concluído"
-          badgeVariant="success"
-          initials="RA"
-          accent={colors.green}
-        />
-        <ListRow
-          title="Inspeção elétrica agendada"
-          subtitle="Bloco C • Amanhã às 08:00"
-          badge="Agenda"
-          badgeVariant="info"
-          initials="EL"
-          accent={colors.blue}
-        />
+      <SurfaceCard title="Tarefas por prioridade" subtitle="Distribuicao real dos chamados">
+        {chamados.length === 0 ? <Text style={styles.emptyDark}>Nenhum dado cadastrado ainda.</Text> : <MiniBars data={prioridades} />}
+      </SurfaceCard>
+
+      <SurfaceCard title="Itens com estoque baixo" subtitle="Pecas que exigem reposicao">
+        {itensCriticos.length === 0 ? <Text style={styles.emptyDark}>Nenhum dado cadastrado ainda.</Text> : null}
+        {itensCriticos.slice(0, 5).map((item) => (
+          <ListRow
+            key={item.id}
+            title={item.titulo}
+            subtitle={`${item.quantidade_disponivel} ${item.unidade} disponiveis`}
+            badge={item.status}
+            badgeVariant={item.status === 'esgotado' ? 'danger' : 'warning'}
+            initials={item.titulo.slice(0, 2).toUpperCase()}
+            accent={item.status === 'esgotado' ? colors.red : colors.orange}
+          />
+        ))}
       </SurfaceCard>
     </ModuleScreen>
   );
@@ -187,8 +111,5 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   metric: { width: '48%' },
-  split: { gap: 12 },
-  splitCard: { flex: 1 },
-  ringRow: { flexDirection: 'row', alignItems: 'center', gap: 18 },
-  progressStack: { flex: 1, gap: 13 },
+  emptyDark: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
 });

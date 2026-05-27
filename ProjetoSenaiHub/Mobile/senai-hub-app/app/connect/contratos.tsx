@@ -1,17 +1,28 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BriefcaseBusiness, FileCheck2, FileText } from 'lucide-react-native';
-import { CrudModal, type CrudField } from '@/components/common/CrudModal';
+import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
+import { CONTRATO_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { connectService } from '@/services/connect.service';
 import type { ContratoAluno } from '@/types/connect.types';
 
-const fields: CrudField[] = [
-  { name: 'aluno_id', label: 'ID do aluno' },
-  { name: 'empresa_id', label: 'ID da empresa' },
+const contratoOptionLoaders = {
+  alunos: connectService.listAlunoOptions,
+  empresas: connectService.listEmpresaOptions,
+};
+
+type ContratoOptionKey = keyof typeof contratoOptionLoaders;
+type ContratoOptions = Record<ContratoOptionKey, CrudOption[]>;
+
+function getFields(options: Partial<ContratoOptions>): CrudField[] {
+  return [
+  { name: 'aluno_id', label: 'Aluno', required: true, options: options.alunos ?? [] },
+  { name: 'empresa_id', label: 'Empresa', options: options.empresas ?? [], emptyOptionLabel: 'Sem empresa' },
   { name: 'carteira_trabalho', label: 'Carteira de trabalho' },
   { name: 'conta_bancaria', label: 'Conta bancária' },
   { name: 'carga_horaria', label: 'Carga horária', placeholder: '4h, 6h ou 8h', required: true },
@@ -19,8 +30,9 @@ const fields: CrudField[] = [
   { name: 'email_empresa', label: 'E-mail da empresa', keyboardType: 'email-address' },
   { name: 'data_inicio', label: 'Data de início', placeholder: 'DD/MM/AAAA', mask: 'date' },
   { name: 'data_termino', label: 'Data de término', placeholder: 'DD/MM/AAAA', mask: 'date' },
-  { name: 'status', label: 'Status', placeholder: 'ativo, encerrado ou pendente' },
-];
+  { name: 'status', label: 'Status', required: true, options: CONTRATO_STATUS_OPTIONS },
+  ];
+}
 
 function formValues(contrato: ContratoAluno): Record<string, string> {
   return {
@@ -41,6 +53,8 @@ export default function ContratosScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ContratoAluno | null>(null);
   const [search, setSearch] = useState('');
+  const { options, error: optionsError } = useSelectOptions(contratoOptionLoaders);
+  const fields = getFields(options);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<ContratoAluno, Record<string, string>>({
       load: connectService.listContratos,
@@ -75,7 +89,7 @@ export default function ContratosScreen() {
         <SearchField placeholder="Buscar contrato, aluno ou empresa..." value={search} onChangeText={setSearch} />
 
         <SurfaceCard title="Contratos vigentes" subtitle="Contratos de aprendizagem">
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhum contrato encontrado.</Text> : null}
           {filtered.map((contrato) => (
             <ListRow

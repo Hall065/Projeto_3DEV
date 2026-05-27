@@ -1,26 +1,39 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CalendarCheck, CheckCircle2, Clock3, XCircle } from 'lucide-react-native';
-import { CrudModal, type CrudField } from '@/components/common/CrudModal';
+import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, Pill, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
+import { FREQUENCIA_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { connectService } from '@/services/connect.service';
 import { useAuthStore } from '@/stores/auth.store';
 import type { FrequenciaRegistro } from '@/types/connect.types';
 
-const fields: CrudField[] = [
-  { name: 'aluno_id', label: 'ID do aluno', required: true },
-  { name: 'turma_id', label: 'ID da turma' },
-  { name: 'professor_id', label: 'ID do professor' },
+const frequenciaOptionLoaders = {
+  alunos: connectService.listAlunoOptions,
+  turmas: connectService.listTurmaOptions,
+  professores: connectService.listProfessorOptions,
+};
+
+type FrequenciaOptionKey = keyof typeof frequenciaOptionLoaders;
+type FrequenciaOptions = Record<FrequenciaOptionKey, CrudOption[]>;
+
+function getFields(options: Partial<FrequenciaOptions>): CrudField[] {
+  return [
+  { name: 'aluno_id', label: 'Aluno', required: true, options: options.alunos ?? [] },
+  { name: 'turma_id', label: 'Turma', options: options.turmas ?? [], emptyOptionLabel: 'Sem turma' },
+  { name: 'professor_id', label: 'Professor', options: options.professores ?? [], emptyOptionLabel: 'Sem professor' },
   { name: 'disciplina', label: 'Disciplina' },
   { name: 'data_aula', label: 'Data da aula', placeholder: 'DD/MM/AAAA', mask: 'date', required: true },
   { name: 'quantidade_aulas', label: 'Quantidade de aulas', keyboardType: 'numeric', mask: 'integer' },
-  { name: 'status', label: 'Status', placeholder: 'presente, falta_justificada ou falta_injustificada', required: true },
+  { name: 'status', label: 'Status', required: true, options: FREQUENCIA_STATUS_OPTIONS },
   { name: 'quantidade_aulas_faltadas', label: 'Aulas faltadas', keyboardType: 'numeric', mask: 'integer' },
   { name: 'justificativa', label: 'Justificativa', multiline: true },
-];
+  ];
+}
 
 function formValues(frequencia: FrequenciaRegistro): Record<string, string> {
   return {
@@ -35,6 +48,8 @@ export default function FrequenciaScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<FrequenciaRegistro | null>(null);
   const session = useAuthStore((s) => s.session);
+  const { options, error: optionsError } = useSelectOptions(frequenciaOptionLoaders);
+  const fields = getFields(options);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<FrequenciaRegistro, Record<string, string>>({
       load: connectService.listFrequencias,
@@ -73,7 +88,7 @@ export default function FrequenciaScreen() {
             <Pill label="Falta justificada" variant="warning" />
             <Pill label="Falta" variant="danger" />
           </View>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
           {items.length === 0 ? <Text style={styles.empty}>Nenhum registro de frequência encontrado.</Text> : null}
           {items.map((registro) => (
             <ListRow

@@ -1,24 +1,37 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AlertCircle, CheckCircle2, Clock3, Wrench } from 'lucide-react-native';
-import { CrudModal, type CrudField } from '@/components/common/CrudModal';
+import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, Pill, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
+import { CHAMADO_PRIORIDADE_OPTIONS, CHAMADO_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { gridService } from '@/services/grid.service';
 import { useAuthStore } from '@/stores/auth.store';
 import type { Chamado } from '@/types/grid.types';
 
-const fields: CrudField[] = [
+const chamadoOptionLoaders = {
+  categorias: gridService.listCategoriaOptions,
+  blocos: gridService.listBlocoOptions,
+  salas: gridService.listSalaOptions,
+};
+
+type ChamadoOptionKey = keyof typeof chamadoOptionLoaders;
+type ChamadoOptions = Record<ChamadoOptionKey, CrudOption[]>;
+
+function getFields(options: Partial<ChamadoOptions>): CrudField[] {
+  return [
   { name: 'titulo', label: 'Título', required: true },
   { name: 'descricao', label: 'Descrição', required: true, multiline: true },
-  { name: 'prioridade', label: 'Prioridade', placeholder: 'baixa, media, alta ou urgente' },
-  { name: 'status', label: 'Status', placeholder: 'aberto, em_andamento, concluido' },
-  { name: 'categoria_id', label: 'ID da categoria' },
-  { name: 'bloco_id', label: 'ID do bloco' },
-  { name: 'sala_id', label: 'ID da sala' },
-];
+  { name: 'prioridade', label: 'Prioridade', required: true, options: CHAMADO_PRIORIDADE_OPTIONS },
+  { name: 'status', label: 'Status', required: true, options: CHAMADO_STATUS_OPTIONS },
+  { name: 'categoria_id', label: 'Categoria', options: options.categorias ?? [], emptyOptionLabel: 'Sem categoria' },
+  { name: 'bloco_id', label: 'Bloco', options: options.blocos ?? [], emptyOptionLabel: 'Sem bloco' },
+  { name: 'sala_id', label: 'Sala', options: options.salas ?? [], emptyOptionLabel: 'Sem sala' },
+  ];
+}
 
 function formValues(chamado: Chamado): Record<string, string> {
   return {
@@ -37,6 +50,8 @@ export default function ChamadosScreen() {
   const [editing, setEditing] = useState<Chamado | null>(null);
   const [search, setSearch] = useState('');
   const session = useAuthStore((s) => s.session);
+  const { options, error: optionsError } = useSelectOptions(chamadoOptionLoaders);
+  const fields = getFields(options);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<Chamado, Record<string, string>>({
       load: gridService.listChamados,
@@ -79,7 +94,7 @@ export default function ChamadosScreen() {
             <Pill label="Em andamento" variant="warning" tone="dark" />
             <Pill label="Concluídos" variant="success" tone="dark" />
           </View>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
           {filtered.length === 0 ? <Text style={styles.emptyDark}>Nenhum chamado encontrado.</Text> : null}
           {filtered.map((chamado) => (
             <ListRow

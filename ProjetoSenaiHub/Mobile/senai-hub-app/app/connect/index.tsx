@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { BookOpen, GraduationCap, TrendingUp, Users } from 'lucide-react-native';
-import {
-  ListRow,
-  MetricTile,
-  MiniBars,
-  ProgressBar,
-  RingMetric,
-  SurfaceCard,
-} from '@/components/common/VisualPrimitives';
+import { StyleSheet, Text, View } from 'react-native';
+import { BookOpen, BriefcaseBusiness, GraduationCap, Users } from 'lucide-react-native';
+import { ListRow, MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { connectService } from '@/services/connect.service';
+import type { Curso, Turma } from '@/types/connect.types';
 
 export default function ConnectDashboard() {
   const [loading, setLoading] = useState(true);
@@ -21,108 +15,70 @@ export default function ConnectDashboard() {
     totalTurmas: 0,
     totalCursos: 0,
   });
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [turmas, setTurmas] = useState<Turma[]>([]);
 
   useEffect(() => {
-    connectService
-      .getDashboardMetrics()
-      .then(setMetrics)
-      .catch(() => setMetrics({ totalAlunos: 0, totalProfessores: 0, totalTurmas: 0, totalCursos: 0 }))
+    Promise.all([
+      connectService.getDashboardMetrics(),
+      connectService.listCursos(),
+      connectService.listTurmas(),
+    ])
+      .then(([dashboardMetrics, cursosData, turmasData]) => {
+        setMetrics(dashboardMetrics);
+        setCursos(cursosData);
+        setTurmas(turmasData);
+      })
+      .catch(() => {
+        setMetrics({ totalAlunos: 0, totalProfessores: 0, totalTurmas: 0, totalCursos: 0 });
+        setCursos([]);
+        setTurmas([]);
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const cursosPorPeriodo = [
+    { label: 'Manha', value: cursos.filter((c) => c.periodo === 'manha').length, color: colors.blue },
+    { label: 'Tarde', value: cursos.filter((c) => c.periodo === 'tarde').length, color: connectTheme.accent },
+    { label: 'Noite', value: cursos.filter((c) => c.periodo === 'noite').length, color: colors.orange },
+    { label: 'Integral', value: cursos.filter((c) => c.periodo === 'integral').length, color: colors.green },
+  ];
 
   return (
     <ModuleScreen
       kicker="SENAI Connect"
-      title="Visão geral"
-      description="Dashboard acadêmico do SENAI Connect."
+      title="Visao geral"
+      description="Dashboard academico do SENAI Connect."
       isLoading={loading}
     >
       <View style={styles.metricGrid}>
-        <MetricTile
-          label="Alunos ativos"
-          value={metrics.totalAlunos || '2.489'}
-          hint="+12%"
-          accent={connectTheme.accent}
-          icon={<Users size={16} color={connectTheme.accent} />}
-          style={styles.metric}
-        />
-        <MetricTile
-          label="Professores"
-          value={metrics.totalProfessores || 186}
-          hint="+8%"
-          accent={colors.blue}
-          icon={<GraduationCap size={16} color={colors.blue} />}
-          style={styles.metric}
-        />
-        <MetricTile
-          label="Turmas"
-          value={metrics.totalTurmas || 96}
-          hint="Ativas"
-          accent={colors.orange}
-          icon={<BookOpen size={16} color={colors.orange} />}
-          style={styles.metric}
-        />
-        <MetricTile
-          label="Cursos"
-          value={metrics.totalCursos || 34}
-          hint="+2"
-          accent={colors.green}
-          icon={<TrendingUp size={16} color={colors.green} />}
-          style={styles.metric}
-        />
+        <MetricTile label="Alunos ativos" value={metrics.totalAlunos} accent={connectTheme.accent} icon={<Users size={16} color={connectTheme.accent} />} style={styles.metric} />
+        <MetricTile label="Professores" value={metrics.totalProfessores} accent={colors.blue} icon={<GraduationCap size={16} color={colors.blue} />} style={styles.metric} />
+        <MetricTile label="Turmas" value={metrics.totalTurmas} accent={colors.orange} icon={<BookOpen size={16} color={colors.orange} />} style={styles.metric} />
+        <MetricTile label="Cursos" value={metrics.totalCursos} accent={colors.green} icon={<BriefcaseBusiness size={16} color={colors.green} />} style={styles.metric} />
       </View>
 
-      <SurfaceCard title="Frequência média" subtitle="Acompanhamento das turmas no mês">
-        <View style={styles.ringRow}>
-          <RingMetric value="92,4%" label="Presença" accent={colors.green} />
-          <View style={styles.progressStack}>
-            <ProgressBar value={92} accent={colors.green} />
-            <ProgressBar value={68} accent={colors.blue} />
-            <ProgressBar value={22} accent={colors.red} />
-          </View>
-        </View>
+      <SurfaceCard title="Cursos por periodo" subtitle="Distribuicao real do catalogo">
+        {cursos.length === 0 ? (
+          <Text style={styles.empty}>Nenhum dado cadastrado ainda.</Text>
+        ) : (
+          <MiniBars data={cursosPorPeriodo} />
+        )}
       </SurfaceCard>
 
-      <SurfaceCard title="Matrículas por mês" subtitle="Novas entradas e rematrículas">
-        <MiniBars
-          data={[
-            { label: 'Jan', value: 54, color: connectTheme.accent },
-            { label: 'Fev', value: 63, color: colors.blue },
-            { label: 'Mar', value: 48, color: colors.orange },
-            { label: 'Abr', value: 72, color: colors.green },
-            { label: 'Mai', value: 86, color: connectTheme.accent },
-          ]}
-        />
-      </SurfaceCard>
-
-      <SurfaceCard title="Atividades recentes" subtitle="Últimos eventos acadêmicos">
-        <ListRow
-          title="Nova turma criada"
-          subtitle="TURMA-AUT-25 • Técnico em Automação"
-          badge="Turma"
-          badgeVariant="info"
-          meta="Hoje"
-          initials="TA"
-          accent={colors.blue}
-        />
-        <ListRow
-          title="Frequência registrada"
-          subtitle="Desenvolvimento de Sistemas • 5 aulas"
-          badge="Concluída"
-          badgeVariant="success"
-          meta="08:40"
-          initials="DS"
-          accent={colors.green}
-        />
-        <ListRow
-          title="Contrato atualizado"
-          subtitle="Empresa parceira • 12 alunos"
-          badge="Contrato"
-          badgeVariant="warning"
-          meta="Ontem"
-          initials="CP"
-          accent={colors.orange}
-        />
+      <SurfaceCard title="Turmas cadastradas" subtitle="Ultimas turmas carregadas do Supabase">
+        {turmas.length === 0 ? <Text style={styles.empty}>Nenhum dado cadastrado ainda.</Text> : null}
+        {turmas.slice(0, 5).map((turma) => (
+          <ListRow
+            key={turma.id}
+            title={turma.nome}
+            subtitle={`${turma.curso_nome ?? 'Curso nao vinculado'} - ${turma.periodo ?? 'sem periodo'}`}
+            badge={turma.status}
+            badgeVariant={turma.status === 'ativa' ? 'success' : 'neutral'}
+            initials={turma.nome.slice(0, 2).toUpperCase()}
+            accent={colors.blue}
+          />
+        ))}
       </SurfaceCard>
     </ModuleScreen>
   );
@@ -136,6 +92,5 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   metric: { width: '48%' },
-  ringRow: { flexDirection: 'row', alignItems: 'center', gap: 18 },
-  progressStack: { flex: 1, gap: 14 },
+  empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
 });

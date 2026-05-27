@@ -10,6 +10,7 @@ export const CONNECT_DRAWER_ITEMS: DrawerMenuItem[] = [
   { label: 'Professores', route: ROUTES.connect.professores },
   { label: 'Turmas', route: ROUTES.connect.turmas },
   { label: 'Cursos', route: ROUTES.connect.cursos },
+  { label: 'Empresas', route: ROUTES.connect.empresas },
   { label: 'Frequência', route: ROUTES.connect.frequencia },
   { label: 'Gerenciar frequência', route: ROUTES.connect.gerenciarFrequencia },
   { label: 'Relatórios', route: ROUTES.connect.relatorios },

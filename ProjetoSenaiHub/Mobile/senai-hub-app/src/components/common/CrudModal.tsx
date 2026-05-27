@@ -24,6 +24,12 @@ import {
   type InputMask,
 } from '@/utils/formatters';
 
+export interface CrudOption {
+  value: string;
+  label: string;
+  description?: string;
+}
+
 export interface CrudField {
   name: string;
   label: string;
@@ -33,6 +39,8 @@ export interface CrudField {
   secureTextEntry?: boolean;
   keyboardType?: KeyboardTypeOptions;
   mask?: InputMask;
+  options?: CrudOption[];
+  emptyOptionLabel?: string;
 }
 
 interface CrudModalProps {
@@ -98,24 +106,65 @@ export function CrudModal({
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             {fields.map((field) => {
               const mask = resolveInputMask(field);
+              const fieldValue = values[field.name] ?? '';
+              const selectOptions = field.options
+                ? field.required
+                  ? field.options
+                  : [{ value: '', label: field.emptyOptionLabel ?? 'Sem vinculo' }, ...field.options]
+                : [];
               return (
                 <View key={field.name} style={styles.field}>
                   <Text style={styles.label}>
                     {field.label}
                     {field.required ? <Text style={styles.required}> *</Text> : null}
                   </Text>
-                  <TextInput
-                    style={[styles.input, field.multiline && styles.inputMultiline]}
-                    placeholder={field.placeholder}
-                    placeholderTextColor={colors.mutedText}
-                    value={values[field.name] ?? ''}
-                    onChangeText={(value) =>
-                      setValues((current) => ({ ...current, [field.name]: applyInputMask(field, value) }))
-                    }
-                    multiline={field.multiline}
-                    secureTextEntry={field.secureTextEntry}
-                    keyboardType={field.keyboardType ?? getKeyboardTypeForMask(mask)}
-                  />
+                  {field.options ? (
+                    <View style={styles.optionList}>
+                      {selectOptions.length === 0 ? (
+                        <Text style={styles.emptyOptions}>Nenhum dado cadastrado ainda.</Text>
+                      ) : (
+                        selectOptions.map((option) => {
+                          const selected = fieldValue === option.value;
+                          return (
+                            <Pressable
+                              key={`${field.name}-${option.value || 'empty'}`}
+                              style={[styles.optionButton, selected && styles.optionButtonSelected]}
+                              onPress={() =>
+                                setValues((current) => ({ ...current, [field.name]: option.value }))
+                              }
+                            >
+                              <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
+                                {option.label}
+                              </Text>
+                              {option.description ? (
+                                <Text
+                                  style={[
+                                    styles.optionDescription,
+                                    selected && styles.optionDescriptionSelected,
+                                  ]}
+                                >
+                                  {option.description}
+                                </Text>
+                              ) : null}
+                            </Pressable>
+                          );
+                        })
+                      )}
+                    </View>
+                  ) : (
+                    <TextInput
+                      style={[styles.input, field.multiline && styles.inputMultiline]}
+                      placeholder={field.placeholder}
+                      placeholderTextColor={colors.mutedText}
+                      value={fieldValue}
+                      onChangeText={(value) =>
+                        setValues((current) => ({ ...current, [field.name]: applyInputMask(field, value) }))
+                      }
+                      multiline={field.multiline}
+                      secureTextEntry={field.secureTextEntry}
+                      keyboardType={field.keyboardType ?? getKeyboardTypeForMask(mask)}
+                    />
+                  )}
                 </View>
               );
             })}
@@ -186,6 +235,26 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   inputMultiline: { minHeight: 86, textAlignVertical: 'top' },
+  optionList: { gap: 8 },
+  optionButton: {
+    minHeight: 42,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    justifyContent: 'center',
+  },
+  optionButtonSelected: {
+    borderColor: colors.red,
+    backgroundColor: colors.panelSoft,
+  },
+  optionLabel: { color: colors.navy, fontSize: 13, fontWeight: '800' },
+  optionLabelSelected: { color: colors.red },
+  optionDescription: { color: colors.grayText, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  optionDescriptionSelected: { color: colors.navy },
+  emptyOptions: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
   error: { color: colors.red, fontSize: 12, fontWeight: '700', marginBottom: 10 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 4 },
   cancelButton: {

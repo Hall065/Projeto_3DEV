@@ -1,32 +1,46 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AlertTriangle, DollarSign, Package, Warehouse } from 'lucide-react-native';
-import { CrudModal, type CrudField } from '@/components/common/CrudModal';
+import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
+import { ESTOQUE_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { gridService } from '@/services/grid.service';
 import type { ItemEstoque } from '@/types/grid.types';
 
-const fields: CrudField[] = [
+const estoqueOptionLoaders = {
+  categorias: gridService.listCategoriaOptions,
+  fornecedores: gridService.listFornecedorOptions,
+};
+
+type EstoqueOptionKey = keyof typeof estoqueOptionLoaders;
+type EstoqueOptions = Record<EstoqueOptionKey, CrudOption[]>;
+
+function getFields(options: Partial<EstoqueOptions>): CrudField[] {
+  return [
   { name: 'titulo', label: 'Nome do item', required: true },
   { name: 'descricao', label: 'Descrição', multiline: true, required: true },
-  { name: 'categoria_id', label: 'ID da categoria' },
+  { name: 'categoria_id', label: 'Categoria', options: options.categorias ?? [], emptyOptionLabel: 'Sem categoria' },
+  { name: 'fornecedor_id', label: 'Fornecedor', options: options.fornecedores ?? [], emptyOptionLabel: 'Sem fornecedor' },
   { name: 'quantidade_disponivel', label: 'Quantidade disponível', keyboardType: 'numeric', mask: 'integer', required: true },
   { name: 'quantidade_minima', label: 'Quantidade mínima', keyboardType: 'numeric', mask: 'integer' },
   { name: 'unidade', label: 'Unidade (ex: un, m, kg)', placeholder: 'un' },
   { name: 'localizacao', label: 'Localização (Sala/Prateleira)', required: true },
   { name: 'empresa_distribuidora', label: 'Distribuidora' },
   { name: 'custo', label: 'Custo', placeholder: '120,00', keyboardType: 'decimal-pad', mask: 'currency' },
-  { name: 'status', label: 'Status', placeholder: 'disponivel, estoque_baixo, reservado, esgotado' },
-];
+  { name: 'status', label: 'Status', required: true, options: ESTOQUE_STATUS_OPTIONS },
+  ];
+}
 
 function formValues(item: ItemEstoque): Record<string, string> {
   return {
     titulo: item.titulo ?? '',
     descricao: item.descricao ?? '',
     categoria_id: item.categoria_id ?? '',
+    fornecedor_id: item.fornecedor_id ?? '',
     quantidade_disponivel: String(item.quantidade_disponivel ?? 0),
     quantidade_minima: String(item.quantidade_minima ?? 0),
     unidade: item.unidade ?? 'un',
@@ -41,6 +55,8 @@ export default function EstoqueScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ItemEstoque | null>(null);
   const [search, setSearch] = useState('');
+  const { options, error: optionsError } = useSelectOptions(estoqueOptionLoaders);
+  const fields = getFields(options);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<ItemEstoque, Record<string, string>>({
       load: gridService.listEstoque,
@@ -77,7 +93,7 @@ export default function EstoqueScreen() {
         <SearchField placeholder="Buscar por item, código ou categoria..." value={search} onChangeText={setSearch} />
 
         <SurfaceCard title="Itens cadastrados" subtitle="Lista de materiais de manutenção">
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhum item encontrado.</Text> : null}
           {filtered.map((item) => (
             <ListRow

@@ -2,24 +2,36 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CheckCircle2, Clock3, Plus, Wrench } from 'lucide-react-native';
-import { CrudModal, type CrudField } from '@/components/common/CrudModal';
+import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
+import { CHAMADO_PRIORIDADE_OPTIONS, TAREFA_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { gridService } from '@/services/grid.service';
 import { useAuthStore } from '@/stores/auth.store';
 import type { Tarefa } from '@/types/grid.types';
 
-const fields: CrudField[] = [
+const tarefaOptionLoaders = {
+  chamados: gridService.listChamadoOptions,
+  responsaveis: gridService.listUsuarioOptions,
+};
+
+type TarefaOptionKey = keyof typeof tarefaOptionLoaders;
+type TarefaOptions = Record<TarefaOptionKey, CrudOption[]>;
+
+function getFields(options: Partial<TarefaOptions>): CrudField[] {
+  return [
   { name: 'titulo', label: 'Título da tarefa', required: true },
   { name: 'descricao', label: 'Descrição', multiline: true },
-  { name: 'chamado_id', label: 'ID do chamado existente' },
-  { name: 'responsavel_id', label: 'ID do responsável' },
-  { name: 'prioridade', label: 'Prioridade', placeholder: 'media' },
-  { name: 'status', label: 'Status', placeholder: 'a_fazer, em_andamento ou concluida' },
+  { name: 'chamado_id', label: 'Chamado existente', options: options.chamados ?? [], emptyOptionLabel: 'Criar chamado novo' },
+  { name: 'responsavel_id', label: 'Responsavel', options: options.responsaveis ?? [], emptyOptionLabel: 'Sem responsavel' },
+  { name: 'prioridade', label: 'Prioridade', required: true, options: CHAMADO_PRIORIDADE_OPTIONS },
+  { name: 'status', label: 'Status', required: true, options: TAREFA_STATUS_OPTIONS },
   { name: 'observacao', label: 'Observação', multiline: true },
-];
+  ];
+}
 
 function formValues(tarefa: Tarefa): Record<string, string> {
   return {
@@ -51,6 +63,8 @@ export default function TarefasScreen() {
   const [editing, setEditing] = useState<Tarefa | null>(null);
   const [search, setSearch] = useState('');
   const session = useAuthStore((s) => s.session);
+  const { options, error: optionsError } = useSelectOptions(tarefaOptionLoaders);
+  const fields = getFields(options);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<Tarefa, Record<string, string>>({
       load: gridService.listTarefas,
@@ -109,7 +123,7 @@ export default function TarefasScreen() {
         </View>
 
         <SearchField placeholder="Buscar tarefa, sala, status ou responsável..." value={search} onChangeText={setSearch} tone="dark" />
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
 
         <TaskColumn title="A fazer" count={byStatus.a_fazer.length} accent={colors.blue}>
           {byStatus.a_fazer.length ? byStatus.a_fazer.map(renderTask) : <Text style={styles.emptyDark}>Sem tarefas.</Text>}

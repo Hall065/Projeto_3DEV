@@ -5,6 +5,7 @@ import { CrudModal, type CrudField } from '@/components/common/CrudModal';
 import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
+import { USER_ROLE_OPTIONS, USER_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
 import { gridService } from '@/services/grid.service';
 import type { HubUsuario } from '@/types/auth.types';
@@ -13,10 +14,10 @@ const fields: CrudField[] = [
   { name: 'nome', label: 'Nome completo', required: true },
   { name: 'email_institucional', label: 'E-mail institucional', required: true, keyboardType: 'email-address' },
   { name: 'senha', label: 'Senha inicial', placeholder: 'Senai@123456', secureTextEntry: true },
-  { name: 'tipo', label: 'Perfil', placeholder: 'manutencao, admin, direcao...' },
+  { name: 'tipo', label: 'Perfil', required: true, options: USER_ROLE_OPTIONS },
   { name: 'telefone', label: 'Telefone', placeholder: '(19) 98999-9999', mask: 'phone' },
   { name: 'cpf', label: 'CPF', placeholder: '111.111.111-11', mask: 'cpf' },
-  { name: 'status', label: 'Status', placeholder: 'ativo' },
+  { name: 'status', label: 'Status', required: true, options: USER_STATUS_OPTIONS },
 ];
 
 function initials(nome: string) {

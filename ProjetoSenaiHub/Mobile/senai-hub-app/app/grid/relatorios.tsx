@@ -1,101 +1,61 @@
-import { Alert, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { ChartColumn, CheckCircle2, ClipboardList, TrendingUp } from 'lucide-react-native';
-import {
-  ListRow,
-  MetricTile,
-  MiniBars,
-  ProgressBar,
-  RingMetric,
-  SurfaceCard,
-} from '@/components/common/VisualPrimitives';
+import { MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
+import { gridService } from '@/services/grid.service';
+import type { Chamado, ItemEstoque, Tarefa } from '@/types/grid.types';
 
 export default function RelatoriosGridScreen() {
+  const [loading, setLoading] = useState(true);
+  const [chamados, setChamados] = useState<Chamado[]>([]);
+  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
+  const [estoque, setEstoque] = useState<ItemEstoque[]>([]);
+
+  useEffect(() => {
+    Promise.all([gridService.listChamados(), gridService.listTarefas(), gridService.listEstoque()])
+      .then(([chamadosData, tarefasData, estoqueData]) => {
+        setChamados(chamadosData);
+        setTarefas(tarefasData);
+        setEstoque(estoqueData);
+      })
+      .catch(() => {
+        setChamados([]);
+        setTarefas([]);
+        setEstoque([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const tarefasConcluidas = tarefas.filter((tarefa) => tarefa.status === 'concluida' || tarefa.status === 'concluido').length;
+  const custoTotal = estoque.reduce((sum, item) => sum + item.quantidade_disponivel * (item.custo ?? 0), 0);
+  const chamadosPorStatus = [
+    { label: 'Aberto', value: chamados.filter((c) => c.status === 'aberto').length, color: colors.orange },
+    { label: 'And.', value: chamados.filter((c) => c.status === 'em_andamento').length, color: colors.blue },
+    { label: 'Conc.', value: chamados.filter((c) => c.status === 'concluido' || c.status === 'concluida').length, color: gridTheme.accent },
+  ];
+
   return (
     <ModuleScreen
       kicker="SENAI Grid"
-      title="Relatórios"
-      description="Indicadores de manutenção, custos e performance."
-      actionLabel="Exportar"
-      onActionPress={() => Alert.alert('Exportação', 'Relatório de manutenção preparado para exportação.')}
+      title="Relatorios"
+      description="Indicadores de manutencao calculados a partir do Supabase."
+      isLoading={loading}
     >
       <View style={styles.metricGrid}>
-        <MetricTile
-          label="Ordens finalizadas"
-          value={342}
-          accent={gridTheme.accent}
-          icon={<CheckCircle2 size={16} color={gridTheme.accent} />}
-          style={styles.metric}
-        />
-        <MetricTile
-          label="Tempo médio"
-          value="4h"
-          accent={colors.blue}
-          icon={<TrendingUp size={16} color={colors.blue} />}
-          style={styles.metric}
-        />
-        <MetricTile
-          label="Custo mensal"
-          value="R$ 32k"
-          accent={colors.orange}
-          icon={<ChartColumn size={16} color={colors.orange} />}
-          style={styles.metric}
-        />
-        <MetricTile
-          label="Chamados"
-          value={128}
-          accent={colors.red}
-          icon={<ClipboardList size={16} color={colors.red} />}
-          style={styles.metric}
-        />
+        <MetricTile label="Tarefas concluidas" value={tarefasConcluidas} accent={gridTheme.accent} icon={<CheckCircle2 size={16} color={gridTheme.accent} />} style={styles.metric} />
+        <MetricTile label="Tarefas abertas" value={tarefas.length - tarefasConcluidas} accent={colors.blue} icon={<TrendingUp size={16} color={colors.blue} />} style={styles.metric} />
+        <MetricTile label="Custo em estoque" value={`R$ ${Math.round(custoTotal).toLocaleString('pt-BR')}`} accent={colors.orange} icon={<ChartColumn size={16} color={colors.orange} />} style={styles.metric} />
+        <MetricTile label="Chamados" value={chamados.length} accent={colors.red} icon={<ClipboardList size={16} color={colors.red} />} style={styles.metric} />
       </View>
 
-      <SurfaceCard title="Manutenções por mês" subtitle="Volume de tarefas concluídas">
-        <MiniBars
-          data={[
-            { label: 'Jan', value: 45, color: colors.blue },
-            { label: 'Fev', value: 52, color: colors.green },
-            { label: 'Mar', value: 66, color: colors.orange },
-            { label: 'Abr', value: 74, color: colors.red },
-            { label: 'Mai', value: 88, color: gridTheme.accent },
-          ]}
-        />
+      <SurfaceCard title="Chamados por status" subtitle="Distribuicao real das solicitacoes">
+        {chamados.length === 0 ? <Text style={styles.empty}>Nenhum dado cadastrado ainda.</Text> : <MiniBars data={chamadosPorStatus} />}
       </SurfaceCard>
 
-      <SurfaceCard title="Tipos de manutenção" subtitle="Distribuição operacional">
-        <View style={styles.ringRow}>
-          <RingMetric value="342" label="Corretivas" accent={colors.blue} />
-          <RingMetric value="128" label="Preventivas" accent={gridTheme.accent} />
-          <RingMetric value="23" label="Críticas" accent={colors.red} />
-        </View>
-      </SurfaceCard>
-
-      <SurfaceCard title="Custos por manutenção" subtitle="Itens e mão de obra">
-        <View style={styles.progressStack}>
-          <ProgressBar value={72} accent={colors.blue} />
-          <ProgressBar value={54} accent={gridTheme.accent} />
-          <ProgressBar value={33} accent={colors.orange} />
-        </View>
-      </SurfaceCard>
-
-      <SurfaceCard title="Relatórios disponíveis" subtitle="Arquivos gerados recentemente">
-        <ListRow
-          title="Manutenção mensal - Maio"
-          subtitle="PDF • gerado hoje às 09:40"
-          badge="Novo"
-          badgeVariant="success"
-          initials="MM"
-          accent={gridTheme.accent}
-        />
-        <ListRow
-          title="Custos por centro"
-          subtitle="XLSX • atualizado ontem"
-          badge="Planilha"
-          badgeVariant="info"
-          initials="CC"
-          accent={colors.blue}
-        />
+      <SurfaceCard title="Exportacoes" subtitle="Arquivos gerados">
+        <Text style={styles.empty}>Nenhum arquivo gerado ainda.</Text>
       </SurfaceCard>
     </ModuleScreen>
   );
@@ -109,6 +69,5 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   metric: { width: '48%' },
-  ringRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  progressStack: { gap: 14, paddingVertical: 8 },
+  empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
 });

@@ -54,6 +54,7 @@ export interface Tarefa {
 export interface ItemEstoque {
   id: string;
   categoria_id?: string | null;
+  fornecedor_id?: string | null;
   titulo: string;
   descricao: string;
   quantidade_disponivel: number;
@@ -66,6 +67,7 @@ export interface ItemEstoque {
   criado_em?: string;
   // Campos auxiliares para UI
   categoria_nome?: string;
+  fornecedor_nome?: string;
 }
 
 export interface GridCategoria {
