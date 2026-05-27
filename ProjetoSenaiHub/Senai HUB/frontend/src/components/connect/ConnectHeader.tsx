@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, LayoutGrid, LogOut, Menu, Search, Settings, User as UserIcon } from 'lucide-react'
+import { Bell, LayoutGrid, LogOut, Menu, Paintbrush, Search, Settings, User as UserIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { SidebarRailToggle } from '../layout/SidebarRailToggle'
@@ -108,6 +108,15 @@ export function ConnectHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: C
                 onClick={() => setMenuOpen(false)}
               >
                 <UserIcon className="h-4 w-4" /> Perfil
+              </Link>
+              <Link
+                to="/temas"
+                role="menuitem"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-hub-bg"
+                onClick={() => setMenuOpen(false)}
+              >
+                <Paintbrush className="h-4 w-4 text-hub-text-muted" />
+                Temas
               </Link>
               <Link
                 to="/configuracoes"

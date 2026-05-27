@@ -3,7 +3,6 @@ import {
   CheckCircle2,
   ClipboardList,
   Package,
-  Pencil,
   Wrench,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -11,14 +10,18 @@ import { Link } from 'react-router-dom'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
 import { viewRowAction } from '../../components/connect/connectViewActions'
-import { GridDonutChart } from '../../components/grid/GridCharts'
+import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
+import {
+  breakdownTotalCount,
+  GridDistributionDonut,
+  GridQuickReportsSection,
+} from '../../components/grid/GridCharts'
 import { GridPriorityBadge, GridTicketStatusBadge } from '../../components/grid/GridBadges'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
   ConnectPageHeader,
   ConnectTableScroll,
-  KpiCard,
   OutlineButton,
 } from '../../components/connect/ConnectShared'
 import { gridService } from '../../services/gridService'
@@ -37,7 +40,7 @@ export function GridDashboardPage() {
   }, [])
 
   const kpis = data?.kpis
-  const trends = data?.kpi_trends
+  const spark = data?.kpi_sparklines
 
   return (
     <div className="w-full min-w-0">
@@ -48,126 +51,133 @@ export function GridDashboardPage() {
 
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {loading || !kpis ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-2xl border border-hub-border/60 bg-white" />
-          ))
+          Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
         ) : (
           <>
-            <KpiCard icon={ClipboardList} label="Chamados abertos" value={kpis.open_tickets} trend={trends?.open_tickets} />
-            <KpiCard icon={Wrench} label="Em andamento" value={kpis.in_progress} trend={trends?.in_progress} />
-            <KpiCard icon={CheckCircle2} label="Concluídos no mês" value={kpis.completed_month} trend={trends?.completed_month} />
-            <KpiCard icon={Package} label="Itens com estoque baixo" value={kpis.low_stock} trend={trends?.low_stock} />
+            <KpiCard
+              icon={ClipboardList}
+              label="Chamados abertos"
+              value={kpis.open_tickets}
+              variant="blue"
+              sparkline={spark?.open_tickets ?? []}
+              to="/grid/chamados"
+            />
+            <KpiCard
+              icon={Wrench}
+              label="Em andamento"
+              value={kpis.in_progress}
+              variant="coral"
+              sparkline={spark?.in_progress ?? []}
+              to="/grid/tarefas"
+            />
+            <KpiCard
+              icon={CheckCircle2}
+              label="Concluídos no mês"
+              value={kpis.completed_month}
+              variant="green"
+              sparkline={spark?.completed_month ?? []}
+              to="/grid/chamados"
+            />
+            <KpiCard
+              icon={Package}
+              label="Itens com estoque baixo"
+              value={kpis.low_stock}
+              variant="amber"
+              sparkline={spark?.low_stock ?? []}
+              to="/grid/estoque"
+            />
           </>
         )}
       </div>
 
-      <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-6 xl:grid-cols-3">
-        <ConnectCard className="min-w-0 xl:col-span-2">
-          <div className="flex flex-col gap-3 border-b border-hub-border/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <h2 className="text-lg font-semibold text-hub-navy">Chamados recentes</h2>
-            <Link to="/grid/chamados">
-              <OutlineButton>Ver todos</OutlineButton>
-            </Link>
-          </div>
-          {loading ? (
-            <ConnectLoadingSpinner label="Carregando chamados..." className="min-h-[240px]" />
-          ) : (
-            <ConnectTableScroll>
-              <table className="w-full min-w-[720px] text-sm">
-                <thead className="bg-hub-bg/60 text-hub-text-muted">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-medium">ID</th>
-                    <th className="px-4 py-3 text-left font-medium">Título</th>
-                    <th className="px-4 py-3 text-left font-medium">Bloco/Sala</th>
-                    <th className="px-4 py-3 text-left font-medium">Prioridade</th>
-                    <th className="px-4 py-3 text-left font-medium">Status</th>
-                    <th className="px-4 py-3 text-left font-medium">Responsável</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {data?.recent_tickets.map((t) => (
-                    <tr key={t.id} className="border-t border-hub-border/40">
-                      <td className="whitespace-nowrap px-4 py-3 font-medium text-hub-navy">{t.code}</td>
-                      <td className="px-4 py-3">{t.title}</td>
-                      <td className="px-4 py-3">
-                        {t.room} / {t.block}
-                      </td>
-                      <td className="px-4 py-3">
-                        <GridPriorityBadge priority={t.priority} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <GridTicketStatusBadge status={t.status} />
-                      </td>
-                      <td className="px-4 py-3">{t.assignee}</td>
-                      <td className="px-4 py-3 text-right">
-                        <ConnectRowActionsMenu
-                          ariaLabel={`Ações do chamado ${t.code}`}
-                          actions={[
-                            viewRowAction(() => setViewSnapshot(t)),
-                            {
-                              key: 'edit',
-                              label: 'Editar',
-                              icon: Pencil,
-                              onClick: () => window.alert(`Edição do chamado ${t.code} em breve.`),
-                            },
-                          ]}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </ConnectTableScroll>
-          )}
-        </ConnectCard>
+      <ConnectCard className="mb-6 min-w-0 p-4 sm:p-6 lg:p-8">
+        <h2 className="mb-6 text-lg font-semibold text-hub-navy sm:mb-8 sm:text-xl">Relatórios rápidos</h2>
+        <GridQuickReportsSection
+          loading={loading}
+          maintenanceBreakdown={data?.maintenance_breakdown ?? []}
+          priorityBreakdown={data?.priority_breakdown ?? []}
+          ticketsByMonth={data?.tickets_by_month ?? []}
+          ticketsByTechnician={data?.tickets_by_technician ?? []}
+          topInventory={data?.top_inventory ?? []}
+          tasksByColumn={data?.tasks_by_column}
+        />
+      </ConnectCard>
 
-        <ConnectCard className="min-w-0 p-4 sm:p-6">
-          <h2 className="mb-4 text-lg font-semibold text-hub-navy">Resumo de manutenção</h2>
-          <GridDonutChart
-            loading={loading}
-            items={data?.maintenance_breakdown ?? []}
-            centerValue={data?.kpis.completed_month ?? 0}
-            centerLabel="Concluídos"
-          />
-        </ConnectCard>
-      </div>
+      <ConnectCard className="mb-6 min-w-0 overflow-hidden">
+        <div className="flex flex-col gap-3 border-b border-hub-border/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <h2 className="text-lg font-semibold text-hub-navy">Chamados recentes</h2>
+          <Link to="/grid/chamados">
+            <OutlineButton>Ver todos</OutlineButton>
+          </Link>
+        </div>
+        {loading ? (
+          <ConnectLoadingSpinner label="Carregando chamados..." className="min-h-[140px]" />
+        ) : (data?.recent_tickets.length ?? 0) === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-hub-text-muted sm:px-6">
+            Nenhum chamado recente. Crie um em Controle ou Chamados.
+          </p>
+        ) : (
+          <div className="scrollbar-minimal-x overflow-x-auto px-4 py-4 sm:px-6">
+            <ul className="flex w-max min-w-full gap-3 pb-1">
+              {data?.recent_tickets.map((t) => (
+                <li key={t.id} className="w-[min(100%,280px)] shrink-0 sm:w-[300px]">
+                  <article className="flex h-full min-w-0 items-center gap-2 rounded-xl border border-hub-border/50 bg-gradient-to-r from-white to-hub-bg/30 p-3 shadow-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-hub-red">{t.code}</p>
+                      <p className="mt-0.5 line-clamp-2 text-sm font-medium leading-snug text-hub-navy">{t.title}</p>
+                      <p className="mt-1 truncate text-xs text-hub-text-muted">
+                        {t.room || '—'} / {t.block || '—'}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        <GridPriorityBadge priority={t.priority} />
+                        <GridTicketStatusBadge status={t.status} />
+                      </div>
+                    </div>
+                    <ConnectRowActionsMenu
+                      ariaLabel={`Ações do chamado ${t.code}`}
+                      actions={[viewRowAction(() => setViewSnapshot(t))]}
+                    />
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </ConnectCard>
 
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
         <ConnectCard className="p-4 sm:p-6">
-          <h2 className="mb-4 text-lg font-semibold text-hub-navy">Tarefas por prioridade</h2>
-          <GridDonutChart
+          <h2 className="mb-4 text-lg font-semibold text-hub-navy sm:text-xl">Prioridade dos chamados</h2>
+          <GridDistributionDonut
             loading={loading}
             items={data?.priority_breakdown ?? []}
-            centerValue="100%"
-            centerLabel="Distribuição"
+            centerValue={breakdownTotalCount(data?.priority_breakdown ?? []) || '—'}
+            centerLabel="Chamados"
           />
         </ConnectCard>
 
-        <ConnectCard className="min-w-0">
-          <h2 className="border-b border-hub-border/60 px-4 py-4 text-lg font-semibold text-hub-navy sm:px-6">
+        <ConnectCard className="min-w-0 overflow-hidden">
+          <h2 className="border-b border-hub-border/60 px-4 py-4 text-lg font-semibold text-hub-navy sm:px-6 sm:text-xl">
             Itens com estoque baixo
           </h2>
           {loading ? (
             <ConnectLoadingSpinner label="Carregando estoque..." className="min-h-[200px]" />
           ) : (
             <ConnectTableScroll>
-              <table className="w-full min-w-[480px] text-sm">
-                <thead className="bg-hub-bg/60 text-hub-text-muted">
+              <table className="w-full min-w-[400px] text-sm">
+                <thead className="glass-thead text-hub-text-muted">
                   <tr>
-                    <th className="px-4 py-3 text-left">Categoria</th>
-                    <th className="px-4 py-3 text-left">Estoque atual</th>
-                    <th className="px-4 py-3 text-left">Mínimo</th>
-                    <th className="px-4 py-3 text-left">Un.</th>
+                    <th className="px-4 py-3 text-left sm:px-6">Item</th>
+                    <th className="px-4 py-3 text-left sm:px-6">Atual</th>
+                    <th className="px-4 py-3 text-left sm:px-6">Mínimo</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data?.low_stock_items.map((item) => (
                     <tr key={item.id} className="border-t border-hub-border/40">
-                      <td className="px-4 py-3">{item.category}</td>
-                      <td className="px-4 py-3 font-semibold text-red-600">{item.current}</td>
-                      <td className="px-4 py-3">{item.minimum}</td>
-                      <td className="px-4 py-3">{item.unit}</td>
+                      <td className="px-4 py-3 sm:px-6">{item.category}</td>
+                      <td className="px-4 py-3 font-semibold text-red-600 sm:px-6">{item.current}</td>
+                      <td className="px-4 py-3 sm:px-6">{item.minimum}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -179,13 +189,16 @@ export function GridDashboardPage() {
 
       <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">
         <ConnectCard className="p-4 sm:p-6">
-          <h2 className="mb-4 text-lg font-semibold text-hub-navy">Itens urgentes</h2>
+          <h2 className="mb-4 text-lg font-semibold text-hub-navy sm:text-xl">Itens urgentes</h2>
           {loading ? (
             <ConnectLoadingSpinner className="min-h-[160px]" />
           ) : (
-            <ul className="space-y-3">
+            <ul className="scrollbar-glass-inset max-h-[320px] space-y-3 overflow-y-auto pr-1">
               {data?.urgent_items.map((item) => (
-                <li key={item.id} className="flex items-start gap-3 rounded-xl border border-hub-border/50 p-3">
+                <li
+                  key={item.id}
+                  className="flex items-start gap-3 rounded-xl border border-hub-border/50 bg-gradient-to-r from-white to-hub-bg/30 p-3 shadow-sm"
+                >
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-hub-text">{item.title}</p>
@@ -201,22 +214,35 @@ export function GridDashboardPage() {
         </ConnectCard>
 
         <ConnectCard className="p-4 sm:p-6">
-          <h2 className="mb-4 text-lg font-semibold text-hub-navy">Atividades em andamento</h2>
+          <h2 className="mb-4 text-lg font-semibold text-hub-navy sm:text-xl">Atividades em andamento</h2>
           {loading ? (
             <ConnectLoadingSpinner className="min-h-[160px]" />
           ) : (
-            <ul className="space-y-4">
-              {data?.activities.map((a) => (
-                <li key={a.id}>
-                  <div className="mb-1 flex justify-between text-sm">
-                    <span className="font-medium text-hub-text">{a.title}</span>
-                    <span className="font-semibold text-emerald-600">{a.progress}%</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-hub-bg">
-                    <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${a.progress}%` }} />
-                  </div>
-                </li>
-              ))}
+            <ul className="scrollbar-glass-inset max-h-[320px] space-y-3 overflow-y-auto pr-1">
+              {(data?.activities ?? []).length === 0 ? (
+                <li className="py-6 text-center text-sm text-hub-text-muted">Nenhuma tarefa em andamento no momento.</li>
+              ) : (
+                data?.activities.map((a) => (
+                  <li
+                    key={a.id}
+                    className="rounded-xl border border-hub-border/50 bg-gradient-to-r from-white to-hub-bg/30 p-3 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-hub-text-muted">{a.code}</p>
+                        <p className="text-sm font-medium text-hub-text">{a.title}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                        {a.status_label}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs text-hub-text-muted">
+                      {a.room} / {a.block}
+                      {a.assignee ? ` · ${a.assignee}` : ' · Sem técnico'}
+                    </p>
+                  </li>
+                ))
+              )}
             </ul>
           )}
         </ConnectCard>

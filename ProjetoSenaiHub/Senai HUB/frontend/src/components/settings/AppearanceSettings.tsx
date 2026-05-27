@@ -1,6 +1,10 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
-import { WALLPAPER_PRESETS, type WallpaperId } from '../../constants/wallpapers'
+import { WALLPAPER_PRESETS, getWallpaperPreset, type WallpaperId } from '../../constants/wallpapers'
 import { useAppearance } from '../../contexts/AppearanceContext'
+import { navigateBack } from '../../utils/navigation'
+import { SettingsPageFooter } from './SettingsPageFooter'
 
 function WallpaperPreview({ presetId, baseColor, mesh }: { presetId: WallpaperId; baseColor: string; mesh: string }) {
   return (
@@ -19,27 +23,62 @@ function WallpaperPreview({ presetId, baseColor, mesh }: { presetId: WallpaperId
 }
 
 export function AppearanceSettings() {
-  const { wallpaperId, setWallpaperId, wallpaper } = useAppearance()
+  const navigate = useNavigate()
+  const { wallpaperId, setWallpaperId, previewWallpaperId, wallpaper } = useAppearance()
+  const [draftId, setDraftId] = useState<WallpaperId>(wallpaperId)
+  const [savedMessage, setSavedMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    setDraftId(wallpaperId)
+  }, [wallpaperId])
+
+  useEffect(() => {
+    if (draftId === wallpaperId) {
+      previewWallpaperId(null)
+      return
+    }
+    previewWallpaperId(draftId)
+  }, [draftId, wallpaperId, previewWallpaperId])
+
+  useEffect(() => () => previewWallpaperId(null), [previewWallpaperId])
+
+  const draftWallpaper = getWallpaperPreset(draftId)
+  const dirty = draftId !== wallpaperId
+
+  function handleSave() {
+    setWallpaperId(draftId)
+    setSavedMessage('Tema salvo com sucesso.')
+    window.setTimeout(() => setSavedMessage(null), 3000)
+  }
+
+  function handleBack() {
+    setDraftId(wallpaperId)
+    previewWallpaperId(null)
+    navigateBack(navigate)
+  }
 
   return (
     <section className="glass-panel rounded-2xl p-6">
       <header className="mb-5">
-        <h2 className="text-lg font-semibold text-hub-navy">Aparência</h2>
+        <h2 className="text-lg font-semibold text-hub-navy">Plano de fundo</h2>
         <p className="mt-1 text-sm text-hub-text-muted">
-          Plano de fundo colorido com efeito vidro no Hub, Connect e página inicial. O preset{' '}
-          <strong className="font-medium text-hub-navy">Amanhecer</strong> é o mais próximo do estilo
-          glass moderno.
+          Clique em um tema para ver a pré-visualização na tela inteira. O tema só é aplicado de
+          forma permanente ao Hub, Connect e Grid depois de clicar em{' '}
+          <strong className="font-medium text-hub-navy">Salvar</strong>.
         </p>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {WALLPAPER_PRESETS.map((preset) => {
-          const selected = wallpaperId === preset.id
+          const selected = draftId === preset.id
           return (
             <button
               key={preset.id}
               type="button"
-              onClick={() => setWallpaperId(preset.id)}
+              onClick={() => {
+                setDraftId(preset.id)
+                setSavedMessage(null)
+              }}
               className={`group relative overflow-hidden rounded-xl border-2 p-1 text-left transition ${
                 selected
                   ? 'border-hub-red ring-2 ring-hub-red/25'
@@ -62,8 +101,31 @@ export function AppearanceSettings() {
       </div>
 
       <p className="mt-4 text-xs text-hub-text-muted">
-        Ativo: <span className="font-medium text-hub-navy">{wallpaper.name}</span>
+        {dirty ? (
+          <>
+            Pré-visualizando: <span className="font-medium text-hub-navy">{draftWallpaper.name}</span>
+            {' · '}
+            Salvo: <span className="font-medium text-hub-navy">{wallpaper.name}</span>
+          </>
+        ) : (
+          <>
+            Tema salvo: <span className="font-medium text-hub-navy">{wallpaper.name}</span>
+          </>
+        )}
       </p>
+
+      {savedMessage && (
+        <p className="mt-3 text-sm font-medium text-emerald-700" role="status">
+          {savedMessage}
+        </p>
+      )}
+
+      <SettingsPageFooter
+        onSave={handleSave}
+        onBack={handleBack}
+        saveDisabled={!dirty}
+        saveVariant="danger"
+      />
     </section>
   )
 }

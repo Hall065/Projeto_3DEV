@@ -9,8 +9,14 @@ import {
 const STORAGE_KEY = 'senai_hub_wallpaper'
 
 interface AppearanceContextValue {
+  /** Tema persistido (localStorage). */
   wallpaperId: WallpaperId
   wallpaper: WallpaperPreset
+  /** Tema exibido agora (pré-visualização ou salvo). */
+  activeWallpaper: WallpaperPreset
+  /** Aplica o tema na tela sem gravar; `null` restaura o tema salvo. */
+  previewWallpaperId: (id: WallpaperId | null) => void
+  /** Persiste o tema e encerra qualquer pré-visualização. */
   setWallpaperId: (id: WallpaperId) => void
 }
 
@@ -28,9 +34,13 @@ function readStoredWallpaper(): WallpaperId {
 
 export function AppearanceProvider({ children }: { children: React.ReactNode }) {
   const [wallpaperId, setWallpaperIdState] = useState<WallpaperId>(readStoredWallpaper)
+  const [previewId, setPreviewId] = useState<WallpaperId | null>(null)
+
+  const activeWallpaperId = previewId ?? wallpaperId
 
   const setWallpaperId = useCallback((id: WallpaperId) => {
     setWallpaperIdState(id)
+    setPreviewId(null)
     try {
       localStorage.setItem(STORAGE_KEY, id)
     } catch {
@@ -38,15 +48,20 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
     }
   }, [])
 
+  const previewWallpaperId = useCallback((id: WallpaperId | null) => {
+    setPreviewId(id)
+  }, [])
+
   const wallpaper = useMemo(() => getWallpaperPreset(wallpaperId), [wallpaperId])
+  const activeWallpaper = useMemo(() => getWallpaperPreset(activeWallpaperId), [activeWallpaperId])
 
   useEffect(() => {
-    document.documentElement.dataset.wallpaper = wallpaperId
-  }, [wallpaperId])
+    document.documentElement.dataset.wallpaper = activeWallpaperId
+  }, [activeWallpaperId])
 
   const value = useMemo(
-    () => ({ wallpaperId, wallpaper, setWallpaperId }),
-    [wallpaperId, wallpaper, setWallpaperId],
+    () => ({ wallpaperId, wallpaper, activeWallpaper, previewWallpaperId, setWallpaperId }),
+    [wallpaperId, wallpaper, activeWallpaper, previewWallpaperId, setWallpaperId],
   )
 
   return <AppearanceContext.Provider value={value}>{children}</AppearanceContext.Provider>

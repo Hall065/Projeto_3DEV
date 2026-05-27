@@ -9,12 +9,14 @@ import { ApplicationHubPage } from '../pages/ApplicationHubPage'
 import { GridLayout } from '../layouts/GridLayout'
 import { GridDashboardPage } from '../pages/grid/GridDashboardPage'
 import { GridTicketsPage } from '../pages/grid/GridTicketsPage'
+import { GridTicketControlPage } from '../pages/grid/GridTicketControlPage'
 import { GridTasksPage } from '../pages/grid/GridTasksPage'
 import { GridReportsPage } from '../pages/grid/GridReportsPage'
 import { GridInventoryPage } from '../pages/grid/GridInventoryPage'
 import { GridTaskMapPage } from '../pages/grid/GridTaskMapPage'
 import { GridUsersPage } from '../pages/grid/GridUsersPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { ThemesPage } from '../pages/ThemesPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { ConnectOverviewPage } from '../pages/connect/ConnectOverviewPage'
@@ -42,12 +44,14 @@ export function AppRoutes() {
         <Route element={<HubLayout />}>
           <Route path="/hub" element={<ApplicationHubPage />} />
           <Route path="/configuracoes" element={<SettingsPage />} />
+          <Route path="/temas" element={<ThemesPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
         </Route>
 
         <Route element={<GridLayout />}>
           <Route path="/grid" element={<GridDashboardPage />} />
           <Route path="/grid/chamados" element={<GridTicketsPage />} />
+          <Route path="/grid/controle" element={<GridTicketControlPage />} />
           <Route path="/grid/tarefas" element={<GridTasksPage />} />
           <Route path="/grid/relatorios" element={<GridReportsPage />} />
           <Route path="/grid/estoque" element={<GridInventoryPage />} />
@@ -72,7 +76,7 @@ export function AppRoutes() {
       </Route>
 
       <Route path="/" element={<LandingPage />} />
-      <Route path="/dashboard" element={<Navigate to="/hub" replace />} />
+      <Route path="/dashboard" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

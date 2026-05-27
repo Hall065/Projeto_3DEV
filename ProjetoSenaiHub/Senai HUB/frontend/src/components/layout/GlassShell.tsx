@@ -8,17 +8,17 @@ export function GlassShell({
   children: ReactNode
   className?: string
 }) {
-  const { wallpaper } = useAppearance()
+  const { activeWallpaper } = useAppearance()
 
   return (
     <div className={`relative min-h-screen min-h-[100dvh] ${className}`}>
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
-        <div className="absolute inset-0" style={{ backgroundColor: wallpaper.baseColor }} />
+        <div className="absolute inset-0" style={{ backgroundColor: activeWallpaper.baseColor }} />
         <div
           className="absolute inset-0"
-          style={{ background: wallpaper.mesh.replace(/\s+/g, ' ').trim() }}
+          style={{ background: activeWallpaper.mesh.replace(/\s+/g, ' ').trim() }}
         />
-        {wallpaper.blobs.map((blobClass, i) => (
+        {activeWallpaper.blobs.map((blobClass, i) => (
           <div key={`${blobClass.slice(0, 24)}-${i}`} className={blobClass} />
         ))}
         {/* leve véu — não apagar o mesh */}

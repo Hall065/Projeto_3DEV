@@ -8,6 +8,7 @@ import {
   MapPin,
   Package,
   Shield,
+  Signpost,
   Users,
   X,
 } from 'lucide-react'
@@ -23,6 +24,7 @@ interface GridSidebarProps {
 
 const mainNav = [
   { to: '/grid', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/grid/controle', label: 'Controle', icon: Signpost },
   { to: '/grid/chamados', label: 'Chamados', icon: ClipboardList },
   { to: '/grid/tarefas', label: 'Tarefas', icon: ListTodo },
   { to: '/grid/relatorios', label: 'Relatórios', icon: BarChart3 },

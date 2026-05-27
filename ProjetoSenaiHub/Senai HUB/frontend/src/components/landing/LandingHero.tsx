@@ -23,20 +23,20 @@ export function LandingHero() {
 
   return (
     <>
-      <section className="relative flex min-h-[100dvh] flex-col">
+      <section className="relative flex min-h-[calc(100dvh-4.75rem)] flex-col sm:min-h-[calc(100dvh-5.25rem)]">
         <img
           src={loginBackground}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[76%_center] opacity-30 sm:object-[74%_center] lg:object-[88%_center]"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_30%] opacity-30 sm:object-[72%_center] lg:object-[88%_center]"
         />
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/50 via-white/20 to-transparent sm:from-white/40 lg:from-white/35"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/55 via-white/25 to-transparent sm:from-white/45 lg:from-white/40"
           aria-hidden
         />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-4 pb-10 pt-28 sm:px-6 sm:pt-32 lg:px-8 lg:pt-36">
-          <div className="glass-panel-solid max-w-xl rounded-3xl p-8 sm:max-w-2xl sm:p-10">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-10 sm:px-6 sm:py-12 lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center lg:gap-10 lg:px-8 lg:py-16">
+          <div className="glass-panel-solid mx-auto w-full max-w-xl rounded-3xl p-8 sm:max-w-2xl sm:p-10 lg:mx-0 lg:max-w-xl lg:justify-self-start xl:max-w-2xl">
             <h1 className="text-3xl font-bold leading-tight tracking-tight text-hub-navy sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
               Conecte alunos, professores e conteúdos para{' '}
               <span className="text-hub-red">transformar aprendizado em futuro.</span>
@@ -71,7 +71,7 @@ export function LandingHero() {
         }`}
         aria-hidden={!showHighlights}
       >
-        <div className="glass-panel mx-auto max-w-7xl border-t border-white/50 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="glass-panel w-full border-t border-white/50 px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center gap-8 sm:gap-16">
             {highlights.map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-3">

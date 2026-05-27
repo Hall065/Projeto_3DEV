@@ -27,7 +27,7 @@ export function KpiCard({
   label: string
   value: string | number
   variant?: KpiCardVariant
-  /** Série semanal (últimas 8 semanas) vinda da API */
+  /** Novos registros / frequência por semana (últimas 8 semanas) vinda da API */
   sparkline?: number[]
   /** Rota ao clicar no ícone */
   to?: string

@@ -31,9 +31,7 @@ class DashboardController extends Controller
 
         $attendanceRate = $this->calculateAttendanceRate();
 
-        $chartData = ConnectDashboardMetric::query()
-            ->where('key', 'attendance_chart')
-            ->value('value') ?? $this->defaultChartData();
+        $chartData = $this->resolveAttendanceChart();
 
         $recentActivities = ConnectActivity::query()
             ->orderByDesc('occurred_at')
@@ -137,7 +135,7 @@ class DashboardController extends Controller
         $all = array_sum($totals->all());
 
         if ($all === 0) {
-            return 87.5;
+            return 0.0;
         }
 
         return round(($present / $all) * 100, 1);
@@ -167,7 +165,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Séries das últimas 8 semanas para mini-gráficos dos cards (cadastros acumulados / frequência).
+     * Séries das últimas 8 semanas para mini-gráficos dos cards (novos cadastros por semana / frequência).
      *
      * @return array<string, list<int|float>>
      */
@@ -176,19 +174,19 @@ class DashboardController extends Controller
         $weeks = 8;
 
         return [
-            'students' => $this->cumulativeWeeklySeries(ConnectStudent::class, $weeks),
-            'teachers' => $this->cumulativeWeeklySeries(ConnectTeacher::class, $weeks),
-            'classes' => $this->cumulativeWeeklySeries(
+            'students' => $this->weeklyNewSeries(ConnectStudent::class, $weeks),
+            'teachers' => $this->weeklyNewSeries(ConnectTeacher::class, $weeks),
+            'classes' => $this->weeklyNewSeries(
                 ConnectClass::class,
                 $weeks,
                 fn ($query) => $query->where('status', 'active'),
             ),
-            'courses' => $this->cumulativeWeeklySeries(
+            'courses' => $this->weeklyNewSeries(
                 ConnectCourse::class,
                 $weeks,
                 fn ($query) => $query->where('status', 'active'),
             ),
-            'contracts' => $this->cumulativeWeeklySeries(
+            'contracts' => $this->weeklyNewSeries(
                 ConnectContract::class,
                 $weeks,
                 fn ($query) => $query->where('status', 'active'),
@@ -198,18 +196,21 @@ class DashboardController extends Controller
     }
 
     /**
+     * Novos registros criados em cada semana (melhor leitura visual nos sparklines).
+     *
      * @param  class-string  $model
      * @param  callable(\Illuminate\Database\Eloquent\Builder): void|null  $scope
      * @return list<int>
      */
-    private function cumulativeWeeklySeries(string $model, int $weeks, ?callable $scope = null): array
+    private function weeklyNewSeries(string $model, int $weeks, ?callable $scope = null): array
     {
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
+            $start = Carbon::now()->subWeeks($w)->startOfWeek();
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
 
-            $query = $model::query()->where('created_at', '<=', $end);
+            $query = $model::query()->whereBetween('created_at', [$start, $end]);
 
             if ($scope !== null) {
                 $scope($query);
@@ -233,12 +234,6 @@ class DashboardController extends Controller
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
             $rate = $this->attendanceRateForPeriod($start, $end);
             $points[] = $rate > 0 ? $rate : ($points[count($points) - 1] ?? 0.0);
-        }
-
-        if (array_sum($points) === 0.0) {
-            $current = $this->calculateAttendanceRate();
-
-            return array_fill(0, $weeks, $current);
         }
 
         return $points;
@@ -350,18 +345,49 @@ class DashboardController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function defaultChartData(): array
+    private function resolveAttendanceChart(): array
     {
+        $stored = ConnectDashboardMetric::query()
+            ->where('key', 'attendance_chart')
+            ->value('value');
+
+        if (is_array($stored) && ! empty($stored['labels'])) {
+            return $stored;
+        }
+
+        return $this->buildAttendanceChartFromDb();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildAttendanceChartFromDb(): array
+    {
+        $monthsPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        $labels = [];
+        $attendanceRates = [];
+        $enrollments = [];
+
+        for ($m = 5; $m >= 0; $m--) {
+            $start = Carbon::now()->subMonths($m)->startOfMonth();
+            $end = Carbon::now()->subMonths($m)->endOfMonth();
+            $labels[] = $monthsPt[$start->month - 1];
+            $attendanceRates[] = $this->attendanceRateForPeriod($start, $end);
+            $enrollments[] = ConnectStudent::query()
+                ->whereBetween('created_at', [$start, $end])
+                ->count();
+        }
+
         return [
-            'labels' => ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+            'labels' => $labels,
             'datasets' => [
                 [
                     'label' => 'Frequência (%)',
-                    'data' => [82, 85, 88, 86, 89, 87],
+                    'data' => $attendanceRates,
                 ],
                 [
                     'label' => 'Matrículas',
-                    'data' => [210, 245, 198, 267, 231, 289],
+                    'data' => $enrollments,
                 ],
             ],
         ];
