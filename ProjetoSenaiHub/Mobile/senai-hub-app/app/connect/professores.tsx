@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { GraduationCap, UserCheck, Users } from 'lucide-react-native';
 import { CrudModal, type CrudField } from '@/components/common/CrudModal';
-import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { FeedbackMessage, ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { USER_STATUS_OPTIONS } from '@/constants/form-options';
@@ -80,7 +80,7 @@ export default function ProfessoresScreen() {
         <SearchField placeholder="Buscar por nome, e-mail ou CPF..." value={search} onChangeText={setSearch} />
 
         <SurfaceCard title="Professores cadastrados" subtitle="Equipe docente ativa">
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <FeedbackMessage variant="danger" message={error} /> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhum professor encontrado.</Text> : null}
           {filtered.map((professor) => (
             <ListRow

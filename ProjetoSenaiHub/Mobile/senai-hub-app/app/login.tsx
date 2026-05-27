@@ -3,12 +3,10 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
-  ActivityIndicator,
   Image,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +14,8 @@ import {
   View,
 } from 'react-native';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react-native';
+import { AnimatedPressable, AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
+import { DEV_TEST_ACCOUNT } from '@/constants/dev-test-account';
 import { colors } from '@/constants/colors';
 import { getSupabaseKeyHint, isSupabaseConfigured } from '@/lib/supabase-config';
 import { useAuthStore } from '@/stores/auth.store';
@@ -27,7 +27,6 @@ const hubLogo = require('../assets/brand/senai-hub-logo-2.png');
 export default function LoginScreen() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
-  const loginAsGuest = useAuthStore((s) => s.loginAsGuest);
   const isLoading = useAuthStore((s) => s.isLoading);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,8 +39,18 @@ export default function LoginScreen() {
     },
   });
 
-  const handleBypass = () => {
-    loginAsGuest();
+  const handleBypass = async () => {
+    setError(null);
+    if (!DEV_TEST_ACCOUNT?.email || !DEV_TEST_ACCOUNT.password) {
+      setError('Configure EXPO_PUBLIC_DEV_TEST_EMAIL e EXPO_PUBLIC_DEV_TEST_PASSWORD no .env para usar o acesso rápido.');
+      return;
+    }
+
+    const err = await login(DEV_TEST_ACCOUNT.email, DEV_TEST_ACCOUNT.password);
+    if (err) {
+      setError(`Não foi possível autenticar a conta de demonstração: ${err}`);
+      return;
+    }
     router.replace('/hub');
   };
 
@@ -82,12 +91,13 @@ export default function LoginScreen() {
           <Text style={styles.subtitle}>Informe seu e-mail e senha para continuar.</Text>
 
           {__DEV__ && !isSupabaseConfigured ? (
-            <Text style={styles.configWarning}>
-              Supabase não configurado. Verifique o .env e reinicie o Expo com -c.
-            </Text>
+            <FeedbackMessage
+              variant="warning"
+              message="Supabase não configurado. Verifique o .env e reinicie o Expo com -c."
+            />
           ) : null}
           {__DEV__ && isSupabaseConfigured ? (
-            <Text style={styles.configHint}>API: {getSupabaseKeyHint()}</Text>
+            <FeedbackMessage variant="info" message={`API: ${getSupabaseKeyHint()}`} />
           ) : null}
 
           <Controller
@@ -129,13 +139,13 @@ export default function LoginScreen() {
                     value={value}
                     onChangeText={onChange}
                   />
-                  <Pressable onPress={() => setShowPassword(!showPassword)}>
+                  <AnimatedPressable style={styles.eyeButton} onPress={() => setShowPassword(!showPassword)}>
                     {showPassword ? (
                       <EyeOff size={17} color={colors.grayText} />
                     ) : (
                       <Eye size={17} color={colors.grayText} />
                     )}
-                  </Pressable>
+                  </AnimatedPressable>
                 </View>
                 {fieldError ? <Text style={styles.fieldError}>{fieldError.message}</Text> : null}
               </View>
@@ -148,19 +158,13 @@ export default function LoginScreen() {
             </Link>
           </View>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <FeedbackMessage variant="danger" message={error} /> : null}
 
-          <Pressable style={styles.button} onPress={handleSubmit(onSubmit)} disabled={isLoading}>
-            {isLoading ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text style={styles.buttonText}>Entrar</Text>
-            )}
-          </Pressable>
+          <AppButton label="Entrar" accent={colors.red} onPress={handleSubmit(onSubmit)} loading={isLoading} />
 
-          <Pressable style={styles.testAccess} onPress={handleBypass}>
+          <AnimatedPressable style={styles.testAccess} onPress={handleBypass} disabled={isLoading}>
             <Text style={styles.testAccessText}>Acesso rápido para demonstração</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -192,17 +196,6 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.navy, fontSize: 25, fontWeight: '900' },
   subtitle: { color: colors.grayText, fontSize: 13, marginTop: 6, marginBottom: 24 },
-  configWarning: {
-    color: colors.red,
-    fontSize: 11,
-    lineHeight: 15,
-    marginBottom: 12,
-  },
-  configHint: {
-    color: colors.grayText,
-    fontSize: 11,
-    marginBottom: 12,
-  },
   field: { marginBottom: 14 },
   label: { color: colors.navy, fontSize: 13, fontWeight: '800', marginBottom: 7 },
   inputWrap: {
@@ -222,6 +215,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingVertical: 12,
   },
+  eyeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   fieldError: { color: colors.red, fontSize: 11, marginTop: 5 },
   forgotRow: { alignItems: 'flex-start', marginTop: -2, marginBottom: 12 },
   link: {
@@ -229,16 +229,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
-  error: { color: colors.red, marginBottom: 12, textAlign: 'center', fontSize: 12 },
-  button: {
-    minHeight: 52,
-    backgroundColor: colors.red,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: '900' },
   testAccess: {
     alignItems: 'center',
     paddingVertical: 14,

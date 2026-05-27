@@ -1,4 +1,6 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { X } from 'lucide-react-native';
+import { AnimatedPressable } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 
 interface FormBottomSheetProps {
@@ -15,9 +17,9 @@ export function FormBottomSheet({ visible, title, onClose, children }: FormBotto
         <View style={styles.sheet}>
           <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
-            <Pressable onPress={onClose}>
-              <Text style={styles.close}>Fechar</Text>
-            </Pressable>
+            <AnimatedPressable style={styles.closeButton} onPress={onClose}>
+              <X size={18} color={colors.navy} />
+            </AnimatedPressable>
           </View>
           <ScrollView style={styles.content}>{children}</ScrollView>
         </View>
@@ -35,8 +37,8 @@ const styles = StyleSheet.create({
   sheet: {
     maxHeight: '85%',
     backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
     padding: 20,
   },
   header: {
@@ -46,6 +48,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: { fontSize: 18, fontWeight: '700', color: colors.navy },
-  close: { color: colors.blue, fontWeight: '600' },
+  closeButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: colors.panelSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   content: { flexGrow: 0 },
 });

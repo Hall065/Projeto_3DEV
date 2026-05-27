@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BriefcaseBusiness, Building2, Mail, UserCheck } from 'lucide-react-native';
 import { CrudModal, type CrudField } from '@/components/common/CrudModal';
-import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { FeedbackMessage, ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { EMPRESA_STATUS_OPTIONS } from '@/constants/form-options';
@@ -69,7 +69,7 @@ export default function EmpresasScreen() {
         <SearchField placeholder="Buscar empresa, CNPJ ou responsavel..." value={search} onChangeText={setSearch} />
 
         <SurfaceCard title="Empresas cadastradas" subtitle="Dados usados nos contratos">
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <FeedbackMessage variant="danger" message={error} /> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhuma empresa encontrada.</Text> : null}
           {filtered.map((empresa) => (
             <ListRow

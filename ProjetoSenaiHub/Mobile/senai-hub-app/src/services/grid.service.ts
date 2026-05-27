@@ -46,6 +46,54 @@ function relation(row: Row, key: string) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function isSupabasePermissionError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const supabaseError = error as { code?: string; status?: number; message?: string };
+  const message = supabaseError.message?.toLowerCase() ?? '';
+  return (
+    supabaseError.status === 401 ||
+    supabaseError.status === 403 ||
+    supabaseError.code === '42501' ||
+    message.includes('permission denied') ||
+    message.includes('row-level security')
+  );
+}
+
+function isSupabaseSchemaError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const supabaseError = error as { code?: string; message?: string };
+  const message = supabaseError.message?.toLowerCase() ?? '';
+  return (
+    supabaseError.code === 'PGRST204' ||
+    supabaseError.code === '42703' ||
+    message.includes('schema cache') ||
+    message.includes('column')
+  );
+}
+
+function getSupabaseErrorMessage(error: unknown, table: string) {
+  if (isSupabasePermissionError(error)) {
+    return `Sem permissão para salvar em grid.${table}. Entre com uma conta autenticada do Supabase e verifique as policies RLS de INSERT/UPDATE no banco.`;
+  }
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = String((error as { message?: unknown }).message ?? '').trim();
+    if (message) return message;
+  }
+  return `Não foi possível salvar em grid.${table}.`;
+}
+
+async function getAuthenticatedUserId(action: string) {
+  const { data } = await supabase.auth.getSession();
+  const userId = data.session?.user?.id;
+  if (!userId) {
+    throw new Error(
+      `Para ${action}, entre com uma conta real do Supabase Auth. O acesso rápido sem autenticação permite visualizar dados, mas não criar ou alterar registros.`
+    );
+  }
+  return userId;
+}
+
 async function selectRows(table: string, select = '*', targetSchema = schema): Promise<Row[]> {
   const { data, error } = await supabase.schema(targetSchema).from(table).select(select);
   if (error) {
@@ -140,9 +188,13 @@ async function insertWithFallback(table: string, payloads: Row[]) {
   for (const payload of payloads) {
     const { data, error } = await supabase.schema(schema).from(table).insert(payload).select('*').single();
     if (!error) return data;
+    if (isSupabasePermissionError(error)) {
+      throw new Error(getSupabaseErrorMessage(error, table));
+    }
     lastError = error;
+    if (!isSupabaseSchemaError(error)) break;
   }
-  throw lastError;
+  throw new Error(getSupabaseErrorMessage(lastError, table));
 }
 
 async function updateWithFallback(table: string, id: string, payloads: Row[]) {
@@ -156,14 +208,18 @@ async function updateWithFallback(table: string, id: string, payloads: Row[]) {
       .select('*')
       .single();
     if (!error) return data;
+    if (isSupabasePermissionError(error)) {
+      throw new Error(getSupabaseErrorMessage(error, table));
+    }
     lastError = error;
+    if (!isSupabaseSchemaError(error)) break;
   }
-  throw lastError;
+  throw new Error(getSupabaseErrorMessage(lastError, table));
 }
 
 async function deleteRow(table: string, id: string) {
   const { error } = await supabase.schema(schema).from(table).delete().eq('id', id);
-  if (error) throw error;
+  if (error) throw new Error(getSupabaseErrorMessage(error, table));
 }
 
 function makeCodigo() {
@@ -211,7 +267,7 @@ function mapTarefa(row: Row): Tarefa {
     prioridade: row.prioridade ?? chamado.prioridade ?? 'media',
     responsavel_id: row.responsavel_id,
     responsavel_nome: responsavel.nome,
-    observacao: row.observacao,
+    observacao: row.observacao ?? row.observacoes,
     data_inicio_reparo: row.data_inicio_reparo,
     data_termino_reparo: row.data_termino_reparo,
   };
@@ -337,11 +393,12 @@ export const gridService = {
     return rows.map(mapChamado);
   },
 
-  createChamado(values: FormValues, userId?: string | null) {
+  async createChamado(values: FormValues, userId?: string | null) {
+    const actorId = await getAuthenticatedUserId('abrir chamado');
     return insertWithFallback('chamados', [
       {
         codigo: nullIfEmpty(values.codigo) ?? makeCodigo(),
-        aberto_por: uuidOrNull(userId ?? values.aberto_por, 'solicitante'),
+        aberto_por: uuidOrNull(actorId ?? values.aberto_por, 'solicitante'),
         categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao) ?? '',
@@ -355,7 +412,7 @@ export const gridService = {
         descricao: nullIfEmpty(values.descricao) ?? '',
         prioridade: normalizeStatus(values.prioridade, 'media'),
         status: normalizeStatus(values.status, 'aberto'),
-        solicitante_id: uuidOrNull(userId ?? values.solicitante_id, 'solicitante'),
+        solicitante_id: uuidOrNull(actorId ?? values.solicitante_id, 'solicitante'),
       },
     ]);
   },
@@ -389,6 +446,7 @@ export const gridService = {
   },
 
   async createTarefa(values: FormValues, userId?: string | null) {
+    const actorId = await getAuthenticatedUserId('criar tarefa');
     let chamadoId = uuidOrNull(values.chamado_id, 'chamado');
     if (!chamadoId) {
       const chamado = await gridService.createChamado(
@@ -399,7 +457,7 @@ export const gridService = {
           status: 'aberto',
           categoria_id: values.categoria_id,
         },
-        userId
+        actorId
       ) as Row;
       chamadoId = chamado.id;
     }
@@ -408,9 +466,16 @@ export const gridService = {
       {
         chamado_id: chamadoId,
         responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
-        atribuido_por: uuidOrNull(userId ?? values.atribuido_por, 'usuario'),
+        atribuido_por: uuidOrNull(actorId ?? values.atribuido_por, 'usuario'),
         status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
         observacao: nullIfEmpty(values.observacao ?? values.descricao),
+      },
+      {
+        chamado_id: chamadoId,
+        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
+        atribuido_por: uuidOrNull(actorId ?? values.atribuido_por, 'usuario'),
+        status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
+        observacoes: nullIfEmpty(values.observacao ?? values.descricao),
       },
       {
         chamado_id: chamadoId,
@@ -429,6 +494,11 @@ export const gridService = {
         responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
         status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
         observacao: nullIfEmpty(values.observacao ?? values.descricao),
+      },
+      {
+        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
+        status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
+        observacoes: nullIfEmpty(values.observacao ?? values.descricao),
       },
       {
         titulo: nullIfEmpty(values.titulo),

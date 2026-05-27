@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { UserCheck, UserPlus, Users } from 'lucide-react-native';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
 import {
+  FeedbackMessage,
   ListRow,
   MetricTile,
   SearchField,
@@ -143,7 +144,7 @@ export default function AlunosScreen() {
         />
 
         <SurfaceCard title="Lista de alunos" subtitle="Dados principais e situação acadêmica">
-          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
+          {error || optionsError ? <FeedbackMessage variant="danger" message={error ?? optionsError ?? ''} /> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhum aluno encontrado.</Text> : null}
           {filtered.map((aluno) => (
             <ListRow

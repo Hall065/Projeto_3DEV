@@ -4,19 +4,21 @@ import { useEffect } from 'react';
 import {
   Image,
   type ImageSourcePropType,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  ArrowRight,
   Bell,
   BookOpen,
   CheckCircle2,
   Grid3x3,
   LogOut,
 } from 'lucide-react-native';
+import { AnimatedPressable, FeedbackMessage } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 import { canAccessConnect, canAccessGrid } from '@/lib/permissions';
 import { useAuthStore } from '@/stores/auth.store';
@@ -36,7 +38,7 @@ interface AppCardProps {
 
 function AppCard({ title, description, accent, onPress, icon, image }: AppCardProps) {
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <AnimatedPressable accessibilityRole="button" style={styles.card} onPress={onPress}>
       <View style={styles.illustration}>
         <Image source={image} style={styles.illustrationImage} resizeMode="cover" />
       </View>
@@ -53,14 +55,16 @@ function AppCard({ title, description, accent, onPress, icon, image }: AppCardPr
       </View>
       <View style={styles.accessBtn}>
         <Text style={styles.accessBtnText}>Acessar aplicativo</Text>
+        <ArrowRight size={16} color={colors.white} />
       </View>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
 export default function HubScreen() {
   const router = useRouter();
   const { session, logout } = useAuthStore();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!session) {
@@ -103,15 +107,22 @@ export default function HubScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 18 }]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.topbar}>
         <Image source={hubLogo} style={styles.logo} resizeMode="contain" />
         <View style={styles.topActions}>
-          <Bell size={20} color={colors.navy} />
+          <View style={styles.iconAction}>
+            <Bell size={19} color={colors.navy} />
+          </View>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
-          <Pressable
+          <AnimatedPressable
+            style={styles.iconAction}
             onPress={async () => {
               await logout();
               router.replace('/login');
@@ -119,7 +130,7 @@ export default function HubScreen() {
             hitSlop={8}
           >
             <LogOut size={19} color={colors.grayText} />
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </View>
 
@@ -127,10 +138,11 @@ export default function HubScreen() {
       <Text style={styles.hubTitle}>Hub de Aplicações</Text>
       <Text style={styles.description}>Acesse os sistemas disponíveis para o seu perfil.</Text>
 
-      <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>Os aplicativos exibidos abaixo dependem do seu perfil e permissões de acesso.</Text>
-        <Text style={styles.infoText}>Use o card desejado para entrar no ambiente SENAI.</Text>
-      </View>
+      <FeedbackMessage
+        variant="info"
+        message="Os aplicativos exibidos abaixo dependem do seu perfil e permissões de acesso."
+        style={styles.infoBox}
+      />
 
       <View style={styles.cards}>
         {apps.map((app) => (
@@ -147,15 +159,19 @@ export default function HubScreen() {
       </View>
 
       {apps.length === 0 ? (
-        <Text style={styles.empty}>Nenhuma aplicação liberada para seu perfil.</Text>
+        <FeedbackMessage
+          variant="warning"
+          message="Nenhuma aplicação liberada para seu perfil."
+          style={styles.emptyMessage}
+        />
       ) : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
-  content: { padding: 18, paddingTop: 24, paddingBottom: 34 },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 18, paddingBottom: 34 },
   topbar: {
     minHeight: 48,
     flexDirection: 'row',
@@ -165,10 +181,20 @@ const styles = StyleSheet.create({
   },
   logo: { width: 156, height: 50 },
   topActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  iconAction: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   avatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 8,
     backgroundColor: colors.navy,
     alignItems: 'center',
     justifyContent: 'center',
@@ -177,17 +203,7 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.grayText, fontSize: 13, fontWeight: '700' },
   hubTitle: { color: colors.navy, fontSize: 27, fontWeight: '900', marginTop: 4 },
   description: { color: colors.grayText, fontSize: 13, marginTop: 5 },
-  infoBox: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#C7DAFF',
-    backgroundColor: '#F0F6FF',
-    padding: 12,
-    marginTop: 18,
-    marginBottom: 14,
-  },
-  infoTitle: { color: colors.navy, fontSize: 12, fontWeight: '800' },
-  infoText: { color: colors.grayText, fontSize: 11, marginTop: 3 },
+  infoBox: { marginTop: 18 },
   cards: { gap: 14 },
   card: {
     borderRadius: 8,
@@ -196,10 +212,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     padding: 14,
     shadowColor: colors.black,
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 4,
   },
   illustration: {
     height: 160,
@@ -231,10 +247,12 @@ const styles = StyleSheet.create({
     minHeight: 42,
     borderRadius: 8,
     backgroundColor: colors.navy,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
     marginTop: 12,
   },
   accessBtnText: { color: colors.white, fontSize: 13, fontWeight: '900' },
-  empty: { textAlign: 'center', color: colors.grayText, marginTop: 24 },
+  emptyMessage: { marginTop: 18 },
 });

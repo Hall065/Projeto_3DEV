@@ -8,6 +8,15 @@ interface CrudResourceConfig<T, FormValues> {
   remove: (id: string) => Promise<unknown>;
 }
 
+function getErrorMessage(err: unknown, fallback: string) {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object' && 'message' in err) {
+    const message = String((err as { message?: unknown }).message ?? '').trim();
+    if (message) return message;
+  }
+  return fallback;
+}
+
 export function useCrudResource<T extends { id: string }, FormValues>(
   config: CrudResourceConfig<T, FormValues>
 ) {
@@ -24,7 +33,7 @@ export function useCrudResource<T extends { id: string }, FormValues>(
       const data = await load();
       setItems(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Não foi possível carregar os dados.';
+      const message = getErrorMessage(err, 'Não foi possível carregar os dados.');
       setError(message);
       setItems([]);
     } finally {
@@ -39,8 +48,13 @@ export function useCrudResource<T extends { id: string }, FormValues>(
   const createItem = async (values: FormValues) => {
     setSubmitting(true);
     try {
+      setError(null);
       await create(values);
       await reload();
+    } catch (err) {
+      const message = getErrorMessage(err, 'Não foi possível criar o registro.');
+      setError(message);
+      throw err;
     } finally {
       setSubmitting(false);
     }
@@ -49,8 +63,13 @@ export function useCrudResource<T extends { id: string }, FormValues>(
   const updateItem = async (id: string, values: FormValues) => {
     setSubmitting(true);
     try {
+      setError(null);
       await update(id, values);
       await reload();
+    } catch (err) {
+      const message = getErrorMessage(err, 'Não foi possível atualizar o registro.');
+      setError(message);
+      throw err;
     } finally {
       setSubmitting(false);
     }
@@ -65,8 +84,12 @@ export function useCrudResource<T extends { id: string }, FormValues>(
         onPress: async () => {
           setSubmitting(true);
           try {
+            setError(null);
             await remove(id);
             await reload();
+          } catch (err) {
+            const message = getErrorMessage(err, 'Não foi possível excluir o registro.');
+            setError(message);
           } finally {
             setSubmitting(false);
           }

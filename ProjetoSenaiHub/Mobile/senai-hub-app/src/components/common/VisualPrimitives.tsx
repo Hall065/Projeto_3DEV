@@ -1,7 +1,25 @@
 import type { ReactNode } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Pencil, Search, Trash2 } from 'lucide-react-native';
+import { useEffect, useRef } from 'react';
+import type { PressableProps, StyleProp, TextStyle, ViewStyle } from 'react-native';
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  Pencil,
+  Search,
+  Trash2,
+  XCircle,
+} from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 
 type Tone = 'light' | 'dark';
@@ -24,6 +42,235 @@ function softAccent(accent: string) {
   return '#E8F1FF';
 }
 
+function useRevealAnimation(delay = 0) {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 260,
+      delay,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [delay, progress]);
+
+  return {
+    opacity: progress,
+    transform: [
+      {
+        translateY: progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [10, 0],
+        }),
+      },
+    ],
+  };
+}
+
+interface AnimatedPressableProps extends Omit<PressableProps, 'style' | 'children'> {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  wrapperStyle?: StyleProp<ViewStyle>;
+  pressScale?: number;
+}
+
+export function AnimatedPressable({
+  children,
+  disabled,
+  onPressIn,
+  onPressOut,
+  pressScale = 0.97,
+  style,
+  wrapperStyle,
+  ...props
+}: AnimatedPressableProps) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const animate = (value: number) => {
+    Animated.spring(scale, {
+      toValue: value,
+      friction: 7,
+      tension: 120,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Animated.View style={[wrapperStyle, { transform: [{ scale }], opacity: disabled ? 0.62 : 1 }]}>
+      <Pressable
+        {...props}
+        disabled={disabled}
+        onPressIn={(event) => {
+          if (!disabled) animate(pressScale);
+          onPressIn?.(event);
+        }}
+        onPressOut={(event) => {
+          if (!disabled) animate(1);
+          onPressOut?.(event);
+        }}
+        style={style}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+interface AppButtonProps extends Omit<PressableProps, 'style' | 'children'> {
+  label: string;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  accent?: string;
+  icon?: ReactNode;
+  loading?: boolean;
+  tone?: Tone;
+  style?: StyleProp<ViewStyle>;
+  wrapperStyle?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+}
+
+export function AppButton({
+  label,
+  variant = 'primary',
+  accent = colors.red,
+  icon,
+  loading,
+  disabled,
+  tone = 'light',
+  style,
+  wrapperStyle,
+  textStyle,
+  ...props
+}: AppButtonProps) {
+  const dark = tone === 'dark';
+  const isPrimary = variant === 'primary';
+  const isGhost = variant === 'ghost';
+  const textColor = isPrimary ? colors.white : dark ? colors.white : accent;
+
+  return (
+    <AnimatedPressable
+      {...props}
+      accessibilityRole="button"
+      disabled={disabled || loading}
+      wrapperStyle={wrapperStyle}
+      style={[
+        styles.appButton,
+        isPrimary && { backgroundColor: accent, borderColor: accent },
+        variant === 'secondary' && [
+          styles.appButtonSecondary,
+          { borderColor: dark ? colors.borderDark : softAccent(accent) },
+        ],
+        isGhost && styles.appButtonGhost,
+        style,
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator color={textColor} />
+      ) : (
+        <View style={styles.appButtonContent}>
+          {icon}
+          <Text style={[styles.appButtonText, { color: textColor }, textStyle]}>{label}</Text>
+        </View>
+      )}
+    </AnimatedPressable>
+  );
+}
+
+interface LoadingStateProps {
+  label?: string;
+  tone?: Tone;
+}
+
+export function LoadingState({ label = 'Carregando informações...', tone = 'light' }: LoadingStateProps) {
+  const dark = tone === 'dark';
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 760,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: 760,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    animation.start();
+    return () => animation.stop();
+  }, [pulse]);
+
+  const pulseOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.8] });
+
+  return (
+    <View style={styles.loadingWrap}>
+      <Animated.View
+        style={[
+          styles.loadingHalo,
+          { opacity: pulseOpacity, backgroundColor: dark ? colors.darkPanelSoft : colors.panelSoft },
+        ]}
+      />
+      <ActivityIndicator size="large" color={dark ? colors.white : colors.navy} />
+      <Text style={[styles.loadingText, dark && styles.mutedOnDark]}>{label}</Text>
+    </View>
+  );
+}
+
+interface FeedbackMessageProps {
+  message: string;
+  variant?: StatusVariant;
+  tone?: Tone;
+  style?: StyleProp<ViewStyle>;
+}
+
+export function FeedbackMessage({
+  message,
+  variant = 'info',
+  tone = 'light',
+  style,
+}: FeedbackMessageProps) {
+  const palette = statusPalette[variant];
+  const dark = tone === 'dark';
+  const revealStyle = useRevealAnimation();
+  const iconColor = dark ? colors.white : palette.text;
+  const icon =
+    variant === 'success' ? (
+      <CheckCircle2 size={17} color={iconColor} />
+    ) : variant === 'danger' ? (
+      <XCircle size={17} color={iconColor} />
+    ) : variant === 'warning' ? (
+      <AlertTriangle size={17} color={iconColor} />
+    ) : (
+      <Info size={17} color={iconColor} />
+    );
+
+  return (
+    <Animated.View
+      style={[
+        styles.feedback,
+        {
+          backgroundColor: dark ? 'rgba(255,255,255,0.08)' : palette.bg,
+          borderColor: dark ? colors.borderDark : palette.border,
+        },
+        revealStyle,
+        style,
+      ]}
+    >
+      {icon}
+      <Text style={[styles.feedbackText, { color: dark ? colors.white : palette.text }]}>
+        {message}
+      </Text>
+    </Animated.View>
+  );
+}
+
 interface SurfaceCardProps {
   title?: string;
   subtitle?: string;
@@ -44,9 +291,10 @@ export function SurfaceCard({
   style,
 }: SurfaceCardProps) {
   const dark = tone === 'dark';
+  const revealStyle = useRevealAnimation();
 
   return (
-    <View style={[styles.surface, dark && styles.surfaceDark, style]}>
+    <Animated.View style={[styles.surface, dark && styles.surfaceDark, revealStyle, style]}>
       {title ? (
         <View style={styles.surfaceHeader}>
           <View style={styles.surfaceTitleWrap}>
@@ -56,7 +304,7 @@ export function SurfaceCard({
             ) : null}
           </View>
           {actionLabel ? (
-            <Pressable
+            <AnimatedPressable
               style={[styles.surfaceAction, dark && styles.surfaceActionDark]}
               onPress={onActionPress}
               disabled={!onActionPress}
@@ -64,12 +312,12 @@ export function SurfaceCard({
               <Text style={[styles.surfaceActionText, dark && styles.surfaceActionTextDark]}>
                 {actionLabel}
               </Text>
-            </Pressable>
+            </AnimatedPressable>
           ) : null}
         </View>
       ) : null}
       {children}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -93,16 +341,19 @@ export function MetricTile({
   style,
 }: MetricTileProps) {
   const dark = tone === 'dark';
+  const revealStyle = useRevealAnimation();
 
   return (
-    <View style={[styles.metric, dark && styles.metricDark, { borderLeftColor: accent }, style]}>
+    <Animated.View
+      style={[styles.metric, dark && styles.metricDark, { borderLeftColor: accent }, revealStyle, style]}
+    >
       <View style={styles.metricTop}>
         <View style={[styles.metricIcon, { backgroundColor: softAccent(accent) }]}>{icon}</View>
         {hint ? <Text style={[styles.metricHint, dark && styles.mutedOnDark]}>{hint}</Text> : null}
       </View>
       <Text style={[styles.metricValue, dark && styles.textOnDark]}>{value}</Text>
       <Text style={[styles.metricLabel, dark && styles.mutedOnDark]}>{label}</Text>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -352,6 +603,65 @@ export function FieldPreview({ label, value }: { label: string; value: string })
 }
 
 const styles = StyleSheet.create({
+  appButton: {
+    minHeight: 46,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  appButtonSecondary: {
+    backgroundColor: colors.white,
+  },
+  appButtonGhost: {
+    minHeight: 38,
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
+  },
+  appButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+  },
+  appButtonText: { fontSize: 13, fontWeight: '900' },
+  loadingWrap: {
+    minHeight: 180,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  loadingHalo: {
+    position: 'absolute',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+  },
+  loadingText: {
+    color: colors.grayText,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  feedback: {
+    minHeight: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  feedbackText: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: 12,
+    fontWeight: '800',
+    lineHeight: 17,
+  },
   surface: {
     backgroundColor: colors.panel,
     borderRadius: 8,

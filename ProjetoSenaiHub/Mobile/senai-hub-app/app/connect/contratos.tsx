@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BriefcaseBusiness, FileCheck2, FileText } from 'lucide-react-native';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
-import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { FeedbackMessage, ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { CONTRATO_STATUS_OPTIONS } from '@/constants/form-options';
@@ -89,7 +89,7 @@ export default function ContratosScreen() {
         <SearchField placeholder="Buscar contrato, aluno ou empresa..." value={search} onChangeText={setSearch} />
 
         <SurfaceCard title="Contratos vigentes" subtitle="Contratos de aprendizagem">
-          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
+          {error || optionsError ? <FeedbackMessage variant="danger" message={error ?? optionsError ?? ''} /> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhum contrato encontrado.</Text> : null}
           {filtered.map((contrato) => (
             <ListRow

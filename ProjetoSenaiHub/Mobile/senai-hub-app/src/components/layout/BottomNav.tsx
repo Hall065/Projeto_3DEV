@@ -1,7 +1,8 @@
 import { cloneElement, isValidElement, type ReactElement } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname, useRouter } from 'expo-router';
+import { AnimatedPressable } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 
 export interface NavItem {
@@ -19,6 +20,8 @@ export function BottomNav({ items, accentColor = colors.navy }: BottomNavProps) 
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const router = useRouter();
+  const activeBg =
+    accentColor === colors.red ? '#FFE7E9' : accentColor === colors.green ? '#E6F8EE' : colors.panelSoft;
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom + 8 }]}>
@@ -29,16 +32,18 @@ export function BottomNav({ items, accentColor = colors.navy }: BottomNavProps) 
           ? cloneElement(item.icon, { color: iconColor, size: active ? 22 : 20 })
           : item.icon;
         return (
-          <Pressable
+          <AnimatedPressable
             key={item.route}
-            style={[styles.item, active && styles.itemActive]}
+            wrapperStyle={styles.itemWrap}
+            style={[styles.item, active && { backgroundColor: activeBg }]}
             onPress={() => router.push(item.route as never)}
           >
+            {active ? <View style={[styles.activeBar, { backgroundColor: accentColor }]} /> : null}
             {icon}
             <Text style={[styles.label, active && { color: accentColor, fontWeight: '700' }]}>
               {item.label}
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         );
       })}
     </View>
@@ -59,14 +64,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -3 },
     elevation: 8,
   },
+  itemWrap: { flex: 1 },
   item: {
-    flex: 1,
     minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
     borderRadius: 8,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  itemActive: { backgroundColor: colors.panelSoft },
-  label: { fontSize: 10, color: colors.grayText },
+  activeBar: {
+    position: 'absolute',
+    top: 0,
+    width: 28,
+    height: 3,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
+  },
+  label: { fontSize: 10, color: colors.grayText, fontWeight: '700' },
 });

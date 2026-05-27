@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/constants/colors';
+import { AnimatedPressable } from './VisualPrimitives';
 import { StatusBadge } from './StatusBadge';
 
 interface DataCardProps {
@@ -11,7 +12,7 @@ interface DataCardProps {
 
 export function DataCard({ title, subtitle, statusLabel, onPress }: DataCardProps) {
   return (
-    <Pressable style={styles.card} onPress={onPress} disabled={!onPress}>
+    <AnimatedPressable style={styles.card} onPress={onPress}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>
           {title
@@ -30,7 +31,7 @@ export function DataCard({ title, subtitle, statusLabel, onPress }: DataCardProp
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
       {statusLabel ? <StatusBadge label={statusLabel} variant="success" /> : null}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -46,6 +47,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: colors.border,
+    shadowColor: colors.black,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
   },
   avatar: {
     width: 40,

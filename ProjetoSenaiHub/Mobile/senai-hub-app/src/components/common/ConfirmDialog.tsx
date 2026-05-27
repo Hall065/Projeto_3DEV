@@ -1,4 +1,5 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View } from 'react-native';
+import { AppButton } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 
 interface ConfirmDialogProps {
@@ -27,12 +28,19 @@ export function ConfirmDialog({
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
           <View style={styles.actions}>
-            <Pressable style={styles.cancelBtn} onPress={onCancel}>
-              <Text style={styles.cancelText}>{cancelLabel}</Text>
-            </Pressable>
-            <Pressable style={styles.confirmBtn} onPress={onConfirm}>
-              <Text style={styles.confirmText}>{confirmLabel}</Text>
-            </Pressable>
+            <AppButton
+              label={cancelLabel}
+              variant="secondary"
+              accent={colors.navy}
+              onPress={onCancel}
+              wrapperStyle={styles.actionButton}
+            />
+            <AppButton
+              label={confirmLabel}
+              accent={colors.red}
+              onPress={onConfirm}
+              wrapperStyle={styles.actionButton}
+            />
           </View>
         </View>
       </View>
@@ -49,8 +57,10 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.white,
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   title: {
     fontSize: 18,
@@ -64,17 +74,8 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
+    gap: 10,
     marginTop: 20,
   },
-  cancelBtn: { padding: 10 },
-  cancelText: { color: colors.grayText, fontWeight: '600' },
-  confirmBtn: {
-    backgroundColor: colors.red,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  confirmText: { color: colors.white, fontWeight: '600' },
+  actionButton: { flex: 1 },
 });

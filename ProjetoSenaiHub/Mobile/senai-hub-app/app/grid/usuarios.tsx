@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ShieldCheck, UserCheck, UserPlus, Users } from 'lucide-react-native';
 import { CrudModal, type CrudField } from '@/components/common/CrudModal';
-import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { FeedbackMessage, ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { USER_ROLE_OPTIONS, USER_STATUS_OPTIONS } from '@/constants/form-options';
@@ -75,7 +75,7 @@ export default function UsuariosGridScreen() {
         <SearchField placeholder="Buscar usuário, e-mail, cargo ou permissão..." value={search} onChangeText={setSearch} />
 
         <SurfaceCard title="Equipe cadastrada" subtitle="Usuários internos e níveis de acesso">
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <FeedbackMessage variant="danger" message={error} /> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhum usuário encontrado.</Text> : null}
           {filtered.map((usuario) => (
             <ListRow

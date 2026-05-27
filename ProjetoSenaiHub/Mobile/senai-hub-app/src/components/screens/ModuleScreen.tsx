@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppButton, LoadingState } from '@/components/common/VisualPrimitives';
 import { EmptyState } from '@/components/common/EmptyState';
 import { colors } from '@/constants/colors';
 
@@ -43,24 +44,20 @@ export function ModuleScreen({
           <Text style={[styles.description, dark && styles.descriptionDark]}>{description}</Text>
         </View>
         {actionLabel ? (
-          <Pressable
-            style={[styles.actionButton, dark && styles.actionButtonDark]}
+          <AppButton
+            label={actionLabel}
             onPress={onActionPress}
             disabled={!onActionPress}
-          >
-            <Text style={[styles.actionButtonText, dark && styles.actionButtonTextDark]}>
-              {actionLabel}
-            </Text>
-          </Pressable>
+            accent={dark ? colors.green : colors.red}
+            tone={tone}
+            style={styles.actionButton}
+            textStyle={styles.actionButtonText}
+          />
         ) : null}
       </View>
 
       {isLoading ? (
-        <ActivityIndicator
-          size="large"
-          color={dark ? colors.white : colors.navy}
-          style={styles.loader}
-        />
+        <LoadingState tone={tone} />
       ) : isEmpty ? (
         <EmptyState title={emptyTitle} description="Os dados aparecerão após conectar o Supabase." />
       ) : (
@@ -73,13 +70,14 @@ export function ModuleScreen({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   containerDark: { backgroundColor: colors.navyDark },
-  content: { padding: 14, paddingBottom: 28 },
+  content: { padding: 16, paddingBottom: 28 },
   heading: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: 12,
-    marginBottom: 14,
+    marginBottom: 16,
+    paddingTop: 2,
   },
   headingText: { flex: 1, minWidth: 0 },
   kicker: {
@@ -95,14 +93,9 @@ const styles = StyleSheet.create({
   description: { color: colors.grayText, fontSize: 12, marginTop: 4 },
   descriptionDark: { color: colors.mutedText },
   actionButton: {
-    borderRadius: 8,
-    backgroundColor: colors.red,
+    minHeight: 40,
     paddingHorizontal: 12,
-    paddingVertical: 10,
   },
-  actionButtonDark: { backgroundColor: colors.green },
-  actionButtonText: { color: colors.white, fontSize: 11, fontWeight: '900' },
-  actionButtonTextDark: { color: colors.navyDark },
-  loader: { marginTop: 40 },
+  actionButtonText: { fontSize: 11 },
   body: { flex: 1 },
 });

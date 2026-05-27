@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, Menu } from 'lucide-react-native';
+import { AnimatedPressable } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 import { useAppStore } from '@/stores/app.store';
 import { useAuthStore } from '@/stores/auth.store';
@@ -46,9 +47,14 @@ export function AppHeader({
     <View style={[styles.container, { paddingTop: insets.top + 8, backgroundColor: accentColor }]}>
       <View style={styles.row}>
         {showMenu ? (
-          <Pressable style={styles.iconButton} onPress={toggleSidebar} hitSlop={8}>
+          <AnimatedPressable
+            accessibilityLabel="Abrir menu"
+            style={styles.iconButton}
+            onPress={toggleSidebar}
+            hitSlop={8}
+          >
             <Menu color={colors.white} size={21} />
-          </Pressable>
+          </AnimatedPressable>
         ) : (
           <View style={styles.spacer} />
         )}
@@ -64,7 +70,12 @@ export function AppHeader({
             </Text>
           </View>
         </View>
-        <Pressable style={styles.iconButton} onPress={onNotificationsPress} hitSlop={8}>
+        <AnimatedPressable
+          accessibilityLabel="Abrir notificações"
+          style={styles.iconButton}
+          onPress={onNotificationsPress}
+          hitSlop={8}
+        >
           <Bell color={colors.white} size={22} />
           {notificationCount > 0 ? (
             <View style={styles.badge}>
@@ -73,7 +84,7 @@ export function AppHeader({
               </Text>
             </View>
           ) : null}
-        </Pressable>
+        </AnimatedPressable>
         <View style={styles.profile}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials}</Text>
@@ -88,16 +99,28 @@ export function AppHeader({
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 12, paddingBottom: 10 },
+  container: {
+    paddingHorizontal: 12,
+    paddingBottom: 11,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+    shadowColor: colors.black,
+    shadowOpacity: 0.14,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   spacer: { width: 36 },
   iconButton: {
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   brandWrap: {
     flex: 1,
@@ -123,7 +146,7 @@ const styles = StyleSheet.create({
   brandDivider: { width: 1, height: 26, backgroundColor: 'rgba(255,255,255,0.35)' },
   titleWrap: { flex: 1, minWidth: 0 },
   title: { fontSize: 13, fontWeight: '900', color: colors.white },
-  subtitle: { fontSize: 8, color: 'rgba(255,255,255,0.72)', marginTop: 1 },
+  subtitle: { fontSize: 9, color: 'rgba(255,255,255,0.72)', marginTop: 1 },
   badge: {
     position: 'absolute',
     top: 3,
@@ -143,9 +166,9 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   avatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 31,
+    height: 31,
+    borderRadius: 8,
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',

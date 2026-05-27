@@ -3,16 +3,15 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
-  ActivityIndicator,
   Image,
   ImageBackground,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import { Mail } from 'lucide-react-native';
+import { AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 import { resetPasswordForEmail } from '@/lib/auth';
 import { recuperarSenhaSchema, type RecuperarSenhaFormData } from '@/utils/validators';
@@ -21,7 +20,7 @@ const circuitBg = require('../assets/brand/senai-circuit-bg.png');
 const hubLogo = require('../assets/brand/senai-hub-logo-2.png');
 
 export default function RecuperarSenhaScreen() {
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; variant: 'success' | 'danger' } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const { control, handleSubmit } = useForm<RecuperarSenhaFormData>({
@@ -35,10 +34,10 @@ export default function RecuperarSenhaScreen() {
     const { error } = await resetPasswordForEmail(data.email);
     setLoading(false);
     if (error) {
-      setMessage(error);
+      setMessage({ text: error, variant: 'danger' });
       return;
     }
-    setMessage('Enviamos um link de recuperação para o seu e-mail.');
+    setMessage({ text: 'Enviamos um link de recuperação para o seu e-mail.', variant: 'success' });
   };
 
   return (
@@ -75,15 +74,9 @@ export default function RecuperarSenhaScreen() {
           )}
         />
 
-        {message ? <Text style={styles.message}>{message}</Text> : null}
+        {message ? <FeedbackMessage variant={message.variant} message={message.text} /> : null}
 
-        <Pressable style={styles.button} onPress={handleSubmit(onSubmit)} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={styles.buttonText}>Enviar link</Text>
-          )}
-        </Pressable>
+        <AppButton label="Enviar link" accent={colors.red} onPress={handleSubmit(onSubmit)} loading={loading} />
 
         <Link href="/login" style={styles.link}>
           Voltar ao login
@@ -128,15 +121,5 @@ const styles = StyleSheet.create({
   },
   input: { flex: 1, color: colors.navy, fontSize: 14, paddingVertical: 12 },
   error: { color: colors.red, fontSize: 12, marginTop: 6 },
-  message: { color: colors.green, fontSize: 12, fontWeight: '700', marginBottom: 12 },
-  button: {
-    minHeight: 52,
-    backgroundColor: colors.red,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  buttonText: { color: colors.white, fontWeight: '900', fontSize: 15 },
   link: { marginTop: 20, color: colors.blue, fontWeight: '800', textAlign: 'center' },
 });

@@ -3,16 +3,15 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
-  ActivityIndicator,
   Image,
   ImageBackground,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import { Eye, Lock } from 'lucide-react-native';
+import { AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 import { updatePassword } from '@/lib/auth';
 import { redefinirSenhaSchema, type RedefinirSenhaFormData } from '@/utils/validators';
@@ -97,15 +96,9 @@ export default function RedefinirSenhaScreen() {
           )}
         />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? <FeedbackMessage variant="danger" message={error} /> : null}
 
-        <Pressable style={styles.button} onPress={handleSubmit(onSubmit)} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={styles.buttonText}>Salvar nova senha</Text>
-          )}
-        </Pressable>
+        <AppButton label="Salvar nova senha" accent={colors.red} onPress={handleSubmit(onSubmit)} loading={loading} />
       </View>
     </View>
   );
@@ -146,13 +139,4 @@ const styles = StyleSheet.create({
   },
   input: { flex: 1, color: colors.navy, fontSize: 14, paddingVertical: 12 },
   error: { color: colors.red, fontSize: 12, marginTop: 6 },
-  button: {
-    minHeight: 52,
-    backgroundColor: colors.red,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  buttonText: { color: colors.white, fontWeight: '900', fontSize: 15 },
 });

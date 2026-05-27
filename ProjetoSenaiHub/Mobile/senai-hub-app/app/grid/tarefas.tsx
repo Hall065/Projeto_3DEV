@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CheckCircle2, Clock3, Plus, Wrench } from 'lucide-react-native';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
-import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { FeedbackMessage, ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { CHAMADO_PRIORIDADE_OPTIONS, TAREFA_STATUS_OPTIONS } from '@/constants/form-options';
@@ -41,7 +41,7 @@ function formValues(tarefa: Tarefa): Record<string, string> {
     responsavel_id: tarefa.responsavel_id ?? '',
     prioridade: tarefa.prioridade ?? 'media',
     status: tarefa.status ?? 'a_fazer',
-    observacao: tarefa.observacao ?? '',
+    observacao: tarefa.observacao ?? tarefa.observacoes ?? '',
   };
 }
 
@@ -123,7 +123,7 @@ export default function TarefasScreen() {
         </View>
 
         <SearchField placeholder="Buscar tarefa, sala, status ou responsável..." value={search} onChangeText={setSearch} tone="dark" />
-        {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
+        {error || optionsError ? <FeedbackMessage variant="danger" message={error ?? optionsError ?? ''} tone="dark" /> : null}
 
         <TaskColumn title="A fazer" count={byStatus.a_fazer.length} accent={colors.blue}>
           {byStatus.a_fazer.length ? byStatus.a_fazer.map(renderTask) : <Text style={styles.emptyDark}>Sem tarefas.</Text>}

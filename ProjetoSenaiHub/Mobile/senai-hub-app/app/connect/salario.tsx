@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Calculator, DollarSign, Percent, WalletCards } from 'lucide-react-native';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
-import { ListRow, MetricTile, ProgressBar, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { FeedbackMessage, ListRow, MetricTile, ProgressBar, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { TIPO_PAGAMENTO_OPTIONS } from '@/constants/form-options';
@@ -93,7 +93,7 @@ export default function SalarioScreen() {
         </SurfaceCard>
 
         <SurfaceCard title="Alunos calculados" subtitle="Fechamento mensal por status">
-          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
+          {error || optionsError ? <FeedbackMessage variant="danger" message={error ?? optionsError ?? ''} /> : null}
           {items.length === 0 ? <Text style={styles.empty}>Nenhum cálculo encontrado.</Text> : null}
           {items.map((salario) => (
             <ListRow

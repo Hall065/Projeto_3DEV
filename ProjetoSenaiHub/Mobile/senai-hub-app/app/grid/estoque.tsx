@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AlertTriangle, DollarSign, Package, Warehouse } from 'lucide-react-native';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
-import { ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { FeedbackMessage, ListRow, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { ESTOQUE_STATUS_OPTIONS } from '@/constants/form-options';
@@ -93,7 +93,7 @@ export default function EstoqueScreen() {
         <SearchField placeholder="Buscar por item, código ou categoria..." value={search} onChangeText={setSearch} />
 
         <SurfaceCard title="Itens cadastrados" subtitle="Lista de materiais de manutenção">
-          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
+          {error || optionsError ? <FeedbackMessage variant="danger" message={error ?? optionsError ?? ''} /> : null}
           {filtered.length === 0 ? <Text style={styles.empty}>Nenhum item encontrado.</Text> : null}
           {filtered.map((item) => (
             <ListRow

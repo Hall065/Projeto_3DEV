@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AlertCircle, CheckCircle2, Clock3, Wrench } from 'lucide-react-native';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
-import { ListRow, MetricTile, Pill, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { FeedbackMessage, ListRow, MetricTile, Pill, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { CHAMADO_PRIORIDADE_OPTIONS, CHAMADO_STATUS_OPTIONS } from '@/constants/form-options';
@@ -94,7 +94,7 @@ export default function ChamadosScreen() {
             <Pill label="Em andamento" variant="warning" tone="dark" />
             <Pill label="Concluídos" variant="success" tone="dark" />
           </View>
-          {error || optionsError ? <Text style={styles.error}>{error ?? optionsError}</Text> : null}
+          {error || optionsError ? <FeedbackMessage variant="danger" message={error ?? optionsError ?? ''} tone="dark" /> : null}
           {filtered.length === 0 ? <Text style={styles.emptyDark}>Nenhum chamado encontrado.</Text> : null}
           {filtered.map((chamado) => (
             <ListRow

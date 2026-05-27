@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BookOpen, Clock3, Layers } from 'lucide-react-native';
 import { CrudModal, type CrudField } from '@/components/common/CrudModal';
-import { ListRow, MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { FeedbackMessage, ListRow, MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { CURSO_MODALIDADE_OPTIONS, PERIODO_OPTIONS, USER_STATUS_OPTIONS } from '@/constants/form-options';
@@ -76,7 +76,7 @@ export default function CursosScreen() {
         </SurfaceCard>
 
         <SurfaceCard title="Catálogo" subtitle="Cursos cadastrados">
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <FeedbackMessage variant="danger" message={error} /> : null}
           {items.length === 0 ? <Text style={styles.empty}>Nenhum curso encontrado.</Text> : null}
           {items.map((curso) => (
             <ListRow

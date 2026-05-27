@@ -1,33 +1,51 @@
-import { ClipboardList, GraduationCap, Home, Package, Users, Wrench } from 'lucide-react-native';
+import {
+  BarChart3,
+  BookOpen,
+  BriefcaseBusiness,
+  Building2,
+  CalendarCheck,
+  ClipboardCheck,
+  ClipboardList,
+  CircleDollarSign,
+  FileText,
+  GraduationCap,
+  Home,
+  Map,
+  MapPin,
+  Package,
+  UserCheck,
+  Users,
+  Wrench,
+} from 'lucide-react-native';
 import type { DrawerMenuItem } from '@/components/layout/SidebarDrawer';
 import type { NavItem } from '@/components/layout/BottomNav';
 import { connectTheme, gridTheme } from '@/constants/colors';
 import { ROUTES } from '@/constants/routes';
 
 export const CONNECT_DRAWER_ITEMS: DrawerMenuItem[] = [
-  { label: 'Visão geral', route: ROUTES.connect.index },
-  { label: 'Alunos', route: ROUTES.connect.alunos },
-  { label: 'Professores', route: ROUTES.connect.professores },
-  { label: 'Turmas', route: ROUTES.connect.turmas },
-  { label: 'Cursos', route: ROUTES.connect.cursos },
-  { label: 'Empresas', route: ROUTES.connect.empresas },
-  { label: 'Frequência', route: ROUTES.connect.frequencia },
-  { label: 'Gerenciar frequência', route: ROUTES.connect.gerenciarFrequencia },
-  { label: 'Relatórios', route: ROUTES.connect.relatorios },
-  { label: 'Localização', route: ROUTES.connect.localizacao },
-  { label: 'Contratos', route: ROUTES.connect.contratos },
-  { label: 'Contrato alunos', route: ROUTES.connect.contratoAlunos },
-  { label: 'Salário', route: ROUTES.connect.salario },
+  { label: 'Visão geral', route: ROUTES.connect.index, icon: <Home />, section: 'Painel' },
+  { label: 'Alunos', route: ROUTES.connect.alunos, icon: <Users />, section: 'Acadêmico' },
+  { label: 'Professores', route: ROUTES.connect.professores, icon: <UserCheck />, section: 'Acadêmico' },
+  { label: 'Turmas', route: ROUTES.connect.turmas, icon: <GraduationCap />, section: 'Acadêmico' },
+  { label: 'Cursos', route: ROUTES.connect.cursos, icon: <BookOpen />, section: 'Acadêmico' },
+  { label: 'Empresas', route: ROUTES.connect.empresas, icon: <Building2 />, section: 'Relacionamentos' },
+  { label: 'Frequência', route: ROUTES.connect.frequencia, icon: <CalendarCheck />, section: 'Operação' },
+  { label: 'Gerenciar frequência', route: ROUTES.connect.gerenciarFrequencia, icon: <ClipboardCheck />, section: 'Operação' },
+  { label: 'Relatórios', route: ROUTES.connect.relatorios, icon: <BarChart3 />, section: 'Operação' },
+  { label: 'Localização', route: ROUTES.connect.localizacao, icon: <MapPin />, section: 'Operação' },
+  { label: 'Contratos', route: ROUTES.connect.contratos, icon: <FileText />, section: 'Contratos' },
+  { label: 'Contrato alunos', route: ROUTES.connect.contratoAlunos, icon: <BriefcaseBusiness />, section: 'Contratos' },
+  { label: 'Salário', route: ROUTES.connect.salario, icon: <CircleDollarSign />, section: 'Contratos' },
 ];
 
 export const GRID_DRAWER_ITEMS: DrawerMenuItem[] = [
-  { label: 'Dashboard', route: ROUTES.grid.index },
-  { label: 'Chamados', route: ROUTES.grid.chamados },
-  { label: 'Tarefas', route: ROUTES.grid.tarefas },
-  { label: 'Relatórios', route: ROUTES.grid.relatorios },
-  { label: 'Estoque', route: ROUTES.grid.estoque },
-  { label: 'Mapa de tarefas', route: ROUTES.grid.mapaTarefas },
-  { label: 'Usuários', route: ROUTES.grid.usuarios },
+  { label: 'Dashboard', route: ROUTES.grid.index, icon: <Home />, section: 'Painel' },
+  { label: 'Chamados', route: ROUTES.grid.chamados, icon: <Wrench />, section: 'Operação' },
+  { label: 'Tarefas', route: ROUTES.grid.tarefas, icon: <ClipboardList />, section: 'Operação' },
+  { label: 'Relatórios', route: ROUTES.grid.relatorios, icon: <BarChart3 />, section: 'Operação' },
+  { label: 'Estoque', route: ROUTES.grid.estoque, icon: <Package />, section: 'Recursos' },
+  { label: 'Mapa de tarefas', route: ROUTES.grid.mapaTarefas, icon: <Map />, section: 'Recursos' },
+  { label: 'Usuários', route: ROUTES.grid.usuarios, icon: <Users />, section: 'Administração' },
 ];
 
 export const CONNECT_BOTTOM_NAV: NavItem[] = [

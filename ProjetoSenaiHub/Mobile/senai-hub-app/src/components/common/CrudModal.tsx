@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { KeyboardTypeOptions } from 'react-native';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { X } from 'lucide-react-native';
+import { AnimatedPressable, AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 import {
   applyInputMask,
@@ -54,6 +53,15 @@ interface CrudModalProps {
   onSubmit: (values: Record<string, string>) => Promise<void> | void;
 }
 
+function getErrorMessage(err: unknown) {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object' && 'message' in err) {
+    const message = String((err as { message?: unknown }).message ?? '').trim();
+    if (message) return message;
+  }
+  return 'Não foi possível salvar o registro. Tente novamente.';
+}
+
 export function CrudModal({
   visible,
   title,
@@ -86,7 +94,11 @@ export function CrudModal({
       return;
     }
     setError(null);
-    await onSubmit(normalizeFormValues(values, fields));
+    try {
+      await onSubmit(normalizeFormValues(values, fields));
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
   };
 
   return (
@@ -98,9 +110,9 @@ export function CrudModal({
         <View style={styles.sheet}>
           <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
-            <Pressable style={styles.closeButton} onPress={onClose}>
+            <AnimatedPressable style={styles.closeButton} onPress={onClose}>
               <X size={18} color={colors.navy} />
-            </Pressable>
+            </AnimatedPressable>
           </View>
 
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -126,7 +138,7 @@ export function CrudModal({
                         selectOptions.map((option) => {
                           const selected = fieldValue === option.value;
                           return (
-                            <Pressable
+                            <AnimatedPressable
                               key={`${field.name}-${option.value || 'empty'}`}
                               style={[styles.optionButton, selected && styles.optionButtonSelected]}
                               onPress={() =>
@@ -146,7 +158,7 @@ export function CrudModal({
                                   {option.description}
                                 </Text>
                               ) : null}
-                            </Pressable>
+                            </AnimatedPressable>
                           );
                         })
                       )}
@@ -169,19 +181,24 @@ export function CrudModal({
               );
             })}
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? <FeedbackMessage variant="danger" message={error} /> : null}
 
             <View style={styles.actions}>
-              <Pressable style={styles.cancelButton} onPress={onClose} disabled={isSubmitting}>
-                <Text style={styles.cancelText}>Cancelar</Text>
-              </Pressable>
-              <Pressable style={styles.submitButton} onPress={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <ActivityIndicator color={colors.white} />
-                ) : (
-                  <Text style={styles.submitText}>{submitLabel}</Text>
-                )}
-              </Pressable>
+              <AppButton
+                label="Cancelar"
+                variant="secondary"
+                accent={colors.navy}
+                onPress={onClose}
+                disabled={isSubmitting}
+                wrapperStyle={styles.actionButtonWrap}
+              />
+              <AppButton
+                label={submitLabel}
+                accent={colors.red}
+                onPress={handleSubmit}
+                loading={isSubmitting}
+                wrapperStyle={styles.actionButtonWrap}
+              />
             </View>
           </ScrollView>
         </View>
@@ -255,25 +272,6 @@ const styles = StyleSheet.create({
   optionDescription: { color: colors.grayText, fontSize: 11, fontWeight: '700', marginTop: 2 },
   optionDescriptionSelected: { color: colors.navy },
   emptyOptions: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
-  error: { color: colors.red, fontSize: 12, fontWeight: '700', marginBottom: 10 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 4 },
-  cancelButton: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelText: { color: colors.navy, fontSize: 13, fontWeight: '900' },
-  submitButton: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 8,
-    backgroundColor: colors.red,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitText: { color: colors.white, fontSize: 13, fontWeight: '900' },
+  actionButtonWrap: { flex: 1 },
 });
