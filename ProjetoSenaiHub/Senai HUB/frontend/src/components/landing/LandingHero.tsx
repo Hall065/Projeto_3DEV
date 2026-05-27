@@ -31,30 +31,33 @@ export function LandingHero() {
           className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_30%] opacity-30 sm:object-[72%_center] lg:object-[88%_center]"
         />
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/55 via-white/25 to-transparent sm:from-white/45 lg:from-white/40"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/60 via-white/30 to-transparent sm:from-white/50 lg:from-white/55 lg:via-white/25 xl:from-white/50"
           aria-hidden
         />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-10 sm:px-6 sm:py-12 lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center lg:gap-10 lg:px-8 lg:py-16">
-          <div className="glass-panel-solid mx-auto w-full max-w-xl rounded-3xl p-8 sm:max-w-2xl sm:p-10 lg:mx-0 lg:max-w-xl lg:justify-self-start xl:max-w-2xl">
-            <h1 className="text-3xl font-bold leading-tight tracking-tight text-hub-navy sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-4 py-10 sm:px-6 sm:py-12 lg:max-w-[90rem] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center lg:gap-12 lg:px-10 lg:py-16 xl:gap-16 xl:px-12 2xl:px-16">
+          <div className="glass-panel-solid mx-auto w-full max-w-xl rounded-3xl p-8 sm:max-w-2xl sm:p-10 lg:mx-0 lg:max-w-2xl lg:justify-self-start lg:self-center lg:p-12 xl:max-w-3xl xl:p-14 2xl:max-w-[44rem]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-hub-red sm:text-sm">
+              Plataforma educacional SENAI
+            </p>
+            <h1 className="mt-4 text-3xl font-bold leading-tight tracking-tight text-hub-navy sm:text-4xl sm:leading-[1.12] lg:mt-5 lg:text-[2.65rem] xl:text-5xl xl:leading-[1.1] 2xl:text-[3.25rem]">
               Conecte alunos, professores e conteúdos para{' '}
               <span className="text-hub-red">transformar aprendizado em futuro.</span>
             </h1>
-            <p className="mt-6 text-base leading-relaxed text-hub-text-muted sm:text-lg">
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-hub-text-muted sm:text-lg lg:mt-8 lg:text-xl lg:leading-relaxed xl:mt-9">
               O SENAI Hub é a plataforma que reúne aplicativos e ferramentas para impulsionar a
               educação profissional e tecnológica — com acesso simples, seguro e centralizado.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4 lg:mt-10 xl:mt-12">
               <Link
                 to="/cadastro"
-                className="inline-flex items-center justify-center rounded-lg bg-hub-red px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-hub-red-hover"
+                className="inline-flex items-center justify-center rounded-xl bg-hub-red px-7 py-3.5 text-sm font-semibold text-white shadow-md shadow-hub-red/20 transition-colors hover:bg-hub-red-hover lg:px-8 lg:py-4 lg:text-base"
               >
                 Criar minha conta
               </Link>
               <a
                 href="#recursos"
-                className="glass-input inline-flex items-center justify-center rounded-lg border-hub-navy/20 px-6 py-3 text-sm font-semibold text-hub-navy transition-colors hover:bg-white/70"
+                className="glass-input inline-flex items-center justify-center rounded-xl border-hub-navy/20 px-7 py-3.5 text-sm font-semibold text-hub-navy transition-colors hover:bg-white/70 lg:px-8 lg:py-4 lg:text-base"
               >
                 Conhecer recursos
               </a>
