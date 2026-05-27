@@ -473,6 +473,16 @@ function GridUserView({ user }: { user: GridUser }) {
 function GridInventoryView({ item }: { item: GridInventoryItem }) {
   return (
     <DetailSection title="Item de estoque">
+      {item.image_url ? (
+        <div className="mb-4 flex justify-center">
+          <img
+            src={item.image_url}
+            alt={item.title}
+            referrerPolicy="no-referrer"
+            className="max-h-48 max-w-full rounded-xl border border-hub-border/50 bg-white object-contain p-2"
+          />
+        </div>
+      ) : null}
       <DetailGrid>
         <DetailRow label="Título" value={item.title} />
         <DetailRow label="Categoria" value={item.category} />

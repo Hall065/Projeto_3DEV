@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Headphones, Mail, MessageCircle, X } from 'lucide-react'
 import { logoSenaiHub } from '../../assets/brand'
 
@@ -19,11 +20,9 @@ export function AuthSidebar() {
 
   return (
     <aside className="hub-chrome-sidebar relative flex min-h-screen w-[34%] min-w-[300px] max-w-[440px] flex-col items-center justify-start px-10 py-10 text-white">
-      <img
-        src={logoSenaiHub}
-        alt="SENAI HUB"
-        className="h-auto w-full max-w-[340px] object-contain"
-      />
+      <Link to="/" className="block w-full max-w-[340px] transition-opacity hover:opacity-90" aria-label="Ir para a página inicial">
+        <img src={logoSenaiHub} alt="SENAI HUB" className="h-auto w-full object-contain" />
+      </Link>
 
       <div className="my-auto w-full py-10">
         <h2 className="text-[2rem] font-bold leading-tight">Bem-vindo(a) ao SENAI Hub</h2>

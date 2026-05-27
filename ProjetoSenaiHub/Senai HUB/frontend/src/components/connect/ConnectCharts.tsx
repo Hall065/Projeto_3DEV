@@ -1,14 +1,19 @@
 import { useEffect, useId, useMemo, useState } from 'react'
+import {
+  CHART_PALETTE_5,
+  CHART_PALETTE_GRADIENTS,
+  chartColorByIndex,
+  resolveChartGradient,
+  sanitizeChartSegmentKey,
+} from '../../constants/chartPalette'
 import { ConnectCard, ConnectLoadingSpinner } from './ConnectShared'
 
-/** Gradientes SENAI para o modo infográfico */
+/** Frequência — 3 tons da paleta harmônica de 5 */
 const INFO_GRADIENTS = {
-  present: { from: '#e30613', to: '#ff6b6b' },
-  justified: { from: '#f59e0b', to: '#fcd34d' },
-  unjustified: { from: '#38bdf8', to: '#0369a1' },
+  present: CHART_PALETTE_GRADIENTS[2],
+  justified: CHART_PALETTE_GRADIENTS[3],
+  unjustified: CHART_PALETTE_GRADIENTS[1],
 }
-
-const COURSE_COLORS = ['#e30613', '#021a3a', '#032a52', '#8b5cf6', '#f59e0b', '#10b981']
 
 function ellipsePoint(cx: number, cy: number, rx: number, ry: number, t: number) {
   return {
@@ -44,9 +49,9 @@ function annulusSectorPath(
 }
 
 const SEGMENT_COLORS = {
-  present: '#e30613',
-  justified: '#d97706',
-  unjustified: '#0284c7',
+  present: CHART_PALETTE_5[2],
+  justified: CHART_PALETTE_5[3],
+  unjustified: CHART_PALETTE_5[1],
 } as const
 
 /** Geometria do donut (viewBox) — centralizado para callouts */
@@ -160,47 +165,70 @@ function ChartReveal({ children, delayMs = 0 }: { children: React.ReactNode; del
   )
 }
 
-export function AttendanceDonutChart({
-  present,
-  justified,
-  unjustified,
-  rate,
+function lightenColor(hex: string, factor = 1.28): string {
+  const clean = hex.replace('#', '')
+  if (clean.length !== 6) return hex
+  const clamp = (n: number) => Math.min(255, Math.max(0, n))
+  const r = clamp(Math.round(parseInt(clean.slice(0, 2), 16) * factor))
+  const g = clamp(Math.round(parseInt(clean.slice(2, 4), 16) * factor))
+  const b = clamp(Math.round(parseInt(clean.slice(4, 6), 16) * factor))
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+}
+
+export function gradientFromColor(color: string): { from: string; to: string } {
+  return { from: color, to: lightenColor(color) }
+}
+
+export type IsometricDonutSegmentInput = {
+  key: string
+  label: string
+  short?: string
+  pct: number
+  color: string
+  gradient?: { from: string; to: string }
+  legendHint?: string
+  count?: number
+}
+
+/** Donut isométrico com callouts — mesmo visual do dashboard Connect */
+export function IsometricDistributionDonut({
+  segments,
+  centerValue,
+  centerLabel,
+  centerSubtitle,
   loading,
+  loadingLabel = 'Carregando gráfico...',
+  emptyMessage = 'Sem dados para exibir.',
+  ariaLabel,
 }: {
-  present: number
-  justified: number
-  unjustified: number
-  rate: number
+  segments: IsometricDonutSegmentInput[]
+  centerValue: React.ReactNode
+  centerLabel: string
+  centerSubtitle?: string
   loading?: boolean
+  loadingLabel?: string
+  emptyMessage?: string
+  ariaLabel?: string
 }) {
   const gid = useId().replace(/:/g, '')
   const [animated, setAnimated] = useState(false)
 
-  const { arcs, callouts, total } = useMemo(() => {
-    const t = present + justified + unjustified || 1
-    const segs = [
-      {
-        key: 'present' as const,
-        pct: (present / t) * 100,
-        label: 'Presentes',
-        short: 'Presentes',
-        gradient: INFO_GRADIENTS.present,
-      },
-      {
-        key: 'justified' as const,
-        pct: (justified / t) * 100,
-        label: 'Faltas justificadas',
-        short: 'Faltas justif.',
-        gradient: INFO_GRADIENTS.justified,
-      },
-      {
-        key: 'unjustified' as const,
-        pct: (unjustified / t) * 100,
-        label: 'Faltas injustificadas',
-        short: 'Faltas injustif.',
-        gradient: INFO_GRADIENTS.unjustified,
-      },
-    ]
+  const visibleSegments = useMemo(
+    () => segments.filter((seg) => seg.pct > 0.05),
+    [segments],
+  )
+
+  const { arcs, callouts, showCallouts } = useMemo(() => {
+    const segs = visibleSegments.map((seg, index) => {
+      const color = seg.color?.trim() ? seg.color : chartColorByIndex(index)
+      return {
+        ...seg,
+        short: seg.short ?? seg.label,
+        color,
+        gradientId: sanitizeChartSegmentKey(seg.key, index),
+        gradient: seg.gradient ?? resolveChartGradient(color, index),
+      }
+    })
     let angle = -Math.PI / 2
     const arcList = segs.map((seg) => {
       const sweep = (seg.pct / 100) * 2 * Math.PI
@@ -210,18 +238,14 @@ export function AttendanceDonutChart({
       return { ...seg, a0, a1, sweep }
     })
     const { cx, cy, rxo, ryo } = DONUT
-    const callouts = arcList.map((seg) => {
+    const calloutList = arcList.map((seg, i) => {
       const mid = (seg.a0 + seg.a1) / 2
-      if (seg.key === 'present') {
-        return segmentCallout(cx, cy, rxo, ryo, mid, { radial: 22, horizontal: seg.pct > 40 ? 64 : 54 })
-      }
-      if (seg.key === 'justified') {
-        return segmentCallout(cx, cy, rxo, ryo, mid, { radial: 28, horizontal: 58 })
-      }
-      return segmentCallout(cx, cy, rxo, ryo, mid, { radial: 24, horizontal: 54 })
+      const horizontal = Math.max(48, Math.min(68, 44 + seg.pct * 0.35))
+      const radial = 20 + (i % 3) * 6
+      return segmentCallout(cx, cy, rxo, ryo, mid, { radial, horizontal })
     })
-    return { arcs: arcList, callouts, total: t }
-  }, [present, justified, unjustified])
+    return { arcs: arcList, callouts: calloutList, showCallouts: arcList.length <= 3 }
+  }, [visibleSegments])
 
   useEffect(() => {
     if (loading) {
@@ -230,92 +254,94 @@ export function AttendanceDonutChart({
     }
     const timer = window.setTimeout(() => setAnimated(true), 80)
     return () => window.clearTimeout(timer)
-  }, [loading, present, justified, unjustified])
+  }, [loading, visibleSegments])
 
-  if (loading) return <ConnectLoadingSpinner label="Calculando frequencia..." />
+  if (loading) return <ConnectLoadingSpinner label={loadingLabel} />
 
-  if (rate === 0 && present + justified + unjustified <= 1) {
-    return <p className="py-10 text-center text-sm text-hub-text-muted">Sem registros de frequencia ainda.</p>
+  if (visibleSegments.length === 0) {
+    return <p className="py-10 text-center text-sm text-hub-text-muted">{emptyMessage}</p>
   }
 
   const { viewW, viewH, cx, cy, rxo, ryo, rxi, ryi } = DONUT
   const depthDy = 12
   const opacity = animated ? 1 : 0
+  /** Legenda em linha única no mobile/tablet; mais colunas só em telas grandes */
+  const legendCols = 'grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3'
 
   return (
     <ChartReveal delayMs={50}>
-      <div className="flex w-full min-w-0 flex-col gap-4 rounded-2xl border border-hub-border/50 bg-white p-4 shadow-sm sm:gap-5 sm:p-5">
-        <div className="mx-auto w-full max-w-2xl">
+      <div className="flex w-full min-w-0 flex-col gap-4 rounded-2xl border border-hub-border/50 bg-white p-3 shadow-sm sm:gap-5 sm:p-5">
+        <div className="mx-auto w-full min-w-0 max-w-2xl">
           <div
             className="relative aspect-[520/240] w-full overflow-visible transition-opacity duration-700 motion-reduce:transition-none"
             style={{ opacity }}
           >
-              <svg
-                viewBox={`0 0 ${viewW} ${viewH}`}
-                className="h-full w-full drop-shadow-[0_12px_28px_rgba(2,26,58,0.08)]"
-                preserveAspectRatio="xMidYMid meet"
-                role="img"
-                aria-label={`Distribuição de frequência: ${rate}% de presença`}
-              >
-                <defs>
-                  <radialGradient id={`${gid}-floorGlow`} cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#e30613" stopOpacity={0.12} />
-                    <stop offset="70%" stopColor="#f8fafc" stopOpacity={0} />
-                  </radialGradient>
-                  {arcs.map((a) => (
-                    <linearGradient
-                      key={`g-${a.key}`}
-                      id={`${gid}-grad-${a.key}`}
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="100%"
-                    >
-                      <stop offset="0%" stopColor={a.gradient.from} />
-                      <stop offset="100%" stopColor={a.gradient.to} />
-                    </linearGradient>
-                  ))}
-                  {arcs.map((a) => (
-                    <linearGradient
-                      key={`gd-${a.key}`}
-                      id={`${gid}-dark-${a.key}`}
-                      x1="0%"
-                      y1="0%"
-                      x2="0%"
-                      y2="100%"
-                    >
-                      <stop offset="0%" stopColor={a.gradient.from} stopOpacity={0.55} />
-                      <stop offset="100%" stopColor="#94a3b8" stopOpacity={0.75} />
-                    </linearGradient>
-                  ))}
-                </defs>
+            <svg
+              viewBox={`0 0 ${viewW} ${viewH}`}
+              className="h-full w-full drop-shadow-[0_12px_28px_rgba(2,26,58,0.08)]"
+              preserveAspectRatio="xMidYMid meet"
+              role="img"
+              aria-label={ariaLabel ?? `Distribuição: ${centerLabel}`}
+            >
+              <defs>
+                <radialGradient id={`${gid}-floorGlow`} cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor={arcs[0]?.color ?? '#e30613'} stopOpacity={0.12} />
+                  <stop offset="70%" stopColor="#f8fafc" stopOpacity={0} />
+                </radialGradient>
+                {arcs.map((a) => (
+                  <linearGradient
+                    key={`g-${a.gradientId}`}
+                    id={`${gid}-grad-${a.gradientId}`}
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor={a.gradient.from} />
+                    <stop offset="100%" stopColor={a.gradient.to} />
+                  </linearGradient>
+                ))}
+                {arcs.map((a) => (
+                  <linearGradient
+                    key={`gd-${a.gradientId}`}
+                    id={`${gid}-dark-${a.gradientId}`}
+                    x1="0%"
+                    y1="0%"
+                    x2="0%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stopColor={a.gradient.from} stopOpacity={0.55} />
+                    <stop offset="100%" stopColor="#94a3b8" stopOpacity={0.75} />
+                  </linearGradient>
+                ))}
+              </defs>
 
-                <ellipse cx={cx} cy={cy + 52} rx={140} ry={28} fill={`url(#${gid}-floorGlow)`} />
+              <ellipse cx={cx} cy={cy + 52} rx={140} ry={28} fill={`url(#${gid}-floorGlow)`} />
 
-                <g opacity={0.92}>
-                  {arcs.map((a) => (
-                    <path
-                      key={`depth-${a.key}`}
-                      d={annulusSectorPath(cx, cy + depthDy, rxo, ryo, rxi, ryi, a.a0, a.a1)}
-                      fill={`url(#${gid}-dark-${a.key})`}
-                    />
-                  ))}
-                </g>
-
+              <g opacity={0.92}>
                 {arcs.map((a) => (
                   <path
-                    key={`top-${a.key}`}
-                    d={annulusSectorPath(cx, cy, rxo, ryo, rxi, ryi, a.a0, a.a1)}
-                    fill={`url(#${gid}-grad-${a.key})`}
-                    stroke="rgba(255,255,255,0.5)"
-                    strokeWidth={0.75}
+                    key={`depth-${a.gradientId}`}
+                    d={annulusSectorPath(cx, cy + depthDy, rxo, ryo, rxi, ryi, a.a0, a.a1)}
+                    fill={`url(#${gid}-dark-${a.gradientId})`}
                   />
                 ))}
+              </g>
 
-                {/* Linhas + cards (linhas antes dos retângulos para não ficarem ocultas) */}
-                {arcs.map((a, i) => {
+              {arcs.map((a) => (
+                <path
+                  key={`top-${a.gradientId}`}
+                  d={annulusSectorPath(cx, cy, rxo, ryo, rxi, ryi, a.a0, a.a1)}
+                  fill={`url(#${gid}-grad-${a.gradientId})`}
+                  stroke="rgba(255,255,255,0.5)"
+                  strokeWidth={0.75}
+                />
+              ))}
+
+              {showCallouts &&
+                arcs.map((a, i) => {
                   const c = callouts[i]
-                  const color = SEGMENT_COLORS[a.key]
+                  const color = a.color
                   const { boxX, boxY, boxW, boxH, textX } = calloutLabelBox(c.label.x, c.label.y, viewW)
                   const lineEnd = lineEndAtBoxEdge(c.anchor, boxX, boxY, boxW, boxH)
                   const pathD = `M ${c.anchor.x.toFixed(1)} ${c.anchor.y.toFixed(1)} L ${c.elbow.x.toFixed(1)} ${c.elbow.y.toFixed(1)} L ${lineEnd.x.toFixed(1)} ${lineEnd.y.toFixed(1)}`
@@ -373,28 +399,20 @@ export function AttendanceDonutChart({
                     </g>
                   )
                 })}
-
-              </svg>
+            </svg>
           </div>
 
-          {/* Resumo central — fora do buraco do donut para leitura confortável */}
           <div
             className="-mt-1 border-t border-hub-border/40 pt-4 text-center transition-all duration-700 motion-reduce:transition-none sm:pt-5"
             style={{ opacity, transform: animated ? 'translateY(0)' : 'translateY(6px)' }}
           >
-            <p className="text-4xl font-bold tabular-nums tracking-tight text-hub-navy sm:text-5xl">
-              {rate.toFixed(1)}%
-            </p>
-            <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-hub-text-muted">
-              Presença geral
-            </p>
-            <p className="mt-0.5 text-xs text-hub-text-muted">
-              {total.toLocaleString('pt-BR')} registros no período
-            </p>
+            <p className="text-3xl font-bold tabular-nums tracking-tight text-hub-navy sm:text-4xl 2xl:text-5xl">{centerValue}</p>
+            <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-hub-text-muted">{centerLabel}</p>
+            {centerSubtitle ? <p className="mt-0.5 text-xs text-hub-text-muted">{centerSubtitle}</p> : null}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className={`grid grid-cols-1 gap-3 ${legendCols}`}>
           {arcs.map((a, i) => (
             <div
               key={`legend-${a.key}`}
@@ -414,18 +432,80 @@ export function AttendanceDonutChart({
                 {a.short}
               </div>
               <div className="space-y-1 px-3 py-2.5 text-xs leading-relaxed text-hub-text-muted">
-                <p>
-                  {a.key === 'present' && 'Alunos com registro de presença no período.'}
-                  {a.key === 'justified' && 'Ausências com justificativa aceita.'}
-                  {a.key === 'unjustified' && 'Ausências sem justificativa ou pendentes.'}
+                {a.legendHint ? <p>{a.legendHint}</p> : null}
+                <p className="text-sm font-semibold tabular-nums text-hub-navy">
+                  {a.count != null ? `${a.count.toLocaleString('pt-BR')} · ` : ''}
+                  {a.pct.toFixed(1)}%
                 </p>
-                <p className="text-sm font-semibold tabular-nums text-hub-navy">{a.pct.toFixed(1)}%</p>
               </div>
             </div>
           ))}
         </div>
       </div>
     </ChartReveal>
+  )
+}
+
+export function AttendanceDonutChart({
+  present,
+  justified,
+  unjustified,
+  rate,
+  loading,
+}: {
+  present: number
+  justified: number
+  unjustified: number
+  rate: number
+  loading?: boolean
+}) {
+  const total = present + justified + unjustified
+
+  if (!loading && rate === 0 && total <= 1) {
+    return <p className="py-10 text-center text-sm text-hub-text-muted">Sem registros de frequencia ainda.</p>
+  }
+
+  const t = total || 1
+  const segments: IsometricDonutSegmentInput[] = [
+    {
+      key: 'present',
+      pct: (present / t) * 100,
+      label: 'Presentes',
+      short: 'Presentes',
+      color: SEGMENT_COLORS.present,
+      gradient: INFO_GRADIENTS.present,
+      legendHint: 'Alunos com registro de presença no período.',
+    },
+    {
+      key: 'justified',
+      pct: (justified / t) * 100,
+      label: 'Faltas justificadas',
+      short: 'Faltas justif.',
+      color: SEGMENT_COLORS.justified,
+      gradient: INFO_GRADIENTS.justified,
+      legendHint: 'Ausências com justificativa aceita.',
+    },
+    {
+      key: 'unjustified',
+      pct: (unjustified / t) * 100,
+      label: 'Faltas injustificadas',
+      short: 'Faltas injustif.',
+      color: SEGMENT_COLORS.unjustified,
+      gradient: INFO_GRADIENTS.unjustified,
+      legendHint: 'Ausências sem justificativa ou pendentes.',
+    },
+  ]
+
+  return (
+    <IsometricDistributionDonut
+      segments={segments}
+      centerValue={`${rate.toFixed(1)}%`}
+      centerLabel="Presença geral"
+      centerSubtitle={`${t.toLocaleString('pt-BR')} registros no período`}
+      loading={loading}
+      loadingLabel="Calculando frequencia..."
+      ariaLabel={`Distribuição de frequência: ${rate}% de presença`}
+    />
   )
 }
 
@@ -562,7 +642,7 @@ export function StudentsByCourseChart({
       <ul className="flex w-full min-w-0 flex-col gap-4 sm:gap-5">
         {items.map((course, index) => {
           const widthPct = (course.count / max) * 100
-          const color = COURSE_COLORS[index % COURSE_COLORS.length]
+          const color = chartColorByIndex(index)
 
           return (
             <li key={course.name} className="min-w-0">

@@ -1,0 +1,45 @@
+import { useNavigate } from 'react-router-dom'
+import { navigateBack } from '../../utils/navigation'
+import { Button } from '../ui/Button'
+
+interface SettingsPageFooterProps {
+  onSave?: () => void
+  onBack?: () => void
+  saving?: boolean
+  saveDisabled?: boolean
+  saveLabel?: string
+  saveVariant?: 'primary' | 'danger'
+}
+
+export function SettingsPageFooter({
+  onSave,
+  onBack,
+  saving = false,
+  saveDisabled = false,
+  saveLabel = 'Salvar',
+  saveVariant = 'primary',
+}: SettingsPageFooterProps) {
+  const navigate = useNavigate()
+
+  return (
+    <footer className="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-white/50 pt-6">
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={onBack ?? (() => navigateBack(navigate))}
+      >
+        Voltar
+      </Button>
+      <Button
+        type="button"
+        variant={saveVariant === 'danger' ? 'danger' : 'primary'}
+        className={saveVariant === 'danger' ? '!bg-hub-red hover:!bg-[#c40010]' : ''}
+        onClick={onSave}
+        isLoading={saving}
+        disabled={saveDisabled || !onSave}
+      >
+        {saveLabel}
+      </Button>
+    </footer>
+  )
+}

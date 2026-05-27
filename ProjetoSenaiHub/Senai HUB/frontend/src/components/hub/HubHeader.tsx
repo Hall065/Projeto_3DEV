@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, LogOut, Settings, User as UserIcon } from 'lucide-react'
+import { Bell, LogOut, Paintbrush, Settings, User as UserIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { SidebarRailToggle } from '../layout/SidebarRailToggle'
@@ -65,15 +65,6 @@ export function HubHeader({ collapsed, onToggleSidebar }: HubHeaderProps) {
             className="glass-panel-solid absolute right-0 top-full z-[60] mt-2 w-52 overflow-hidden rounded-xl py-2 shadow-xl"
           >
             <Link
-              to="/configuracoes"
-              role="menuitem"
-              className="flex items-center gap-3 px-4 py-2.5 text-sm text-hub-text transition hover:bg-hub-bg"
-              onClick={() => setMenuOpen(false)}
-            >
-              <Settings className="h-4 w-4 text-hub-text-muted" />
-              Configuracoes
-            </Link>
-            <Link
               to="/perfil"
               role="menuitem"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-hub-text transition hover:bg-hub-bg"
@@ -81,6 +72,24 @@ export function HubHeader({ collapsed, onToggleSidebar }: HubHeaderProps) {
             >
               <UserIcon className="h-4 w-4 text-hub-text-muted" />
               Perfil
+            </Link>
+            <Link
+              to="/temas"
+              role="menuitem"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-hub-text transition hover:bg-hub-bg"
+              onClick={() => setMenuOpen(false)}
+            >
+              <Paintbrush className="h-4 w-4 text-hub-text-muted" />
+              Temas
+            </Link>
+            <Link
+              to="/configuracoes"
+              role="menuitem"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-hub-text transition hover:bg-hub-bg"
+              onClick={() => setMenuOpen(false)}
+            >
+              <Settings className="h-4 w-4 text-hub-text-muted" />
+              Configuracoes
             </Link>
             <button
               type="button"

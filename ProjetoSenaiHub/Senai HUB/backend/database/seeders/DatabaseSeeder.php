@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             ApplicationSeeder::class,
             ApplicationPermissionSeeder::class,
             ConnectSeeder::class,
+            GridSeeder::class,
         ]);
     }
 }

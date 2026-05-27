@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { GridHeader } from '../components/grid/GridHeader'
 import { GridSidebar } from '../components/grid/GridSidebar'
+import { GlassShell } from '../components/layout/GlassShell'
 
 export function GridLayout() {
   const [collapsed, setCollapsed] = useState(false)
@@ -23,7 +24,7 @@ export function GridLayout() {
   }, [mobileNavOpen])
 
   return (
-    <div className="flex h-screen max-h-[100dvh] min-w-0 overflow-hidden bg-hub-bg">
+    <GlassShell className="flex h-screen max-h-[100dvh] min-w-0 overflow-hidden">
       {mobileNavOpen && (
         <button
           type="button"
@@ -57,6 +58,6 @@ export function GridLayout() {
           </div>
         </main>
       </div>
-    </div>
+    </GlassShell>
   )
 }

@@ -17,6 +17,11 @@ use App\Http\Controllers\Api\Connect\ReportController;
 use App\Http\Controllers\Api\Connect\SalaryController;
 use App\Http\Controllers\Api\Connect\StudentController;
 use App\Http\Controllers\Api\Connect\TeacherController;
+use App\Http\Controllers\Api\Grid\DashboardController as GridDashboardController;
+use App\Http\Controllers\Api\Grid\InventoryController as GridInventoryController;
+use App\Http\Controllers\Api\Grid\TaskController as GridTaskController;
+use App\Http\Controllers\Api\Grid\TicketController as GridTicketController;
+use App\Http\Controllers\Api\Grid\UserController as GridUserController;
 use App\Http\Controllers\Api\HealthController;
 use Illuminate\Support\Facades\Route;
 
@@ -100,5 +105,36 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
         Route::get('/salaries', [SalaryController::class, 'index']);
         Route::post('/salaries/calculate', [SalaryController::class, 'calculate']);
+    });
+
+    Route::prefix('grid')->group(function (): void {
+        Route::get('/dashboard', [GridDashboardController::class, 'index']);
+
+        Route::get('/tickets', [GridTicketController::class, 'index']);
+        Route::get('/tickets/{ticket}', [GridTicketController::class, 'show']);
+        Route::get('/tickets/{ticket}/report', [GridTicketController::class, 'report']);
+        Route::post('/tickets', [GridTicketController::class, 'store']);
+        Route::post('/tickets/{ticket}/tasks', [GridTicketController::class, 'createTask']);
+        Route::post('/tickets/{ticket}/approve-service', [GridTicketController::class, 'approveService']);
+        Route::post('/tickets/{ticket}/evaluate', [GridTicketController::class, 'evaluate']);
+        Route::put('/tickets/{ticket}', [GridTicketController::class, 'update']);
+        Route::delete('/tickets/{ticket}', [GridTicketController::class, 'destroy']);
+
+        Route::get('/tasks', [GridTaskController::class, 'index']);
+        Route::post('/tasks', [GridTaskController::class, 'store']);
+        Route::put('/tasks/{task}', [GridTaskController::class, 'update']);
+        Route::delete('/tasks/{task}', [GridTaskController::class, 'destroy']);
+
+        Route::get('/inventory', [GridInventoryController::class, 'index']);
+        Route::post('/inventory', [GridInventoryController::class, 'store']);
+        Route::put('/inventory/{inventoryItem}', [GridInventoryController::class, 'update']);
+        Route::post('/inventory/{inventoryItem}/adjust', [GridInventoryController::class, 'adjust']);
+        Route::post('/inventory/{inventoryItem}/sync-image', [GridInventoryController::class, 'syncImage']);
+        Route::delete('/inventory/{inventoryItem}', [GridInventoryController::class, 'destroy']);
+
+        Route::get('/users', [GridUserController::class, 'index']);
+        Route::post('/users', [GridUserController::class, 'store']);
+        Route::put('/users/{gridUser}', [GridUserController::class, 'update']);
+        Route::delete('/users/{gridUser}', [GridUserController::class, 'destroy']);
     });
 });

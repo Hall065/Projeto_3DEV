@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Map, Settings } from 'lucide-react'
+import { LayoutDashboard, Map, Paintbrush, Settings } from 'lucide-react'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/mapa', label: 'Mapa Escolar', icon: Map },
+  { to: '/temas', label: 'Temas', icon: Paintbrush },
   { to: '/configuracoes', label: 'Configurações', icon: Settings },
 ]
 

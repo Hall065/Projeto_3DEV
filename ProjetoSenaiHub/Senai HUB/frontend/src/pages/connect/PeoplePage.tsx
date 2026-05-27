@@ -259,6 +259,7 @@ export function PeoplePage() {
               className={inputClass}
               value={form.full_name}
               onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              placeholder="Ex: Maria Silva"
             />
           </FormField>
           <FormField label="E-mail">
@@ -267,6 +268,7 @@ export function PeoplePage() {
               className={inputClass}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="pessoa@senai.edu.br"
             />
           </FormField>
           <FormField label="Celular">
@@ -274,16 +276,18 @@ export function PeoplePage() {
               className={inputClass}
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="(11) 99999-9999"
             />
           </FormField>
           <FormField label="CPF">
-            <input className={inputClass} value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} />
+            <input className={inputClass} value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" />
           </FormField>
           <FormField label="Matrícula / registro">
             <input
               className={inputClass}
               value={form.registration_number}
               onChange={(e) => setForm({ ...form, registration_number: e.target.value })}
+              placeholder="Ex: RM20250130"
             />
           </FormField>
           <FormField label="Especialidade / função">
@@ -291,6 +295,7 @@ export function PeoplePage() {
               className={inputClass}
               value={form.specialty}
               onChange={(e) => setForm({ ...form, specialty: e.target.value })}
+              placeholder="Ex: Automação Industrial"
             />
           </FormField>
         </div>

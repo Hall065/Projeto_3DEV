@@ -241,4 +241,23 @@ body {
     width: 0;
     height: 0;
   }
+
+  .kanban-overlay-card {
+    animation: kanban-lift 0.22s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+  }
+
+  .kanban-sortable-card {
+    will-change: transform;
+  }
+
+  @keyframes kanban-lift {
+    from {
+      transform: scale(0.97);
+      opacity: 0.92;
+    }
+    to {
+      transform: scale(1.02);
+      opacity: 1;
+    }
+  }
 }
