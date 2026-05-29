@@ -5,6 +5,7 @@ node_modules/
 
 # Expo
 .expo/
+.expo-map-export/
 dist/
 web-build/
 expo-env.d.ts
@@ -27,6 +28,10 @@ yarn-debug.*
 yarn-error.*
 expo-web*.log
 expo-web*.err.log
+expo-map-*.log
+expo-map-*.err.log
+static-map-*.log
+static-map-*.err.log
 
 # macOS
 .DS_Store
