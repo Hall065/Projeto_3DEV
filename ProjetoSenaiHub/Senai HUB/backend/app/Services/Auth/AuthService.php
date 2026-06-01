@@ -42,7 +42,7 @@ class AuthService
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
-            'role' => 'student',
+            'role' => 'connect_aluno',
         ]);
 
         $connect = Application::query()->where('slug', 'connect')->first();
@@ -57,6 +57,32 @@ class AuthService
             'user' => $user,
             'token' => $token,
         ];
+    }
+
+    /**
+     * @param  array{name: string, email: string}  $data
+     */
+    public function updateProfile(User $user, array $data): User
+    {
+        $user->update([
+            'name' => $data['name'],
+            'email' => $data['email'],
+        ]);
+
+        return $user->fresh();
+    }
+
+    public function changePassword(User $user, string $currentPassword, string $newPassword): void
+    {
+        if (! Hash::check($currentPassword, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Senha atual incorreta.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => $newPassword,
+        ]);
     }
 
     public function logout(?Authenticatable $user): void

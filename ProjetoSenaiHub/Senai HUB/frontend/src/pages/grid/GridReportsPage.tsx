@@ -1,8 +1,9 @@
 import {
   AlertTriangle,
+  BarChart3,
   ClipboardList,
   Download,
-  Filter,
+  FileText,
   Star,
   UserX,
   Wrench,
@@ -16,6 +17,7 @@ import {
 } from '../../components/grid/GridCharts'
 import { GridTicketStatusBadge } from '../../components/grid/GridBadges'
 import { GridTicketReportPanel } from '../../components/grid/GridTicketReportPanel'
+import { CustomReportBuilder } from '../../components/reports/CustomReportBuilder'
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
 import {
   ConnectCard,
@@ -28,16 +30,13 @@ import {
 import { gridService } from '../../services/gridService'
 import type { GridDashboardData, GridTicket } from '../../types/grid'
 
-export function GridReportsPage() {
+function GridReportsDashboard() {
   const [data, setData] = useState<GridDashboardData | null>(null)
   const [allTickets, setAllTickets] = useState<GridTicket[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      gridService.getDashboard(),
-      gridService.getTickets({ per_page: 200 }),
-    ])
+    Promise.all([gridService.getDashboard(), gridService.getTickets({ per_page: 200 })])
       .then(([dashboard, ticketsRes]) => {
         setData(dashboard)
         setAllTickets(ticketsRes.data)
@@ -48,22 +47,7 @@ export function GridReportsPage() {
   const report = data?.report_kpis
 
   return (
-    <div className="w-full min-w-0">
-      <ConnectPageHeader
-        title="Relatórios"
-        subtitle="Indicadores alinhados ao fluxo de chamados e relatório detalhado por atendimento."
-        actions={
-          <>
-            <OutlineButton>
-              <Filter className="h-4 w-4" /> Filtros avançados
-            </OutlineButton>
-            <PrimaryButton>
-              <Download className="h-4 w-4" /> Exportar relatório
-            </PrimaryButton>
-          </>
-        }
-      />
-
+    <>
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {loading || !report ? (
           Array.from({ length: 6 }).map((_, i) => <KpiCardSkeleton key={i} />)
@@ -137,6 +121,31 @@ export function GridReportsPage() {
           </ConnectTableScroll>
         )}
       </ConnectCard>
+    </>
+  )
+}
+
+export function GridReportsPage() {
+  const [tab, setTab] = useState<'dashboard' | 'builder'>('builder')
+
+  return (
+    <div className="w-full min-w-0">
+      <ConnectPageHeader
+        title="Relatórios"
+        subtitle="Painel operacional ou construtor personalizado com secoes e colunas a sua escolha."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <OutlineButton type="button" onClick={() => setTab('dashboard')}>
+              <BarChart3 className="h-4 w-4" /> Painel
+            </OutlineButton>
+            <PrimaryButton type="button" onClick={() => setTab('builder')}>
+              <FileText className="h-4 w-4" /> Construtor
+            </PrimaryButton>
+          </div>
+        }
+      />
+
+      {tab === 'dashboard' ? <GridReportsDashboard /> : <CustomReportBuilder module="grid" />}
     </div>
   )
 }

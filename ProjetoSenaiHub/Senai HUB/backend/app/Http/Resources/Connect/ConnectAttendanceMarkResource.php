@@ -18,6 +18,7 @@ class ConnectAttendanceMarkResource extends JsonResource
             'connect_attendance_session_id' => $this->connect_attendance_session_id,
             'connect_student_id' => $this->connect_student_id,
             'status' => $this->status,
+            'missed_lessons' => $this->missed_lessons ?? 0,
             'notes' => $this->notes,
             'student' => new ConnectStudentResource($this->whenLoaded('student')),
         ];

@@ -81,6 +81,8 @@ export interface ConnectClass {
   start_date?: string
   end_date?: string
   capacity?: number
+  default_lessons_per_day?: number
+  max_absences_allowed?: number | null
   status: string
   course?: ConnectCourse
   teacher?: ConnectTeacher
@@ -99,6 +101,7 @@ export interface ConnectStudent {
   phone?: string
   birth_date?: string
   status: string
+  max_absences_allowed?: number | null
   class?: ConnectClass
   location?: ConnectStudentLocation
   created_at?: string
@@ -159,11 +162,20 @@ export interface ConnectSalaryRecord {
   student?: ConnectStudent
 }
 
+export interface ConnectAttendanceAbsenceSummary {
+  unjustified_lessons_total: number
+  max_absences_allowed: number | null
+  remaining_absences: number | null
+}
+
 export interface ConnectAttendanceMark {
   id: number
   connect_student_id: number
   status: 'present' | 'absent' | 'justified' | 'late'
+  missed_lessons?: number
+  notes?: string | null
   student?: ConnectStudent
+  absence_summary?: ConnectAttendanceAbsenceSummary
 }
 
 export interface ConnectAttendanceSession {
@@ -171,10 +183,15 @@ export interface ConnectAttendanceSession {
   connect_class_id: number
   session_date: string
   subject: string
+  lessons_count?: number
   status: string
   class?: ConnectClass
   teacher?: ConnectTeacher
   marks?: ConnectAttendanceMark[]
+  attendance_settings?: {
+    default_lessons_per_day: number
+    max_absences_allowed: number | null
+  }
   stats?: {
     total: number
     present: number
@@ -182,6 +199,7 @@ export interface ConnectAttendanceSession {
     absent: number
     presence_rate: number
     lessons_count: number
+    missed_lessons_total?: number
   }
 }
 

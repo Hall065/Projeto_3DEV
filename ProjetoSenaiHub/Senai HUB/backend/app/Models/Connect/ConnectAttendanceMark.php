@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'connect_attendance_session_id',
     'connect_student_id',
     'status',
+    'missed_lessons',
     'notes',
 ])]
 class ConnectAttendanceMark extends Model

@@ -23,6 +23,8 @@ class ConnectClassResource extends JsonResource
             'start_date' => $this->start_date?->format('Y-m-d'),
             'end_date' => $this->end_date?->format('Y-m-d'),
             'capacity' => $this->capacity,
+            'default_lessons_per_day' => $this->default_lessons_per_day ?? 4,
+            'max_absences_allowed' => $this->max_absences_allowed,
             'status' => $this->status,
             'course' => new ConnectCourseResource($this->whenLoaded('course')),
             'teacher' => new ConnectTeacherResource($this->whenLoaded('teacher')),

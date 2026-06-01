@@ -409,11 +409,13 @@ function AttendanceSnapshotView({ session }: { session: ConnectAttendanceSession
           <DetailRow label="Data" value={formatDate(session.session_date)} />
           <DetailRow label="Turma" value={session.class?.name} />
           <DetailRow label="Disciplina" value={session.subject} />
+          <DetailRow label="Aulas no dia" value={session.lessons_count ?? stats?.lessons_count} />
           <DetailRow label="Professor" value={session.teacher?.full_name ?? session.class?.teacher?.full_name} />
           {stats && (
             <>
               <DetailRow label="Presença" value={`${stats.presence_rate}%`} />
               <DetailRow label="Total marcações" value={stats.total} />
+              <DetailRow label="Aulas faltadas (dia)" value={stats.missed_lessons_total ?? 0} />
             </>
           )}
         </DetailGrid>

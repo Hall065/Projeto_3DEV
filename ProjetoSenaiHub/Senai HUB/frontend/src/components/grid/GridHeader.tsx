@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, LayoutGrid, LogOut, Menu, Paintbrush, Search, Settings, User as UserIcon } from 'lucide-react'
+import { Bell, LayoutGrid, LogOut, Menu, Paintbrush, Settings, User as UserIcon } from 'lucide-react'
+import { GlobalSearchTrigger } from '../search/GlobalSearchTrigger'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { SidebarRailToggle } from '../layout/SidebarRailToggle'
@@ -49,14 +50,7 @@ export function GridHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: Grid
       </button>
 
       <div className="flex min-w-0 flex-1 items-center justify-center px-1 sm:px-4">
-        <div className="glass-input flex w-full max-w-2xl min-w-0 items-center gap-2 rounded-full border border-white/50 px-3 py-2">
-          <Search className="h-4 w-4 shrink-0 text-hub-text-muted" />
-          <input
-            type="search"
-            placeholder="Buscar chamados, tarefas, equipamentos..."
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-hub-text-muted"
-          />
-        </div>
+        <GlobalSearchTrigger />
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-4">

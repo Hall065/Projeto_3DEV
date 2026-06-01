@@ -19,7 +19,7 @@ class ClassController extends Controller
     ) {}
     public function index(Request $request): JsonResponse
     {
-        $query = ConnectClass::query()
+        $query = \App\Support\UserAccessScope::connectClassQuery($request->user())
             ->with(['course', 'teacher.hubPerson'])
             ->withCount('students')
             ->orderBy('code');
@@ -57,6 +57,8 @@ class ClassController extends Controller
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'default_lessons_per_day' => ['nullable', 'integer', 'min:1', 'max:5'],
+            'max_absences_allowed' => ['nullable', 'integer', 'min:1', 'max:999'],
             'status' => ['nullable', Rule::in(['active', 'inactive', 'finished'])],
         ]);
 
@@ -108,6 +110,8 @@ class ClassController extends Controller
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
+            'default_lessons_per_day' => ['nullable', 'integer', 'min:1', 'max:5'],
+            'max_absences_allowed' => ['nullable', 'integer', 'min:1', 'max:999'],
             'status' => ['nullable', Rule::in(['active', 'inactive', 'finished'])],
         ]);
 

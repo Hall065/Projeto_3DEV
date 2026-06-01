@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'connect_teacher_id',
     'session_date',
     'subject',
+    'lessons_count',
     'status',
 ])]
 class ConnectAttendanceSession extends Model

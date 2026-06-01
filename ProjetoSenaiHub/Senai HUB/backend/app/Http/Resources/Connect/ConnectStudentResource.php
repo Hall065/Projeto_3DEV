@@ -27,6 +27,7 @@ class ConnectStudentResource extends JsonResource
             'phone' => $this->phone,
             'birth_date' => $this->birth_date?->format('Y-m-d'),
             'status' => $this->status,
+            'max_absences_allowed' => $this->max_absences_allowed,
             'class' => new ConnectClassResource($this->whenLoaded('connectClass')),
             'location' => new ConnectStudentLocationResource($this->whenLoaded('location')),
             'created_at' => $this->created_at?->toIso8601String(),

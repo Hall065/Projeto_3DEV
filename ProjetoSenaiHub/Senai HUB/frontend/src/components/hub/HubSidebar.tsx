@@ -1,13 +1,15 @@
-import { ChevronRight, Headphones, LayoutGrid, Mail, MessageCircle, Shield, X } from 'lucide-react'
+import { ChevronRight, Headphones, LayoutGrid, Mail, MessageCircle, Shield, Users, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { logoSenaiHub } from '../../assets/brand'
+import { usePermissions } from '../../hooks/usePermissions'
 
 interface HubSidebarProps {
   collapsed: boolean
 }
 
 export function HubSidebar({ collapsed }: HubSidebarProps) {
+  const { isAdmin } = usePermissions()
   const [supportOpen, setSupportOpen] = useState(false)
   const supportRef = useRef<HTMLDivElement>(null)
 
@@ -50,6 +52,21 @@ export function HubSidebar({ collapsed }: HubSidebarProps) {
           <LayoutGrid className="h-5 w-5 shrink-0" />
           {!collapsed && <span>Hub de Aplicacoes</span>}
         </NavLink>
+
+        {isAdmin && (
+          <NavLink
+            to="/hub/usuarios"
+            className={({ isActive }) =>
+              `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+                isActive ? 'bg-hub-red text-white' : 'text-white/85 hover:bg-white/10'
+              } ${collapsed ? 'justify-center px-3' : ''}`
+            }
+            title="Usuarios e perfis"
+          >
+            <Users className="h-5 w-5 shrink-0" />
+            {!collapsed && <span>Usuarios e perfis</span>}
+          </NavLink>
+        )}
 
         <div className="relative" ref={supportRef}>
           <button

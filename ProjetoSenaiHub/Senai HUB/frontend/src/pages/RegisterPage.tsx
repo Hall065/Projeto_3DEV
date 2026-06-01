@@ -54,7 +54,7 @@ export function RegisterPage() {
   return (
     <AuthFormCard
       title="Crie sua conta"
-      subtitle="Preencha os dados abaixo para se cadastrar"
+      subtitle="Cadastro com perfil Aluno. Outros perfis sao criados pelo administrador."
       footer={
         <p className="text-hub-text-muted">
           Ja possui uma conta?{' '}

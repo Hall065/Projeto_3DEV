@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'start_date',
     'end_date',
     'capacity',
+    'default_lessons_per_day',
+    'max_absences_allowed',
     'status',
 ])]
 class ConnectClass extends Model

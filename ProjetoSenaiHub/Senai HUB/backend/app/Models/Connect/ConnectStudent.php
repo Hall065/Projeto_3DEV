@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'phone',
     'birth_date',
     'status',
+    'max_absences_allowed',
 ])]
 class ConnectStudent extends Model
 {

@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Application;
 use App\Models\User;
+use App\Services\Auth\PermissionService;
+use App\Support\HubRole;
 use Illuminate\Database\Seeder;
 
 class ApplicationPermissionSeeder extends Seeder
@@ -17,19 +19,29 @@ class ApplicationPermissionSeeder extends Seeder
             return;
         }
 
-        $permissions = [
-            'admin@senaihub.local' => [$connect->id, $grid->id],
-            'maria.aluno@senai.local' => [$connect->id],
-            'carlos.professor@senai.local' => [$connect->id],
-            'ana.grid@senai.local' => [$connect->id, $grid->id],
-        ];
+        $permissions = app(PermissionService::class);
 
-        foreach ($permissions as $email => $applicationIds) {
-            $user = User::query()->where('email', $email)->first();
+        foreach (User::query()->cursor() as $user) {
+            $slugs = $permissions->applicationSlugsFor($user);
+            $ids = collect([$connect, $grid])
+                ->filter(fn (Application $app) => in_array($app->slug, $slugs, true))
+                ->pluck('id');
+            $user->applications()->sync($ids);
+        }
 
-            if ($user) {
-                $user->applications()->sync($applicationIds);
-            }
+        // Vincular user_id do aluno demo
+        $studentUser = User::query()->where('email', 'maria.aluno@senai.local')->first();
+        if ($studentUser) {
+            \App\Models\Connect\ConnectStudent::query()
+                ->where('registration_number', '2025AUT0046')
+                ->orWhere('email', 'mariana.coelho@aluno.senai.local')
+                ->limit(1)
+                ->update(['user_id' => $studentUser->id]);
+        }
+
+        $teacherUser = User::query()->where('email', 'carlos.professor@senai.local')->first();
+        if ($teacherUser) {
+            \App\Models\Connect\ConnectTeacher::query()->orderBy('id')->limit(1)->update(['user_id' => $teacherUser->id]);
         }
     }
 }

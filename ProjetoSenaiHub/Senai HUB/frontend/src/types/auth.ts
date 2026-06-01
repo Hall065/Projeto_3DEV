@@ -4,6 +4,10 @@ export interface User {
   email: string
   role?: string
   role_label?: string
+  company_name?: string | null
+  is_admin?: boolean
+  permissions?: string[]
+  application_slugs?: string[]
   avatar_url?: string | null
 }
 

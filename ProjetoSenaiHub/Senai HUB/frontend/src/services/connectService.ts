@@ -114,11 +114,22 @@ export const connectService = {
 
   async saveAttendanceMarks(
     sessionId: number,
-    marks: { connect_student_id: number; status: string }[],
+    payload: {
+      marks: {
+        connect_student_id: number
+        status: string
+        missed_lessons?: number
+        max_absences_allowed?: number | null
+      }[]
+      lessons_count?: number
+      max_absences_allowed?: number | null
+      default_lessons_per_day?: number
+      close_session?: boolean
+    },
   ): Promise<ConnectAttendanceSession> {
     const { data } = await api.post<{ data: ConnectAttendanceSession }>(
       `/connect/attendance/sessions/${sessionId}/marks`,
-      { marks, close_session: true },
+      { ...payload, close_session: payload.close_session ?? true },
     )
     return data.data
   },

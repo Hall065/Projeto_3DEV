@@ -19,6 +19,9 @@ import { SettingsPage } from '../pages/SettingsPage'
 import { ThemesPage } from '../pages/ThemesPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { ProtectedRoute } from './ProtectedRoute'
+import { ModuleAccessRoute } from './ModuleAccessRoute'
+import { AdminRoute } from './AdminRoute'
+import { HubUsersPage } from '../pages/hub/HubUsersPage'
 import { ConnectOverviewPage } from '../pages/connect/ConnectOverviewPage'
 import { PeoplePage } from '../pages/connect/PeoplePage'
 import { StudentsPage } from '../pages/connect/StudentsPage'
@@ -27,10 +30,11 @@ import { ClassesPage } from '../pages/connect/ClassesPage'
 import { CoursesPage } from '../pages/connect/CoursesPage'
 import { AttendancePage } from '../pages/connect/AttendancePage'
 import { AttendanceManagePage } from '../pages/connect/AttendanceManagePage'
-import { ReportPage } from '../pages/connect/ReportPage'
+import { ConnectReportsPage } from '../pages/connect/ConnectReportsPage'
 import { LocationPage } from '../pages/connect/LocationPage'
 import { ContractsPage } from '../pages/connect/ContractsPage'
 import { SalaryPage } from '../pages/connect/SalaryPage'
+import { SpreadsheetHubPage } from '../pages/spreadsheet/SpreadsheetHubPage'
 
 export function AppRoutes() {
   return (
@@ -43,11 +47,15 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<HubLayout />}>
           <Route path="/hub" element={<ApplicationHubPage />} />
+          <Route element={<AdminRoute />}>
+            <Route path="/hub/usuarios" element={<HubUsersPage />} />
+          </Route>
           <Route path="/configuracoes" element={<SettingsPage />} />
           <Route path="/temas" element={<ThemesPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
         </Route>
 
+        <Route element={<ModuleAccessRoute module="grid" />}>
         <Route element={<GridLayout />}>
           <Route path="/grid" element={<GridDashboardPage />} />
           <Route path="/grid/chamados" element={<GridTicketsPage />} />
@@ -57,8 +65,11 @@ export function AppRoutes() {
           <Route path="/grid/estoque" element={<GridInventoryPage />} />
           <Route path="/grid/mapa" element={<GridTaskMapPage />} />
           <Route path="/grid/usuarios" element={<GridUsersPage />} />
+          <Route path="/grid/planilhas" element={<SpreadsheetHubPage module="grid" />} />
+        </Route>
         </Route>
 
+        <Route element={<ModuleAccessRoute module="connect" />}>
         <Route element={<ConnectLayout />}>
           <Route path="/connect" element={<ConnectOverviewPage />} />
           <Route path="/connect/pessoas" element={<PeoplePage />} />
@@ -68,10 +79,12 @@ export function AppRoutes() {
           <Route path="/connect/cursos" element={<CoursesPage />} />
           <Route path="/connect/frequencia" element={<AttendancePage />} />
           <Route path="/connect/gerenciar-frequencia" element={<AttendanceManagePage />} />
-          <Route path="/connect/relatorio" element={<ReportPage />} />
+          <Route path="/connect/relatorio" element={<ConnectReportsPage />} />
           <Route path="/connect/localizacao" element={<LocationPage />} />
           <Route path="/connect/contratos/alunos" element={<ContractsPage />} />
           <Route path="/connect/salario" element={<SalaryPage />} />
+          <Route path="/connect/planilhas" element={<SpreadsheetHubPage module="connect" />} />
+        </Route>
         </Route>
       </Route>
 

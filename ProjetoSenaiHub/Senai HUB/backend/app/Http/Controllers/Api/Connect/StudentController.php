@@ -22,7 +22,7 @@ class StudentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = ConnectStudent::query()
+        $query = \App\Support\UserAccessScope::connectStudentQuery($request->user())
             ->with(['connectClass.course', 'location', 'hubPerson'])
             ->orderBy('full_name');
 

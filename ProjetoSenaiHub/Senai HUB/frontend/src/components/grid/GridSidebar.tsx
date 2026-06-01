@@ -1,20 +1,9 @@
-import {
-  BarChart3,
-  ChevronRight,
-  ClipboardList,
-  Headphones,
-  LayoutDashboard,
-  ListTodo,
-  MapPin,
-  Package,
-  Shield,
-  Signpost,
-  Users,
-  X,
-} from 'lucide-react'
+import { ChevronRight, Headphones, Shield, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { logoSenaiHub } from '../../assets/brand'
+import { filterNavItems, gridNavItems } from '../../config/navPermissions'
+import { usePermissions } from '../../hooks/usePermissions'
 
 interface GridSidebarProps {
   collapsed: boolean
@@ -22,19 +11,10 @@ interface GridSidebarProps {
   onMobileClose?: () => void
 }
 
-const mainNav = [
-  { to: '/grid', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/grid/controle', label: 'Controle', icon: Signpost },
-  { to: '/grid/chamados', label: 'Chamados', icon: ClipboardList },
-  { to: '/grid/tarefas', label: 'Tarefas', icon: ListTodo },
-  { to: '/grid/relatorios', label: 'Relatórios', icon: BarChart3 },
-  { to: '/grid/estoque', label: 'Estoque', icon: Package },
-  { to: '/grid/mapa', label: 'Mapa de tarefas', icon: MapPin },
-  { to: '/grid/usuarios', label: 'Usuários', icon: Users },
-]
-
 export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: GridSidebarProps) {
   const isCollapsed = collapsed && !mobileOpen
+  const { can } = usePermissions()
+  const mainNav = filterNavItems(gridNavItems, can)
   const [supportOpen, setSupportOpen] = useState(false)
   const supportRef = useRef<HTMLDivElement>(null)
 

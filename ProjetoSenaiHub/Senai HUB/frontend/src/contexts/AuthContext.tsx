@@ -1,10 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
+  changePasswordRequest,
   fetchCurrentUser,
   loginRequest,
   logoutRequest,
   parseAuthError,
   registerRequest,
+  updateProfileRequest,
 } from '../services/authService'
 import type { AuthState, LoginCredentials, RegisterCredentials, User } from '../types/auth'
 
@@ -12,6 +14,13 @@ interface AuthContextValue extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>
   register: (credentials: RegisterCredentials) => Promise<void>
   logout: () => Promise<void>
+  updateProfile: (payload: { name: string; email: string }) => Promise<User>
+  changePassword: (payload: {
+    current_password: string
+    password: string
+    password_confirmation: string
+  }) => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const TOKEN_KEY = 'senai_hub_token'
@@ -92,6 +101,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const refreshUser = useCallback(async () => {
+    const currentUser = await fetchCurrentUser()
+    setUser(currentUser)
+    localStorage.setItem(USER_KEY, JSON.stringify(currentUser))
+  }, [])
+
+  const updateProfile = useCallback(async (payload: { name: string; email: string }): Promise<User> => {
+    setIsSubmitting(true)
+    try {
+      const updated = await updateProfileRequest(payload)
+      setUser(updated)
+      localStorage.setItem(USER_KEY, JSON.stringify(updated))
+      return updated
+    } catch (error) {
+      throw new Error(parseAuthError(error))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [])
+
+  const changePassword = useCallback(
+    async (payload: { current_password: string; password: string; password_confirmation: string }) => {
+      setIsSubmitting(true)
+      try {
+        await changePasswordRequest(payload)
+      } catch (error) {
+        throw new Error(parseAuthError(error))
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [],
+  )
+
   const logout = useCallback(async () => {
     try {
       if (localStorage.getItem(TOKEN_KEY)) {
@@ -114,8 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      updateProfile,
+      changePassword,
+      refreshUser,
     }),
-    [user, isInitializing, isSubmitting, login, register, logout],
+    [user, isInitializing, isSubmitting, login, register, logout, updateProfile, changePassword, refreshUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

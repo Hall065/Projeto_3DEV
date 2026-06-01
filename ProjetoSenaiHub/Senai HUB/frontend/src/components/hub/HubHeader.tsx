@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell, LogOut, Paintbrush, Settings, User as UserIcon } from 'lucide-react'
+import { GlobalSearchTrigger } from '../search/GlobalSearchTrigger'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { SidebarRailToggle } from '../layout/SidebarRailToggle'
@@ -33,8 +34,12 @@ export function HubHeader({ collapsed, onToggleSidebar }: HubHeaderProps) {
   }
 
   return (
-    <header className="glass-nav relative z-50 flex items-center justify-end gap-4 border-b px-8 py-4">
+    <header className="glass-nav relative z-50 flex items-center gap-4 border-b px-8 py-4">
       <SidebarRailToggle collapsed={collapsed} onClick={onToggleSidebar} />
+
+      <div className="mx-auto hidden max-w-xl flex-1 md:block">
+        <GlobalSearchTrigger />
+      </div>
 
       <button
         type="button"

@@ -17,6 +17,7 @@ import {
   GridQuickReportsSection,
 } from '../../components/grid/GridCharts'
 import { GridPriorityBadge, GridTicketStatusBadge } from '../../components/grid/GridBadges'
+import { HorizontalAutoCarousel } from '../../components/connect/HorizontalAutoCarousel'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -90,19 +91,6 @@ export function GridDashboardPage() {
         )}
       </div>
 
-      <ConnectCard className="mb-6 min-w-0 p-4 sm:p-6 lg:p-8">
-        <h2 className="mb-6 text-lg font-semibold text-hub-navy sm:mb-8 sm:text-xl">Relatórios rápidos</h2>
-        <GridQuickReportsSection
-          loading={loading}
-          maintenanceBreakdown={data?.maintenance_breakdown ?? []}
-          priorityBreakdown={data?.priority_breakdown ?? []}
-          ticketsByMonth={data?.tickets_by_month ?? []}
-          ticketsByTechnician={data?.tickets_by_technician ?? []}
-          topInventory={data?.top_inventory ?? []}
-          tasksByColumn={data?.tasks_by_column}
-        />
-      </ConnectCard>
-
       <ConnectCard className="mb-6 min-w-0 overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-hub-border/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <h2 className="text-lg font-semibold text-hub-navy">Chamados recentes</h2>
@@ -117,10 +105,10 @@ export function GridDashboardPage() {
             Nenhum chamado recente. Crie um em Controle ou Chamados.
           </p>
         ) : (
-          <div className="scrollbar-minimal-x overflow-x-auto px-4 py-4 sm:px-6">
-            <ul className="flex w-max min-w-full gap-3 pb-1">
-              {data?.recent_tickets.map((t) => (
-                <li key={t.id} className="w-[min(100%,280px)] shrink-0 sm:w-[300px]">
+          <HorizontalAutoCarousel className="px-4 py-4 sm:px-6">
+            <ul className="flex gap-3 pb-1">
+              {[...(data?.recent_tickets ?? []), ...(data?.recent_tickets ?? [])].map((t, index) => (
+                <li key={`${t.id}-${index}`} className="w-[min(100%,280px)] shrink-0 sm:w-[300px]">
                   <article className="flex h-full min-w-0 items-center gap-2 rounded-xl border border-hub-border/50 bg-gradient-to-r from-white to-hub-bg/30 p-3 shadow-sm">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-semibold text-hub-red">{t.code}</p>
@@ -141,8 +129,21 @@ export function GridDashboardPage() {
                 </li>
               ))}
             </ul>
-          </div>
+          </HorizontalAutoCarousel>
         )}
+      </ConnectCard>
+
+      <ConnectCard className="mb-6 min-w-0 p-4 sm:p-6 lg:p-8">
+        <h2 className="mb-6 text-lg font-semibold text-hub-navy sm:mb-8 sm:text-xl">Relatórios rápidos</h2>
+        <GridQuickReportsSection
+          loading={loading}
+          maintenanceBreakdown={data?.maintenance_breakdown ?? []}
+          priorityBreakdown={data?.priority_breakdown ?? []}
+          ticketsByMonth={data?.tickets_by_month ?? []}
+          ticketsByTechnician={data?.tickets_by_technician ?? []}
+          topInventory={data?.top_inventory ?? []}
+          tasksByColumn={data?.tasks_by_column}
+        />
       </ConnectCard>
 
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-2">

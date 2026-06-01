@@ -324,7 +324,7 @@ export function GridTicketsPage() {
       </div>
 
       <ConnectCard className="mb-4 p-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <FormField label="Busca">
             <input
               className={inputClass}
@@ -363,19 +363,19 @@ export function GridTicketsPage() {
               <option value="concluido">Finalizado</option>
             </select>
           </FormField>
-        </div>
-        <div className="mt-4 flex justify-end">
-          <OutlineButton
-            onClick={() => {
-              setSearch('')
-              setBlock('')
-              setPriority('')
-              setStatus('')
-              setPage(1)
-            }}
-          >
-            <Filter className="h-4 w-4" /> Limpar filtros
-          </OutlineButton>
+          <div className="flex items-end justify-end sm:col-span-2 lg:col-span-4">
+            <OutlineButton
+              onClick={() => {
+                setSearch('')
+                setBlock('')
+                setPriority('')
+                setStatus('')
+                setPage(1)
+              }}
+            >
+              <Filter className="h-4 w-4" /> Limpar filtros
+            </OutlineButton>
+          </div>
         </div>
       </ConnectCard>
 

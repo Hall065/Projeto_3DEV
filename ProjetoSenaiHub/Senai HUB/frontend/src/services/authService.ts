@@ -37,6 +37,19 @@ export async function logoutRequest(): Promise<void> {
   await api.post('/auth/logout')
 }
 
+export async function updateProfileRequest(payload: { name: string; email: string }): Promise<User> {
+  const { data } = await api.put<{ data: User; message: string }>('/auth/me', payload)
+  return data.data
+}
+
+export async function changePasswordRequest(payload: {
+  current_password: string
+  password: string
+  password_confirmation: string
+}): Promise<void> {
+  await api.put('/auth/password', payload)
+}
+
 export function parseAuthError(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const response = (error as { response?: { status?: number; data?: ApiValidationError } }).response
