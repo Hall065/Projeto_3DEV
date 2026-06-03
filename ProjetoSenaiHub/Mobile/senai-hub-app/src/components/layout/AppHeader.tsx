@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Bell, Menu } from 'lucide-react-native';
 import { AnimatedPressable } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
@@ -23,6 +24,7 @@ export function AppHeader({
   onNotificationsPress,
   accentColor = colors.navy,
 }: AppHeaderProps) {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const session = useAuthStore((s) => s.session);
@@ -85,14 +87,18 @@ export function AppHeader({
             </View>
           ) : null}
         </AnimatedPressable>
-        <View style={styles.profile}>
+        <AnimatedPressable style={styles.profile} onPress={() => router.push('/perfil' as never)}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
+            {session?.perfil?.foto_url ? (
+              <Image source={{ uri: session.perfil.foto_url }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{initials}</Text>
+            )}
           </View>
           <Text numberOfLines={1} style={styles.profileName}>
             {profileName}
           </Text>
-        </View>
+        </AnimatedPressable>
       </View>
     </View>
   );
@@ -172,7 +178,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  avatarImage: { width: '100%', height: '100%' },
   avatarText: { color: colors.navy, fontSize: 10, fontWeight: '900' },
   profileName: { color: colors.white, fontSize: 9, fontWeight: '700' },
 });

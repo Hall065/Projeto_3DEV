@@ -53,9 +53,7 @@ export default function GridDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const itensCriticos = estoque.filter(
-    (item) => item.status === 'estoque_baixo' || item.status === 'esgotado' || item.quantidade_disponivel <= item.quantidade_minima
-  );
+  const itensCriticos = estoque.filter((item) => item.status === 'indisponivel');
   const prioridades = [
     { label: 'Baixa', value: chamados.filter((c) => c.prioridade === 'baixa').length, color: colors.green },
     { label: 'Media', value: chamados.filter((c) => c.prioridade === 'media').length, color: colors.blue },
@@ -157,9 +155,9 @@ export default function GridDashboard() {
             title={item.titulo}
             subtitle={`${item.quantidade_disponivel} ${item.unidade} disponíveis`}
             badge={item.status}
-            badgeVariant={item.status === 'esgotado' ? 'danger' : 'warning'}
+            badgeVariant="danger"
             initials={item.titulo.slice(0, 2).toUpperCase()}
-            accent={item.status === 'esgotado' ? colors.red : colors.orange}
+            accent={colors.red}
           />
         ))}
       </SurfaceCard>

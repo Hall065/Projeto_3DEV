@@ -1,19 +1,16 @@
-import { Stack, usePathname, useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { SidebarDrawer } from '@/components/layout/SidebarDrawer';
 import { NotificationsModal } from '@/components/notifications/NotificationsModal';
 import { colors, connectTheme } from '@/constants/colors';
-import { CONNECT_BOTTOM_NAV, CONNECT_DRAWER_ITEMS } from '@/constants/navigation';
-import { canAccessConnect, canAccessConnectRoute } from '@/lib/permissions';
+import { ALUNO_BOTTOM_NAV } from '@/constants/navigation';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuthStore } from '@/stores/auth.store';
 
-export default function ConnectLayout() {
+export default function AlunoLayout() {
   const router = useRouter();
-  const pathname = usePathname();
   const session = useAuthStore((s) => s.session);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notifications = useNotifications(session?.userId);
@@ -23,28 +20,16 @@ export default function ConnectLayout() {
       router.replace('/login');
       return;
     }
-    if (session.perfil && !canAccessConnect(session.perfil, session.aplicacoes)) {
+    if (session.perfil?.tipo !== 'aluno') {
       router.replace('/hub');
     }
-    if (
-      session.perfil &&
-      !canAccessConnectRoute(session.perfil.tipo, pathname)
-    ) {
-      router.replace('/connect/turmas');
-    }
-  }, [pathname, session, router]);
-
-  const drawerItems = CONNECT_DRAWER_ITEMS.filter((item) =>
-    canAccessConnectRoute(session?.perfil?.tipo, item.route)
-  );
-  const bottomItems = CONNECT_BOTTOM_NAV.filter((item) =>
-    canAccessConnectRoute(session?.perfil?.tipo, item.route)
-  );
+  }, [router, session]);
 
   return (
     <View style={{ flex: 1 }}>
       <AppHeader
-        title="SENAI Connect"
+        title="SENAI Aluno"
+        showMenu={false}
         accentColor={connectTheme.primary}
         notificationCount={notifications.unreadCount}
         onNotificationsPress={() => setNotificationsOpen(true)}
@@ -58,8 +43,7 @@ export default function ConnectLayout() {
           }}
         />
       </View>
-      <BottomNav items={bottomItems} accentColor={connectTheme.accent} />
-      <SidebarDrawer items={drawerItems} moduleTitle="SENAI Connect" accentColor={connectTheme.accent} />
+      <BottomNav items={ALUNO_BOTTOM_NAV} accentColor={connectTheme.accent} />
       <NotificationsModal
         visible={notificationsOpen}
         notifications={notifications.notifications}

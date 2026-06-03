@@ -15,6 +15,7 @@ import { USER_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
 import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { connectService } from '@/services/connect.service';
+import { useAuthStore } from '@/stores/auth.store';
 import { useFilterStore } from '@/stores/filter.store';
 import type { Aluno } from '@/types/connect.types';
 
@@ -35,6 +36,7 @@ function getFields(options: Partial<AlunoOptions>): CrudField[] {
   { name: 'rm', label: 'RM', required: true, mask: 'integer', keyboardType: 'numeric' },
   { name: 'cpf', label: 'CPF', placeholder: '111.111.111-11', mask: 'cpf' },
   { name: 'telefone', label: 'Telefone/Celular', placeholder: '(19) 98999-9999', mask: 'phone' },
+  { name: 'foto_uri', label: 'Foto do aluno', type: 'image' },
   { name: 'curso_id', label: 'Curso', options: options.cursos ?? [], emptyOptionLabel: 'Sem curso' },
   { name: 'turma_id', label: 'Turma', options: options.turmas ?? [], emptyOptionLabel: 'Sem turma' },
   { name: 'data_nascimento', label: 'Data de nascimento', placeholder: 'DD/MM/AAAA', mask: 'date' },
@@ -65,6 +67,7 @@ function formValues(aluno: Aluno): Record<string, string> {
     rm: aluno.rm ?? '',
     cpf: aluno.cpf ?? '',
     telefone: aluno.telefone ?? '',
+    foto_uri: aluno.foto_url ?? '',
     curso_id: aluno.curso_id ?? '',
     turma_id: aluno.turma_id ?? '',
     data_nascimento: aluno.data_nascimento ?? '',
@@ -78,13 +81,14 @@ export default function AlunosScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Aluno | null>(null);
   const { search, setSearch } = useFilterStore();
+  const session = useAuthStore((s) => s.session);
   const { options, error: optionsError } = useSelectOptions(alunoOptionLoaders);
   const fields = getFields(options);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<Aluno, Record<string, string>>({
       load: connectService.listAlunos,
-      create: connectService.createAluno,
-      update: connectService.updateAluno,
+      create: (values) => connectService.createAluno(values, session?.userId),
+      update: (id, values) => connectService.updateAluno(id, values, session?.userId),
       remove: connectService.deleteAluno,
     });
 
@@ -155,6 +159,7 @@ export default function AlunosScreen() {
               badgeVariant={aluno.status === 'ativo' ? 'success' : 'neutral'}
               meta="BD"
               initials={initials(aluno.nome)}
+              imageUri={aluno.foto_url}
               accent={connectTheme.accent}
               onEdit={() => openEdit(aluno)}
               onDelete={() => deleteItem(aluno.id, aluno.nome)}

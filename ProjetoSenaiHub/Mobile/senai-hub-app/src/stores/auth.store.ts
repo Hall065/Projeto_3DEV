@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { AuthSession } from '@/types/auth.types';
 import * as authService from '@/services/auth.service';
+import { stopStudentGeofence } from '@/tasks/geofenceTask';
 
 interface AuthState {
   session: AuthSession | null;
@@ -61,6 +62,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
+    await stopStudentGeofence();
     await authService.logout();
     set({ session: null });
   },

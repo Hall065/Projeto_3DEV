@@ -28,6 +28,18 @@ export interface Chamado {
   created_at?: string; // fallback
   data_abertura?: string | null;
   data_fechamento?: string | null;
+  anexos?: ChamadoAnexo[];
+  imagem_url?: string | null;
+  evidencia_url?: string | null;
+}
+
+export interface ChamadoAnexo {
+  id: string;
+  chamado_id: string;
+  arquivo_id?: string | null;
+  url?: string | null;
+  tipo?: 'abertura' | 'evidencia_conclusao' | string | null;
+  created_at?: string | null;
 }
 
 export interface Tarefa {
@@ -63,7 +75,7 @@ export interface ItemEstoque {
   localizacao: string;
   empresa_distribuidora?: string | null;
   custo: number | null;
-  status: 'disponivel' | 'estoque_baixo' | 'reservado' | 'esgotado';
+  status: 'disponivel' | 'indisponivel' | 'estoque_baixo' | 'reservado' | 'esgotado';
   criado_em?: string;
   // Campos auxiliares para UI
   categoria_nome?: string;

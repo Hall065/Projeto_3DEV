@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
 import type { KeyboardTypeOptions } from 'react-native';
 import {
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -10,7 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { X } from 'lucide-react-native';
+import { Camera, X } from 'lucide-react-native';
 import { AnimatedPressable, AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 import {
@@ -40,6 +42,7 @@ export interface CrudField {
   mask?: InputMask;
   options?: CrudOption[];
   emptyOptionLabel?: string;
+  type?: 'text' | 'image';
 }
 
 interface CrudModalProps {
@@ -101,6 +104,25 @@ export function CrudModal({
     }
   };
 
+  const pickImage = async (fieldName: string) => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setError('Permita acesso Ã galeria para selecionar uma imagem.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.82,
+    });
+
+    if (!result.canceled && result.assets[0]?.uri) {
+      setValues((current) => ({ ...current, [fieldName]: result.assets[0].uri }));
+    }
+  };
+
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <KeyboardAvoidingView
@@ -130,7 +152,24 @@ export function CrudModal({
                     {field.label}
                     {field.required ? <Text style={styles.required}> *</Text> : null}
                   </Text>
-                  {field.options ? (
+                  {field.type === 'image' ? (
+                    <View style={styles.imageField}>
+                      {fieldValue ? (
+                        <Image source={{ uri: fieldValue }} style={styles.imagePreview} />
+                      ) : (
+                        <View style={styles.imagePlaceholder}>
+                          <Camera size={22} color={colors.grayText} />
+                        </View>
+                      )}
+                      <AppButton
+                        label={fieldValue ? 'Trocar imagem' : 'Selecionar imagem'}
+                        variant="secondary"
+                        accent={colors.navy}
+                        icon={<Camera size={16} color={colors.navy} />}
+                        onPress={() => pickImage(field.name)}
+                      />
+                    </View>
+                  ) : field.options ? (
                     <View style={styles.optionList}>
                       {selectOptions.length === 0 ? (
                         <Text style={styles.emptyOptions}>Nenhum dado cadastrado ainda.</Text>
@@ -272,6 +311,25 @@ const styles = StyleSheet.create({
   optionDescription: { color: colors.grayText, fontSize: 11, fontWeight: '700', marginTop: 2 },
   optionDescriptionSelected: { color: colors.navy },
   emptyOptions: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
+  imageField: { gap: 10 },
+  imagePreview: {
+    width: 92,
+    height: 92,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panelSoft,
+  },
+  imagePlaceholder: {
+    width: 92,
+    height: 92,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.panelSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   actions: { flexDirection: 'row', gap: 10, marginTop: 4 },
   actionButtonWrap: { flex: 1 },
 });

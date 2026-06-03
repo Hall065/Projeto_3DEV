@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -410,6 +411,7 @@ interface ListRowProps {
   badge?: string;
   badgeVariant?: StatusVariant;
   initials?: string;
+  imageUri?: string | null;
   accent?: string;
   tone?: Tone;
   onPress?: () => void;
@@ -424,6 +426,7 @@ export function ListRow({
   badge,
   badgeVariant = 'neutral',
   initials,
+  imageUri,
   accent = colors.navy,
   tone = 'light',
   onPress,
@@ -434,9 +437,13 @@ export function ListRow({
 
   return (
     <Pressable style={[styles.row, dark && styles.rowDark]} onPress={onPress} disabled={!onPress}>
-      {initials ? (
+      {imageUri || initials ? (
         <View style={[styles.avatar, { backgroundColor: dark ? colors.darkPanelSoft : softAccent(accent) }]}>
-          <Text style={[styles.avatarText, { color: accent }]}>{initials}</Text>
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={styles.avatarImage} />
+          ) : (
+            <Text style={[styles.avatarText, { color: accent }]}>{initials}</Text>
+          )}
         </View>
       ) : null}
       <View style={styles.rowBody}>
@@ -785,7 +792,9 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  avatarImage: { width: '100%', height: '100%' },
   avatarText: { fontSize: 12, fontWeight: '900' },
   rowBody: { flex: 1, minWidth: 0 },
   rowTitle: { color: colors.navy, fontSize: 13, fontWeight: '800' },

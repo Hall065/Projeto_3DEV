@@ -8,13 +8,20 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LoadingState } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 import { useAuthStore } from '@/stores/auth.store';
+import { startStudentGeofence } from '@/tasks/geofenceTask';
 
 export default function RootLayout() {
-  const { hydrate, isInitialized } = useAuthStore();
+  const { hydrate, isInitialized, session } = useAuthStore();
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  useEffect(() => {
+    startStudentGeofence(session).catch((error) => {
+      console.warn('[Geofence] Nao foi possivel iniciar o monitoramento:', error);
+    });
+  }, [session]);
 
   if (!isInitialized) {
     return (
@@ -45,6 +52,8 @@ export default function RootLayout() {
           <Stack.Screen name="hub" />
           <Stack.Screen name="connect" />
           <Stack.Screen name="grid" />
+          <Stack.Screen name="aluno" />
+          <Stack.Screen name="perfil" />
         </Stack>
         <StatusBar style="light" />
       </SafeAreaProvider>

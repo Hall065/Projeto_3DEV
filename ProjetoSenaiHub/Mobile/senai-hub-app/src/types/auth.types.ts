@@ -8,6 +8,7 @@ export interface HubUsuario {
   status: 'ativo' | 'inativo' | 'bloqueado';
   telefone?: string | null;
   cpf?: string | null;
+  foto_arquivo_id?: string | null;
   foto_url?: string | null;
   created_at?: string;
   updated_at?: string;

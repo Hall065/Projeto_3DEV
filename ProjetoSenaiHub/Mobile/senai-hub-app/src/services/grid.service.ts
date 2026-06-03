@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { createAuthUserProfile } from '@/services/user-profile.service';
+import { uploadService } from '@/services/upload.service';
 import type {
   Chamado,
   ChamadoPrioridade,
@@ -137,6 +138,27 @@ async function hydrateChamados(rows: Row[]) {
       'hub'
     )
   );
+  let anexosByChamado = new Map<string, Row[]>();
+  try {
+    const chamadoIds = uniqueIds(rows.map((row) => row.id));
+    const { data: anexosData, error: anexosError } = await supabase
+      .schema(schema)
+      .from('anexos_chamado')
+      .select('*')
+      .in('chamado_id', chamadoIds);
+    if (anexosError) throw anexosError;
+    const anexos = (anexosData ?? []) as Row[];
+    const arquivoIds = uniqueIds(anexos.map((anexo) => anexo.arquivo_id));
+    const arquivos = indexById(await selectRowsByIds('arquivos', arquivoIds, 'id,url_segura', 'hub'));
+    anexosByChamado = anexos.reduce<Map<string, Row[]>>((map, anexo) => {
+      const current = map.get(anexo.chamado_id) ?? [];
+      current.push({ ...anexo, arquivo: arquivos.get(anexo.arquivo_id) });
+      map.set(anexo.chamado_id, current);
+      return map;
+    }, new Map<string, Row[]>());
+  } catch {
+    anexosByChamado = new Map();
+  }
 
   return rows.map((row) => ({
     ...row,
@@ -145,6 +167,7 @@ async function hydrateChamados(rows: Row[]) {
     sala: row.sala ?? salas.get(row.sala_id),
     solicitante: row.solicitante ?? usuarios.get(row.aberto_por ?? row.solicitante_id),
     responsavel: row.responsavel ?? usuarios.get(row.responsavel_id),
+    anexos: row.anexos ?? anexosByChamado.get(row.id) ?? [],
   }));
 }
 
@@ -231,6 +254,19 @@ function mapChamado(row: Row): Chamado {
   const bloco = relation(row, 'bloco') ?? relation(row, 'blocos') ?? {};
   const sala = relation(row, 'sala') ?? relation(row, 'salas') ?? {};
   const solicitante = relation(row, 'solicitante') ?? relation(row, 'usuarios') ?? {};
+  const anexos = ((row.anexos ?? []) as Row[]).map((anexo) => {
+    const arquivo = relation(anexo, 'arquivo') ?? {};
+    return {
+      id: anexo.id,
+      chamado_id: anexo.chamado_id,
+      arquivo_id: anexo.arquivo_id,
+      tipo: anexo.tipo,
+      url: anexo.url ?? anexo.url_segura ?? arquivo.url_segura,
+      created_at: anexo.created_at ?? anexo.criado_em,
+    };
+  });
+  const abertura = anexos.find((anexo) => anexo.tipo !== 'evidencia_conclusao');
+  const evidencia = anexos.find((anexo) => anexo.tipo === 'evidencia_conclusao');
   return {
     id: row.id,
     codigo: row.codigo,
@@ -251,6 +287,9 @@ function mapChamado(row: Row): Chamado {
     created_at: row.created_at ?? row.criado_em,
     data_abertura: row.data_abertura,
     data_fechamento: row.data_fechamento,
+    anexos,
+    imagem_url: abertura?.url ?? null,
+    evidencia_url: evidencia?.url ?? null,
   };
 }
 
@@ -286,7 +325,9 @@ function mapItem(row: Row): ItemEstoque {
     unidade: row.unidade ?? 'un',
     localizacao: row.localizacao,
     empresa_distribuidora: row.empresa_distribuidora,
-    status: row.status ?? 'disponivel',
+    status: row.status === 'indisponivel' || row.status === 'esgotado' || row.status === 'reservado' || row.status === 'estoque_baixo'
+      ? 'indisponivel'
+      : 'disponivel',
     categoria_id: row.categoria_id,
     categoria_nome: categoria.nome,
     fornecedor_nome: fornecedor.nome,
@@ -387,6 +428,43 @@ async function deleteHubUsuario(id: string) {
   throw lastError;
 }
 
+async function attachChamadoImage(
+  chamadoId: string,
+  uri: string | null | undefined,
+  enviadoPor: string,
+  tipo: 'abertura' | 'evidencia_conclusao'
+) {
+  const imageUri = nullIfEmpty(uri);
+  if (!imageUri || imageUri.startsWith('http')) return;
+
+  const result = await uploadService.uploadAndSave(
+    imageUri,
+    enviadoPor,
+    tipo === 'evidencia_conclusao' ? 'evidencia_conclusao' : 'chamado',
+    'image',
+    { tipo: 'chamado', id: chamadoId }
+  );
+
+  const payloads = [
+    {
+      chamado_id: chamadoId,
+      arquivo_id: result.arquivoId,
+      tipo,
+      url: result.cloudinary.secure_url,
+    },
+    {
+      chamado_id: chamadoId,
+      arquivo_id: result.arquivoId,
+      tipo,
+    },
+  ];
+
+  for (const payload of payloads) {
+    const { error } = await supabase.schema(schema).from('anexos_chamado').insert(payload as never);
+    if (!error) return;
+  }
+}
+
 export const gridService = {
   async listChamados(): Promise<Chamado[]> {
     const rows = await hydrateChamados(await selectRows('chamados'));
@@ -395,7 +473,7 @@ export const gridService = {
 
   async createChamado(values: FormValues, userId?: string | null) {
     const actorId = await getAuthenticatedUserId('abrir chamado');
-    return insertWithFallback('chamados', [
+    const chamado = await insertWithFallback('chamados', [
       {
         codigo: nullIfEmpty(values.codigo) ?? makeCodigo(),
         aberto_por: uuidOrNull(actorId ?? values.aberto_por, 'solicitante'),
@@ -415,10 +493,19 @@ export const gridService = {
         solicitante_id: uuidOrNull(actorId ?? values.solicitante_id, 'solicitante'),
       },
     ]);
+    await attachChamadoImage((chamado as Row).id, values.anexo_uri, actorId, 'abertura');
+    return chamado;
   },
 
-  updateChamado(id: string, values: FormValues) {
-    return updateWithFallback('chamados', id, [
+  async updateChamado(id: string, values: FormValues) {
+    const actorId = await getAuthenticatedUserId('atualizar chamado');
+    if (normalizeStatus(values.status, 'aberto') === 'concluido' && !nullIfEmpty(values.evidencia_uri)) {
+      const anexos = await selectRows('anexos_chamado').catch(() => []);
+      const hasEvidence = anexos.some((anexo) => anexo.chamado_id === id && anexo.tipo === 'evidencia_conclusao');
+      if (!hasEvidence) throw new Error('Envie uma foto de evidencia para concluir o chamado.');
+    }
+
+    const chamado = await updateWithFallback('chamados', id, [
       {
         codigo: nullIfEmpty(values.codigo),
         categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
@@ -436,6 +523,9 @@ export const gridService = {
         status: normalizeStatus(values.status, 'aberto'),
       },
     ]);
+    await attachChamadoImage(id, values.anexo_uri, actorId, 'abertura');
+    await attachChamadoImage(id, values.evidencia_uri, actorId, 'evidencia_conclusao');
+    return chamado;
   },
 
   deleteChamado: (id: string) => deleteRow('chamados', id),
@@ -532,7 +622,7 @@ export const gridService = {
         localizacao: nullIfEmpty(values.localizacao) ?? 'N/A',
         empresa_distribuidora: nullIfEmpty(values.empresa_distribuidora),
         custo: numberOrZero(values.custo),
-        status: normalizeStatus(values.status, quantidade <= minima ? 'estoque_baixo' : 'disponivel'),
+        status: normalizeStatus(values.status, quantidade <= minima ? 'indisponivel' : 'disponivel'),
       },
     ]);
   },
@@ -552,7 +642,7 @@ export const gridService = {
         localizacao: nullIfEmpty(values.localizacao),
         empresa_distribuidora: nullIfEmpty(values.empresa_distribuidora),
         custo: numberOrZero(values.custo),
-        status: normalizeStatus(values.status, quantidade <= minima ? 'estoque_baixo' : 'disponivel'),
+        status: normalizeStatus(values.status, quantidade <= minima ? 'indisponivel' : 'disponivel'),
       },
     ]);
   },
@@ -647,7 +737,7 @@ export const gridService = {
         .schema(schema)
         .from('itens_estoque')
         .select('id', { count: 'exact', head: true })
-        .eq('status', 'estoque_baixo'),
+        .eq('status', 'indisponivel'),
       supabase
         .schema(schema)
         .from('chamados')

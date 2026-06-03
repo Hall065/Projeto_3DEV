@@ -30,6 +30,8 @@ function getFields(options: Partial<ChamadoOptions>): CrudField[] {
   { name: 'categoria_id', label: 'Categoria', options: options.categorias ?? [], emptyOptionLabel: 'Sem categoria' },
   { name: 'bloco_id', label: 'Bloco', options: options.blocos ?? [], emptyOptionLabel: 'Sem bloco' },
   { name: 'sala_id', label: 'Sala', options: options.salas ?? [], emptyOptionLabel: 'Sem sala' },
+  { name: 'anexo_uri', label: 'Imagem de abertura', type: 'image' },
+  { name: 'evidencia_uri', label: 'Evidencia de conclusao', type: 'image' },
   ];
 }
 
@@ -42,6 +44,8 @@ function formValues(chamado: Chamado): Record<string, string> {
     categoria_id: chamado.categoria_id ?? '',
     bloco_id: chamado.bloco_id ?? '',
     sala_id: chamado.sala_id ?? '',
+    anexo_uri: chamado.imagem_url ?? '',
+    evidencia_uri: chamado.evidencia_url ?? '',
   };
 }
 
@@ -105,6 +109,7 @@ export default function ChamadosScreen() {
               badgeVariant={chamado.status === 'concluido' ? 'success' : chamado.prioridade === 'urgente' ? 'danger' : 'warning'}
               meta="BD"
               initials="CH"
+              imageUri={chamado.evidencia_url ?? chamado.imagem_url}
               accent={chamado.prioridade === 'urgente' ? colors.red : colors.orange}
               tone="dark"
               onEdit={() => {

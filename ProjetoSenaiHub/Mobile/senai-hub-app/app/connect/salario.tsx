@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Calculator, DollarSign, Percent, WalletCards } from 'lucide-react-native';
+import { ExportModal } from '@/components/common/ExportModal';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
-import { FeedbackMessage, ListRow, MetricTile, ProgressBar, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { AppButton, FeedbackMessage, ListRow, MetricTile, ProgressBar, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { TIPO_PAGAMENTO_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
 import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { connectService } from '@/services/connect.service';
+import { exportService } from '@/services/export.service';
 import type { SalarioAluno } from '@/types/connect.types';
 
 const salarioOptionLoaders = {
@@ -50,6 +52,7 @@ function formValues(salario: SalarioAluno): Record<string, string> {
 
 export default function SalarioScreen() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [editing, setEditing] = useState<SalarioAluno | null>(null);
   const { options, error: optionsError } = useSelectOptions(salarioOptionLoaders);
   const fields = getFields(options);
@@ -89,6 +92,12 @@ export default function SalarioScreen() {
             <Text style={styles.salaryLabel}>Total de bolsas base</Text>
             <Text style={styles.salaryValue}>R$ {Math.round(totalBase).toLocaleString('pt-BR')}</Text>
             <ProgressBar value={items.length ? 85 : 0} accent={colors.green} />
+            <AppButton
+              label="Exportar PDF ou Excel"
+              variant="secondary"
+              accent={connectTheme.accent}
+              onPress={() => setExportOpen(true)}
+            />
           </View>
         </SurfaceCard>
 
@@ -129,8 +138,34 @@ export default function SalarioScreen() {
           setModalOpen(false);
         }}
       />
+      <ExportModal
+        visible={exportOpen}
+        title="Exportar salarios"
+        onClose={() => setExportOpen(false)}
+        onPDF={async () => {
+          await exportService.exportarPDF(toRows(items), 'Relatorio de salarios');
+          setExportOpen(false);
+        }}
+        onExcel={async () => {
+          await exportService.exportarExcel(toRows(items), 'relatorio-salarios');
+          setExportOpen(false);
+        }}
+      />
     </>
   );
+}
+
+function toRows(items: SalarioAluno[]) {
+  return items.map((item) => ({
+    aluno: item.aluno_nome ?? item.aluno_id,
+    empresa: item.empresa_nome,
+    mes: item.mes_referencia,
+    salario_base: item.salario_base,
+    valor_dia: item.valor_dia,
+    desconto: item.desconto,
+    salario_final: item.salario_final,
+    faltas_injustificadas: item.faltas_injustificadas,
+  }));
 }
 
 const styles = StyleSheet.create({

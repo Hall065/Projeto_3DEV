@@ -30,4 +30,10 @@ export const ROUTES = {
     mapaTarefas: '/grid/mapa-tarefas',
     usuarios: '/grid/usuarios',
   },
+  aluno: {
+    dashboard: '/aluno/dashboard',
+    frequencia: '/aluno/frequencia',
+    grade: '/aluno/grade',
+    perfil: '/aluno/perfil',
+  },
 } as const;

@@ -86,7 +86,7 @@ export default function EstoqueScreen() {
         <View style={styles.metricGrid}>
           <MetricTile label="Total de itens" value={items.length} accent={gridTheme.accent} icon={<Package size={16} color={gridTheme.accent} />} style={styles.metric} />
           <MetricTile label="Valor em estoque" value={`R$ ${Math.round(totalValue).toLocaleString('pt-BR')}`} accent={colors.blue} icon={<DollarSign size={16} color={colors.blue} />} style={styles.metric} />
-          <MetricTile label="Estoque baixo" value={items.filter((i) => i.status === 'estoque_baixo' || i.quantidade_disponivel <= i.quantidade_minima).length} accent={colors.orange} icon={<AlertTriangle size={16} color={colors.orange} />} style={styles.metric} />
+          <MetricTile label="Indisponiveis" value={items.filter((i) => i.status === 'indisponivel').length} accent={colors.red} icon={<AlertTriangle size={16} color={colors.red} />} style={styles.metric} />
           <MetricTile label="Distribuidoras" value={new Set(items.map(i => i.empresa_distribuidora).filter(Boolean)).size} accent={colors.purple} icon={<Warehouse size={16} color={colors.purple} />} style={styles.metric} />
         </View>
 
@@ -101,10 +101,10 @@ export default function EstoqueScreen() {
               title={item.titulo}
               subtitle={`${item.categoria_nome ?? 'Sem categoria'} • ${item.quantidade_disponivel} ${item.unidade} em ${item.localizacao}`}
               badge={item.status}
-              badgeVariant={item.status === 'estoque_baixo' || item.quantidade_disponivel <= item.quantidade_minima ? 'warning' : item.status === 'esgotado' ? 'danger' : 'success'}
+              badgeVariant={item.status === 'indisponivel' ? 'danger' : 'success'}
               meta={item.custo ? `R$ ${item.custo.toLocaleString('pt-BR')}` : undefined}
               initials={item.titulo.slice(0, 2).toUpperCase()}
-              accent={item.status === 'estoque_baixo' ? colors.orange : item.status === 'esgotado' ? colors.red : colors.green}
+              accent={item.status === 'indisponivel' ? colors.red : colors.green}
               onEdit={() => {
                 setEditing(item);
                 setModalOpen(true);

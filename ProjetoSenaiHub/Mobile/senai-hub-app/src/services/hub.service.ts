@@ -1,11 +1,29 @@
 import { supabase } from '@/lib/supabase';
 import type { HubUsuario, UsuarioAplicacao } from '@/types/auth.types';
 
+async function fetchArquivoUrl(arquivoId?: string | null) {
+  if (!arquivoId) return null;
+
+  for (const targetSchema of ['hub', 'public']) {
+    const { data, error } = await supabase
+      .schema(targetSchema)
+      .from('arquivos')
+      .select('url_segura')
+      .eq('id', arquivoId)
+      .maybeSingle();
+
+    if (!error) return (data as { url_segura?: string } | null)?.url_segura ?? null;
+  }
+
+  return null;
+}
+
 export async function fetchUserProfile(email: string): Promise<HubUsuario | null> {
   const normalizedEmail = email.trim().toLowerCase();
   const { data, error } = await supabase
     .from('usuarios')
-    .select(`
+    .select(
+      `
       id,
       nome,
       email,
@@ -16,8 +34,11 @@ export async function fetchUserProfile(email: string): Promise<HubUsuario | null
       cpf,
       foto_arquivo_id,
       criado_em,
-      atualizado_em
-    `)
+      atualizado_em,
+      created_at,
+      updated_at
+    `
+    )
     .or(`email.ilike.${normalizedEmail},email_institucional.ilike.${normalizedEmail}`)
     .maybeSingle();
 
@@ -28,19 +49,63 @@ export async function fetchUserProfile(email: string): Promise<HubUsuario | null
 
   if (!data) return null;
 
-  // Mapear campos do banco para a interface HubUsuario
+  const row = data as Record<string, any>;
+  const fotoArquivoId = row.foto_arquivo_id as string | null | undefined;
+  const fotoUrl = await fetchArquivoUrl(fotoArquivoId);
+
   return {
-    id: data.id,
-    nome: data.nome,
-    email_institucional: data.email_institucional ?? data.email,
-    tipo: data.tipo_usuario,
-    status: data.status,
-    telefone: data.telefone,
-    cpf: data.cpf,
-    foto_url: null, // foto_url não existe no banco, apenas foto_arquivo_id
-    created_at: data.criado_em,
-    updated_at: data.atualizado_em,
+    id: row.id,
+    nome: row.nome,
+    email_institucional: row.email_institucional ?? row.email,
+    tipo: row.tipo_usuario,
+    status: row.status,
+    telefone: row.telefone,
+    cpf: row.cpf,
+    foto_arquivo_id: fotoArquivoId,
+    foto_url: fotoUrl,
+    created_at: row.criado_em ?? row.created_at,
+    updated_at: row.atualizado_em ?? row.updated_at,
   } as HubUsuario;
+}
+
+export async function updateUserProfile(
+  userId: string,
+  values: Pick<HubUsuario, 'nome' | 'email_institucional' | 'telefone' | 'cpf'>
+) {
+  const payload = {
+    nome: values.nome,
+    email_institucional: values.email_institucional,
+    telefone: values.telefone,
+    cpf: values.cpf,
+  };
+
+  let lastError: unknown = null;
+  for (const targetSchema of ['hub', 'public']) {
+    const { data, error } = await supabase
+      .schema(targetSchema)
+      .from('usuarios')
+      .update(payload)
+      .eq('id', userId)
+      .select('*')
+      .single();
+    if (!error) return data;
+    lastError = error;
+  }
+  throw lastError;
+}
+
+export async function updateUserPhoto(userId: string, arquivoId: string) {
+  let lastError: unknown = null;
+  for (const targetSchema of ['hub', 'public']) {
+    const { error } = await supabase
+      .schema(targetSchema)
+      .from('usuarios')
+      .update({ foto_arquivo_id: arquivoId } as never)
+      .eq('id', userId);
+    if (!error) return;
+    lastError = error;
+  }
+  throw lastError;
 }
 
 export async function fetchUserApplications(userId: string): Promise<UsuarioAplicacao[]> {

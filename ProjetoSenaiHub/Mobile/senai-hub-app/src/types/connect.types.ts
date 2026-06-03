@@ -5,6 +5,8 @@ export interface Aluno {
   usuario_id?: string | null;
   curso_id?: string | null;
   turma_id?: string | null;
+  foto_arquivo_id?: string | null;
+  foto_url?: string | null;
   rm: string;
   nome: string;
   email_pessoal?: string | null;
@@ -79,6 +81,9 @@ export interface FrequenciaRegistro {
   turma_nome?: string | null;
   data_aula?: string | null;
   data?: string | null;
+  disciplina?: string | null;
+  professor_id?: string | null;
+  turma_id?: string | null;
 }
 
 export interface Empresa {
@@ -120,11 +125,14 @@ export interface SalarioAluno {
   tipo_pagamento?: string | null;
   salario_base: number;
   valor_hora?: number | null;
-  valor_dia?: number | null;
   carga_diaria_horas?: number | null;
   dias_uteis_mes?: number | null;
   outros_descontos?: number | null;
   salario_final?: number | null;
+  valor_dia?: number | null;
+  desconto?: number | null;
+  frequencia_percentual?: number | null;
+  dias_trabalhados?: number | null;
   faltas_injustificadas?: number | null;
   aluno_nome?: string | null;
   empresa_nome?: string | null;
@@ -138,6 +146,11 @@ export interface LocalizacaoAluno {
   dentro_do_senai?: boolean | null;
   dentro_perimetro?: boolean | null;
   em_aula?: boolean | null;
+  turma_id?: string | null;
+  turma_nome?: string | null;
+  curso_id?: string | null;
+  curso_nome?: string | null;
+  email_institucional?: string | null;
   atualizado_em?: string | null;
   data_hora?: string | null;
   precisao_metros?: number | null;

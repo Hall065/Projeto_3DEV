@@ -65,9 +65,7 @@ export const TAREFA_STATUS_OPTIONS: CrudOption[] = [
 
 export const ESTOQUE_STATUS_OPTIONS: CrudOption[] = [
   { value: 'disponivel', label: 'Disponivel' },
-  { value: 'estoque_baixo', label: 'Estoque baixo' },
-  { value: 'reservado', label: 'Reservado' },
-  { value: 'esgotado', label: 'Esgotado' },
+  { value: 'indisponivel', label: 'Indisponivel' },
 ];
 
 export const FREQUENCIA_STATUS_OPTIONS: CrudOption[] = [

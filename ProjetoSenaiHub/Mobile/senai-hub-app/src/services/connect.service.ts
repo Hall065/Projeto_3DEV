@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { createAuthUserProfile } from '@/services/user-profile.service';
+import { uploadService } from '@/services/upload.service';
 import type {
   Aluno,
   ContratoAluno,
@@ -130,12 +131,21 @@ async function hydrateAlunos(rows: Row[]) {
   );
   const cursos = indexById(await selectRowsByIds('cursos', uniqueIds(rows.map((row) => row.curso_id)), 'id,nome'));
   const turmas = indexById(await selectRowsByIds('turmas', uniqueIds(rows.map((row) => row.turma_id)), 'id,nome'));
+  let fotos = new Map<string, Row>();
+  try {
+    fotos = indexById(
+      await selectHubRowsByIds('arquivos', uniqueIds(rows.map((row) => row.foto_arquivo_id)), 'id,url_segura')
+    );
+  } catch {
+    fotos = new Map();
+  }
 
   return rows.map((row) => ({
     ...row,
     usuario: row.usuario ?? usuarios.get(row.usuario_id),
     curso: row.curso ?? cursos.get(row.curso_id),
     turma: row.turma ?? turmas.get(row.turma_id),
+    foto: row.foto ?? fotos.get(row.foto_arquivo_id),
   }));
 }
 
@@ -170,6 +180,36 @@ async function hydrateFrequencias(rows: Row[]) {
     aluno: row.aluno ?? alunos.get(row.aluno_id),
     aula: row.aula ?? aulasById.get(row.aula_id),
   }));
+}
+
+async function hydrateLocalizacoes(rows: Row[]) {
+  const alunos = indexById(
+    await hydrateAlunos(await selectRowsByIds('alunos', uniqueIds(rows.map((row) => row.aluno_id)), '*'))
+  );
+
+  return rows.map((row) => ({
+    ...row,
+    aluno: row.aluno ?? alunos.get(row.aluno_id),
+  }));
+}
+
+async function attachAlunoPhoto(alunoId: string, uri: string | null | undefined, enviadoPor?: string | null) {
+  const imageUri = nullIfEmpty(uri);
+  if (!imageUri || !enviadoPor || imageUri.startsWith('http')) return;
+
+  const result = await uploadService.uploadAndSave(imageUri, enviadoPor, 'aluno', 'image', {
+    tipo: 'aluno',
+    id: alunoId,
+  });
+
+  try {
+    await updateWithFallback('alunos', alunoId, [
+      { foto_arquivo_id: result.arquivoId },
+      { foto_url: result.cloudinary.secure_url },
+    ]);
+  } catch (error) {
+    console.warn('[Connect] Foto do aluno enviada, mas a FK nao foi atualizada:', error);
+  }
 }
 
 async function insertWithFallback(table: string, payloads: Row[]) {
@@ -233,10 +273,13 @@ function mapAluno(row: Row): Aluno {
   const usuario = relation(row, 'usuario') ?? relation(row, 'usuarios') ?? {};
   const turma = relation(row, 'turma') ?? relation(row, 'turmas') ?? {};
   const curso = relation(row, 'curso') ?? relation(row, 'cursos') ?? {};
+  const foto = relation(row, 'foto') ?? relation(row, 'arquivos') ?? {};
 
   return {
     id: row.id,
     usuario_id: row.usuario_id,
+    foto_arquivo_id: row.foto_arquivo_id,
+    foto_url: row.foto_url ?? row.url_segura ?? foto.url_segura,
     nome: row.nome ?? usuario.nome ?? 'Aluno sem nome',
     email: row.email_institucional ?? usuario.email_institucional ?? usuario.email,
     email_institucional: row.email_institucional ?? usuario.email_institucional ?? usuario.email,
@@ -357,6 +400,10 @@ function mapSalario(row: Row): SalarioAluno {
     dias_uteis_mes: row.dias_uteis_mes,
     mes_referencia: row.mes_referencia,
     salario_final: row.salario_final == null ? null : Number(row.salario_final),
+    valor_dia: row.valor_dia == null ? null : Number(row.valor_dia),
+    desconto: row.desconto == null ? null : Number(row.desconto),
+    frequencia_percentual: row.frequencia_percentual == null ? null : Number(row.frequencia_percentual),
+    dias_trabalhados: row.dias_trabalhados,
     faltas_injustificadas: row.faltas_injustificadas,
   };
 }
@@ -370,6 +417,9 @@ function mapFrequencia(row: Row): FrequenciaRegistro {
     id: row.id,
     aluno_id: row.aluno_id,
     aula_id: row.aula_id,
+    turma_id: aula.turma_id,
+    professor_id: aula.professor_id,
+    disciplina: aula.disciplina,
     data: row.data ?? aula.data_aula,
     data_aula: aula.data_aula,
     status: row.status,
@@ -382,14 +432,22 @@ function mapFrequencia(row: Row): FrequenciaRegistro {
 function mapLocalizacao(row: Row): LocalizacaoAluno {
   const aluno = relation(row, 'aluno') ?? relation(row, 'alunos') ?? {};
   const usuario = relation(aluno, 'usuario') ?? {};
+  const turma = relation(aluno, 'turma') ?? {};
+  const curso = relation(aluno, 'curso') ?? {};
   return {
     id: row.id ?? row.aluno_id,
     aluno_id: row.aluno_id,
     aluno_nome: row.aluno_nome ?? aluno.nome ?? usuario.nome,
     latitude: row.latitude == null ? null : Number(row.latitude),
     longitude: row.longitude == null ? null : Number(row.longitude),
-    dentro_perimetro: row.dentro_perimetro,
+    dentro_do_senai: row.dentro_do_senai ?? row.dentro_perimetro,
+    dentro_perimetro: row.dentro_perimetro ?? row.dentro_do_senai,
     em_aula: row.em_aula,
+    turma_id: aluno.turma_id,
+    turma_nome: aluno.turma_nome ?? turma.nome,
+    curso_id: aluno.curso_id,
+    curso_nome: aluno.curso_nome ?? curso.nome,
+    email_institucional: aluno.email_institucional ?? aluno.email ?? usuario.email_institucional,
     data_hora: row.data_hora,
     precisao_metros: row.precisao_metros == null ? null : Number(row.precisao_metros),
   };
@@ -401,11 +459,11 @@ export const connectService = {
     return rows.map(mapAluno);
   },
 
-  async createAluno(values: FormValues) {
+  async createAluno(values: FormValues, enviadoPor?: string | null) {
     const cursoId = uuidOrNull(values.curso_id, 'curso');
     const turmaId = uuidOrNull(values.turma_id, 'turma');
     const usuarioId = await createHubUser(values, 'aluno');
-    return insertWithFallback('alunos', [
+    const aluno = await insertWithFallback('alunos', [
       {
         usuario_id: usuarioId,
         curso_id: cursoId,
@@ -419,14 +477,16 @@ export const connectService = {
         status: normalizeStatus(values.status),
       },
     ]);
+    await attachAlunoPhoto((aluno as Row).id, values.foto_uri, enviadoPor ?? usuarioId);
+    return aluno;
   },
 
-  async updateAluno(id: string, values: FormValues) {
+  async updateAluno(id: string, values: FormValues, enviadoPor?: string | null) {
     const { data } = await supabase.schema(schema).from('alunos').select('usuario_id').eq('id', id).single();
     const cursoId = uuidOrNull(values.curso_id, 'curso');
     const turmaId = uuidOrNull(values.turma_id, 'turma');
     await updateHubUser((data as Row | null)?.usuario_id, values);
-    return updateWithFallback('alunos', id, [
+    const aluno = await updateWithFallback('alunos', id, [
       {
         curso_id: cursoId,
         turma_id: turmaId,
@@ -439,6 +499,8 @@ export const connectService = {
         status: normalizeStatus(values.status),
       },
     ]);
+    await attachAlunoPhoto(id, values.foto_uri, enviadoPor ?? (data as Row | null)?.usuario_id);
+    return aluno;
   },
 
   deleteAluno: (id: string) => deleteRow('alunos', id),
@@ -735,7 +797,7 @@ export const connectService = {
   deleteFrequencia: (id: string) => deleteRow('frequencias', id),
 
   async listLocalizacoes(): Promise<LocalizacaoAluno[]> {
-    const rows = await hydrateContratos(await selectRows('localizacoes_alunos'));
+    const rows = await hydrateLocalizacoes(await selectRows('localizacoes_alunos'));
     return rows.map(mapLocalizacao);
   },
 
@@ -791,6 +853,174 @@ export const connectService = {
       label: contrato.aluno_nome ?? contrato.empresa_nome ?? contrato.id,
       description: contrato.empresa_nome ?? contrato.status ?? undefined,
     }));
+  },
+
+  async getAlunoByUserId(userId: string): Promise<Aluno | null> {
+    const { data, error } = await supabase.schema(schema).from('alunos').select('*').eq('usuario_id', userId).maybeSingle();
+    if (error || !data) return null;
+    const rows = await hydrateAlunos([data as Row]);
+    return mapAluno(rows[0]);
+  },
+
+  async getProfessorByUserId(userId: string): Promise<Professor | null> {
+    const { data, error } = await supabase
+      .schema(schema)
+      .from('professores')
+      .select('*')
+      .eq('usuario_id', userId)
+      .maybeSingle();
+    if (error || !data) return null;
+    const rows = await hydrateProfessores([data as Row]);
+    return mapProfessor(rows[0]);
+  },
+
+  async listTurmasForProfessorUser(userId: string): Promise<Turma[]> {
+    const professor = await connectService.getProfessorByUserId(userId);
+    if (!professor) return connectService.listTurmas();
+
+    const { data } = await supabase
+      .schema(schema)
+      .from('professor_turmas')
+      .select('turma_id')
+      .eq('professor_id', professor.id);
+    const turmaIds = uniqueIds(((data ?? []) as Row[]).map((row) => row.turma_id));
+
+    if (turmaIds.length > 0) {
+      const rows = await hydrateTurmas(await selectRowsByIds('turmas', turmaIds, '*'));
+      return rows.map(mapTurma);
+    }
+
+    const { data: fallback } = await supabase
+      .schema(schema)
+      .from('turmas')
+      .select('*')
+      .eq('professor_responsavel_id', professor.id);
+    const rows = await hydrateTurmas((fallback ?? []) as Row[]);
+    return rows.map(mapTurma);
+  },
+
+  async listAlunosByTurma(turmaId: string): Promise<Aluno[]> {
+    const { data, error } = await supabase.schema(schema).from('alunos').select('*').eq('turma_id', turmaId);
+    if (error) throw error;
+    return (await hydrateAlunos((data ?? []) as Row[])).map(mapAluno);
+  },
+
+  async saveChamada(input: {
+    turmaId: string;
+    professorId?: string | null;
+    dataAula: string;
+    quantidadeAulas: number;
+    registradoPor?: string | null;
+    registros: { alunoId: string; aulas: ('presente' | 'falta_justificada' | 'falta_injustificada')[] }[];
+  }) {
+    const { data: existing, error: existingError } = await supabase
+      .schema(schema)
+      .from('aulas')
+      .select('id')
+      .eq('turma_id', input.turmaId)
+      .eq('data_aula', input.dataAula)
+      .maybeSingle();
+
+    if (!existingError && existing) {
+      throw new Error('Ja existe chamada para esta turma e data.');
+    }
+
+    const { data: aula, error: aulaError } = await supabase
+      .schema(schema)
+      .from('aulas')
+      .insert({
+        turma_id: requiredUuid(input.turmaId, 'turma'),
+        professor_id: uuidOrNull(input.professorId, 'professor'),
+        disciplina: 'Chamada',
+        data_aula: input.dataAula,
+        quantidade_aulas: input.quantidadeAulas,
+      })
+      .select('id')
+      .single();
+    if (aulaError) throw aulaError;
+
+    const rows = input.registros.map((registro) => {
+      const faltas = registro.aulas.filter((status) => status !== 'presente');
+      const hasInjustificada = registro.aulas.includes('falta_injustificada');
+      const hasJustificada = registro.aulas.includes('falta_justificada');
+      const status = hasInjustificada ? 'falta_injustificada' : hasJustificada ? 'falta_justificada' : 'presente';
+      return {
+        aula_id: (aula as Row).id,
+        aluno_id: registro.alunoId,
+        status,
+        quantidade_aulas_faltadas: faltas.length,
+        registrado_por: uuidOrNull(input.registradoPor, 'usuario'),
+      };
+    });
+
+    const { error } = await supabase.schema(schema).from('frequencias').insert(rows as never);
+    if (error) throw error;
+  },
+
+  async listFrequenciasByAluno(alunoId: string, mesReferencia?: string): Promise<FrequenciaRegistro[]> {
+    let query = supabase.schema(schema).from('frequencias').select('*').eq('aluno_id', alunoId);
+    const { data, error } = await query;
+    if (error) throw error;
+    const rows = await hydrateFrequencias((data ?? []) as Row[]);
+    const mapped = rows.map(mapFrequencia);
+    if (!mesReferencia) return mapped;
+    return mapped.filter((item) => (item.data_aula ?? item.data ?? '').startsWith(mesReferencia));
+  },
+
+  async listContratosByAluno(alunoId: string): Promise<ContratoAluno[]> {
+    const { data, error } = await supabase.schema(schema).from('contratos_alunos').select('*').eq('aluno_id', alunoId);
+    if (error) throw error;
+    return (await hydrateContratos((data ?? []) as Row[])).map(mapContrato);
+  },
+
+  async calculateSalaryForAluno(alunoId: string, mesReferencia = new Date().toISOString().slice(0, 7)) {
+    const contratos = await connectService.listContratosByAluno(alunoId);
+    const contrato = contratos[0];
+    const frequencias = await connectService.listFrequenciasByAluno(alunoId, mesReferencia);
+    const totalFaltasInjustificadas = frequencias.reduce(
+      (sum, item) => sum + (item.status === 'falta_injustificada' ? item.quantidade_aulas_faltadas ?? 1 : 0),
+      0
+    );
+    const diasUteis = 20;
+    const diasTrabalhados = Math.max(0, diasUteis - totalFaltasInjustificadas);
+    const carga = contrato?.carga_horaria ?? '';
+    const base = carga.includes('4') ? 759 : 1518;
+    const valorDia = base / diasUteis;
+    const desconto = valorDia * totalFaltasInjustificadas;
+    const salarioFinal = base - desconto;
+    const frequenciaPerc = Math.round((diasTrabalhados / diasUteis) * 1000) / 10;
+    const payload = {
+      aluno_id: alunoId,
+      contrato_id: contrato?.id,
+      empresa_id: contrato?.empresa_id,
+      mes_referencia: mesReferencia,
+      salario_base: base,
+      valor_dia: valorDia,
+      desconto,
+      salario_final: salarioFinal,
+      frequencia_percentual: frequenciaPerc,
+      dias_trabalhados: diasTrabalhados,
+      faltas_injustificadas: totalFaltasInjustificadas,
+    };
+
+    const tables = ['calculos_salario', 'salarios_alunos'];
+    for (const table of tables) {
+      const { data: existing } = await supabase
+        .schema(schema)
+        .from(table)
+        .select('id')
+        .eq('aluno_id', alunoId)
+        .eq('mes_referencia', mesReferencia)
+        .maybeSingle();
+
+      const result = existing
+        ? await supabase.schema(schema).from(table).update(payload as never).eq('id', (existing as Row).id).select('*').single()
+        : await supabase.schema(schema).from(table).insert(payload as never).select('*').single();
+
+      if (!result.error) return mapSalario({ ...(result.data as Row), aluno: { id: alunoId } });
+    }
+
+    return mapSalario({ id: `${alunoId}-${mesReferencia}`, ...payload });
   },
 
   async getDashboardMetrics() {

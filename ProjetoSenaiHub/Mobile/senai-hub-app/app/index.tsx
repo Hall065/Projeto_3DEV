@@ -5,7 +5,7 @@ export default function Index() {
   const session = useAuthStore((s) => s.session);
 
   if (session) {
-    return <Redirect href="/hub" />;
+    return <Redirect href={(session.perfil?.tipo === 'aluno' ? '/aluno/dashboard' : '/hub') as never} />;
   }
 
   return <Redirect href="/login" />;

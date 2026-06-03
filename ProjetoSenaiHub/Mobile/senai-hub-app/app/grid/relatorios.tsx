@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ChartColumn, CheckCircle2, ClipboardList, TrendingUp } from 'lucide-react-native';
+import { ExportModal } from '@/components/common/ExportModal';
 import { MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
+import { exportService } from '@/services/export.service';
 import { gridService } from '@/services/grid.service';
 import type { Chamado, ItemEstoque, Tarefa } from '@/types/grid.types';
 
@@ -12,6 +14,7 @@ export default function RelatoriosGridScreen() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [estoque, setEstoque] = useState<ItemEstoque[]>([]);
+  const [exportOpen, setExportOpen] = useState(false);
 
   useEffect(() => {
     Promise.all([gridService.listChamados(), gridService.listTarefas(), gridService.listEstoque()])
@@ -42,6 +45,8 @@ export default function RelatoriosGridScreen() {
       title="Relatorios"
       description="Indicadores de manutencao calculados a partir do Supabase."
       isLoading={loading}
+      actionLabel="Exportar"
+      onActionPress={() => setExportOpen(true)}
     >
       <View style={styles.metricGrid}>
         <MetricTile label="Tarefas concluidas" value={tarefasConcluidas} accent={gridTheme.accent} icon={<CheckCircle2 size={16} color={gridTheme.accent} />} style={styles.metric} />
@@ -55,10 +60,50 @@ export default function RelatoriosGridScreen() {
       </SurfaceCard>
 
       <SurfaceCard title="Exportacoes" subtitle="Arquivos gerados">
-        <Text style={styles.empty}>Nenhum arquivo gerado ainda.</Text>
+        <Text style={styles.empty}>Use o botao Exportar para gerar PDF ou Excel.</Text>
       </SurfaceCard>
+
+      <ExportModal
+        visible={exportOpen}
+        title="Exportar manutencoes"
+        onClose={() => setExportOpen(false)}
+        onPDF={async () => {
+          await exportService.exportarPDF(toRows(chamados, tarefas, estoque), 'Relatorio de manutencoes');
+          setExportOpen(false);
+        }}
+        onExcel={async () => {
+          await exportService.exportarExcel(toRows(chamados, tarefas, estoque), 'relatorio-manutencoes');
+          setExportOpen(false);
+        }}
+      />
     </ModuleScreen>
   );
+}
+
+function toRows(chamados: Chamado[], tarefas: Tarefa[], estoque: ItemEstoque[]) {
+  return [
+    ...chamados.map((item) => ({
+      tipo: 'Chamado',
+      titulo: item.titulo,
+      status: item.status,
+      prioridade: item.prioridade,
+      local: item.sala_nome ?? item.bloco_nome,
+    })),
+    ...tarefas.map((item) => ({
+      tipo: 'Tarefa',
+      titulo: item.titulo,
+      status: item.status,
+      prioridade: item.prioridade,
+      responsavel: item.responsavel_nome,
+    })),
+    ...estoque.map((item) => ({
+      tipo: 'Estoque',
+      titulo: item.titulo,
+      status: item.status,
+      quantidade: item.quantidade_disponivel,
+      custo: item.custo,
+    })),
+  ];
 }
 
 const styles = StyleSheet.create({

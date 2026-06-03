@@ -12,7 +12,12 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Permite selecionar fotos para perfil, alunos e chamados.",
+        "NSLocationWhenInUseUsageDescription": "Permite verificar se o aluno esta dentro do perimetro do SENAI.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Permite monitorar automaticamente a entrada e saida do perimetro do SENAI."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,6 +27,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "READ_MEDIA_IMAGES"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {

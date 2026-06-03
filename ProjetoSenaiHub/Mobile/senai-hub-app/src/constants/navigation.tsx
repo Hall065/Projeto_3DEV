@@ -13,6 +13,7 @@ import {
   Map,
   MapPin,
   Package,
+  User,
   UserCheck,
   Users,
   Wrench,
@@ -60,4 +61,11 @@ export const GRID_BOTTOM_NAV: NavItem[] = [
   { label: 'Chamados', route: ROUTES.grid.chamados, icon: <Wrench size={20} color={gridTheme.primary} /> },
   { label: 'Tarefas', route: ROUTES.grid.tarefas, icon: <ClipboardList size={20} color={gridTheme.primary} /> },
   { label: 'Estoque', route: ROUTES.grid.estoque, icon: <Package size={20} color={gridTheme.primary} /> },
+];
+
+export const ALUNO_BOTTOM_NAV: NavItem[] = [
+  { label: 'Inicio', route: ROUTES.aluno.dashboard, icon: <Home size={20} color={connectTheme.primary} /> },
+  { label: 'Frequencia', route: ROUTES.aluno.frequencia, icon: <CalendarCheck size={20} color={connectTheme.primary} /> },
+  { label: 'Grade', route: ROUTES.aluno.grade, icon: <ClipboardList size={20} color={connectTheme.primary} /> },
+  { label: 'Perfil', route: ROUTES.aluno.perfil, icon: <User size={20} color={connectTheme.primary} /> },
 ];

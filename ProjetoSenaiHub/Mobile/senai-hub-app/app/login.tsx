@@ -24,6 +24,11 @@ import { loginSchema, type LoginFormData } from '@/utils/validators';
 const circuitBg = require('../assets/brand/senai-circuit-bg.png');
 const hubLogo = require('../assets/brand/senai-hub-logo-2.png');
 
+function getPostLoginRoute() {
+  const session = useAuthStore.getState().session;
+  return session?.perfil?.tipo === 'aluno' ? '/aluno/dashboard' : '/hub';
+}
+
 export default function LoginScreen() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
@@ -51,7 +56,7 @@ export default function LoginScreen() {
       setError(`Não foi possível autenticar a conta de demonstração: ${err}`);
       return;
     }
-    router.replace('/hub');
+    router.replace(getPostLoginRoute() as never);
   };
 
   const onSubmit = async (data: LoginFormData) => {
@@ -64,8 +69,8 @@ export default function LoginScreen() {
         setError(err);
         return;
       }
-      console.log('[Login] Sucesso! Redirecionando para /hub');
-      router.replace('/hub');
+      console.log('[Login] Sucesso! Redirecionando para a area correta');
+      router.replace(getPostLoginRoute() as never);
     } catch (e: any) {
       console.error('[Login] Erro inesperado:', e);
       setError('Ocorreu um erro inesperado ao tentar entrar.');

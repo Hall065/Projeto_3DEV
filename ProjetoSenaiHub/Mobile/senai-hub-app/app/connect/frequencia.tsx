@@ -1,137 +1,239 @@
-import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { CalendarCheck, CheckCircle2, Clock3, XCircle } from 'lucide-react-native';
-import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
-import { FeedbackMessage, ListRow, MetricTile, Pill, SurfaceCard } from '@/components/common/VisualPrimitives';
-import { ModuleScreen } from '@/components/screens/ModuleScreen';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { CalendarCheck, CheckCircle2, Users } from 'lucide-react-native';
+import { AppButton, FeedbackMessage, ListRow, LoadingState, MetricTile, Pill, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { colors, connectTheme } from '@/constants/colors';
-import { FREQUENCIA_STATUS_OPTIONS } from '@/constants/form-options';
-import { useCrudResource } from '@/hooks/useCrudResource';
-import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { connectService } from '@/services/connect.service';
 import { useAuthStore } from '@/stores/auth.store';
-import type { FrequenciaRegistro } from '@/types/connect.types';
+import type { Aluno, Professor, Turma } from '@/types/connect.types';
 
-const frequenciaOptionLoaders = {
-  alunos: connectService.listAlunoOptions,
-  turmas: connectService.listTurmaOptions,
-  professores: connectService.listProfessorOptions,
+type AulaStatus = 'presente' | 'falta_justificada' | 'falta_injustificada';
+
+const STATUS_LABEL: Record<AulaStatus, string> = {
+  presente: 'P',
+  falta_justificada: 'FJ',
+  falta_injustificada: 'FI',
 };
 
-type FrequenciaOptionKey = keyof typeof frequenciaOptionLoaders;
-type FrequenciaOptions = Record<FrequenciaOptionKey, CrudOption[]>;
-
-function getFields(options: Partial<FrequenciaOptions>): CrudField[] {
-  return [
-  { name: 'aluno_id', label: 'Aluno', required: true, options: options.alunos ?? [] },
-  { name: 'turma_id', label: 'Turma', options: options.turmas ?? [], emptyOptionLabel: 'Sem turma' },
-  { name: 'professor_id', label: 'Professor', options: options.professores ?? [], emptyOptionLabel: 'Sem professor' },
-  { name: 'disciplina', label: 'Disciplina' },
-  { name: 'data_aula', label: 'Data da aula', placeholder: 'DD/MM/AAAA', mask: 'date', required: true },
-  { name: 'quantidade_aulas', label: 'Quantidade de aulas', keyboardType: 'numeric', mask: 'integer' },
-  { name: 'status', label: 'Status', required: true, options: FREQUENCIA_STATUS_OPTIONS },
-  { name: 'quantidade_aulas_faltadas', label: 'Aulas faltadas', keyboardType: 'numeric', mask: 'integer' },
-  { name: 'justificativa', label: 'Justificativa', multiline: true },
-  ];
-}
-
-function formValues(frequencia: FrequenciaRegistro): Record<string, string> {
-  return {
-    aluno_id: frequencia.aluno_id ?? '',
-    data_aula: frequencia.data_aula ?? frequencia.data ?? '',
-    status: frequencia.status ?? 'presente',
-    quantidade_aulas_faltadas: frequencia.quantidade_aulas_faltadas ? String(frequencia.quantidade_aulas_faltadas) : '0',
-  };
-}
-
 export default function FrequenciaScreen() {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<FrequenciaRegistro | null>(null);
   const session = useAuthStore((s) => s.session);
-  const { options, error: optionsError } = useSelectOptions(frequenciaOptionLoaders);
-  const fields = getFields(options);
-  const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
-    useCrudResource<FrequenciaRegistro, Record<string, string>>({
-      load: connectService.listFrequencias,
-      create: (values) => connectService.createFrequencia(values, session?.userId),
-      update: connectService.updateFrequencia,
-      remove: connectService.deleteFrequencia,
-    });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [professor, setProfessor] = useState<Professor | null>(null);
+  const [turmaId, setTurmaId] = useState('');
+  const [dataAula, setDataAula] = useState(new Date().toISOString().slice(0, 10));
+  const [quantidadeAulas, setQuantidadeAulas] = useState(1);
+  const [registros, setRegistros] = useState<Record<string, AulaStatus[]>>({});
 
-  const presentes = items.filter((item) => item.status === 'presente').length;
-  const faltas = items.filter((item) => item.status !== 'presente').length;
-  const presenceRate = items.length ? Math.round((presentes / items.length) * 100) : 0;
+  useEffect(() => {
+    async function load() {
+      if (!session?.userId) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const professorData = await connectService.getProfessorByUserId(session.userId);
+        const turmasData =
+          session.perfil?.tipo === 'professor'
+            ? await connectService.listTurmasForProfessorUser(session.userId)
+            : await connectService.listTurmas();
+        setProfessor(professorData);
+        setTurmas(turmasData);
+        setTurmaId((current) => current || turmasData[0]?.id || '');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Nao foi possivel carregar as turmas.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [session?.perfil?.tipo, session?.userId]);
+
+  useEffect(() => {
+    if (!turmaId) {
+      setAlunos([]);
+      return;
+    }
+    connectService
+      .listAlunosByTurma(turmaId)
+      .then((data) => {
+        setAlunos(data);
+        setRegistros(
+          Object.fromEntries(
+            data.map((aluno) => [aluno.id, Array.from({ length: quantidadeAulas }, () => 'presente' as AulaStatus)])
+          )
+        );
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : 'Nao foi possivel carregar os alunos.'));
+  }, [quantidadeAulas, turmaId]);
+
+  const selectedTurma = useMemo(() => turmas.find((turma) => turma.id === turmaId), [turmaId, turmas]);
+
+  const setStatus = (alunoId: string, index: number, status: AulaStatus) => {
+    setRegistros((current) => {
+      const currentAluno = current[alunoId] ?? Array.from({ length: quantidadeAulas }, () => 'presente' as AulaStatus);
+      return {
+        ...current,
+        [alunoId]: currentAluno.map((item, itemIndex) => (itemIndex === index ? status : item)),
+      };
+    });
+  };
+
+  const save = async () => {
+    if (!turmaId) {
+      setError('Selecione uma turma.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      await connectService.saveChamada({
+        turmaId,
+        professorId: professor?.id ?? selectedTurma?.professor_responsavel_id,
+        dataAula,
+        quantidadeAulas,
+        registradoPor: session?.userId,
+        registros: alunos.map((aluno) => ({
+          alunoId: aluno.id,
+          aulas: registros[aluno.id] ?? Array.from({ length: quantidadeAulas }, () => 'presente' as AulaStatus),
+        })),
+      });
+      Alert.alert('Chamada', 'Chamada salva com sucesso!');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nao foi possivel salvar a chamada.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <LoadingState />;
 
   return (
-    <>
-      <ModuleScreen
-        kicker="SENAI Connect"
-        title="Frequência"
-        description="Registro de presença por turma e aula."
-        isLoading={loading}
-        actionLabel="+ Registrar"
-        onActionPress={() => {
-          setEditing(null);
-          setModalOpen(true);
-        }}
-      >
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.metricGrid}>
-          <MetricTile label="Presentes" value={`${presenceRate}%`} accent={colors.green} icon={<CheckCircle2 size={16} color={colors.green} />} style={styles.metric} />
-          <MetricTile label="Faltas" value={faltas} accent={colors.red} icon={<XCircle size={16} color={colors.red} />} style={styles.metric} />
-          <MetricTile label="Registros" value={items.length} accent={connectTheme.accent} icon={<CalendarCheck size={16} color={connectTheme.accent} />} style={styles.metric} />
-          <MetricTile label="Pendentes" value={items.filter((i) => !i.status).length} accent={colors.orange} icon={<Clock3 size={16} color={colors.orange} />} style={styles.metric} />
+          <MetricTile label="Turmas disponiveis" value={turmas.length} accent={connectTheme.accent} icon={<Users size={16} color={connectTheme.accent} />} style={styles.metric} />
+          <MetricTile label="Alunos na chamada" value={alunos.length} accent={colors.blue} icon={<CalendarCheck size={16} color={colors.blue} />} style={styles.metric} />
+          <MetricTile label="Aulas do dia" value={quantidadeAulas} accent={colors.green} icon={<CheckCircle2 size={16} color={colors.green} />} style={styles.metric} />
         </View>
 
-        <SurfaceCard title="Registros de frequência" subtitle="Dados carregados do Supabase">
-          <View style={styles.tabs}>
-            <Pill label="Presença" variant="success" />
-            <Pill label="Falta justificada" variant="warning" />
-            <Pill label="Falta" variant="danger" />
+        <SurfaceCard title="Cabecalho da chamada" subtitle="Selecione turma, data e quantidade de aulas">
+          {error ? <FeedbackMessage variant="danger" message={error} /> : null}
+          <Text style={styles.label}>Turma</Text>
+          <View style={styles.optionGrid}>
+            {turmas.map((turma) => (
+              <AppButton
+                key={turma.id}
+                label={turma.nome}
+                variant={turma.id === turmaId ? 'primary' : 'secondary'}
+                accent={connectTheme.accent}
+                onPress={() => setTurmaId(turma.id)}
+                wrapperStyle={styles.optionButton}
+              />
+            ))}
           </View>
-          {error || optionsError ? <FeedbackMessage variant="danger" message={error ?? optionsError ?? ''} /> : null}
-          {items.length === 0 ? <Text style={styles.empty}>Nenhum registro de frequência encontrado.</Text> : null}
-          {items.map((registro) => (
-            <ListRow
-              key={registro.id}
-              title={registro.aluno_nome ?? registro.aluno_id}
-              subtitle={`${registro.turma_nome ?? 'Turma não vinculada'} • ${registro.data_aula ?? registro.data ?? 'sem data'}`}
-              badge={registro.status}
-              badgeVariant={registro.status === 'presente' ? 'success' : registro.status === 'falta_justificada' ? 'warning' : 'danger'}
-              meta={registro.quantidade_aulas_faltadas ? `${registro.quantidade_aulas_faltadas} aulas` : undefined}
-              initials="FR"
-              accent={registro.status === 'presente' ? colors.green : colors.red}
-              onEdit={() => {
-                setEditing(registro);
-                setModalOpen(true);
-              }}
-              onDelete={() => deleteItem(registro.id, registro.aluno_nome ?? 'frequência')}
-            />
+
+          <Text style={styles.label}>Data da aula</Text>
+          <View style={styles.dateBox}>
+            <Text style={styles.dateText}>{dataAula}</Text>
+            <AppButton label="Hoje" variant="secondary" accent={colors.navy} onPress={() => setDataAula(new Date().toISOString().slice(0, 10))} />
+          </View>
+
+          <Text style={styles.label}>Quantidade de aulas</Text>
+          <View style={styles.lessonButtons}>
+            {[1, 2, 3, 4, 5].map((value) => (
+              <AppButton
+                key={value}
+                label={String(value)}
+                variant={quantidadeAulas === value ? 'primary' : 'secondary'}
+                accent={colors.red}
+                onPress={() => setQuantidadeAulas(value)}
+                wrapperStyle={styles.lessonButton}
+              />
+            ))}
+          </View>
+          <View style={styles.legend}>
+            <Pill label="P = Presente" variant="success" />
+            <Pill label="FJ = Justificada" variant="warning" />
+            <Pill label="FI = Injustificada" variant="danger" />
+          </View>
+        </SurfaceCard>
+
+        <SurfaceCard title="Alunos da turma" subtitle="Marque P, FJ ou FI por aula">
+          {alunos.length === 0 ? <Text style={styles.empty}>Nenhum aluno encontrado para esta turma.</Text> : null}
+          {alunos.map((aluno) => (
+            <View key={aluno.id} style={styles.studentRow}>
+              <ListRow
+                title={aluno.nome}
+                subtitle={`RM ${aluno.rm ?? 'sem RM'}`}
+                initials={aluno.nome.slice(0, 2).toUpperCase()}
+                imageUri={aluno.foto_url}
+                accent={connectTheme.accent}
+              />
+              <View style={styles.attendanceGrid}>
+                {Array.from({ length: quantidadeAulas }).map((_, index) => (
+                  <View key={`${aluno.id}-${index}`} style={styles.attendanceCell}>
+                    <Text style={styles.classIndex}>{index + 1}</Text>
+                    {(['presente', 'falta_justificada', 'falta_injustificada'] as AulaStatus[]).map((status) => (
+                      <AppButton
+                        key={status}
+                        label={STATUS_LABEL[status]}
+                        variant={(registros[aluno.id]?.[index] ?? 'presente') === status ? 'primary' : 'secondary'}
+                        accent={status === 'presente' ? colors.green : status === 'falta_justificada' ? colors.orange : colors.red}
+                        onPress={() => setStatus(aluno.id, index, status)}
+                      />
+                    ))}
+                  </View>
+                ))}
+              </View>
+            </View>
           ))}
         </SurfaceCard>
-      </ModuleScreen>
+      </ScrollView>
 
-      <CrudModal
-        visible={modalOpen}
-        title={editing ? 'Editar frequência' : 'Registrar frequência'}
-        fields={fields}
-        initialValues={editing ? formValues(editing) : { status: 'presente', quantidade_aulas: '1', quantidade_aulas_faltadas: '0', data_aula: new Date().toISOString().slice(0, 10) }}
-        isSubmitting={submitting}
-        submitLabel={editing ? 'Salvar alterações' : 'Registrar'}
-        onClose={() => setModalOpen(false)}
-        onSubmit={async (values) => {
-          if (editing) await updateItem(editing.id, values);
-          else await createItem(values);
-          setModalOpen(false);
-        }}
-      />
-    </>
+      <View style={styles.footer}>
+        <AppButton label="Salvar chamada" accent={colors.red} onPress={save} loading={saving} />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 14, paddingBottom: 96 },
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
   metric: { width: '48%' },
-  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  label: { color: colors.navy, fontSize: 12, fontWeight: '900', marginTop: 10, marginBottom: 7 },
+  optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  optionButton: { minWidth: '47%' },
+  dateBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  dateText: { flex: 1, color: colors.navy, fontSize: 14, fontWeight: '900' },
+  lessonButtons: { flexDirection: 'row', gap: 8 },
+  lessonButton: { flex: 1 },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  studentRow: { marginBottom: 12 },
+  attendanceGrid: { gap: 8 },
+  attendanceCell: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    padding: 8,
+    gap: 8,
+  },
+  classIndex: { color: colors.grayText, fontSize: 11, fontWeight: '900' },
   empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
-  error: { color: colors.red, fontSize: 12, fontWeight: '700', marginBottom: 8 },
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: 14,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.white,
+  },
 });
