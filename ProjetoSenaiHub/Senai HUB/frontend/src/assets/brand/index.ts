@@ -9,3 +9,6 @@ export { default as logoSenaiHubBlack } from '../auth/logo-senai-hub.png'
 
 /** Logo SENAI Connect — versao BLACK apenas. */
 export { default as logoConnectBlack } from './logo-connect-black.png'
+
+/** Logo SENAI Grid — versao para sidebar escura (fundo navy). */
+export { default as logoGridBlack } from './logo-grid-black.svg'

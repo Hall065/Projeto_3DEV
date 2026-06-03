@@ -17,7 +17,7 @@ export function ApplicationHubPage() {
   }, [])
 
   return (
-    <section className="px-8 py-8">
+    <section className="w-full min-w-0">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-hub-navy">Hub de Aplicacoes</h1>
         <p className="mt-2 text-hub-text-muted">Acesse os sistemas disponiveis para o seu perfil.</p>

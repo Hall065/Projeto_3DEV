@@ -1,4 +1,5 @@
 import { chartColorByIndex } from '../../constants/chartPalette'
+import { IsometricDistributionDonut, type IsometricDonutSegmentInput } from '../connect/ConnectCharts'
 import type { BuiltReport, ReportChartItem, ReportKpiItem, ReportSection } from '../../types/reports'
 
 const kpiVariantClass: Record<string, string> = {
@@ -54,26 +55,30 @@ function SimpleBarChart({ items, horizontal }: { items: ReportChartItem[]; horiz
   )
 }
 
-function DonutLegend({ items }: { items: ReportChartItem[] }) {
-  const total = items.reduce((s, i) => s + i.value, 0) || 1
+function ReportDonutChart({ items }: { items: ReportChartItem[] }) {
+  const total = items.reduce((sum, item) => sum + item.value, 0)
+
+  if (total <= 0) {
+    return <p className="py-6 text-center text-sm text-hub-text-muted">Sem dados para exibir.</p>
+  }
+
+  const segments: IsometricDonutSegmentInput[] = items.map((item, index) => ({
+    key: item.label,
+    label: item.label,
+    short: item.label,
+    pct: (item.value / total) * 100,
+    color: item.color ?? chartColorByIndex(index),
+    count: item.value,
+  }))
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
-      {items.map((item, index) => (
-        <div key={item.label} className="flex items-center justify-between rounded-lg border border-hub-border/50 px-3 py-2 text-sm">
-          <span className="flex items-center gap-2">
-            <span
-              className="h-3 w-3 rounded-full"
-              style={{ background: item.color ?? chartColorByIndex(index) }}
-            />
-            {item.label}
-          </span>
-          <span className="font-medium text-hub-navy">
-            {item.value} ({Math.round((item.value / total) * 100)}%)
-          </span>
-        </div>
-      ))}
-    </div>
+    <IsometricDistributionDonut
+      segments={segments}
+      centerValue={total.toLocaleString('pt-BR')}
+      centerLabel="Total"
+      emptyMessage="Sem dados para exibir."
+      ariaLabel="Distribuicao do relatorio"
+    />
   )
 }
 
@@ -146,7 +151,7 @@ function SectionBlock({ section, meta }: { section: ReportSection; meta: BuiltRe
         <h3 className="mb-3 text-lg font-semibold text-hub-navy">{section.title}</h3>
         <div className="rounded-xl border border-hub-border/60 bg-white p-5">
           {section.chart_kind === 'donut' ? (
-            <DonutLegend items={items} />
+            <ReportDonutChart items={items} />
           ) : (
             <SimpleBarChart items={items} horizontal={section.chart_kind === 'bar_horizontal'} />
           )}
@@ -207,7 +212,7 @@ export function ReportPreview({ report, className = '' }: { report: BuiltReport 
   if (!report) {
     return (
       <div className={`flex min-h-[320px] items-center justify-center rounded-xl border border-dashed border-hub-border text-sm text-hub-text-muted ${className}`}>
-        Configure o relatorio e clique em &quot;Gerar preview&quot;.
+        Selecione um preset ou configure as secoes e clique em &quot;Gerar preview&quot;.
       </div>
     )
   }

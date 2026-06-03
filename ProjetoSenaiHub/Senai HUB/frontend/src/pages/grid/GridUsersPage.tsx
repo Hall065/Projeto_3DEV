@@ -1,7 +1,7 @@
 import { Filter, Pencil, Plus, Trash2, UserPlus, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
-import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { GridUserDetailDrawer } from '../../components/grid/GridUserDetailDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
 import { viewRowAction } from '../../components/connect/connectViewActions'
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
@@ -49,7 +49,7 @@ export function GridUsersPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
-  const [viewSnapshot, setViewSnapshot] = useState<GridUser | null>(null)
+  const [detailUserId, setDetailUserId] = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -208,7 +208,11 @@ export function GridUsersPage() {
                 </thead>
                 <tbody>
                   {users.map((u) => (
-                    <tr key={u.id} className="border-t border-hub-border/40">
+                    <tr
+                      key={u.id}
+                      className="cursor-pointer border-t border-hub-border/40 transition hover:bg-hub-bg/50"
+                      onClick={() => setDetailUserId(u.id)}
+                    >
                       <td className="px-4 py-3">{u.id}</td>
                       <td className="px-4 py-3 font-medium">{u.name}</td>
                       <td className="px-4 py-3">{u.email}</td>
@@ -224,11 +228,11 @@ export function GridUsersPage() {
                         <StatusBadge status={u.status} />
                       </td>
                       <td className="px-4 py-3">{u.cpf}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <ConnectRowActionsMenu
                           ariaLabel={`Ações de ${u.name}`}
                           actions={[
-                            viewRowAction(() => setViewSnapshot(u)),
+                            viewRowAction(() => setDetailUserId(u.id)),
                             { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(u) },
                             { key: 'delete', label: 'Excluir', icon: Trash2, variant: 'danger', onClick: () => void handleDelete(u) },
                           ]}
@@ -288,12 +292,10 @@ export function GridUsersPage() {
         </div>
       </ConnectDrawer>
 
-      <ConnectEntityViewDrawer
-        kind="grid-user"
-        entityId={null}
-        open={viewSnapshot !== null}
-        onClose={() => setViewSnapshot(null)}
-        snapshot={viewSnapshot ?? undefined}
+      <GridUserDetailDrawer
+        userId={detailUserId}
+        open={detailUserId !== null}
+        onClose={() => setDetailUserId(null)}
       />
     </div>
   )

@@ -56,7 +56,11 @@ class XlsxStream
             }
 
             ksort($cells);
-            $line = array_values($cells);
+            $maxIndex = $cells === [] ? 0 : max(array_keys($cells));
+            $line = [];
+            for ($i = 0; $i <= $maxIndex; $i++) {
+                $line[$i] = $cells[$i] ?? '';
+            }
 
             if ($isFirstDataRow) {
                 $normalized = array_map(fn ($v) => CsvStream::normalizeHeaderPublic((string) $v), $line);

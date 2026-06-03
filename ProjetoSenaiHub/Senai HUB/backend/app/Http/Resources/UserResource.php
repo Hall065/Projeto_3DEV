@@ -29,6 +29,7 @@ class UserResource extends JsonResource
             'permissions' => $permissions->permissionsFor($this->resource),
             'application_slugs' => $permissions->applicationSlugsFor($this->resource),
             'avatar_url' => $this->avatar_url,
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }

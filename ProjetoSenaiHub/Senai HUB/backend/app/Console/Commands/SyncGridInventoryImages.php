@@ -27,7 +27,7 @@ class SyncGridInventoryImages extends Command
 
         $updated = 0;
         foreach ($items as $item) {
-            if (! $force && filled($item->image_url)) {
+            if (! $force && filled($item->image_url) && ! $resolver->isLegacyBrokenUrl($item->image_url)) {
                 $this->line("  [skip] {$item->title}");
                 continue;
             }

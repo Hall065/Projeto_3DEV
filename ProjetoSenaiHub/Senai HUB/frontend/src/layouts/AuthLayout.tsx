@@ -4,7 +4,7 @@ import loginBackground from '../assets/auth/login-background.png'
 
 export function AuthLayout() {
   return (
-    <div className="flex min-h-screen">
+    <div className="auth-shell flex min-h-screen">
       <AuthSidebar />
 
       <section className="relative flex flex-1 items-center justify-center overflow-hidden bg-hub-bg px-6 py-10">

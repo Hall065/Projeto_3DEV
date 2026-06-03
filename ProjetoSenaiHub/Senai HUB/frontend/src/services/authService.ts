@@ -50,6 +50,18 @@ export async function changePasswordRequest(payload: {
   await api.put('/auth/password', payload)
 }
 
+export async function uploadAvatarRequest(file: File): Promise<User> {
+  const form = new FormData()
+  form.append('avatar', file)
+  const { data } = await api.post<{ data: User; message: string }>('/auth/avatar', form)
+  return data.data
+}
+
+export async function removeAvatarRequest(): Promise<User> {
+  const { data } = await api.delete<{ data: User; message: string }>('/auth/avatar')
+  return data.data
+}
+
 export function parseAuthError(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const response = (error as { response?: { status?: number; data?: ApiValidationError } }).response

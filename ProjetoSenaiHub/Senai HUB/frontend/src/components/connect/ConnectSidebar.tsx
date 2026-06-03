@@ -1,7 +1,7 @@
 import { ChevronRight, Headphones, Shield, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { logoConnectBlack } from '../../assets/brand'
+import { SidebarAppLogo } from '../layout/SidebarAppLogo'
 import {
   connectContractNav,
   connectNavItems,
@@ -51,20 +51,13 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
 
   return (
     <aside
-      className={`hub-chrome-sidebar fixed inset-y-0 left-0 z-40 flex h-[100dvh] max-h-screen shrink-0 flex-col text-white transition-all duration-300 lg:sticky lg:top-0 lg:z-30 lg:h-screen ${
+      className={`hub-chrome-sidebar fixed inset-y-0 left-0 z-50 flex h-[100dvh] max-h-screen shrink-0 flex-col text-white transition-all duration-300 lg:sticky lg:top-0 lg:z-30 lg:h-screen ${
         mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } ${isCollapsed ? 'w-[88px] px-4 lg:w-[88px]' : 'w-[85vw] max-w-[280px] px-6 lg:w-[280px]'} py-6 sm:py-8`}
     >
       <div className={`mb-4 shrink-0 flex items-start justify-between gap-2 sm:mb-6 ${isCollapsed ? 'flex-col items-center' : ''}`}>
         <div className={isCollapsed ? 'flex justify-center' : 'min-w-0 flex-1'}>
-          <img
-            src={logoConnectBlack}
-            alt="SENAI Connect"
-            className={`object-contain ${isCollapsed ? 'h-10 w-10' : 'h-auto w-full max-w-[200px]'}`}
-          />
-          {!isCollapsed && (
-            <p className="mt-2 text-xs text-white/60">Sistema de Gestao Academica</p>
-          )}
+          <SidebarAppLogo app="connect" collapsed={isCollapsed} onNavigate={onMobileClose} />
         </div>
         {mobileOpen && (
           <button

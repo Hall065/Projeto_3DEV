@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
+use App\Http\Requests\Auth\UploadAvatarRequest;
 use App\Http\Resources\UserResource;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\JsonResponse;
@@ -59,6 +60,29 @@ class AuthController extends Controller
         return response()->json([
             'data' => new UserResource($user),
             'message' => 'Perfil atualizado com sucesso.',
+        ]);
+    }
+
+    public function updateAvatar(UploadAvatarRequest $request): JsonResponse
+    {
+        $user = $this->authService->updateAvatar(
+            $request->user(),
+            $request->file('avatar'),
+        );
+
+        return response()->json([
+            'data' => new UserResource($user),
+            'message' => 'Foto de perfil atualizada com sucesso.',
+        ]);
+    }
+
+    public function deleteAvatar(Request $request): JsonResponse
+    {
+        $user = $this->authService->removeAvatar($request->user());
+
+        return response()->json([
+            'data' => new UserResource($user),
+            'message' => 'Foto de perfil removida.',
         ]);
     }
 

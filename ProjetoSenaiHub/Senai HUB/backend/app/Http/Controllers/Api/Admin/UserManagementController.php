@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\HubUserDetailResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Support\HubRole;
@@ -44,6 +45,13 @@ class UserManagementController extends Controller
         $users = $query->paginate($request->integer('per_page', 20));
 
         return UserResource::collection($users)->response();
+    }
+
+    public function show(User $user): JsonResponse
+    {
+        return response()->json([
+            'data' => new HubUserDetailResource($user),
+        ]);
     }
 
     public function store(Request $request): JsonResponse

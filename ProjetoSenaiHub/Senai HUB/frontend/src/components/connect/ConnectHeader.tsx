@@ -84,7 +84,7 @@ export function ConnectHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: C
           {menuOpen && (
             <div
               role="menu"
-              className="glass-panel-solid absolute right-0 top-full z-[60] mt-2 w-52 overflow-hidden rounded-xl py-2 shadow-xl"
+              className="glass-panel-menu absolute right-0 top-full z-[60] mt-2 w-52 overflow-hidden rounded-xl py-2 shadow-xl"
             >
               <Link
                 to="/hub"

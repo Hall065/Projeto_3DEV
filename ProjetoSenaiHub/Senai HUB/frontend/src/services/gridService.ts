@@ -102,9 +102,25 @@ export const gridService = {
     return data
   },
 
-  async createInventory(payload: Partial<GridInventoryItem>): Promise<GridInventoryItem> {
-    const { data } = await api.post<{ data: GridInventoryItem }>('/grid/inventory', payload)
+  async getInventoryItem(id: number) {
+    const { data } = await api.get<{ data: import('../types/grid').GridInventoryItemDetail }>(`/grid/inventory/${id}`)
     return data.data
+  },
+
+  async createInventory(payload: Partial<GridInventoryItem>): Promise<{
+    item: GridInventoryItem
+    message: string
+    merged?: boolean
+  }> {
+    const { data } = await api.post<{ data: GridInventoryItem; message: string; merged?: boolean }>(
+      '/grid/inventory',
+      payload,
+    )
+    return {
+      item: data.data,
+      message: data.message ?? 'Item cadastrado com sucesso.',
+      merged: data.merged,
+    }
   },
 
   async updateInventory(id: number, payload: Partial<GridInventoryItem>): Promise<GridInventoryItem> {
@@ -114,6 +130,13 @@ export const gridService = {
 
   async syncInventoryImage(id: number): Promise<GridInventoryItem> {
     const { data } = await api.post<{ data: GridInventoryItem }>(`/grid/inventory/${id}/sync-image`)
+    return data.data
+  },
+
+  async uploadInventoryImage(id: number, file: File): Promise<GridInventoryItem> {
+    const form = new FormData()
+    form.append('image', file)
+    const { data } = await api.post<{ data: GridInventoryItem }>(`/grid/inventory/${id}/image`, form)
     return data.data
   },
 
@@ -132,6 +155,11 @@ export const gridService = {
   async getUsers(params?: Record<string, string | number>): Promise<PaginatedResponse<GridUser>> {
     const { data } = await api.get<PaginatedResponse<GridUser>>('/grid/users', { params })
     return data
+  },
+
+  async getUser(id: number) {
+    const { data } = await api.get<{ data: import('../types/grid').GridUserDetail }>(`/grid/users/${id}`)
+    return data.data
   },
 
   async createUser(payload: Partial<GridUser>): Promise<GridUser> {

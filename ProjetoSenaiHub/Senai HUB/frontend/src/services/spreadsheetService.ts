@@ -33,10 +33,11 @@ async function downloadAuthenticated(path: string, fallbackName: string) {
   const response = await fetch(`${base}${path}`, { headers: authHeaders() })
 
   if (!response.ok) {
-    let message = 'Nao foi possivel baixar o arquivo.'
+    let message = 'Não foi possível baixar o arquivo.'
     try {
       const body = await response.json()
-      message = body.message ?? message
+      const errors = body.errors as Record<string, string[]> | undefined
+      message = errors ? (Object.values(errors).flat()[0] ?? body.message) : (body.message ?? message)
     } catch {
       /* ignore */
     }
@@ -72,7 +73,6 @@ export const spreadsheetService = {
     const { data } = await api.post<{ data: SpreadsheetImportPreview }>(
       `/spreadsheets/${module}/${key}/preview`,
       form,
-      { headers: { 'Content-Type': 'multipart/form-data' } },
     )
 
     return data.data
@@ -90,7 +90,6 @@ export const spreadsheetService = {
     const { data } = await api.post<{ data: SpreadsheetImportResult; message: string }>(
       `/spreadsheets/${module}/${key}/import`,
       form,
-      { headers: { 'Content-Type': 'multipart/form-data' } },
     )
 
     return data.data

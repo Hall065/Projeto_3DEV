@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Grid;
 
+use App\Services\Grid\InventoryImageResolver;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -10,12 +11,16 @@ class GridInventoryItemResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $images = app(InventoryImageResolver::class);
+
         return [
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description ?? '',
             'category' => $this->category ?? '',
-            'image_url' => $this->image_url,
+            'sku' => $this->sku,
+            'image_url' => $images->publicImageUrl($this->image_url),
+            'purchased_at' => $this->purchased_at?->toDateString(),
             'qty_available' => $this->qty_available,
             'qty_reserved' => $this->qty_reserved ?? 0,
             'qty_min' => $this->qty_min,

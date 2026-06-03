@@ -10,10 +10,12 @@ export function HubLayout() {
   return (
     <GlassShell className="flex min-h-screen">
       <HubSidebar collapsed={collapsed} />
-      <div className="relative z-50 flex flex-1 flex-col">
+      <div className="relative z-50 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <HubHeader collapsed={collapsed} onToggleSidebar={() => setCollapsed((value) => !value)} />
-        <main className="scrollbar-app-main relative z-0 flex-1 overflow-y-auto">
-          <Outlet />
+        <main className="scrollbar-app-main relative z-0 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1600px] min-w-0">
+            <Outlet />
+          </div>
         </main>
       </div>
     </GlassShell>

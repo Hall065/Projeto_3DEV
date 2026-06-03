@@ -16,6 +16,7 @@ type ConnectSummary = {
   attendance_by_status: Record<string, number>
   active_contracts: number
   active_classes: number
+  attendance_rate?: number
   generated_at: string
 }
 
@@ -91,6 +92,13 @@ function ConnectReportsSummary() {
           <h3 className="mb-3 font-semibold text-hub-navy">Turmas ativas</h3>
           <p className="text-3xl font-bold text-hub-navy">{data.active_classes}</p>
         </ConnectCard>
+
+        {data.attendance_rate != null && (
+          <ConnectCard className="p-4 md:col-span-2">
+            <h3 className="mb-3 font-semibold text-hub-navy">Taxa de presenca (marcacoes)</h3>
+            <p className="text-3xl font-bold text-hub-navy">{data.attendance_rate}%</p>
+          </ConnectCard>
+        )}
       </div>
     </div>
   )
@@ -116,7 +124,7 @@ export function ConnectReportsPage() {
         }
       />
 
-      {tab === 'summary' ? <ConnectReportsSummary /> : <CustomReportBuilder module="connect" />}
+      {tab === 'summary' ? <ConnectReportsSummary /> : <CustomReportBuilder module="connect" embedded />}
     </div>
   )
 }

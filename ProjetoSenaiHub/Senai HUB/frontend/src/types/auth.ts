@@ -9,6 +9,21 @@ export interface User {
   permissions?: string[]
   application_slugs?: string[]
   avatar_url?: string | null
+  created_at?: string | null
+}
+
+export interface HubApplicationDetail {
+  slug: string
+  name: string
+  description?: string | null
+}
+
+export interface HubUserDetail extends User {
+  updated_at?: string | null
+  email_verified_at?: string | null
+  role_description?: string | null
+  role_module?: string | null
+  applications_detail?: HubApplicationDetail[]
 }
 
 export interface AuthState {

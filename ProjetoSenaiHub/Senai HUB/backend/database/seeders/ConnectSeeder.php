@@ -9,7 +9,6 @@ use App\Models\Connect\ConnectAttendanceSession;
 use App\Models\Connect\ConnectClass;
 use App\Models\Connect\ConnectContract;
 use App\Models\Connect\ConnectCourse;
-use App\Models\Connect\ConnectDashboardMetric;
 use App\Models\Connect\ConnectSalaryRecord;
 use App\Models\Connect\ConnectStudent;
 use App\Models\Connect\ConnectStudentLocation;
@@ -373,32 +372,6 @@ class ConnectSeeder extends Seeder
         }
 
         $this->seedStaffPeople();
-
-        $studentTotal = ConnectStudent::query()->where('status', 'active')->count();
-
-        ConnectDashboardMetric::query()->updateOrCreate(
-            ['key' => 'kpis'],
-            ['value' => ['total_students' => $studentTotal]],
-        );
-
-        ConnectDashboardMetric::query()->updateOrCreate(
-            ['key' => 'attendance_chart'],
-            [
-                'value' => [
-                    'labels' => ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
-                    'datasets' => [
-                        [
-                            'label' => 'Frequência (%)',
-                            'data' => [82, 85, 88, 86, 89, 87],
-                        ],
-                        [
-                            'label' => 'Matrículas',
-                            'data' => [210, 245, 198, 267, 231, 289],
-                        ],
-                    ],
-                ],
-            ],
-        );
 
         $this->ensureHubPeopleAndRosterLinks();
     }

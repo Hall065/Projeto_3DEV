@@ -12,7 +12,6 @@ use App\Models\Connect\ConnectAttendanceMark;
 use App\Models\Connect\ConnectClass;
 use App\Models\Connect\ConnectContract;
 use App\Models\Connect\ConnectCourse;
-use App\Models\Connect\ConnectDashboardMetric;
 use App\Models\Connect\ConnectAttendanceSession;
 use App\Models\Connect\ConnectStudent;
 use App\Models\Connect\ConnectTeacher;
@@ -165,7 +164,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Séries das últimas 8 semanas para mini-gráficos dos cards (novos cadastros por semana / frequência).
+     * Séries das últimas 8 semanas para mini-gráficos dos cards (total acumulado / frequência real).
      *
      * @return array<string, list<int|float>>
      */
@@ -174,19 +173,27 @@ class DashboardController extends Controller
         $weeks = 8;
 
         return [
-            'students' => $this->weeklyNewSeries(ConnectStudent::class, $weeks),
-            'teachers' => $this->weeklyNewSeries(ConnectTeacher::class, $weeks),
-            'classes' => $this->weeklyNewSeries(
+            'students' => $this->weeklyActiveSnapshotSeries(
+                ConnectStudent::class,
+                $weeks,
+                fn ($query) => $query->where('status', 'active'),
+            ),
+            'teachers' => $this->weeklyActiveSnapshotSeries(
+                ConnectTeacher::class,
+                $weeks,
+                fn ($query) => $query->where('status', 'active'),
+            ),
+            'classes' => $this->weeklyActiveSnapshotSeries(
                 ConnectClass::class,
                 $weeks,
                 fn ($query) => $query->where('status', 'active'),
             ),
-            'courses' => $this->weeklyNewSeries(
+            'courses' => $this->weeklyActiveSnapshotSeries(
                 ConnectCourse::class,
                 $weeks,
                 fn ($query) => $query->where('status', 'active'),
             ),
-            'contracts' => $this->weeklyNewSeries(
+            'contracts' => $this->weeklyActiveSnapshotSeries(
                 ConnectContract::class,
                 $weeks,
                 fn ($query) => $query->where('status', 'active'),
@@ -196,21 +203,20 @@ class DashboardController extends Controller
     }
 
     /**
-     * Novos registros criados em cada semana (melhor leitura visual nos sparklines).
+     * Total acumulado de registros ativos ao fim de cada semana (alinhado ao KPI do card).
      *
      * @param  class-string  $model
      * @param  callable(\Illuminate\Database\Eloquent\Builder): void|null  $scope
      * @return list<int>
      */
-    private function weeklyNewSeries(string $model, int $weeks, ?callable $scope = null): array
+    private function weeklyActiveSnapshotSeries(string $model, int $weeks, ?callable $scope = null): array
     {
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
-            $start = Carbon::now()->subWeeks($w)->startOfWeek();
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
 
-            $query = $model::query()->whereBetween('created_at', [$start, $end]);
+            $query = $model::query()->where('created_at', '<=', $end);
 
             if ($scope !== null) {
                 $scope($query);
@@ -233,7 +239,7 @@ class DashboardController extends Controller
             $start = Carbon::now()->subWeeks($w)->startOfWeek();
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
             $rate = $this->attendanceRateForPeriod($start, $end);
-            $points[] = $rate > 0 ? $rate : ($points[count($points) - 1] ?? 0.0);
+            $points[] = $rate;
         }
 
         return $points;
@@ -347,14 +353,6 @@ class DashboardController extends Controller
      */
     private function resolveAttendanceChart(): array
     {
-        $stored = ConnectDashboardMetric::query()
-            ->where('key', 'attendance_chart')
-            ->value('value');
-
-        if (is_array($stored) && ! empty($stored['labels'])) {
-            return $stored;
-        }
-
         return $this->buildAttendanceChartFromDb();
     }
 

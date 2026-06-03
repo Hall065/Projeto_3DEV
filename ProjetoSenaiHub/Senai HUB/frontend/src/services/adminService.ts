@@ -1,5 +1,5 @@
 import api from './api'
-import type { User } from '../types/auth'
+import type { HubUserDetail, User } from '../types/auth'
 
 export interface HubRoleOption {
   key: string
@@ -27,6 +27,11 @@ export const adminService = {
   async getUsers(params?: Record<string, string | number>): Promise<PaginatedUsers> {
     const { data } = await api.get<PaginatedUsers>('/admin/users', { params })
     return data
+  },
+
+  async getUser(id: number): Promise<HubUserDetail> {
+    const { data } = await api.get<{ data: HubUserDetail }>(`/admin/users/${id}`)
+    return data.data
   },
 
   async createUser(payload: {

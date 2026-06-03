@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api\Grid;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Grid\UploadInventoryImageRequest;
+use App\Http\Resources\Grid\GridInventoryItemDetailResource;
 use App\Http\Resources\Grid\GridInventoryItemResource;
 use App\Models\Grid\GridInventoryItem;
+use App\Services\Grid\InventoryDuplicateService;
 use App\Services\Grid\InventoryImageResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,7 +15,10 @@ use Illuminate\Validation\Rule;
 
 class InventoryController extends Controller
 {
-    public function __construct(private InventoryImageResolver $images) {}
+    public function __construct(
+        private InventoryImageResolver $images,
+        private InventoryDuplicateService $duplicates,
+    ) {}
     public function index(Request $request): JsonResponse
     {
         $query = GridInventoryItem::query()->orderBy('title');
@@ -29,7 +35,21 @@ class InventoryController extends Controller
 
         $items = $query->paginate($request->integer('per_page', 8));
 
+        $items->getCollection()->each(function (GridInventoryItem $item): void {
+            $this->ensureItemImage($item);
+        });
+
         return GridInventoryItemResource::collection($items)->response();
+    }
+
+    public function show(GridInventoryItem $inventoryItem): JsonResponse
+    {
+        $this->ensureItemImage($inventoryItem);
+        $inventoryItem->refresh();
+
+        return response()->json([
+            'data' => new GridInventoryItemDetailResource($inventoryItem),
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -45,7 +65,31 @@ class InventoryController extends Controller
             'cost' => ['nullable', 'numeric', 'min:0'],
             'status' => ['nullable', Rule::in(['disponivel', 'baixo', 'reservado'])],
             'image_url' => ['nullable', 'string', 'max:2048'],
+            'sku' => ['nullable', 'string', 'max:64'],
+            'purchased_at' => ['nullable', 'date'],
         ]);
+
+        $existing = $this->duplicates->findExisting($validated['sku'] ?? null, $validated['title']);
+
+        if ($existing) {
+            $addedQty = (int) ($validated['qty_available'] ?? 0);
+            $item = $this->duplicates->mergeIncomingQuantity($existing, $validated);
+
+            if (empty($item->image_url)) {
+                if (! empty($validated['image_url'])) {
+                    $item->update(['image_url' => $validated['image_url']]);
+                } else {
+                    $this->images->applyQuick($item);
+                }
+                $item->refresh();
+            }
+
+            return response()->json([
+                'data' => new GridInventoryItemResource($item),
+                'message' => "Item já existente no estoque. Quantidade somada (+{$addedQty}). Total disponível: {$item->qty_available}.",
+                'merged' => true,
+            ]);
+        }
 
         $item = GridInventoryItem::query()->create([
             ...$validated,
@@ -59,7 +103,7 @@ class InventoryController extends Controller
         $item->save();
 
         if (empty($item->image_url)) {
-            $this->images->apply($item);
+            $this->images->applyQuick($item);
             $item->refresh();
         }
 
@@ -82,6 +126,8 @@ class InventoryController extends Controller
             'cost' => ['nullable', 'numeric', 'min:0'],
             'status' => ['nullable', Rule::in(['disponivel', 'baixo', 'reservado'])],
             'image_url' => ['nullable', 'string', 'max:2048'],
+            'sku' => ['nullable', 'string', 'max:64'],
+            'purchased_at' => ['nullable', 'date'],
         ]);
 
         $inventoryItem->update($validated);
@@ -126,10 +172,40 @@ class InventoryController extends Controller
         ]);
     }
 
+    public function uploadImage(UploadInventoryImageRequest $request, GridInventoryItem $inventoryItem): JsonResponse
+    {
+        $this->images->storeUpload($inventoryItem, $request->file('image'));
+
+        return response()->json([
+            'data' => new GridInventoryItemResource($inventoryItem->fresh()),
+            'message' => 'Imagem do item atualizada.',
+        ]);
+    }
+
     public function destroy(GridInventoryItem $inventoryItem): JsonResponse
     {
         $inventoryItem->delete();
 
         return response()->json(['message' => 'Item excluído com sucesso.']);
+    }
+
+    private function ensureItemImage(GridInventoryItem $item): void
+    {
+        $url = $item->image_url;
+
+        if ($this->images->isStoredUpload($url)) {
+            return;
+        }
+
+        if (blank($url) || $this->images->isLegacyBrokenUrl($url)) {
+            $this->images->applyQuick($item);
+
+            return;
+        }
+
+        $normalized = $this->images->normalizeThumbnailUrl($url);
+        if ($normalized !== $url) {
+            $item->update(['image_url' => $normalized]);
+        }
     }
 }

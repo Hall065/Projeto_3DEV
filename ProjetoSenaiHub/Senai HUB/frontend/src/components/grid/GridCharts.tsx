@@ -31,7 +31,7 @@ function ChartPanel({
   children: React.ReactNode
 }) {
   return (
-    <section className="flex min-w-0 w-full flex-col overflow-hidden rounded-2xl border border-hub-border/50 bg-gradient-to-b from-white to-hub-bg/40 p-4 sm:p-6">
+    <section className="flex min-w-0 w-full flex-col overflow-visible rounded-2xl border border-hub-border/50 bg-gradient-to-b from-white to-hub-bg/40 p-4 sm:p-6">
       <header className="mb-5 shrink-0 border-b border-hub-border/40 pb-4">
         <h3 className="text-base font-semibold text-hub-navy sm:text-lg">{title}</h3>
         <p className="mt-1 text-xs text-hub-text-muted sm:text-sm">{subtitle}</p>

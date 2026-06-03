@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useCallback, useEffect, useState } from 'react'
 import {
   BookOpen,
   CalendarCheck,
@@ -19,6 +19,7 @@ import {
   StatusBadge,
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
+import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus'
 import type { DashboardData } from '../../types/connect'
 
 export function ConnectOverviewPage() {
@@ -26,12 +27,13 @@ export function ConnectOverviewPage() {
   const [tab, setTab] = useState<'cadastros' | 'alertas'>('cadastros')
   const [loading, setLoading] = useState(true)
 
+  const loadDashboard = useCallback(() => connectService.getDashboard().then(setData), [])
+
   useEffect(() => {
-    connectService
-      .getDashboard()
-      .then(setData)
-      .finally(() => setLoading(false))
-  }, [])
+    loadDashboard().finally(() => setLoading(false))
+  }, [loadDashboard])
+
+  useRefetchOnFocus(loadDashboard)
 
   const attendance = data?.attendance_breakdown ?? { present: 0, justified: 0, unjustified: 0, rate: 0 }
   const teachers = data?.classes_by_teacher ?? []

@@ -138,11 +138,11 @@ class DashboardController extends Controller
                 'report_kpis' => $reportKpis,
                 'kpi_trends' => $this->computeKpiTrends($openTickets, $inProgress, $completedMonth, $lowStock),
                 'kpi_sparklines' => [
-                    'open_tickets' => $this->weeklyTicketsOpenedSeries(),
-                    'in_progress' => $this->weeklyTicketsStartedSeries(),
+                    'open_tickets' => $this->weeklyOpenTicketsSnapshotSeries(),
+                    'in_progress' => $this->weeklyInProgressSnapshotSeries(),
                     'completed_month' => $this->weeklyCompletedSeries(),
-                    'low_stock' => $this->weeklyLowStockSeries(),
-                    'urgent' => $this->weeklyUrgentTicketsSeries(),
+                    'low_stock' => $this->weeklyLowStockSnapshotSeries(),
+                    'urgent' => $this->weeklyUrgentTicketsSnapshotSeries(),
                 ],
                 'recent_tickets' => $recentTickets
                     ->map(fn ($ticket) => (new GridTicketResource($ticket))->resolve())
@@ -341,19 +341,19 @@ class DashboardController extends Controller
     }
 
     /**
-     * Chamados abertos por semana (data de abertura).
+     * Total de chamados abertos ao fim de cada semana (alinhado ao KPI do card).
      *
      * @return list<int>
      */
-    private function weeklyTicketsOpenedSeries(int $weeks = 8): array
+    private function weeklyOpenTicketsSnapshotSeries(int $weeks = 8): array
     {
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
-            $start = Carbon::now()->subWeeks($w)->startOfWeek();
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
             $points[] = (int) GridTicket::query()
-                ->whereBetween('opened_at', [$start, $end])
+                ->where('status', 'aberto')
+                ->where('opened_at', '<=', $end)
                 ->count();
         }
 
@@ -361,20 +361,20 @@ class DashboardController extends Controller
     }
 
     /**
-     * Chamados que entraram em atendimento na semana (started_at).
+     * Chamados em atendimento ao fim de cada semana.
      *
      * @return list<int>
      */
-    private function weeklyTicketsStartedSeries(int $weeks = 8): array
+    private function weeklyInProgressSnapshotSeries(int $weeks = 8): array
     {
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
-            $start = Carbon::now()->subWeeks($w)->startOfWeek();
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
             $points[] = (int) GridTicket::query()
+                ->where('status', 'em_atendimento')
                 ->whereNotNull('started_at')
-                ->whereBetween('started_at', [$start, $end])
+                ->where('started_at', '<=', $end)
                 ->count();
         }
 
@@ -382,20 +382,21 @@ class DashboardController extends Controller
     }
 
     /**
-     * Novos chamados de prioridade alta por semana.
+     * Chamados urgentes em aberto ao fim de cada semana.
      *
      * @return list<int>
      */
-    private function weeklyUrgentTicketsSeries(int $weeks = 8): array
+    private function weeklyUrgentTicketsSnapshotSeries(int $weeks = 8): array
     {
+        $activeStatuses = ['aberto', 'pendente', 'em_atendimento', 'aguardando_aprovacao', 'avaliacao_pendente'];
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
-            $start = Carbon::now()->subWeeks($w)->startOfWeek();
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
             $points[] = (int) GridTicket::query()
                 ->where('priority', 'alta')
-                ->whereBetween('opened_at', [$start, $end])
+                ->whereIn('status', $activeStatuses)
+                ->where('opened_at', '<=', $end)
                 ->count();
         }
 
@@ -428,20 +429,19 @@ class DashboardController extends Controller
     }
 
     /**
-     * Itens que entraram em estoque baixo na semana.
+     * Itens com estoque baixo ao fim de cada semana.
      *
      * @return list<int>
      */
-    private function weeklyLowStockSeries(int $weeks = 8): array
+    private function weeklyLowStockSnapshotSeries(int $weeks = 8): array
     {
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
-            $start = Carbon::now()->subWeeks($w)->startOfWeek();
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
             $points[] = (int) GridInventoryItem::query()
                 ->where('status', 'baixo')
-                ->whereBetween('updated_at', [$start, $end])
+                ->where('updated_at', '<=', $end)
                 ->count();
         }
 

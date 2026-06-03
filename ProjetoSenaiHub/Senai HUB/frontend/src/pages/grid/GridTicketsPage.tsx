@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, ClipboardList, Filter, LayoutGrid, List, Pencil, Plus, Trash2, UserCheck, Wrench } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
@@ -26,6 +27,7 @@ import { applyTicketStatus, GridTicketKanbanCard } from '../../components/grid/G
 import { useAuth } from '../../contexts/AuthContext'
 import { GridTicketCard } from '../../components/grid/GridTicketCard'
 import { gridService } from '../../services/gridService'
+import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus'
 import type { GridDashboardData, GridPriority, GridTicket, GridTicketStatus, PaginatedMeta } from '../../types/grid'
 import { confirmDelete } from '../../utils/confirmAction'
 
@@ -63,6 +65,7 @@ function formatDateTime(iso: string) {
 
 export function GridTicketsPage() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [tickets, setTickets] = useState<GridTicket[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [dashboard, setDashboard] = useState<GridDashboardData | null>(null)
@@ -85,6 +88,8 @@ export function GridTicketsPage() {
   const [movingId, setMovingId] = useState<number | null>(null)
   const [evaluateTarget, setEvaluateTarget] = useState<GridTicket | null>(null)
   const [approveTarget, setApproveTarget] = useState<GridTicket | null>(null)
+
+  const loadDashboard = useCallback(() => gridService.getDashboard().then(setDashboard), [])
 
   const load = () => {
     setLoading(true)
@@ -113,12 +118,54 @@ export function GridTicketsPage() {
   }, [page, search, block, priority, status, viewMode])
 
   useEffect(() => {
-    gridService.getDashboard().then(setDashboard)
+    loadDashboard()
     gridService.getUsers({ per_page: 50, role: 'Técnico de manutenção' }).then((res) => {
       const names = res.data.map((u) => u.name)
       setTechnicians(names.length ? names : res.data.map((u) => u.name))
     })
-  }, [])
+  }, [loadDashboard])
+
+  useRefetchOnFocus(loadDashboard)
+
+  const openView = useCallback((ticket: GridTicket) => {
+    setViewSnapshot(ticket)
+    setSearchParams({ id: String(ticket.id) }, { replace: true })
+  }, [setSearchParams])
+
+  const closeView = useCallback(() => {
+    setViewSnapshot(null)
+    if (searchParams.has('id')) {
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
+
+  useEffect(() => {
+    const paramId = searchParams.get('id')
+    if (!paramId) return
+    const id = Number(paramId)
+    if (Number.isNaN(id)) return
+    if (viewSnapshot?.id === id) return
+
+    const fromList = tickets.find((t) => t.id === id)
+    if (fromList) {
+      setViewSnapshot(fromList)
+      return
+    }
+
+    let cancelled = false
+    gridService
+      .getTicket(id)
+      .then((ticket) => {
+        if (!cancelled) setViewSnapshot(ticket)
+      })
+      .catch(() => {
+        if (!cancelled) closeView()
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [searchParams, tickets, viewSnapshot?.id, closeView])
 
   const openCreate = () => {
     setEditingId(null)
@@ -176,7 +223,7 @@ export function GridTicketsPage() {
       }
       setDrawerOpen(false)
       load()
-      gridService.getDashboard().then(setDashboard)
+      loadDashboard()
     } finally {
       setSaving(false)
     }
@@ -198,7 +245,7 @@ export function GridTicketsPage() {
     if (!confirmDelete(`o chamado "${ticket.code}"`)) return
     await gridService.deleteTicket(ticket.id)
     load()
-    gridService.getDashboard().then(setDashboard)
+    loadDashboard()
   }
 
   const handleTicketMove = useCallback(
@@ -228,7 +275,7 @@ export function GridTicketsPage() {
         }
         const updated = await gridService.updateTicket(ticketId, payload)
         setTickets((prev) => prev.map((t) => (t.id === ticketId ? updated : t)))
-        gridService.getDashboard().then(setDashboard)
+        loadDashboard()
       } catch (e: unknown) {
         setTickets(snapshot)
         const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
@@ -425,7 +472,7 @@ export function GridTicketsPage() {
                   <GridTicketCard
                     key={t.id}
                     ticket={t}
-                    onView={() => setViewSnapshot(t)}
+                    onView={() => openView(t)}
                     onEdit={() => openEdit(t)}
                     onAssign={() => openAssign(t)}
                     onDelete={() => void handleDelete(t)}
@@ -472,7 +519,7 @@ export function GridTicketsPage() {
                             <ConnectRowActionsMenu
                               ariaLabel={`Ações do chamado ${t.code}`}
                               actions={[
-                                viewRowAction(() => setViewSnapshot(t)),
+                                viewRowAction(() => openView(t)),
                                 { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(t) },
                                 { key: 'assign', label: 'Atribuir técnico', icon: UserCheck, onClick: () => openAssign(t) },
                                 { key: 'delete', label: 'Excluir', icon: Trash2, variant: 'danger', onClick: () => void handleDelete(t) },
@@ -608,7 +655,7 @@ export function GridTicketsPage() {
         onClose={() => setApproveTarget(null)}
         onApproved={() => {
           load()
-          gridService.getDashboard().then(setDashboard)
+          loadDashboard()
         }}
         approverName={user?.name ?? 'Chefe de Manutenção'}
       />
@@ -619,7 +666,7 @@ export function GridTicketsPage() {
         onClose={() => setEvaluateTarget(null)}
         onEvaluated={() => {
           load()
-          gridService.getDashboard().then(setDashboard)
+          loadDashboard()
         }}
       />
 
@@ -627,7 +674,7 @@ export function GridTicketsPage() {
         kind="grid-ticket"
         entityId={null}
         open={viewSnapshot !== null}
-        onClose={() => setViewSnapshot(null)}
+        onClose={closeView}
         snapshot={viewSnapshot ?? undefined}
       />
     </div>

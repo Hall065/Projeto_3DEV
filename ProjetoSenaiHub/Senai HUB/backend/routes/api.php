@@ -49,6 +49,8 @@ Route::prefix('auth')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/me', [AuthController::class, 'me']);
         Route::put('/me', [AuthController::class, 'update']);
+        Route::post('/avatar', [AuthController::class, 'updateAvatar']);
+        Route::delete('/avatar', [AuthController::class, 'deleteAvatar']);
         Route::put('/password', [AuthController::class, 'changePassword']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });
@@ -62,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::prefix('admin')->middleware('admin')->group(function (): void {
         Route::get('/roles', [UserManagementController::class, 'roles']);
         Route::get('/users', [UserManagementController::class, 'index']);
+        Route::get('/users/{user}', [UserManagementController::class, 'show']);
         Route::post('/users', [UserManagementController::class, 'store']);
         Route::put('/users/{user}', [UserManagementController::class, 'update']);
         Route::delete('/users/{user}', [UserManagementController::class, 'destroy']);
@@ -76,6 +79,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::delete('/presets/{preset}', [ReportPresetController::class, 'destroy']);
         Route::post('/build', [CustomReportController::class, 'build']);
         Route::post('/export-csv', [CustomReportController::class, 'exportCsv']);
+        Route::post('/export-xlsx', [CustomReportController::class, 'exportXlsx']);
+        Route::post('/export-json', [CustomReportController::class, 'exportJson']);
         Route::post('/export-html', [CustomReportController::class, 'exportHtml']);
     });
 
@@ -175,16 +180,19 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::delete('/tasks/{task}', [GridTaskController::class, 'destroy'])->middleware('permission:grid.tasks.manage');
 
         Route::get('/inventory', [GridInventoryController::class, 'index'])->middleware('permission:grid.inventory.view,grid.inventory.manage');
+        Route::get('/inventory/{inventoryItem}', [GridInventoryController::class, 'show'])->middleware('permission:grid.inventory.view,grid.inventory.manage');
         Route::middleware('permission:grid.inventory.manage')->group(function (): void {
             Route::post('/inventory', [GridInventoryController::class, 'store']);
             Route::put('/inventory/{inventoryItem}', [GridInventoryController::class, 'update']);
             Route::post('/inventory/{inventoryItem}/adjust', [GridInventoryController::class, 'adjust']);
             Route::post('/inventory/{inventoryItem}/sync-image', [GridInventoryController::class, 'syncImage']);
+            Route::post('/inventory/{inventoryItem}/image', [GridInventoryController::class, 'uploadImage']);
             Route::delete('/inventory/{inventoryItem}', [GridInventoryController::class, 'destroy']);
         });
 
         Route::middleware('permission:grid.users.manage')->group(function (): void {
             Route::get('/users', [GridUserController::class, 'index']);
+            Route::get('/users/{gridUser}', [GridUserController::class, 'show']);
             Route::post('/users', [GridUserController::class, 'store']);
             Route::put('/users/{gridUser}', [GridUserController::class, 'update']);
             Route::delete('/users/{gridUser}', [GridUserController::class, 'destroy']);

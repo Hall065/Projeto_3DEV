@@ -1,27 +1,44 @@
 import { Package } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { inventoryDisplayImageUrl, resolveInventoryImageFallback } from '../../utils/inventoryImageFallback'
 
 export function GridInventoryThumb({
   title,
   imageUrl,
+  category,
   size = 'md',
   className = '',
 }: {
   title: string
   imageUrl?: string | null
+  category?: string
   size?: 'sm' | 'md' | 'lg'
   className?: string
 }) {
   const [failed, setFailed] = useState(false)
+  const [candidateIndex, setCandidateIndex] = useState(0)
+
+  const candidates = useMemo(() => {
+    const primary = inventoryDisplayImageUrl(title, imageUrl, category)
+    const fallback = resolveInventoryImageFallback(title, category)
+    return primary === fallback ? [primary] : [primary, fallback]
+  }, [title, imageUrl, category])
+
+  const src = candidates[candidateIndex] ?? candidates[0]
+
+  useEffect(() => {
+    setFailed(false)
+    setCandidateIndex(0)
+  }, [candidates])
 
   const box =
     size === 'sm'
-      ? 'h-10 w-10 rounded-lg'
+      ? 'h-11 w-11 rounded-lg'
       : size === 'lg'
-        ? 'h-20 w-20 rounded-xl'
-        : 'h-14 w-14 rounded-xl'
+        ? 'h-28 w-28 rounded-2xl'
+        : 'h-16 w-16 rounded-xl'
 
-  if (!imageUrl || failed) {
+  if (failed) {
     return (
       <div
         className={`flex shrink-0 items-center justify-center border border-hub-border/50 bg-hub-bg/80 text-hub-text-muted ${box} ${className}`}
@@ -34,13 +51,19 @@ export function GridInventoryThumb({
 
   return (
     <img
-      src={imageUrl}
+      src={src}
       alt={title}
       loading="lazy"
       decoding="async"
       referrerPolicy="no-referrer"
-      onError={() => setFailed(true)}
-      className={`shrink-0 border border-hub-border/40 bg-white object-contain p-1 ${box} ${className}`}
+      onError={() => {
+        if (candidateIndex < candidates.length - 1) {
+          setCandidateIndex((index) => index + 1)
+          return
+        }
+        setFailed(true)
+      }}
+      className={`shrink-0 border border-hub-border/40 bg-white object-contain object-center p-1.5 ${box} ${className}`}
     />
   )
 }

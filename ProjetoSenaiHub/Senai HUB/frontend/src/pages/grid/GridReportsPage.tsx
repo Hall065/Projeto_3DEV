@@ -145,7 +145,7 @@ export function GridReportsPage() {
         }
       />
 
-      {tab === 'dashboard' ? <GridReportsDashboard /> : <CustomReportBuilder module="grid" />}
+      {tab === 'dashboard' ? <GridReportsDashboard /> : <CustomReportBuilder module="grid" embedded />}
     </div>
   )
 }

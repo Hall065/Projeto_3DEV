@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Grid;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Grid\GridUserDetailResource;
 use App\Http\Resources\Grid\GridUserResource;
 use App\Models\Grid\GridUser;
 use Illuminate\Http\JsonResponse;
@@ -28,6 +29,13 @@ class UserController extends Controller
         $users = $query->paginate($request->integer('per_page', 10));
 
         return GridUserResource::collection($users)->response();
+    }
+
+    public function show(GridUser $gridUser): JsonResponse
+    {
+        return response()->json([
+            'data' => new GridUserDetailResource($gridUser),
+        ]);
     }
 
     public function store(Request $request): JsonResponse

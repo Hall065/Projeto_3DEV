@@ -3,7 +3,9 @@
 namespace App\Services\Grid;
 
 use App\Models\Grid\GridInventoryItem;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class InventoryImageResolver
@@ -33,16 +35,144 @@ class InventoryImageResolver
 
     public function apply(GridInventoryItem $item, bool $force = false): ?string
     {
-        if (! $force && filled($item->image_url)) {
+        if (! $force && filled($item->image_url) && ! $this->isLegacyBrokenUrl($item->image_url)) {
             return $item->image_url;
         }
 
-        $url = $this->resolve($item);
+        if ($force) {
+            $this->deleteStoredUpload($item);
+        }
+
+        $url = $this->resolve($item) ?? $this->resolveQuick($item);
         if ($url) {
             $item->update(['image_url' => $url]);
         }
 
         return $url;
+    }
+
+    /**
+     * Fallback imediato (sem HTTP) — usado na listagem e ao cadastrar.
+     */
+    public function storeUpload(GridInventoryItem $item, UploadedFile $file): string
+    {
+        $this->deleteStoredUpload($item);
+
+        $path = $file->store('inventory/'.$item->id, 'public');
+        $url = Storage::disk('public')->url($path);
+
+        $item->update(['image_url' => $url]);
+
+        return $url;
+    }
+
+    public function isStoredUpload(?string $url): bool
+    {
+        if (! filled($url)) {
+            return false;
+        }
+
+        $publicBase = rtrim(Storage::disk('public')->url(''), '/').'/';
+
+        if (! str_starts_with($url, $publicBase)) {
+            return false;
+        }
+
+        $relativePath = ltrim(substr($url, strlen($publicBase)), '/');
+
+        return str_starts_with($relativePath, 'inventory/');
+    }
+
+    public function deleteStoredUpload(GridInventoryItem $item): void
+    {
+        $imageUrl = $item->image_url;
+
+        if (! $this->isStoredUpload($imageUrl)) {
+            return;
+        }
+
+        $publicBase = rtrim(Storage::disk('public')->url(''), '/').'/';
+        $relativePath = ltrim(substr($imageUrl, strlen($publicBase)), '/');
+
+        if ($relativePath !== '') {
+            Storage::disk('public')->delete($relativePath);
+        }
+    }
+
+    public function applyQuick(GridInventoryItem $item, bool $persist = true): ?string
+    {
+        if (filled($item->image_url) && ! $this->isLegacyBrokenUrl($item->image_url)) {
+            return $item->image_url;
+        }
+
+        $url = $this->resolveQuick($item);
+        if ($url && $persist) {
+            $item->update(['image_url' => $url]);
+        }
+
+        return $url;
+    }
+
+    public function isLegacyBrokenUrl(string $url): bool
+    {
+        foreach (config('inventory_images.legacy_broken_url_fragments', []) as $fragment) {
+            if (str_contains($url, $fragment)) {
+                return true;
+            }
+        }
+
+        if (str_contains($url, '/512px-')) {
+            return true;
+        }
+
+        if (str_contains($url, 'upload.wikimedia.org/wikipedia/commons/')
+            && ! str_contains($url, '/thumb/')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Wikimedia só aceita tamanhos padronizados (330px, 500px, etc.) — 512px retorna HTTP 400.
+     */
+    public function normalizeThumbnailUrl(string $url): string
+    {
+        if (str_contains($url, '/512px-')) {
+            return str_replace('/512px-', '/330px-', $url);
+        }
+
+        return $url;
+    }
+
+    public function publicImageUrl(?string $url): ?string
+    {
+        if (! filled($url)) {
+            return null;
+        }
+
+        if ($this->isLegacyBrokenUrl($url)) {
+            return null;
+        }
+
+        return $this->normalizeThumbnailUrl($url);
+    }
+
+    public function resolveQuick(GridInventoryItem $item): ?string
+    {
+        $static = $this->staticFallback($item);
+        if ($static) {
+            return $static;
+        }
+
+        $lower = Str::lower($item->title);
+        foreach (config('inventory_images.keyword_fallbacks', []) as $keyword => $url) {
+            if (str_contains($lower, $keyword)) {
+                return $url;
+            }
+        }
+
+        return config('inventory_images.default_fallback');
     }
 
     /**
@@ -125,7 +255,7 @@ class InventoryImageResolver
                     'gsrnamespace' => 6,
                     'prop' => 'imageinfo',
                     'iiprop' => 'url|mime|thumburl',
-                    'iiurlwidth' => 512,
+                    'iiurlwidth' => 330,
                 ]);
 
             if (! $response->successful()) {

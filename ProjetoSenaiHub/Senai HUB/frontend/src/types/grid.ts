@@ -79,7 +79,9 @@ export interface GridInventoryItem {
   title: string
   description: string
   category: string
+  sku?: string | null
   image_url?: string | null
+  purchased_at?: string | null
   qty_available: number
   qty_reserved?: number
   qty_min: number
@@ -89,6 +91,26 @@ export interface GridInventoryItem {
   status: GridInventoryStatus
   created_at?: string
   updated_at?: string
+}
+
+export interface GridInventoryReservationRow {
+  id: number
+  quantity: number
+  status: string
+  task_code?: string | null
+  task_title?: string | null
+  task_column?: string | null
+  ticket_code?: string | null
+  created_at?: string | null
+}
+
+export interface GridInventoryItemDetail extends GridInventoryItem {
+  qty_in_use: number
+  qty_committed: number
+  qty_consumed: number
+  qty_total: number
+  stock_value?: number
+  reservations: GridInventoryReservationRow[]
 }
 
 export interface GridUser {
@@ -101,6 +123,26 @@ export interface GridUser {
   updated_at: string
   status: string
   cpf: string
+}
+
+export interface GridUserActivityRow {
+  type: 'task' | 'ticket'
+  id: number
+  code: string
+  title: string
+  status: string
+  column?: string
+  updated_at?: string | null
+}
+
+export interface GridUserDetail extends GridUser {
+  stats: {
+    tasks_total: number
+    tasks_in_progress: number
+    tasks_completed: number
+    tickets_assigned: number
+  }
+  activity: GridUserActivityRow[]
 }
 
 export interface PaginatedMeta {

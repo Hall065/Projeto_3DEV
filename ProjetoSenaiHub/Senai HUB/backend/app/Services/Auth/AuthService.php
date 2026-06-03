@@ -5,8 +5,10 @@ namespace App\Services\Auth;
 use App\Models\Application;
 use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
@@ -70,6 +72,47 @@ class AuthService
         ]);
 
         return $user->fresh();
+    }
+
+    public function updateAvatar(User $user, UploadedFile $file): User
+    {
+        $this->deleteStoredAvatar($user);
+
+        $path = $file->store('avatars/'.$user->id, 'public');
+        $url = Storage::disk('public')->url($path);
+
+        $user->update(['avatar_url' => $url]);
+
+        return $user->fresh();
+    }
+
+    public function removeAvatar(User $user): User
+    {
+        $this->deleteStoredAvatar($user);
+        $user->update(['avatar_url' => null]);
+
+        return $user->fresh();
+    }
+
+    private function deleteStoredAvatar(User $user): void
+    {
+        $avatarUrl = $user->avatar_url;
+
+        if (! filled($avatarUrl)) {
+            return;
+        }
+
+        $publicBase = rtrim(Storage::disk('public')->url(''), '/').'/';
+
+        if (! str_starts_with($avatarUrl, $publicBase)) {
+            return;
+        }
+
+        $relativePath = ltrim(substr($avatarUrl, strlen($publicBase)), '/');
+
+        if ($relativePath !== '') {
+            Storage::disk('public')->delete($relativePath);
+        }
     }
 
     public function changePassword(User $user, string $currentPassword, string $newPassword): void

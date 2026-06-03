@@ -109,5 +109,12 @@
     @endforeach
 
     <footer>{{ $meta['module_label'] ?? 'SENAI HUB' }} — documento gerado em {{ $meta['generated_at'] ?? now()->format('d/m/Y H:i') }}</footer>
+    <script>
+        window.addEventListener('load', function () {
+            if (window.location.search.indexOf('print=1') !== -1) {
+                window.print();
+            }
+        });
+    </script>
 </body>
 </html>

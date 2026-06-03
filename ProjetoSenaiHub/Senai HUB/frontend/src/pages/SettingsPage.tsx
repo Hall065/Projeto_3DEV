@@ -1,153 +1,262 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { SettingsPageFooter } from '../components/settings/SettingsPageFooter'
-import { Input } from '../components/ui/Input'
+import {
+  ArrowUpRight,
+  Bell,
+  Database,
+  Paintbrush,
+  Sparkles,
+  User as UserIcon,
+  Users,
+  Zap,
+} from 'lucide-react'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { AppearanceSettings } from '../components/settings/AppearanceSettings'
+import {
+  ConnectCard,
+  ConnectPageHeader,
+  OutlineButton,
+} from '../components/connect/ConnectShared'
+import { useAppearance } from '../contexts/AppearanceContext'
 import { useAuth } from '../contexts/AuthContext'
-import { navigateBack } from '../utils/navigation'
+import { useInterfacePreferences } from '../hooks/useInterfacePreferences'
+import { usePermissions } from '../hooks/usePermissions'
+import { DEFAULT_WALLPAPER_ID } from '../constants/wallpapers'
+
+type QuickLink = {
+  to: string
+  label: string
+  description: string
+  icon: typeof UserIcon
+}
+
+function ToggleRow({
+  label,
+  description,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: string
+  description: string
+  checked: boolean
+  onChange: (value: boolean) => void
+  disabled?: boolean
+}) {
+  return (
+    <label
+      className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border border-hub-border/50 px-4 py-3 transition ${
+        disabled ? 'cursor-not-allowed opacity-60' : 'hover:bg-hub-bg/60'
+      }`}
+    >
+      <span>
+        <span className="block text-sm font-medium text-hub-navy">{label}</span>
+        <span className="mt-0.5 block text-xs text-hub-text-muted">{description}</span>
+      </span>
+      <input
+        type="checkbox"
+        className="mt-1 h-4 w-4 shrink-0 accent-hub-red"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+    </label>
+  )
+}
 
 export function SettingsPage() {
-  const navigate = useNavigate()
-  const { user, updateProfile, changePassword, isSubmitting } = useAuth()
+  const { user } = useAuth()
+  const { isAdmin, can } = usePermissions()
+  const { setWallpaperId, removeCustomWallpaper } = useAppearance()
+  const { reduceMotion, setReduceMotion } = useInterfacePreferences()
+  const [feedback, setFeedback] = useState<string | null>(null)
 
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [password, setPassword] = useState('')
-  const [passwordConfirmation, setPasswordConfirmation] = useState('')
-  const [savedMessage, setSavedMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const quickLinks: QuickLink[] = [
+    {
+      to: '/perfil',
+      label: 'Meu perfil',
+      description: 'Nome, e-mail, senha, aplicativos e permissões.',
+      icon: UserIcon,
+    },
+    {
+      to: '/temas',
+      label: 'Temas (tela dedicada)',
+      description: 'Mesmas opções de plano de fundo em página ampla.',
+      icon: Paintbrush,
+    },
+  ]
 
-  useEffect(() => {
-    if (user) {
-      setName(user.name)
-      setEmail(user.email)
-    }
-  }, [user])
+  if (isAdmin || can('hub.users.manage')) {
+    quickLinks.push({
+      to: '/hub/usuarios',
+      label: 'Usuários e perfis',
+      description: 'Gestão de contas e cargos no Hub.',
+      icon: Users,
+    })
+  }
 
-  const profileDirty = user ? name !== user.name || email !== user.email : false
-  const passwordDirty = currentPassword !== '' || password !== '' || passwordConfirmation !== ''
+  function showFeedback(message: string) {
+    setFeedback(message)
+    window.setTimeout(() => setFeedback(null), 3500)
+  }
 
-  async function handleSaveProfile() {
-    setError(null)
+  function clearLocalDrafts() {
     try {
-      await updateProfile({ name, email })
-      setSavedMessage('Perfil atualizado com sucesso.')
-      window.setTimeout(() => setSavedMessage(null), 3000)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nao foi possivel salvar o perfil.')
+      localStorage.removeItem('senai_report_config_connect')
+      localStorage.removeItem('senai_report_config_grid')
+      showFeedback('Rascunhos de relatórios removidos deste navegador.')
+    } catch {
+      showFeedback('Não foi possível limpar os rascunhos.')
     }
   }
 
-  async function handleChangePassword() {
-    setError(null)
-    if (password !== passwordConfirmation) {
-      setError('As senhas nao conferem.')
-      return
-    }
-    try {
-      await changePassword({
-        current_password: currentPassword,
-        password,
-        password_confirmation: passwordConfirmation,
-      })
-      setCurrentPassword('')
-      setPassword('')
-      setPasswordConfirmation('')
-      setSavedMessage('Senha alterada com sucesso.')
-      window.setTimeout(() => setSavedMessage(null), 3000)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nao foi possivel alterar a senha.')
-    }
-  }
-
-  function handleBack() {
-    if (user) {
-      setName(user.name)
-      setEmail(user.email)
-    }
-    navigateBack(navigate)
+  function resetWallpaper() {
+    removeCustomWallpaper()
+    setWallpaperId(DEFAULT_WALLPAPER_ID)
+    showFeedback('Tema restaurado para o padrão SENAI.')
   }
 
   return (
-    <section className="px-8 py-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-hub-navy">Configuracoes</h1>
-        <p className="mt-2 text-hub-text-muted">Perfil e seguranca da sua conta</p>
-      </header>
+    <section className="w-full min-w-0">
+      <ConnectPageHeader
+        title="Configurações"
+        subtitle="Preferências de aparência e interface. Dados da conta, senha e permissões ficam em Meu perfil."
+        actions={
+          <Link
+            to="/perfil"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-hub-border px-4 text-sm font-medium text-hub-navy transition hover:bg-hub-bg"
+          >
+            <UserIcon className="h-4 w-4" />
+            Meu perfil
+          </Link>
+        }
+      />
 
-      <div className="mx-auto max-w-2xl space-y-6">
-        <section className="glass-panel rounded-2xl p-6">
-          <header className="mb-4">
-            <h2 className="text-lg font-semibold text-hub-navy">Perfil</h2>
-            <p className="mt-1 text-sm text-hub-text-muted">
-              {user?.role_label ? `Perfil atual: ${user.role_label}` : 'Dados da conta'}
-            </p>
-          </header>
-          <div className="space-y-4">
-            <Input label="Nome" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input label="E-mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <div className="mt-4">
-            <button
-              type="button"
-              disabled={!profileDirty || isSubmitting}
-              onClick={handleSaveProfile}
-              className="rounded-lg bg-hub-red px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
-              {isSubmitting ? 'Salvando...' : 'Salvar perfil'}
-            </button>
-          </div>
-        </section>
+      {feedback && (
+        <p className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">
+          {feedback}
+        </p>
+      )}
 
-        <section className="glass-panel rounded-2xl p-6">
-          <header className="mb-4">
-            <h2 className="text-lg font-semibold text-hub-navy">Trocar senha</h2>
-            <p className="mt-1 text-sm text-hub-text-muted">Use uma senha forte com pelo menos 8 caracteres.</p>
-          </header>
-          <div className="space-y-4">
-            <Input
-              label="Senha atual"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-            />
-            <Input label="Nova senha" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            <Input
-              label="Confirmar nova senha"
-              type="password"
-              value={passwordConfirmation}
-              onChange={(e) => setPasswordConfirmation(e.target.value)}
-            />
-          </div>
-          <div className="mt-4">
-            <button
-              type="button"
-              disabled={!passwordDirty || isSubmitting}
-              onClick={handleChangePassword}
-              className="rounded-lg border border-hub-border px-4 py-2 text-sm font-medium text-hub-navy disabled:opacity-50"
-            >
-              Alterar senha
-            </button>
-          </div>
-        </section>
+      <div className="grid gap-6 lg:grid-cols-12">
+        <aside className="space-y-4 lg:col-span-4">
+          <ConnectCard className="p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-hub-text-muted">Atalhos</h2>
+            <ul className="mt-4 space-y-2">
+              {quickLinks.map((item) => {
+                const Icon = item.icon
+                return (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      className="flex items-start gap-3 rounded-xl border border-hub-border/50 p-3 transition hover:border-hub-navy/20 hover:bg-hub-bg/50"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-hub-red/10 text-hub-red">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-1 text-sm font-semibold text-hub-navy">
+                          {item.label}
+                          <ArrowUpRight className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                        </span>
+                        <span className="mt-0.5 block text-xs text-hub-text-muted">{item.description}</span>
+                      </span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </ConnectCard>
 
-        <section className="glass-panel rounded-2xl p-6">
-          <header className="mb-4">
-            <h2 className="text-lg font-semibold text-hub-navy">Notificacoes</h2>
-          </header>
-          <p className="text-sm text-hub-text-muted">Configuracoes de notificacao serao implementadas na proxima fase.</p>
-        </section>
+          {user && (
+            <ConnectCard className="p-5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-hub-text-muted">Conta</p>
+              <p className="mt-2 text-sm font-medium text-hub-navy">{user.name}</p>
+              <p className="text-xs text-hub-text-muted">{user.email}</p>
+              <p className="mt-2 text-xs text-hub-text-muted">
+                Perfil: <span className="font-medium text-hub-navy">{user.role_label ?? user.role}</span>
+              </p>
+              <Link to="/perfil" className="mt-4 inline-flex text-sm font-medium text-hub-red hover:underline">
+                Editar dados da conta
+              </Link>
+            </ConnectCard>
+          )}
+        </aside>
 
-        {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
-        )}
-        {savedMessage && (
-          <p className="text-sm font-medium text-emerald-700" role="status">
-            {savedMessage}
-          </p>
-        )}
+        <div className="space-y-6 lg:col-span-8">
+          <AppearanceSettings embedded />
 
-        <SettingsPageFooter onSave={handleSaveProfile} onBack={handleBack} saveDisabled={!profileDirty || isSubmitting} />
+          <ConnectCard className="p-6">
+            <header className="mb-4 flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-hub-navy/10 text-hub-navy">
+                <Sparkles className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-lg font-semibold text-hub-navy">Interface</h2>
+                <p className="mt-0.5 text-sm text-hub-text-muted">Ajustes locais salvos neste navegador.</p>
+              </div>
+            </header>
+            <div className="space-y-2">
+              <ToggleRow
+                label="Reduzir animações"
+                description="Desativa transições e animações decorativas para uma navegação mais estável."
+                checked={reduceMotion}
+                onChange={setReduceMotion}
+              />
+            </div>
+          </ConnectCard>
+
+          <ConnectCard className="p-6">
+            <header className="mb-4 flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700">
+                <Bell className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-lg font-semibold text-hub-navy">Notificações</h2>
+                <p className="mt-0.5 text-sm text-hub-text-muted">Alertas por e-mail e no navegador (em breve).</p>
+              </div>
+            </header>
+            <div className="space-y-2">
+              <ToggleRow
+                label="Resumo por e-mail"
+                description="Chamados, estoque baixo e frequência — disponível em versão futura."
+                checked={false}
+                onChange={() => undefined}
+                disabled
+              />
+              <ToggleRow
+                label="Notificações no navegador"
+                description="Avisos em tempo real quando a aba estiver aberta."
+                checked={false}
+                onChange={() => undefined}
+                disabled
+              />
+            </div>
+          </ConnectCard>
+
+          <ConnectCard className="p-6">
+            <header className="mb-4 flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-700">
+                <Database className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-lg font-semibold text-hub-navy">Dados locais</h2>
+                <p className="mt-0.5 text-sm text-hub-text-muted">
+                  Limpe preferências armazenadas só neste dispositivo, sem alterar sua conta no servidor.
+                </p>
+              </div>
+            </header>
+            <div className="flex flex-wrap gap-2">
+              <OutlineButton type="button" onClick={clearLocalDrafts}>
+                <Zap className="h-4 w-4" />
+                Limpar rascunhos de relatórios
+              </OutlineButton>
+              <OutlineButton type="button" onClick={resetWallpaper}>
+                <Paintbrush className="h-4 w-4" />
+                Restaurar tema padrão
+              </OutlineButton>
+            </div>
+          </ConnectCard>
+        </div>
       </div>
     </section>
   )

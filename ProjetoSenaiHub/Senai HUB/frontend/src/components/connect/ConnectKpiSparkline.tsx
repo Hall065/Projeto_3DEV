@@ -21,21 +21,17 @@ function buildSparklinePaths(
 
   const min = Math.min(...values)
   const max = Math.max(...values)
-
+  let scaleMin = min
+  let scaleMax = max
   if (min === max) {
-    const y = height / 2
-    const line =
-      values.length === 1
-        ? `M 0 ${y} L ${width} ${y}`
-        : values.map((_, i) => `${i === 0 ? 'M' : 'L'} ${i * step} ${y}`).join(' ')
-    const area = `${line} L ${width} ${height} L 0 ${height} Z`
-    return { line, area }
+    const pad = Math.max(1, Math.abs(max) * 0.25)
+    scaleMin = min - pad
+    scaleMax = max + pad
   }
-
-  const range = max - min
+  const scaleRange = scaleMax - scaleMin || 1
   const coords = values.map((v, i) => {
     const x = i * step
-    const y = padY + innerH - ((v - min) / range) * innerH
+    const y = padY + innerH - ((v - scaleMin) / scaleRange) * innerH
     return [x, y] as const
   })
 

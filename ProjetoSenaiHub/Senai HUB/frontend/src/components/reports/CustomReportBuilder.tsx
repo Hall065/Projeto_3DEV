@@ -1,5 +1,5 @@
-import { BookmarkPlus, Download, FileText, Printer, Save, Sparkles, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { BookmarkPlus, ChevronDown, Download, FileJson, FileSpreadsheet, FileText, Printer, Save, Sparkles, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -12,7 +12,7 @@ import {
 } from '../connect/ConnectShared'
 import { ReportPreview } from './ReportPreview'
 import { reportPresetService, type ReportPreset } from '../../services/reportPresetService'
-import { reportService } from '../../services/reportService'
+import { reportService, type ReportExportFormat } from '../../services/reportService'
 import type {
   BuiltReport,
   ConnectFilterOptions,
@@ -20,53 +20,49 @@ import type {
   ReportBuildConfig,
   ReportModule,
   ReportSchema,
-  ReportSectionDef,
 } from '../../types/reports'
 import { mergeSystemPreset, sanitizeReportConfig } from '../../utils/reportConfig'
 
-const STORAGE_KEY = (module: ReportModule) => `senai_report_config_${module}`
+const EXPORT_OPTIONS: { id: ReportExportFormat; label: string; icon: typeof Download }[] = [
+  { id: 'csv', label: 'CSV (planilha)', icon: Download },
+  { id: 'xlsx', label: 'Excel (.xlsx)', icon: FileSpreadsheet },
+  { id: 'json', label: 'JSON (dados brutos)', icon: FileJson },
+  { id: 'html', label: 'PDF / Imprimir', icon: Printer },
+  { id: 'html-download', label: 'HTML (arquivo)', icon: FileText },
+]
 
-function defaultColumns(section: ReportSectionDef): string[] {
-  return (section.columns ?? []).filter((c) => c.default !== false).map((c) => c.key)
-}
-
-function initialConfig(schema: ReportSchema): ReportBuildConfig {
-  const sections = schema.sections.filter((s) => s.default_enabled).map((s) => s.id)
-  const columns: Record<string, string[]> = {}
-  schema.sections.forEach((s) => {
-    if (s.has_columns && s.columns) {
-      columns[s.id] = defaultColumns(s)
-    }
-  })
-
+/** Estado inicial vazio — modelos completos apenas via presets */
+function emptyConfig(): ReportBuildConfig {
   const today = new Date()
   const from = new Date(today)
   from.setMonth(from.getMonth() - 3)
 
   return {
-    title: schema.default_title,
+    title: '',
     subtitle: '',
     from_date: from.toISOString().slice(0, 10),
     to_date: today.toISOString().slice(0, 10),
     filters: {},
-    sections: sections.includes('cover') ? sections : ['cover', ...sections],
-    columns,
+    sections: ['cover'],
+    columns: {},
   }
 }
 
-export function CustomReportBuilder({ module }: { module: ReportModule }) {
+export function CustomReportBuilder({ module, embedded = false }: { module: ReportModule; embedded?: boolean }) {
   const [schema, setSchema] = useState<ReportSchema | null>(null)
   const [filterOptions, setFilterOptions] = useState<ConnectFilterOptions | GridFilterOptions | null>(null)
   const [config, setConfig] = useState<ReportBuildConfig | null>(null)
   const [report, setReport] = useState<BuiltReport | null>(null)
   const [loading, setLoading] = useState(true)
   const [building, setBuilding] = useState(false)
-  const [exporting, setExporting] = useState(false)
-  const [exportingPdf, setExportingPdf] = useState(false)
+  const [exporting, setExporting] = useState<ReportExportFormat | null>(null)
+  const [exportMenuOpen, setExportMenuOpen] = useState(false)
   const [serverPresets, setServerPresets] = useState<ReportPreset[]>([])
   const [presetName, setPresetName] = useState('')
   const [savingPreset, setSavingPreset] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -74,16 +70,7 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
       .then(([schemaData, options]) => {
         setSchema(schemaData)
         setFilterOptions(options)
-        const saved = localStorage.getItem(STORAGE_KEY(module))
-        let base = initialConfig(schemaData)
-        if (saved) {
-          try {
-            base = sanitizeReportConfig(schemaData, JSON.parse(saved) as ReportBuildConfig)
-          } catch {
-            /* ignore invalid draft */
-          }
-        }
-        setConfig(base)
+        setConfig(emptyConfig())
         setReport(null)
       })
       .catch((err: unknown) => {
@@ -97,10 +84,39 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
   }, [module])
 
   useEffect(() => {
-    if (config) {
-      localStorage.setItem(STORAGE_KEY(module), JSON.stringify(config))
+    if (!exportMenuOpen) return
+    const onClickOutside = (e: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setExportMenuOpen(false)
+      }
     }
-  }, [config, module])
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [exportMenuOpen])
+
+  const runBuild = useCallback(
+    async (cfg: ReportBuildConfig) => {
+      setBuilding(true)
+      setError(null)
+      setSuccess(null)
+      try {
+        const built = await reportService.build(module, cfg)
+        setReport(built)
+        setSuccess(`Relatorio gerado com ${built.meta.sections_count} secao(oes).`)
+        window.setTimeout(() => setSuccess(null), 4000)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Falha ao gerar o relatorio.')
+      } finally {
+        setBuilding(false)
+      }
+    },
+    [module],
+  )
+
+  const handleBuild = useCallback(() => {
+    if (!config) return
+    void runBuild(config)
+  }, [config, runBuild])
 
   const toggleSection = (id: string) => {
     if (!config || id === 'cover') return
@@ -112,6 +128,7 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
         sections: has ? prev.sections.filter((s) => s !== id) : [...prev.sections, id],
       }
     })
+    setReport(null)
   }
 
   const toggleColumn = (sectionId: string, columnKey: string) => {
@@ -123,55 +140,38 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
         : [...current, columnKey]
       return { ...prev, columns: { ...prev.columns, [sectionId]: next } }
     })
+    setReport(null)
   }
 
   const applyPreset = (presetId: string) => {
     const preset = schema?.presets.find((p) => p.id === presetId)
     if (!preset || !config || !schema) return
-    setConfig(mergeSystemPreset(schema, preset.sections, config))
+    const next = mergeSystemPreset(schema, preset.sections, config)
+    setConfig(next)
     setReport(null)
+    void runBuild(next)
   }
 
-  const handleBuild = useCallback(async () => {
+  const handleExport = async (format: ReportExportFormat) => {
     if (!config) return
-    setBuilding(true)
+    setExportMenuOpen(false)
+    setExporting(format)
     setError(null)
     try {
-      const built = await reportService.build(module, config)
-      setReport(built)
+      await reportService.export(module, config, format)
+      if (format !== 'html') {
+        setSuccess('Arquivo exportado com sucesso.')
+        window.setTimeout(() => setSuccess(null), 3000)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha ao gerar o relatorio.')
+      setError(err instanceof Error ? err.message : 'Nao foi possivel exportar o relatorio.')
     } finally {
-      setBuilding(false)
+      setExporting(null)
     }
-  }, [config, module])
+  }
 
   const handlePrint = () => {
     window.print()
-  }
-
-  const handleExportCsv = async () => {
-    if (!config) return
-    setExporting(true)
-    try {
-      await reportService.exportCsv(module, config)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nao foi possivel exportar CSV.')
-    } finally {
-      setExporting(false)
-    }
-  }
-
-  const handleExportPdf = async () => {
-    if (!config) return
-    setExportingPdf(true)
-    try {
-      await reportService.exportHtml(module, config)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nao foi possivel abrir o documento para impressao/PDF.')
-    } finally {
-      setExportingPdf(false)
-    }
   }
 
   const handleSavePreset = async () => {
@@ -184,6 +184,8 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
       })
       setServerPresets((prev) => [...prev, created])
       setPresetName('')
+      setSuccess('Preset salvo no servidor.')
+      window.setTimeout(() => setSuccess(null), 3000)
     } catch {
       setError('Nao foi possivel salvar o preset.')
     } finally {
@@ -193,8 +195,10 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
 
   const loadServerPreset = (preset: ReportPreset) => {
     if (!schema) return
-    setConfig(sanitizeReportConfig(schema, preset.config))
+    const next = sanitizeReportConfig(schema, preset.config)
+    setConfig(next)
     setReport(null)
+    void runBuild(next)
   }
 
   const handleDeletePreset = async (id: number) => {
@@ -226,34 +230,65 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
         )
       : []
 
+  const headerActions = (
+    <>
+      <div className="relative" ref={exportMenuRef}>
+        <OutlineButton type="button" onClick={() => setExportMenuOpen((o) => !o)} disabled={Boolean(exporting)}>
+          <Download className="h-4 w-4" />
+          {exporting ? 'Exportando...' : 'Exportar'}
+          <ChevronDown className="h-4 w-4 opacity-70" />
+        </OutlineButton>
+        {exportMenuOpen && (
+          <div className="glass-panel-solid absolute right-0 top-full z-20 mt-2 w-56 overflow-hidden rounded-xl py-1 shadow-xl">
+            {EXPORT_OPTIONS.map((opt) => {
+              const Icon = opt.icon
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-hub-text hover:bg-hub-bg disabled:opacity-50"
+                  disabled={exporting === opt.id}
+                  onClick={() => handleExport(opt.id)}
+                >
+                  <Icon className="h-4 w-4 text-hub-text-muted" />
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+      <OutlineButton type="button" onClick={handlePrint} disabled={!report}>
+        <Printer className="h-4 w-4" /> Preview local
+      </OutlineButton>
+      <PrimaryButton type="button" onClick={handleBuild} disabled={building}>
+        <Sparkles className="h-4 w-4" />
+        {building ? 'Gerando...' : report ? 'Atualizar preview' : 'Gerar preview'}
+      </PrimaryButton>
+    </>
+  )
+
   return (
     <div className="w-full min-w-0">
-      <ConnectPageHeader
-        title={module === 'connect' ? 'Relatorios personalizados' : 'Relatorios Grid'}
-        subtitle="Monte o relatorio escolhendo secoes, colunas e filtros. Ideal para reunioes, diretoria e auditoria."
-        actions={
-          <>
-            <OutlineButton type="button" onClick={handleExportCsv} disabled={exporting || !config}>
-              <Download className="h-4 w-4" />
-              {exporting ? 'Exportando...' : 'Exportar CSV'}
-            </OutlineButton>
-            <OutlineButton type="button" onClick={handleExportPdf} disabled={exportingPdf || !config}>
-              <Printer className="h-4 w-4" />
-              {exportingPdf ? 'Abrindo...' : 'PDF / Imprimir'}
-            </OutlineButton>
-            <OutlineButton type="button" onClick={handlePrint} disabled={!report}>
-              <Printer className="h-4 w-4" /> Preview local
-            </OutlineButton>
-            <PrimaryButton type="button" onClick={handleBuild} disabled={building}>
-              <Sparkles className="h-4 w-4" />
-              {building ? 'Gerando...' : 'Gerar preview'}
-            </PrimaryButton>
-          </>
-        }
-      />
+      {!embedded && (
+        <ConnectPageHeader
+          title={module === 'connect' ? 'Relatorios personalizados' : 'Relatorios Grid'}
+          subtitle="Monte o relatorio escolhendo secoes, colunas e filtros. Exporte em CSV, Excel, JSON ou PDF."
+          actions={headerActions}
+        />
+      )}
+
+      {embedded && (
+        <div className="mb-4 flex w-full min-w-0 flex-wrap items-center justify-end gap-2">{headerActions}</div>
+      )}
 
       {error && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
+      )}
+      {success && (
+        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800" role="status">
+          {success}
+        </p>
       )}
 
       <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
@@ -330,7 +365,11 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
                 <input
                   className={inputClass}
                   value={config.title}
-                  onChange={(e) => setConfig({ ...config, title: e.target.value })}
+                  placeholder={schema.default_title}
+                  onChange={(e) => {
+                    setConfig({ ...config, title: e.target.value })
+                    setReport(null)
+                  }}
                 />
               </FormField>
 
@@ -348,7 +387,10 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
                     type="date"
                     className={inputClass}
                     value={config.from_date}
-                    onChange={(e) => setConfig({ ...config, from_date: e.target.value })}
+                    onChange={(e) => {
+                      setConfig({ ...config, from_date: e.target.value })
+                      setReport(null)
+                    }}
                   />
                 </FormField>
                 <FormField label="Data final">
@@ -356,7 +398,10 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
                     type="date"
                     className={inputClass}
                     value={config.to_date}
-                    onChange={(e) => setConfig({ ...config, to_date: e.target.value })}
+                    onChange={(e) => {
+                      setConfig({ ...config, to_date: e.target.value })
+                      setReport(null)
+                    }}
                   />
                 </FormField>
               </div>
@@ -374,7 +419,7 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
                         <select
                           className={selectClass}
                           value={String(config.filters.connect_course_id ?? '')}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setConfig({
                               ...config,
                               filters: {
@@ -383,7 +428,8 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
                                 connect_class_id: '',
                               },
                             })
-                          }
+                            setReport(null)
+                          }}
                         >
                           <option value="">Todos</option>
                           {connectOptions.courses.map((c) => (
@@ -402,12 +448,13 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
                         <select
                           className={selectClass}
                           value={String(config.filters.connect_class_id ?? '')}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setConfig({
                               ...config,
                               filters: { ...config.filters, connect_class_id: e.target.value },
                             })
-                          }
+                            setReport(null)
+                          }}
                         >
                           <option value="">Todas</option>
                           {filteredClasses.map((c) => (
@@ -426,12 +473,13 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
                         <select
                           className={selectClass}
                           value={String(config.filters[filter.key] ?? '')}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setConfig({
                               ...config,
                               filters: { ...config.filters, [filter.key]: e.target.value },
                             })
-                          }
+                            setReport(null)
+                          }}
                         >
                           {filter.options.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -449,12 +497,13 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
                         <select
                           className={selectClass}
                           value={String(config.filters.block ?? '')}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setConfig({
                               ...config,
                               filters: { ...config.filters, block: e.target.value },
                             })
-                          }
+                            setReport(null)
+                          }}
                         >
                           <option value="">Todos</option>
                           {gridOptions.blocks.map((block) => (
@@ -473,12 +522,13 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
                         <input
                           className={inputClass}
                           value={String(config.filters[filter.key] ?? '')}
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setConfig({
                               ...config,
                               filters: { ...config.filters, [filter.key]: e.target.value },
                             })
-                          }
+                            setReport(null)
+                          }}
                         />
                       </FormField>
                     )
@@ -546,9 +596,19 @@ export function CustomReportBuilder({ module }: { module: ReportModule }) {
 
         <ConnectCard className="min-h-[480px] overflow-hidden p-0 print:border-0 print:shadow-none">
           <div className="border-b border-hub-border/50 bg-hub-bg/50 px-4 py-2 text-xs text-hub-text-muted print:hidden">
-            Preview — use Imprimir / PDF para salvar (Ctrl+P → Salvar como PDF)
+            {building ? (
+              <>Gerando relatorio com dados do servidor...</>
+            ) : report ? (
+              <>Preview atualizado — exporte em CSV, Excel, JSON ou PDF pelo menu Exportar.</>
+            ) : (
+              <>Selecione um preset ou configure as secoes e clique em Gerar preview.</>
+            )}
           </div>
-          <ReportPreview report={report} />
+          {building && !report ? (
+            <ConnectLoadingSpinner label="Montando secoes e tabelas..." className="min-h-[400px]" />
+          ) : (
+            <ReportPreview report={report} />
+          )}
         </ConnectCard>
       </div>
     </div>

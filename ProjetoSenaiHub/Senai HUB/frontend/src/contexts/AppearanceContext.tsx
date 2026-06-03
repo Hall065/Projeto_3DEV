@@ -1,31 +1,45 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
+  CUSTOM_WALLPAPER_ID,
   DEFAULT_WALLPAPER_ID,
-  getWallpaperPreset,
+  isPresetWallpaperId,
+  resolveWallpaper,
+  type ResolvedWallpaper,
   type WallpaperId,
-  type WallpaperPreset,
 } from '../constants/wallpapers'
+import {
+  readCustomWallpaperImage,
+  removeCustomWallpaperImage,
+  writeCustomWallpaperImage,
+} from '../utils/wallpaperImage'
+import { resolveWallpaperTone, type WallpaperTone } from '../utils/wallpaperTone'
 
 const STORAGE_KEY = 'senai_hub_wallpaper'
 
 interface AppearanceContextValue {
-  /** Tema persistido (localStorage). */
   wallpaperId: WallpaperId
-  wallpaper: WallpaperPreset
-  /** Tema exibido agora (pré-visualização ou salvo). */
-  activeWallpaper: WallpaperPreset
-  /** Aplica o tema na tela sem gravar; `null` restaura o tema salvo. */
+  wallpaper: ResolvedWallpaper
+  activeWallpaper: ResolvedWallpaper
+  wallpaperTone: WallpaperTone
+  customImageUrl: string | null
   previewWallpaperId: (id: WallpaperId | null) => void
-  /** Persiste o tema e encerra qualquer pré-visualização. */
+  previewCustomImageUrl: (url: string | null) => void
   setWallpaperId: (id: WallpaperId) => void
+  setCustomWallpaper: (dataUrl: string) => void
+  removeCustomWallpaper: () => void
 }
 
 const AppearanceContext = createContext<AppearanceContextValue | null>(null)
 
-function readStoredWallpaper(): WallpaperId {
+function readStoredWallpaperId(): WallpaperId {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw && getWallpaperPreset(raw)) return raw as WallpaperId
+    if (raw === CUSTOM_WALLPAPER_ID) {
+      return readCustomWallpaperImage() ? CUSTOM_WALLPAPER_ID : DEFAULT_WALLPAPER_ID
+    }
+    if (raw && isPresetWallpaperId(raw)) {
+      return raw
+    }
   } catch {
     /* ignore */
   }
@@ -33,14 +47,28 @@ function readStoredWallpaper(): WallpaperId {
 }
 
 export function AppearanceProvider({ children }: { children: React.ReactNode }) {
-  const [wallpaperId, setWallpaperIdState] = useState<WallpaperId>(readStoredWallpaper)
+  const [wallpaperId, setWallpaperIdState] = useState<WallpaperId>(readStoredWallpaperId)
+  const [customImageUrl, setCustomImageUrl] = useState<string | null>(() => readCustomWallpaperImage())
   const [previewId, setPreviewId] = useState<WallpaperId | null>(null)
+  const [previewCustomUrl, setPreviewCustomUrl] = useState<string | null>(null)
+  const [wallpaperTone, setWallpaperTone] = useState<WallpaperTone>('light')
 
-  const activeWallpaperId = previewId ?? wallpaperId
+  const activeId = previewId ?? wallpaperId
+  const activeCustomUrl = previewCustomUrl ?? (activeId === CUSTOM_WALLPAPER_ID ? customImageUrl : null)
+
+  const wallpaper = useMemo(
+    () => resolveWallpaper(wallpaperId, customImageUrl),
+    [wallpaperId, customImageUrl],
+  )
+  const activeWallpaper = useMemo(
+    () => resolveWallpaper(activeId, activeCustomUrl),
+    [activeId, activeCustomUrl],
+  )
 
   const setWallpaperId = useCallback((id: WallpaperId) => {
     setWallpaperIdState(id)
     setPreviewId(null)
+    setPreviewCustomUrl(null)
     try {
       localStorage.setItem(STORAGE_KEY, id)
     } catch {
@@ -48,20 +76,88 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
     }
   }, [])
 
+  const setCustomWallpaper = useCallback((dataUrl: string) => {
+    try {
+      writeCustomWallpaperImage(dataUrl)
+    } catch {
+      throw new Error('Imagem grande demais para salvar neste navegador. Tente uma foto menor.')
+    }
+    setCustomImageUrl(dataUrl)
+    setWallpaperIdState(CUSTOM_WALLPAPER_ID)
+    setPreviewId(null)
+    setPreviewCustomUrl(null)
+    try {
+      localStorage.setItem(STORAGE_KEY, CUSTOM_WALLPAPER_ID)
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
+  const removeCustomWallpaper = useCallback(() => {
+    removeCustomWallpaperImage()
+    setCustomImageUrl(null)
+    setPreviewCustomUrl(null)
+    if (wallpaperId === CUSTOM_WALLPAPER_ID) {
+      setWallpaperIdState(DEFAULT_WALLPAPER_ID)
+      try {
+        localStorage.setItem(STORAGE_KEY, DEFAULT_WALLPAPER_ID)
+      } catch {
+        /* ignore */
+      }
+    }
+  }, [wallpaperId])
+
   const previewWallpaperId = useCallback((id: WallpaperId | null) => {
     setPreviewId(id)
   }, [])
 
-  const wallpaper = useMemo(() => getWallpaperPreset(wallpaperId), [wallpaperId])
-  const activeWallpaper = useMemo(() => getWallpaperPreset(activeWallpaperId), [activeWallpaperId])
+  const previewCustomImageUrl = useCallback((url: string | null) => {
+    setPreviewCustomUrl(url)
+  }, [])
 
   useEffect(() => {
-    document.documentElement.dataset.wallpaper = activeWallpaperId
-  }, [activeWallpaperId])
+    let cancelled = false
+
+    void resolveWallpaperTone(activeWallpaper, activeCustomUrl).then((tone) => {
+      if (!cancelled) setWallpaperTone(tone)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeWallpaper, activeCustomUrl])
+
+  useEffect(() => {
+    document.documentElement.dataset.wallpaper = activeId
+    document.documentElement.dataset.wallpaperCategory = activeWallpaper.category
+    document.documentElement.dataset.wallpaperTone = wallpaperTone
+  }, [activeId, activeWallpaper.category, wallpaperTone])
 
   const value = useMemo(
-    () => ({ wallpaperId, wallpaper, activeWallpaper, previewWallpaperId, setWallpaperId }),
-    [wallpaperId, wallpaper, activeWallpaper, previewWallpaperId, setWallpaperId],
+    () => ({
+      wallpaperId,
+      wallpaper,
+      activeWallpaper,
+      wallpaperTone,
+      customImageUrl,
+      previewWallpaperId,
+      previewCustomImageUrl,
+      setWallpaperId,
+      setCustomWallpaper,
+      removeCustomWallpaper,
+    }),
+    [
+      wallpaperId,
+      wallpaper,
+      activeWallpaper,
+      wallpaperTone,
+      customImageUrl,
+      previewWallpaperId,
+      previewCustomImageUrl,
+      setWallpaperId,
+      setCustomWallpaper,
+      removeCustomWallpaper,
+    ],
   )
 
   return <AppearanceContext.Provider value={value}>{children}</AppearanceContext.Provider>

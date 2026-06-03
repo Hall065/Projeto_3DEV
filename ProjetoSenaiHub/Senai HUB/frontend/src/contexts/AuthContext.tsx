@@ -6,7 +6,9 @@ import {
   logoutRequest,
   parseAuthError,
   registerRequest,
+  removeAvatarRequest,
   updateProfileRequest,
+  uploadAvatarRequest,
 } from '../services/authService'
 import type { AuthState, LoginCredentials, RegisterCredentials, User } from '../types/auth'
 
@@ -15,6 +17,8 @@ interface AuthContextValue extends AuthState {
   register: (credentials: RegisterCredentials) => Promise<void>
   logout: () => Promise<void>
   updateProfile: (payload: { name: string; email: string }) => Promise<User>
+  uploadAvatar: (file: File) => Promise<User>
+  removeAvatar: () => Promise<User>
   changePassword: (payload: {
     current_password: string
     password: string
@@ -121,6 +125,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const uploadAvatar = useCallback(async (file: File): Promise<User> => {
+    setIsSubmitting(true)
+    try {
+      const updated = await uploadAvatarRequest(file)
+      setUser(updated)
+      localStorage.setItem(USER_KEY, JSON.stringify(updated))
+      return updated
+    } catch (error) {
+      throw new Error(parseAuthError(error))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [])
+
+  const removeAvatar = useCallback(async (): Promise<User> => {
+    setIsSubmitting(true)
+    try {
+      const updated = await removeAvatarRequest()
+      setUser(updated)
+      localStorage.setItem(USER_KEY, JSON.stringify(updated))
+      return updated
+    } catch (error) {
+      throw new Error(parseAuthError(error))
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [])
+
   const changePassword = useCallback(
     async (payload: { current_password: string; password: string; password_confirmation: string }) => {
       setIsSubmitting(true)
@@ -158,10 +190,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       updateProfile,
+      uploadAvatar,
+      removeAvatar,
       changePassword,
       refreshUser,
     }),
-    [user, isInitializing, isSubmitting, login, register, logout, updateProfile, changePassword, refreshUser],
+    [user, isInitializing, isSubmitting, login, register, logout, updateProfile, uploadAvatar, removeAvatar, changePassword, refreshUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -3,8 +3,11 @@
 namespace App\Services\Reports;
 
 use App\Models\User;
+use App\Support\Reports\ReportExporter;
 use App\Support\Reports\ReportSchemaRegistry;
 use App\Support\Spreadsheet\CsvStream;
+use App\Support\Spreadsheet\XlsxWriter;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -51,64 +54,64 @@ class CustomReportService
     {
         $report = $this->build($module, $payload, $user);
         $columns = [
-            ['key' => 'secao', 'header' => 'secao'],
-            ['key' => 'coluna_1', 'header' => 'coluna_1'],
-            ['key' => 'coluna_2', 'header' => 'coluna_2'],
-            ['key' => 'coluna_3', 'header' => 'coluna_3'],
-            ['key' => 'coluna_4', 'header' => 'coluna_4'],
-            ['key' => 'coluna_5', 'header' => 'coluna_5'],
-            ['key' => 'coluna_6', 'header' => 'coluna_6'],
-            ['key' => 'coluna_7', 'header' => 'coluna_7'],
-            ['key' => 'coluna_8', 'header' => 'coluna_8'],
+            ['key' => 'secao', 'header' => 'Secao'],
+            ['key' => 'campo', 'header' => 'Campo'],
+            ['key' => 'valor_1', 'header' => 'Valor 1'],
+            ['key' => 'valor_2', 'header' => 'Valor 2'],
+            ['key' => 'valor_3', 'header' => 'Valor 3'],
+            ['key' => 'valor_4', 'header' => 'Valor 4'],
+            ['key' => 'valor_5', 'header' => 'Valor 5'],
+            ['key' => 'valor_6', 'header' => 'Valor 6'],
+            ['key' => 'valor_7', 'header' => 'Valor 7'],
+            ['key' => 'valor_8', 'header' => 'Valor 8'],
         ];
-
-        $rows = [];
-
-        foreach ($report['sections'] as $section) {
-            if (($section['type'] ?? '') !== 'table') {
-                continue;
-            }
-
-            $sectionColumns = $section['columns'] ?? [];
-            $headerRow = [
-                'secao' => $section['title'] ?? 'Tabela',
-                'coluna_1' => $sectionColumns[0]['label'] ?? '',
-                'coluna_2' => $sectionColumns[1]['label'] ?? '',
-                'coluna_3' => $sectionColumns[2]['label'] ?? '',
-                'coluna_4' => $sectionColumns[3]['label'] ?? '',
-                'coluna_5' => $sectionColumns[4]['label'] ?? '',
-                'coluna_6' => $sectionColumns[5]['label'] ?? '',
-                'coluna_7' => $sectionColumns[6]['label'] ?? '',
-                'coluna_8' => $sectionColumns[7]['label'] ?? '',
-            ];
-            $rows[] = $headerRow;
-
-            foreach ($section['rows'] ?? [] as $row) {
-                $flat = ['secao' => ''];
-                foreach ($sectionColumns as $index => $col) {
-                    $flat['coluna_'.($index + 1)] = $row[$col['key']] ?? '';
-                }
-                $rows[] = $flat;
-            }
-
-            $rows[] = ['secao' => '', 'coluna_1' => '', 'coluna_2' => '', 'coluna_3' => '', 'coluna_4' => '', 'coluna_5' => '', 'coluna_6' => '', 'coluna_7' => '', 'coluna_8' => ''];
-        }
 
         $filename = "{$module}_relatorio_".now()->format('Y-m-d_His').'.csv';
 
-        return CsvStream::download($filename, $columns, $rows);
+        return CsvStream::download($filename, $columns, ReportExporter::flattenToRows($report));
     }
 
     /**
      * @param  array<string, mixed>  $payload
      */
-    public function exportHtml(string $module, array $payload, ?User $user = null): \Illuminate\View\View
+    public function exportXlsx(string $module, array $payload, ?User $user = null): StreamedResponse
+    {
+        $report = $this->build($module, $payload, $user);
+        $filename = "{$module}_relatorio_".now()->format('Y-m-d_His').'.xlsx';
+
+        return XlsxWriter::download($filename, ReportExporter::sheetsForXlsx($report));
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function exportJson(string $module, array $payload, ?User $user = null): JsonResponse
     {
         $report = $this->build($module, $payload, $user);
 
-        return view('reports.print', [
+        return response()->json(['data' => $report]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    public function exportHtml(string $module, array $payload, ?User $user = null, bool $download = false): \Illuminate\View\View|\Illuminate\Http\Response
+    {
+        $report = $this->build($module, $payload, $user);
+        $view = view('reports.print', [
             'report' => $report,
             'module' => $module,
+        ]);
+
+        if (! $download) {
+            return $view;
+        }
+
+        $filename = "{$module}_relatorio_".now()->format('Y-m-d_His').'.html';
+
+        return response($view->render(), 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 

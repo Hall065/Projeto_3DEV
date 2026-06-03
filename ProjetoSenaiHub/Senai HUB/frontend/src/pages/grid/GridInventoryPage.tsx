@@ -1,7 +1,8 @@
-import { Filter, ImageIcon, Minus, Package, Pencil, Plus, Trash2, TrendingDown, TrendingUp } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Filter, Globe, ImageIcon, Minus, Package, Pencil, Plus, Trash2, TrendingDown, TrendingUp, Upload } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
-import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
+import { GridInventoryDetailDrawer } from '../../components/grid/GridInventoryDetailDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
 import { viewRowAction } from '../../components/connect/connectViewActions'
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
@@ -20,13 +21,31 @@ import {
 import { GridInventoryStatusBadge } from '../../components/grid/GridBadges'
 import { GridInventoryThumb } from '../../components/grid/GridInventoryThumb'
 import { gridService } from '../../services/gridService'
+import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus'
 import type { GridDashboardData, GridInventoryItem, PaginatedMeta } from '../../types/grid'
 import { confirmDelete } from '../../utils/confirmAction'
+import { prepareAvatarFile, readAvatarPreview, validateAvatarFile } from '../../utils/avatarImage'
+
+type InventoryImageSource = 'auto' | 'upload' | 'url'
+
+function isStoredInventoryImage(url: string | null | undefined): boolean {
+  if (!url) return false
+  return /\/storage\/inventory\//.test(url)
+}
+
+function detectImageSource(url: string | null | undefined): InventoryImageSource {
+  if (!url) return 'auto'
+  if (isStoredInventoryImage(url)) return 'upload'
+  if (/wikimedia\.org/i.test(url)) return 'auto'
+  return 'url'
+}
 
 const emptyForm = {
   title: '',
   description: '',
   category: '',
+  sku: '',
+  purchased_at: '',
   qty_available: '0',
   qty_min: '0',
   location: '',
@@ -36,6 +55,7 @@ const emptyForm = {
 }
 
 export function GridInventoryPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [items, setItems] = useState<GridInventoryItem[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [dashboard, setDashboard] = useState<GridDashboardData | null>(null)
@@ -52,7 +72,14 @@ export function GridInventoryPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
-  const [viewSnapshot, setViewSnapshot] = useState<GridInventoryItem | null>(null)
+  const [imageSource, setImageSource] = useState<InventoryImageSource>('auto')
+  const [initialImageSource, setInitialImageSource] = useState<InventoryImageSource>('auto')
+  const [imageUrl, setImageUrl] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const [detailItemId, setDetailItemId] = useState<number | null>(null)
+  const [syncingImageId, setSyncingImageId] = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -73,13 +100,27 @@ export function GridInventoryPage() {
     load()
   }, [page, search, category, statusFilter])
 
+  const loadDashboard = useCallback(() => gridService.getDashboard().then(setDashboard), [])
+
   useEffect(() => {
-    gridService.getDashboard().then(setDashboard)
-  }, [])
+    loadDashboard()
+  }, [loadDashboard])
+
+  useRefetchOnFocus(loadDashboard)
+
+  const resetImageFields = () => {
+    setImageSource('auto')
+    setInitialImageSource('auto')
+    setImageUrl('')
+    setImageFile(null)
+    setImagePreview(null)
+    if (imageInputRef.current) imageInputRef.current.value = ''
+  }
 
   const openCreate = () => {
     setEditingId(null)
     setForm(emptyForm)
+    resetImageFields()
     setDrawerOpen(true)
   }
 
@@ -89,6 +130,8 @@ export function GridInventoryPage() {
       title: item.title,
       description: item.description,
       category: item.category,
+      sku: item.sku ?? '',
+      purchased_at: item.purchased_at ?? '',
       qty_available: String(item.qty_available),
       qty_min: String(item.qty_min),
       location: item.location,
@@ -96,6 +139,13 @@ export function GridInventoryPage() {
       cost: String(item.cost),
       status: item.status,
     })
+    const source = detectImageSource(item.image_url)
+    setImageSource(source)
+    setInitialImageSource(source)
+    setImageUrl(source === 'url' ? (item.image_url ?? '') : '')
+    setImageFile(null)
+    setImagePreview(item.image_url ?? null)
+    if (imageInputRef.current) imageInputRef.current.value = ''
     setDrawerOpen(true)
   }
 
@@ -106,18 +156,52 @@ export function GridInventoryPage() {
     setAdjustOpen(true)
   }
 
+  const handleImageFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const validation = validateAvatarFile(file)
+    if (validation) {
+      window.alert(validation)
+      event.target.value = ''
+      return
+    }
+
+    try {
+      const prepared = await prepareAvatarFile(file)
+      const preview = await readAvatarPreview(prepared)
+      setImageFile(prepared)
+      setImagePreview(preview)
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Nao foi possivel processar a imagem.')
+      event.target.value = ''
+    }
+  }
+
   const handleSave = async () => {
     if (!form.title.trim()) {
       window.alert('Informe o nome do item.')
       return
     }
 
+    if (imageSource === 'upload' && !imageFile && !imagePreview) {
+      window.alert('Selecione uma foto para o item.')
+      return
+    }
+
+    if (imageSource === 'url' && !imageUrl.trim()) {
+      window.alert('Informe o link da imagem ou escolha outra opcao.')
+      return
+    }
+
     setSaving(true)
     try {
-      const payload = {
+      const payload: Partial<GridInventoryItem> = {
         title: form.title.trim(),
         description: form.description.trim(),
         category: form.category.trim(),
+        sku: form.sku.trim() || undefined,
+        purchased_at: form.purchased_at || undefined,
         qty_available: Number(form.qty_available) || 0,
         qty_min: Number(form.qty_min) || 0,
         location: form.location.trim(),
@@ -125,14 +209,34 @@ export function GridInventoryPage() {
         cost: Number(form.cost) || 0,
         status: form.status as GridInventoryItem['status'],
       }
+
+      if (imageSource === 'url') {
+        payload.image_url = imageUrl.trim()
+      }
+
+      let itemId = editingId
+
       if (editingId) {
         await gridService.updateInventory(editingId, payload)
       } else {
-        await gridService.createInventory(payload)
+        const created = await gridService.createInventory(payload)
+        itemId = created.item.id
+        if (created.merged) {
+          window.alert(created.message)
+        }
       }
+
+      if (itemId) {
+        if (imageSource === 'upload' && imageFile) {
+          await gridService.uploadInventoryImage(itemId, imageFile)
+        } else if (imageSource === 'auto' && editingId && initialImageSource !== 'auto') {
+          await gridService.syncInventoryImage(itemId)
+        }
+      }
+
       setDrawerOpen(false)
       load()
-      gridService.getDashboard().then(setDashboard)
+      loadDashboard()
     } finally {
       setSaving(false)
     }
@@ -150,7 +254,7 @@ export function GridInventoryPage() {
       await gridService.adjustInventory(adjustTarget.id, adjustType, qty)
       setAdjustOpen(false)
       load()
-      gridService.getDashboard().then(setDashboard)
+      loadDashboard()
     } finally {
       setSaving(false)
     }
@@ -162,16 +266,36 @@ export function GridInventoryPage() {
     load()
   }
 
-  const handleSyncImage = async (item: GridInventoryItem) => {
-    setSaving(true)
+  const handleSyncImage = async (itemId: number) => {
+    setSyncingImageId(itemId)
     try {
-      const updated = await gridService.syncInventoryImage(item.id)
-      setItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)))
-      if (viewSnapshot?.id === item.id) setViewSnapshot(updated)
+      const updated = await gridService.syncInventoryImage(itemId)
+      setItems((prev) => prev.map((i) => (i.id === itemId ? updated : i)))
     } finally {
-      setSaving(false)
+      setSyncingImageId(null)
     }
   }
+
+  const openDetail = (item: GridInventoryItem | number) => {
+    const id = typeof item === 'number' ? item : item.id
+    setDetailItemId(id)
+    setSearchParams({ id: String(id) }, { replace: true })
+  }
+
+  const closeDetail = () => {
+    setDetailItemId(null)
+    if (searchParams.has('id')) {
+      setSearchParams({}, { replace: true })
+    }
+  }
+
+  useEffect(() => {
+    const paramId = searchParams.get('id')
+    if (!paramId) return
+    const id = Number(paramId)
+    if (Number.isNaN(id)) return
+    setDetailItemId(id)
+  }, [searchParams])
 
   const totalValue = items.reduce((sum, i) => sum + i.cost * i.qty_available, 0)
 
@@ -285,9 +409,13 @@ export function GridInventoryPage() {
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <tr key={item.id} className="border-t border-hub-border/40">
-                      <td className="px-4 py-3">
-                        <GridInventoryThumb title={item.title} imageUrl={item.image_url} size="sm" />
+                    <tr
+                      key={item.id}
+                      className="cursor-pointer border-t border-hub-border/40 transition hover:bg-hub-bg/50"
+                      onClick={() => openDetail(item)}
+                    >
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <GridInventoryThumb title={item.title} imageUrl={item.image_url} category={item.category} size="sm" />
                       </td>
                       <td className="px-4 py-3 font-medium">{item.title}</td>
                       <td className="max-w-[180px] truncate px-4 py-3 text-hub-text-muted">{item.description}</td>
@@ -302,18 +430,18 @@ export function GridInventoryPage() {
                       <td className="px-4 py-3">
                         <GridInventoryStatusBadge status={item.status} />
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <ConnectRowActionsMenu
                           ariaLabel={`Ações de ${item.title}`}
                           actions={[
-                            viewRowAction(() => setViewSnapshot(item)),
+                            viewRowAction(() => openDetail(item)),
                             { key: 'add', label: 'Adicionar quantidade', icon: Plus, onClick: () => openAdjust(item, 'in') },
                             { key: 'remove', label: 'Remover quantidade', icon: Minus, onClick: () => openAdjust(item, 'out') },
                             {
                               key: 'image',
                               label: 'Buscar imagem pública',
                               icon: ImageIcon,
-                              onClick: () => void handleSyncImage(item),
+                              onClick: () => void handleSyncImage(item.id),
                             },
                             { key: 'edit', label: 'Editar item', icon: Pencil, onClick: () => openEdit(item) },
                             { key: 'delete', label: 'Excluir', icon: Trash2, variant: 'danger', onClick: () => void handleDelete(item) },
@@ -351,11 +479,109 @@ export function GridInventoryPage() {
           <FormField label="Categoria" required>
             <input className={inputClass} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Ex: Elétrica" />
           </FormField>
+          <FormField label="SKU">
+            <input className={inputClass} value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder="Ex: ELE-LMP-018" />
+          </FormField>
+          <FormField label="Data da compra">
+            <input type="date" className={inputClass} value={form.purchased_at} onChange={(e) => setForm({ ...form, purchased_at: e.target.value })} />
+          </FormField>
           <div className="sm:col-span-2">
             <FormField label="Descrição">
               <textarea className={`${inputClass} min-h-[80px] py-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Especificações, modelo e observações..." />
             </FormField>
           </div>
+
+          <div className="sm:col-span-2">
+            <FormField label="Imagem do item">
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setImageSource('auto')}
+                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                      imageSource === 'auto'
+                        ? 'border-hub-accent bg-hub-accent/10 text-hub-accent'
+                        : 'border-hub-border/60 text-hub-text-muted hover:border-hub-border'
+                    }`}
+                  >
+                    <Globe className="h-4 w-4" />
+                    Buscar na internet
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageSource('upload')}
+                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                      imageSource === 'upload'
+                        ? 'border-hub-accent bg-hub-accent/10 text-hub-accent'
+                        : 'border-hub-border/60 text-hub-text-muted hover:border-hub-border'
+                    }`}
+                  >
+                    <Upload className="h-4 w-4" />
+                    Enviar foto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageSource('url')}
+                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                      imageSource === 'url'
+                        ? 'border-hub-accent bg-hub-accent/10 text-hub-accent'
+                        : 'border-hub-border/60 text-hub-text-muted hover:border-hub-border'
+                    }`}
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    Link da imagem
+                  </button>
+                </div>
+
+                {imageSource === 'auto' && (
+                  <p className="text-sm text-hub-text-muted">
+                    A foto sera buscada automaticamente na internet com base no nome e na categoria do item (Wikimedia Commons).
+                  </p>
+                )}
+
+                {imageSource === 'upload' && (
+                  <div className="flex flex-wrap items-center gap-4">
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
+                      onChange={(e) => void handleImageFileChange(e)}
+                    />
+                    <OutlineButton type="button" onClick={() => imageInputRef.current?.click()}>
+                      <Upload className="h-4 w-4" />
+                      {imagePreview ? 'Trocar foto' : 'Selecionar foto'}
+                    </OutlineButton>
+                    <span className="text-xs text-hub-text-muted">JPG, PNG, WebP ou GIF — max. 2 MB</span>
+                  </div>
+                )}
+
+                {imageSource === 'url' && (
+                  <input
+                    className={inputClass}
+                    value={imageUrl}
+                    onChange={(e) => {
+                      setImageUrl(e.target.value)
+                      setImagePreview(e.target.value.trim() || null)
+                    }}
+                    placeholder="https://exemplo.com/imagem.jpg"
+                  />
+                )}
+
+                {imagePreview && (
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={imagePreview}
+                      alt="Pre-visualizacao"
+                      className="h-20 w-20 rounded-lg border border-hub-border/60 object-cover"
+                    />
+                    <span className="text-xs text-hub-text-muted">Pre-visualizacao</span>
+                  </div>
+                )}
+              </div>
+            </FormField>
+          </div>
+
           <FormField label="Quantidade disponível" required>
             <input type="number" className={inputClass} min={0} value={form.qty_available} onChange={(e) => setForm({ ...form, qty_available: e.target.value })} placeholder="Ex: 50" />
           </FormField>
@@ -398,12 +624,12 @@ export function GridInventoryPage() {
         </FormField>
       </ConnectDrawer>
 
-      <ConnectEntityViewDrawer
-        kind="grid-inventory"
-        entityId={null}
-        open={viewSnapshot !== null}
-        onClose={() => setViewSnapshot(null)}
-        snapshot={viewSnapshot ?? undefined}
+      <GridInventoryDetailDrawer
+        itemId={detailItemId}
+        open={detailItemId !== null}
+        onClose={closeDetail}
+        onSyncImage={(id) => void handleSyncImage(id)}
+        syncingImage={syncingImageId !== null}
       />
     </div>
   )

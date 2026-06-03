@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\Model;
     'title',
     'description',
     'category',
+    'sku',
     'image_url',
     'qty_available',
     'qty_reserved',
     'qty_min',
     'location',
     'supplier',
+    'purchased_at',
     'cost',
     'status',
 ])]
@@ -27,6 +29,7 @@ class GridInventoryItem extends Model
             'qty_reserved' => 'integer',
             'qty_min' => 'integer',
             'cost' => 'float',
+            'purchased_at' => 'date',
         ];
     }
 

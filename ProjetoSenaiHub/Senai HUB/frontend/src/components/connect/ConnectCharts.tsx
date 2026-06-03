@@ -66,33 +66,51 @@ const DONUT = {
   ryi: 24,
 } as const
 
-/** Pontos para seta/callout: borda da fatia → cotovelo → rótulo */
+/** Pontos para callout: borda externa da fatia → cotovelo → rótulo */
 function segmentCallout(
   cx: number,
   cy: number,
-  rx: number,
-  ry: number,
+  rxo: number,
+  ryo: number,
   midAngle: number,
-  opts: { radial?: number; horizontal?: number } = {},
+  opts: { radial?: number; horizontal?: number; labelYOffset?: number } = {},
 ) {
-  const radial = opts.radial ?? 26
-  const horizontal = opts.horizontal ?? 52
-  const anchor = ellipsePoint(cx, cy, rx + 4, ry + 2, midAngle)
+  const radial = opts.radial ?? 28
+  const horizontal = opts.horizontal ?? 54
+  const labelYOffset = opts.labelYOffset ?? 0
+  const anchor = ellipsePoint(cx, cy, rxo, ryo, midAngle)
   const nx = Math.cos(midAngle)
   const ny = Math.sin(midAngle)
   const elbow = {
     x: anchor.x + nx * radial,
-    y: anchor.y + ny * radial * 0.75,
+    y: anchor.y + ny * radial * 0.82,
   }
   const toRight = nx >= 0
   const label = {
     x: elbow.x + (toRight ? horizontal : -horizontal),
-    y: elbow.y,
+    y: elbow.y + labelYOffset,
   }
   return { anchor, elbow, label, toRight }
 }
 
-/** Cards das setas: mais estreitos; altura/fonte preservam leitura */
+function layoutDonutCallouts(
+  arcList: { a0: number; a1: number }[],
+  donut: typeof DONUT,
+) {
+  const { cx, cy, rxo, ryo } = donut
+  const count = arcList.length
+
+  return arcList.map((seg, i) => {
+    const mid = (seg.a0 + seg.a1) / 2
+    const span = seg.a1 - seg.a0
+    const radial = 22 + Math.min(18, span * 36) + (count > 4 ? (i % 3) * 4 : 0)
+    const horizontal = Math.max(40, Math.min(76, 36 + span * 90))
+    const labelYOffset = count > 3 ? Math.sin(mid) * (i % 2 === 0 ? -10 : 10) : 0
+    return segmentCallout(cx, cy, rxo, ryo, mid, { radial, horizontal, labelYOffset })
+  })
+}
+
+/** Cards dos rótulos: mais estreitos; altura/fonte preservam leitura */
 const CALLOUT_BOX = { w: 100, h: 38 } as const
 
 function calloutLabelBox(labelX: number, labelY: number, viewW: number) {
@@ -237,14 +255,8 @@ export function IsometricDistributionDonut({
       angle = a1
       return { ...seg, a0, a1, sweep }
     })
-    const { cx, cy, rxo, ryo } = DONUT
-    const calloutList = arcList.map((seg, i) => {
-      const mid = (seg.a0 + seg.a1) / 2
-      const horizontal = Math.max(48, Math.min(68, 44 + seg.pct * 0.35))
-      const radial = 20 + (i % 3) * 6
-      return segmentCallout(cx, cy, rxo, ryo, mid, { radial, horizontal })
-    })
-    return { arcs: arcList, callouts: calloutList, showCallouts: arcList.length <= 3 }
+    const calloutList = layoutDonutCallouts(arcList, DONUT)
+    return { arcs: arcList, callouts: calloutList, showCallouts: arcList.length > 0 && arcList.length <= 8 }
   }, [visibleSegments])
 
   useEffect(() => {
@@ -361,7 +373,7 @@ export function IsometricDistributionDonut({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
-                        <circle cx={c.anchor.x} cy={c.anchor.y} r={4} fill={color} stroke="#fff" strokeWidth={1.5} />
+                        <circle cx={c.anchor.x} cy={c.anchor.y} r={3.5} fill={color} stroke="#fff" strokeWidth={1.5} />
                       </g>
                       <g style={{ ...fade, transitionDelay: `${180 + i * 80}ms` }}>
                         <rect

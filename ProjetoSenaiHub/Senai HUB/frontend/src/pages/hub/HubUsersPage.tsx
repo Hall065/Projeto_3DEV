@@ -1,5 +1,7 @@
 import { Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
+import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -11,6 +13,8 @@ import {
   PrimaryButton,
   selectClass,
 } from '../../components/connect/ConnectShared'
+import { HubUserDetailDrawer } from '../../components/hub/HubUserDetailDrawer'
+import { UserAvatar } from '../../components/ui/UserAvatar'
 import { adminService, type HubRoleOption } from '../../services/adminService'
 import type { User } from '../../types/auth'
 
@@ -40,6 +44,7 @@ export function HubUsersPage() {
   const [editing, setEditing] = useState<User | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
   const [error, setError] = useState<string | null>(null)
+  const [detailUserId, setDetailUserId] = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -168,29 +173,42 @@ export function HubUsersPage() {
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className="border-t border-hub-border/40">
-                    <td className="px-4 py-3 font-medium">{user.name}</td>
+                  <tr
+                    key={user.id}
+                    className="cursor-pointer border-t border-hub-border/40 transition hover:bg-hub-bg/50"
+                    onClick={() => setDetailUserId(user.id)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <UserAvatar name={user.name} avatarUrl={user.avatar_url} size="sm" />
+                        <span className="font-medium">{user.name}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3">{user.email}</td>
                     <td className="px-4 py-3">
                       <span className="rounded-full bg-hub-bg px-2.5 py-1 text-xs font-medium text-hub-navy">
                         {user.role_label ?? user.role}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-2">
-                        <OutlineButton type="button" onClick={() => openEdit(user)}>
-                          <Pencil className="h-4 w-4" />
-                        </OutlineButton>
-                        {!user.is_admin && (
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(user)}
-                            className="rounded-lg border border-red-200 px-3 py-2 text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
+                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                      <ConnectRowActionsMenu
+                        ariaLabel={`Ações de ${user.name}`}
+                        actions={[
+                          viewRowAction(() => setDetailUserId(user.id)),
+                          { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(user) },
+                          ...(!user.is_admin
+                            ? [
+                                {
+                                  key: 'delete',
+                                  label: 'Excluir',
+                                  icon: Trash2,
+                                  variant: 'danger' as const,
+                                  onClick: () => void handleDelete(user),
+                                },
+                              ]
+                            : []),
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -199,6 +217,8 @@ export function HubUsersPage() {
           </ConnectTableScroll>
         )}
       </ConnectCard>
+
+      <HubUserDetailDrawer userId={detailUserId} open={detailUserId !== null} onClose={() => setDetailUserId(null)} />
 
       {drawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40">

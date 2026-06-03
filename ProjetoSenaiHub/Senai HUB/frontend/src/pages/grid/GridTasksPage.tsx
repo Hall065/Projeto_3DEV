@@ -1,5 +1,6 @@
 import { CheckCircle2, Filter, Link2, ListTodo, Plus, UserX, Wrench } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
 import {
@@ -40,6 +41,8 @@ const emptyForm = {
 }
 
 export function GridTasksPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const openedFromQuery = useRef(false)
   const [tasks, setTasks] = useState<GridTaskCard[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -64,29 +67,56 @@ export function GridTasksPage() {
     load()
   }, [search])
 
+  const closeDrawer = useCallback(() => {
+    setDrawerOpen(false)
+    setEditingId(null)
+    if (searchParams.has('id')) {
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
+
   const openCreate = (column: GridTaskColumn) => {
+    openedFromQuery.current = false
     setEditingId(null)
     setCreateColumn(column)
     setForm({ ...emptyForm, column })
     setDrawerOpen(true)
   }
 
-  const openEdit = (task: GridTaskCard) => {
-    setEditingId(task.id)
-    setForm({
-      opened_by: task.opened_by,
-      title: task.title,
-      description: task.description,
-      room: task.room,
-      block: task.block,
-      assignee: task.assignee ?? '',
-      items: task.items.join(', '),
-      priority: task.priority,
-      column: task.column,
-    })
-    setInventoryItems(task.inventory_items ?? [])
-    setDrawerOpen(true)
-  }
+  const openEdit = useCallback(
+    (task: GridTaskCard) => {
+      setEditingId(task.id)
+      setSearchParams({ id: String(task.id) }, { replace: true })
+      setForm({
+        opened_by: task.opened_by,
+        title: task.title,
+        description: task.description,
+        room: task.room,
+        block: task.block,
+        assignee: task.assignee ?? '',
+        items: task.items.join(', '),
+        priority: task.priority,
+        column: task.column,
+      })
+      setInventoryItems(task.inventory_items ?? [])
+      setDrawerOpen(true)
+    },
+    [setSearchParams],
+  )
+
+  useEffect(() => {
+    const paramId = searchParams.get('id')
+    if (!paramId || loading) return
+    const id = Number(paramId)
+    if (Number.isNaN(id)) return
+    if (editingId === id && drawerOpen) return
+
+    const task = tasks.find((t) => t.id === id)
+    if (!task) return
+
+    openEdit(task)
+    openedFromQuery.current = true
+  }, [searchParams, tasks, loading, editingId, drawerOpen, openEdit])
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.opened_by.trim()) {
@@ -120,7 +150,7 @@ export function GridTasksPage() {
       } else {
         await gridService.createTask({ ...payload, column: createColumn })
       }
-      setDrawerOpen(false)
+      closeDrawer()
       load()
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } })?.response
@@ -235,7 +265,7 @@ export function GridTasksPage() {
 
       <ConnectDrawer
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={closeDrawer}
         title={editingId ? 'Editar tarefa' : 'Nova tarefa'}
         subtitle="Dados da ordem de serviço / tarefa de manutenção."
         footer={

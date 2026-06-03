@@ -28,7 +28,7 @@ export function GridLayout() {
       {mobileNavOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           aria-label="Fechar menu"
           onClick={() => setMobileNavOpen(false)}
         />
@@ -40,7 +40,7 @@ export function GridLayout() {
         onMobileClose={() => setMobileNavOpen(false)}
       />
 
-      <div className="relative z-50 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="relative z-0 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <GridHeader
           collapsed={collapsed}
           onToggleSidebar={() => {

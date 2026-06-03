@@ -55,21 +55,7 @@ class CsvStream
             return [];
         }
 
-        $headerLine = fgetcsv($handle, 0, ';');
-        if ($headerLine === false) {
-            $headerLine = fgetcsv($handle, 0, ',');
-            rewind($handle);
-            $headerLine = fgetcsv($handle, 0, ',');
-        }
-
-        if ($headerLine === false) {
-            fclose($handle);
-
-            return [];
-        }
-
-        $headerLine = array_map(fn ($cell) => self::normalizeHeader((string) $cell), $headerLine);
-        $delimiter = str_contains(implode('', $headerLine), ';') ? ';' : ',';
+        $delimiter = self::detectDelimiter($path);
         rewind($handle);
         $headerLine = fgetcsv($handle, 0, $delimiter);
         if ($headerLine === false) {
@@ -113,6 +99,24 @@ class CsvStream
     public static function normalizeHeaderPublic(string $value): string
     {
         return self::normalizeHeader($value);
+    }
+
+    private static function detectDelimiter(string $path): string
+    {
+        $sample = file_get_contents($path, false, null, 0, 4096);
+        if ($sample === false || $sample === '') {
+            return ';';
+        }
+
+        $firstLine = strtok($sample, "\r\n");
+        if ($firstLine === false || $firstLine === '') {
+            return ';';
+        }
+
+        $semicolonCount = substr_count($firstLine, ';');
+        $commaCount = substr_count($firstLine, ',');
+
+        return $semicolonCount >= $commaCount ? ';' : ',';
     }
 
     private static function normalizeHeader(string $value): string

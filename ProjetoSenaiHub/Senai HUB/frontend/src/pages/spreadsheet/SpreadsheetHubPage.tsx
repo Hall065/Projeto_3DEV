@@ -8,6 +8,7 @@ import {
   PrimaryButton,
 } from '../../components/connect/ConnectShared'
 import { spreadsheetService } from '../../services/spreadsheetService'
+import { getApiErrorMessage } from '../../utils/apiError'
 import type {
   SpreadsheetImportLog,
   SpreadsheetImportPreview,
@@ -84,7 +85,7 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
         setResult(null)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Operacao falhou.')
+      setError(getApiErrorMessage(err, 'Operação falhou.'))
     } finally {
       setBusy(null)
       if (fileRef.current) fileRef.current.value = ''
@@ -102,7 +103,7 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
       setPendingFile(null)
       loadLogs()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Importacao falhou.')
+      setError(getApiErrorMessage(err, 'Importação falhou.'))
     } finally {
       setBusy(null)
     }

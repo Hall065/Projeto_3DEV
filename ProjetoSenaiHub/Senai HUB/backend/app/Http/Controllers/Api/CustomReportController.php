@@ -74,11 +74,27 @@ class CustomReportController extends Controller
         return $this->reports->exportCsv($module, $request->all(), $request->user());
     }
 
-    public function exportHtml(Request $request, string $module): \Illuminate\View\View
+    public function exportHtml(Request $request, string $module): \Illuminate\View\View|\Illuminate\Http\Response
     {
         $this->authorizeModule($request->user(), $module);
 
-        return $this->reports->exportHtml($module, $request->all(), $request->user());
+        $download = $request->boolean('download');
+
+        return $this->reports->exportHtml($module, $request->all(), $request->user(), $download);
+    }
+
+    public function exportXlsx(Request $request, string $module): StreamedResponse
+    {
+        $this->authorizeModule($request->user(), $module);
+
+        return $this->reports->exportXlsx($module, $request->all(), $request->user());
+    }
+
+    public function exportJson(Request $request, string $module): JsonResponse
+    {
+        $this->authorizeModule($request->user(), $module);
+
+        return $this->reports->exportJson($module, $request->all(), $request->user());
     }
 
     private function authorizeModule(?User $user, string $module): void

@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             ApplicationPermissionSeeder::class,
             ConnectSeeder::class,
             GridSeeder::class,
+            GridSampleTicketsSeeder::class,
         ]);
     }
 }

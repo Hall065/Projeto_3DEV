@@ -35,7 +35,7 @@ class SpreadsheetController extends Controller
     public function preview(string $module, string $key, Request $request): JsonResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xlsm', 'max:10240'],
+            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xlsm', 'mimetypes:text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'max:10240'],
         ]);
 
         $result = $this->spreadsheets->preview($module, $key, $request->file('file'));
@@ -48,7 +48,7 @@ class SpreadsheetController extends Controller
     public function import(string $module, string $key, Request $request): JsonResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xlsm', 'max:10240'],
+            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xlsm', 'mimetypes:text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'max:10240'],
         ]);
 
         $result = $this->spreadsheets->import($module, $key, $request->file('file'), $request->user());
