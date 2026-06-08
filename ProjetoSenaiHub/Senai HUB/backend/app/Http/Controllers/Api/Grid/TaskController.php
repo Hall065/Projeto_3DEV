@@ -84,6 +84,9 @@ class TaskController extends Controller
             $ticket = \App\Models\Grid\GridTicket::query()->findOrFail($validated['grid_ticket_id']);
             $task = $this->workflow->createTaskFromTicket($ticket, $validated, $inventoryItems);
 
+            app(\App\Services\Notification\SystemNotificationTriggers::class)
+                ->gridTaskCreated($task, $request->user());
+
             return response()->json([
                 'data' => new GridTaskResource($task),
                 'message' => 'Tarefa cadastrada com sucesso.',
@@ -107,6 +110,9 @@ class TaskController extends Controller
         ]);
 
         $this->workflow->syncInventoryForTask($task, null, $column);
+
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->gridTaskCreated($task->fresh(), $request->user());
 
         return response()->json([
             'data' => new GridTaskResource($task->fresh()),
@@ -143,6 +149,7 @@ class TaskController extends Controller
         ]);
 
         $previousColumn = $task->column;
+        $previousAssignee = $task->assignee;
 
         if (array_key_exists('inventory_items', $validated)) {
             $normalized = $this->normalizeInventoryItems($validated['inventory_items']);
@@ -171,6 +178,9 @@ class TaskController extends Controller
                 'resolution_summary' => $validated['resolution_summary'] ?? $task->ticket->resolution_summary,
             ]);
         }
+
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->gridTaskUpdated($task->fresh(), $previousAssignee, $request->user());
 
         return response()->json([
             'data' => new GridTaskResource($task->fresh(['ticket'])),

@@ -54,9 +54,52 @@ export interface ConnectCourse {
   name: string
   description?: string
   workload_hours?: number
+  start_date?: string | null
+  end_date?: string | null
   area?: string
   status: string
   classes_count?: number
+}
+
+export interface ConnectWeeklyPattern {
+  id?: number
+  connect_class_id?: number
+  day_of_week: number
+  start_time: string
+  end_time: string
+  lessons_count: number
+  subject: string
+}
+
+export interface ConnectSchedulePlan {
+  workload_hours: number
+  scheduled_lessons: number
+  remaining_lessons: number | null
+  weekly_lessons: number
+  estimated_weeks: number | null
+  class_start_date?: string | null
+  class_end_date?: string | null
+  course_start_date?: string | null
+  course_end_date?: string | null
+  semester?: string | null
+  patterns_count: number
+}
+
+export interface ConnectLessonSchedule {
+  id: number
+  connect_class_id: number
+  connect_teacher_id?: number | null
+  scheduled_date: string
+  start_time: string
+  end_time: string
+  subject: string
+  lessons_count: number
+  status: string
+  notes?: string | null
+  class?: ConnectClass
+  teacher?: ConnectTeacher
+  attendance_session_id?: number | null
+  has_attendance?: boolean
 }
 
 export interface ConnectTeacher {
@@ -79,8 +122,11 @@ export interface ConnectClass {
   code: string
   name: string
   shift?: string
+  semester?: string | null
   start_date?: string
   end_date?: string
+  weekly_patterns?: ConnectWeeklyPattern[]
+  schedule_plan?: ConnectSchedulePlan
   capacity?: number
   default_lessons_per_day?: number
   max_absences_allowed?: number | null
@@ -230,8 +276,10 @@ export interface ConnectAttendanceMark {
 export interface ConnectAttendanceSession {
   id: number
   connect_class_id: number
+  connect_lesson_schedule_id?: number | null
   session_date: string
   subject: string
+  lesson_schedule?: ConnectLessonSchedule
   lessons_count?: number
   status: string
   class?: ConnectClass

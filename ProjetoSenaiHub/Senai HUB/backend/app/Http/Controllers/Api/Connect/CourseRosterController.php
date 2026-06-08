@@ -56,6 +56,9 @@ class CourseRosterController extends Controller
 
         $this->enrollment->attachPersonToCourse($person, $course, $role);
 
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->connectCourseRosterAdded($person, $role, $course->id, $course->name, $request->user());
+
         return response()->json([
             'message' => 'Vinculo ao curso registrado.',
             'data' => new HubPersonResource($person->load('courses')),

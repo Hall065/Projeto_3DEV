@@ -8,6 +8,7 @@ use App\Models\Connect\ConnectActivity;
 use App\Models\Connect\ConnectAttendanceMark;
 use App\Models\Connect\ConnectAttendanceSession;
 use App\Models\Connect\ConnectClass;
+use App\Models\Connect\ConnectLessonSchedule;
 use App\Models\Connect\ConnectStudent;
 use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
@@ -20,48 +21,80 @@ class AttendanceController extends Controller
     public function show(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'connect_class_id' => ['required', 'exists:connect_classes,id'],
+            'connect_class_id' => ['required_without:connect_lesson_schedule_id', 'exists:connect_classes,id'],
+            'connect_lesson_schedule_id' => ['nullable', 'exists:connect_lesson_schedules,id'],
             'session_date' => ['nullable', 'date'],
             'subject' => ['nullable', 'string', 'max:255'],
             'lessons_count' => ['nullable', 'integer', 'min:1', 'max:5'],
         ]);
 
-        $sessionDate = isset($validated['session_date'])
-            ? Carbon::parse($validated['session_date'])->toDateString()
-            : now()->toDateString();
+        $lesson = null;
+        if (! empty($validated['connect_lesson_schedule_id'])) {
+            $lesson = ConnectLessonSchedule::query()
+                ->with(['connectClass.students.hubPerson', 'connectClass.teacher.hubPerson', 'teacher.hubPerson'])
+                ->findOrFail($validated['connect_lesson_schedule_id']);
 
-        $subject = $validated['subject'] ?? 'Aula regular';
+            UserAccessScope::connectClassQuery($request->user())
+                ->where('id', $lesson->connect_class_id)
+                ->firstOrFail();
 
-        $class = UserAccessScope::connectClassQuery($request->user())
-            ->with(['students.hubPerson', 'teacher.hubPerson'])
-            ->findOrFail($validated['connect_class_id']);
+            $class = $lesson->connectClass;
+            $sessionDate = $lesson->scheduled_date?->format('Y-m-d') ?? now()->toDateString();
+            $subject = $lesson->subject;
+            $lessonsCount = $lesson->lessons_count ?? $class->default_lessons_per_day ?? 4;
+
+            $session = ConnectAttendanceSession::query()->firstOrCreate(
+                ['connect_lesson_schedule_id' => $lesson->id],
+                [
+                    'connect_class_id' => $class->id,
+                    'connect_teacher_id' => $lesson->connect_teacher_id ?? $class->connect_teacher_id,
+                    'session_date' => $sessionDate,
+                    'subject' => $subject,
+                    'lessons_count' => $lessonsCount,
+                    'status' => 'open',
+                ],
+            );
+        } else {
+            $sessionDate = isset($validated['session_date'])
+                ? Carbon::parse($validated['session_date'])->toDateString()
+                : now()->toDateString();
+
+            $subject = $validated['subject'] ?? 'Aula regular';
+
+            $class = UserAccessScope::connectClassQuery($request->user())
+                ->with(['students.hubPerson', 'teacher.hubPerson'])
+                ->findOrFail($validated['connect_class_id']);
+
+            $lessonsCount = $validated['lessons_count']
+                ?? $class->default_lessons_per_day
+                ?? 4;
+
+            $session = ConnectAttendanceSession::query()->firstOrCreate(
+                [
+                    'connect_class_id' => $class->id,
+                    'session_date' => $sessionDate,
+                    'subject' => $subject,
+                ],
+                [
+                    'connect_teacher_id' => $class->connect_teacher_id,
+                    'lessons_count' => $lessonsCount,
+                    'status' => 'open',
+                ],
+            );
+
+            if ($session->lessons_count !== $lessonsCount) {
+                $session->update(['lessons_count' => $lessonsCount]);
+            }
+        }
+
+        $class = $class ?? $session->connectClass;
+        $class->loadMissing(['students.hubPerson', 'teacher.hubPerson', 'course']);
 
         $allowedStudentIds = UserAccessScope::connectStudentQuery($request->user())->pluck('id');
         $class->setRelation(
             'students',
             $class->students->whereIn('id', $allowedStudentIds)->values(),
         );
-
-        $lessonsCount = $validated['lessons_count']
-            ?? $class->default_lessons_per_day
-            ?? 4;
-
-        $session = ConnectAttendanceSession::query()->firstOrCreate(
-            [
-                'connect_class_id' => $class->id,
-                'session_date' => $sessionDate,
-                'subject' => $subject,
-            ],
-            [
-                'connect_teacher_id' => $class->connect_teacher_id,
-                'lessons_count' => $lessonsCount,
-                'status' => 'open',
-            ],
-        );
-
-        if ($session->lessons_count !== $lessonsCount) {
-            $session->update(['lessons_count' => $lessonsCount]);
-        }
 
         $existingStudentIds = $session->marks()->pluck('connect_student_id');
 
@@ -78,7 +111,7 @@ class AttendanceController extends Controller
             ]);
         });
 
-        $session->load(['connectClass.course', 'teacher.hubPerson', 'marks.student.hubPerson']);
+        $session->load(['connectClass.course', 'teacher.hubPerson', 'marks.student.hubPerson', 'lessonSchedule']);
         $session->setRelation('connectClass', $class);
 
         return response()->json([
@@ -153,6 +186,10 @@ class AttendanceController extends Controller
 
         if ($request->boolean('close_session')) {
             $session->update(['status' => 'closed']);
+            $session->loadMissing('lessonSchedule');
+            if ($session->lessonSchedule && $session->lessonSchedule->status === 'scheduled') {
+                $session->lessonSchedule->update(['status' => 'completed']);
+            }
         }
 
         ConnectActivity::query()->create([
@@ -166,6 +203,9 @@ class AttendanceController extends Controller
         ]);
 
         $session->load(['connectClass.course', 'teacher.hubPerson', 'marks.student.hubPerson']);
+
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->connectAttendanceSaved($session, $request->user());
 
         return response()->json([
             'data' => new ConnectAttendanceSessionResource($session),

@@ -8,7 +8,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppearanceSettings } from '../components/settings/AppearanceSettings'
 import {
@@ -18,6 +18,8 @@ import {
 } from '../components/connect/ConnectShared'
 import { useAppearance } from '../contexts/AppearanceContext'
 import { useAuth } from '../contexts/AuthContext'
+import { notificationService } from '../services/notificationService'
+import type { NotificationPreferences } from '../types/notification'
 import { useInterfacePreferences } from '../hooks/useInterfacePreferences'
 import { usePermissions } from '../hooks/usePermissions'
 import { DEFAULT_WALLPAPER_ID } from '../constants/wallpapers'
@@ -63,12 +65,54 @@ function ToggleRow({
   )
 }
 
+const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
+  in_app: true,
+  email: false,
+  modules: { hub: true, connect: true, grid: true },
+}
+
 export function SettingsPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { isAdmin, can } = usePermissions()
   const { setWallpaperId, removeCustomWallpaper } = useAppearance()
   const { reduceMotion, setReduceMotion } = useInterfacePreferences()
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>(
+    user?.notification_preferences ?? DEFAULT_NOTIFICATION_PREFS,
+  )
+  const [savingNotifications, setSavingNotifications] = useState(false)
+
+  useEffect(() => {
+    if (user?.notification_preferences) {
+      setNotificationPrefs(user.notification_preferences)
+      return
+    }
+    if (!user) return
+    notificationService
+      .getPreferences()
+      .then(setNotificationPrefs)
+      .catch(() => undefined)
+  }, [user])
+
+  async function updateNotificationPrefs(patch: Partial<NotificationPreferences>) {
+    const next: NotificationPreferences = {
+      ...notificationPrefs,
+      ...patch,
+      modules: { ...notificationPrefs.modules, ...(patch.modules ?? {}) },
+    }
+    setNotificationPrefs(next)
+    setSavingNotifications(true)
+    try {
+      await notificationService.updatePreferences(next)
+      await refreshUser()
+      showFeedback('Preferencias de notificacao salvas.')
+    } catch {
+      setNotificationPrefs(notificationPrefs)
+      showFeedback('Nao foi possivel salvar as notificacoes.')
+    } finally {
+      setSavingNotifications(false)
+    }
+  }
 
   const quickLinks: QuickLink[] = [
     {
@@ -212,23 +256,52 @@ export function SettingsPage() {
               </span>
               <div>
                 <h2 className="text-lg font-semibold text-hub-navy">Notificações</h2>
-                <p className="mt-0.5 text-sm text-hub-text-muted">Alertas por e-mail e no navegador (em breve).</p>
+                <p className="mt-0.5 text-sm text-hub-text-muted">
+                  Alertas no sino do sistema e preferências por módulo.
+                </p>
               </div>
             </header>
             <div className="space-y-2">
               <ToggleRow
-                label="Resumo por e-mail"
-                description="Chamados, estoque baixo e frequência — disponível em versão futura."
-                checked={false}
-                onChange={() => undefined}
-                disabled
+                label="Notificações no sistema"
+                description="Exibe alertas no sino (Hub, Connect e Grid) quando você estiver logado."
+                checked={notificationPrefs.in_app}
+                disabled={savingNotifications}
+                onChange={(value) => void updateNotificationPrefs({ in_app: value })}
               />
               <ToggleRow
-                label="Notificações no navegador"
-                description="Avisos em tempo real quando a aba estiver aberta."
-                checked={false}
-                onChange={() => undefined}
+                label="Resumo por e-mail"
+                description="Envio por e-mail será habilitado em versão futura."
+                checked={notificationPrefs.email}
                 disabled
+                onChange={() => undefined}
+              />
+              <ToggleRow
+                label="Módulo Hub"
+                description="Usuários, senha e eventos administrativos."
+                checked={notificationPrefs.modules.hub}
+                disabled={savingNotifications || !notificationPrefs.in_app}
+                onChange={(value) =>
+                  void updateNotificationPrefs({ modules: { ...notificationPrefs.modules, hub: value } })
+                }
+              />
+              <ToggleRow
+                label="Módulo Connect"
+                description="Turmas, calendário, frequência, contratos e matrículas."
+                checked={notificationPrefs.modules.connect}
+                disabled={savingNotifications || !notificationPrefs.in_app}
+                onChange={(value) =>
+                  void updateNotificationPrefs({ modules: { ...notificationPrefs.modules, connect: value } })
+                }
+              />
+              <ToggleRow
+                label="Módulo Grid"
+                description="Chamados, tarefas e alertas de estoque."
+                checked={notificationPrefs.modules.grid}
+                disabled={savingNotifications || !notificationPrefs.in_app}
+                onChange={(value) =>
+                  void updateNotificationPrefs({ modules: { ...notificationPrefs.modules, grid: value } })
+                }
               />
             </div>
           </ConnectCard>

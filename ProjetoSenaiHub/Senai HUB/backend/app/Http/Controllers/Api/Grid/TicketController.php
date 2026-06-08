@@ -126,6 +126,9 @@ class TicketController extends Controller
             'opened_at' => $validated['opened_at'] ?? now(),
         ]);
 
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->gridTicketCreated($ticket, $request->user());
+
         return response()->json([
             'data' => new GridTicketResource($ticket),
             'message' => 'Chamado cadastrado com sucesso.',
@@ -159,7 +162,12 @@ class TicketController extends Controller
             $validated['assignee'] = null;
         }
 
+        $previousStatus = $ticket->status;
+        $previousAssignee = $ticket->assignee;
         $ticket = $this->workflow->updateTicket($ticket, $validated);
+
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->gridTicketUpdated($ticket, $previousStatus, $previousAssignee, $request->user());
 
         return response()->json([
             'data' => new GridTicketResource($ticket),
@@ -181,6 +189,9 @@ class TicketController extends Controller
             $validated['notes'] ?? null,
             $validated['resolution_summary'] ?? null,
         );
+
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->gridTicketAwaitingEvaluation($ticket, $request->user());
 
         return response()->json([
             'data' => new GridTicketResource($ticket),

@@ -68,6 +68,9 @@ class ContractController extends Controller
 
         $contract->load('student.connectClass');
 
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->connectContractCreated($contract, $request->user());
+
         return response()->json([
             'data' => new ConnectContractResource($contract),
             'message' => 'Contrato cadastrado com sucesso.',

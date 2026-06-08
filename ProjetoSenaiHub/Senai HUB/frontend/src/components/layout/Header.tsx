@@ -1,4 +1,5 @@
-import { Bell, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
+import { NotificationBell } from '../notifications/NotificationBell'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/Button'
 
@@ -18,13 +19,7 @@ export function Header({ title, subtitle }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          className="rounded-lg p-2 text-white/75 transition hover:bg-white/10 hover:text-white"
-          aria-label="Notificacoes"
-        >
-          <Bell className="h-5 w-5" />
-        </button>
+        <NotificationBell variant="chrome" />
 
         <div className="hidden text-right sm:block">
           <p className="text-sm font-medium text-white">{user?.name ?? 'Usuario Demo'}</p>

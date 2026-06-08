@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'code',
     'name',
     'shift',
+    'semester',
     'start_date',
     'end_date',
     'capacity',
@@ -54,6 +55,18 @@ class ConnectClass extends Model
     public function attendanceSessions(): HasMany
     {
         return $this->hasMany(ConnectAttendanceSession::class, 'connect_class_id');
+    }
+
+    /** @return HasMany<ConnectClassWeeklyPattern, $this> */
+    public function weeklyPatterns(): HasMany
+    {
+        return $this->hasMany(ConnectClassWeeklyPattern::class, 'connect_class_id');
+    }
+
+    /** @return HasMany<ConnectLessonSchedule, $this> */
+    public function lessonSchedules(): HasMany
+    {
+        return $this->hasMany(ConnectLessonSchedule::class, 'connect_class_id');
     }
 
     /** Matrículas na turma (via cadastro global hub_people). */

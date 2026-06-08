@@ -95,6 +95,9 @@ class UserManagementController extends Controller
 
         $this->syncApplicationAccess($user);
 
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->userCreated($user, $request->user());
+
         return response()->json([
             'data' => new UserResource($user),
             'message' => 'Usuario criado com sucesso.',
@@ -134,11 +137,18 @@ class UserManagementController extends Controller
 
         unset($validated['reset_permissions']);
 
+        $previousRole = $user->role;
         $user->update($validated);
-        $this->syncApplicationAccess($user->fresh());
+        $user = $user->fresh();
+        $this->syncApplicationAccess($user);
+
+        if (isset($validated['role']) && $validated['role'] !== $previousRole) {
+            app(\App\Services\Notification\SystemNotificationTriggers::class)
+                ->userRoleUpdated($user, $previousRole, $request->user());
+        }
 
         return response()->json([
-            'data' => new UserResource($user->fresh()),
+            'data' => new UserResource($user),
             'message' => 'Usuario atualizado com sucesso.',
         ]);
     }

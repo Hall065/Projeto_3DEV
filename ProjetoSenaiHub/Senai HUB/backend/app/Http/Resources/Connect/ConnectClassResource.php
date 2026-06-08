@@ -20,6 +20,7 @@ class ConnectClassResource extends JsonResource
             'code' => $this->code,
             'name' => $this->name,
             'shift' => $this->shift,
+            'semester' => $this->semester,
             'start_date' => $this->start_date?->format('Y-m-d'),
             'end_date' => $this->end_date?->format('Y-m-d'),
             'capacity' => $this->capacity,
@@ -29,6 +30,8 @@ class ConnectClassResource extends JsonResource
             'course' => new ConnectCourseResource($this->whenLoaded('course')),
             'teacher' => new ConnectTeacherResource($this->whenLoaded('teacher')),
             'students_count' => $this->whenCounted('students'),
+            'weekly_patterns' => ConnectClassWeeklyPatternResource::collection($this->whenLoaded('weeklyPatterns')),
+            'schedule_plan' => $this->when(isset($this->schedule_plan), fn () => $this->schedule_plan),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

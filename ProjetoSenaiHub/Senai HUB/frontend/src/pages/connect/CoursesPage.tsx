@@ -16,7 +16,15 @@ import {
 import { connectService } from '../../services/connectService'
 import type { ConnectCourse, PaginatedMeta } from '../../types/connect'
 
-const emptyForm = { name: '', description: '', workload_hours: '120', area: '', status: 'active' }
+const emptyForm = {
+  name: '',
+  description: '',
+  workload_hours: '120',
+  start_date: '',
+  end_date: '',
+  area: '',
+  status: 'active',
+}
 
 export function CoursesPage() {
   const [courses, setCourses] = useState<ConnectCourse[]>([])
@@ -58,6 +66,8 @@ export function CoursesPage() {
       name: course.name,
       description: course.description ?? '',
       workload_hours: String(course.workload_hours ?? 120),
+      start_date: course.start_date?.slice(0, 10) ?? '',
+      end_date: course.end_date?.slice(0, 10) ?? '',
       area: course.area ?? '',
       status: course.status,
     })
@@ -81,6 +91,8 @@ export function CoursesPage() {
       area: form.area.trim() || null,
       status: form.status,
       workload_hours: form.workload_hours ? Number(form.workload_hours) : 0,
+      start_date: form.start_date || null,
+      end_date: form.end_date || null,
     }
 
     if (editingId) {
@@ -179,12 +191,30 @@ export function CoursesPage() {
               placeholder="Ex: Indústria 4.0"
             />
           </FormField>
-          <FormField label="Carga horária total" hint="Opcional">
+          <FormField label="Carga horária total" hint="Usada no planejamento do semestre">
             <input
+              type="number"
+              min={0}
               className={inputClass}
               value={form.workload_hours}
               onChange={(e) => setForm({ ...form, workload_hours: e.target.value })}
               placeholder="Ex: 120 horas"
+            />
+          </FormField>
+          <FormField label="Inicio do curso" hint="Turmas devem ficar dentro deste periodo">
+            <input
+              type="date"
+              className={inputClass}
+              value={form.start_date}
+              onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+            />
+          </FormField>
+          <FormField label="Fim do curso">
+            <input
+              type="date"
+              className={inputClass}
+              value={form.end_date}
+              onChange={(e) => setForm({ ...form, end_date: e.target.value })}
             />
           </FormField>
           <FormField label="Status">

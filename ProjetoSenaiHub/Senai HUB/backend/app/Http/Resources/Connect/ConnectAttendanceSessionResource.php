@@ -27,12 +27,14 @@ class ConnectAttendanceSessionResource extends JsonResource
             'id' => $this->id,
             'connect_class_id' => $this->connect_class_id,
             'connect_teacher_id' => $this->connect_teacher_id,
+            'connect_lesson_schedule_id' => $this->connect_lesson_schedule_id,
             'session_date' => $this->session_date?->format('Y-m-d'),
             'subject' => $this->subject,
             'lessons_count' => $lessonsCount,
             'status' => $this->status,
             'class' => new ConnectClassResource($this->whenLoaded('connectClass')),
             'teacher' => new ConnectTeacherResource($this->whenLoaded('teacher')),
+            'lesson_schedule' => new ConnectLessonScheduleResource($this->whenLoaded('lessonSchedule')),
             'marks' => $this->when($this->relationLoaded('marks'), function () {
                 $class = $this->connectClass;
 

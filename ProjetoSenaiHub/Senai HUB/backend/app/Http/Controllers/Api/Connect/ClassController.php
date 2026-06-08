@@ -7,6 +7,7 @@ use App\Http\Resources\Connect\ConnectClassResource;
 use App\Models\Connect\ConnectActivity;
 use App\Models\Connect\ConnectClass;
 use App\Services\Connect\ConnectEnrollmentService;
+use App\Services\Connect\ConnectScheduleService;
 use App\Support\ConnectForm;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class ClassController extends Controller
 {
     public function __construct(
         private readonly ConnectEnrollmentService $enrollment,
+        private readonly ConnectScheduleService $schedule,
     ) {}
     public function index(Request $request): JsonResponse
     {
@@ -54,8 +56,16 @@ class ClassController extends Controller
             'code' => ['nullable', 'string', 'max:50', 'unique:connect_classes,code'],
             'name' => ['required', 'string', 'max:255'],
             'shift' => ['nullable', Rule::in(['manha', 'tarde', 'noite'])],
+            'semester' => ['nullable', 'string', 'max:20'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'weekly_patterns' => ['nullable', 'array'],
+            'weekly_patterns.*.day_of_week' => ['required_with:weekly_patterns', 'integer', 'min:0', 'max:6'],
+            'weekly_patterns.*.start_time' => ['required_with:weekly_patterns', 'date_format:H:i'],
+            'weekly_patterns.*.end_time' => ['required_with:weekly_patterns', 'date_format:H:i'],
+            'weekly_patterns.*.lessons_count' => ['nullable', 'integer', 'min:1', 'max:5'],
+            'weekly_patterns.*.subject' => ['nullable', 'string', 'max:255'],
+            'generate_schedule' => ['nullable', 'boolean'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
             'default_lessons_per_day' => ['nullable', 'integer', 'min:1', 'max:5'],
             'max_absences_allowed' => ['nullable', 'integer', 'min:1', 'max:999'],
@@ -67,6 +77,10 @@ class ClassController extends Controller
             $code = 'TURMA-'.now()->format('ymdHis');
         }
 
+        $weeklyPatterns = $validated['weekly_patterns'] ?? null;
+        $generateSchedule = $request->boolean('generate_schedule');
+        unset($validated['weekly_patterns'], $validated['generate_schedule']);
+
         $class = ConnectClass::query()->create([
             ...$validated,
             'code' => $code,
@@ -76,6 +90,15 @@ class ClassController extends Controller
             'capacity' => $validated['capacity'] ?? 30,
             'status' => $validated['status'] ?? 'active',
         ]);
+
+        $this->schedule->validateClassAssignment($class->fresh(['course']));
+
+        if (is_array($weeklyPatterns)) {
+            $this->schedule->syncWeeklyPatterns($class, $weeklyPatterns);
+            if ($generateSchedule) {
+                $this->schedule->generateFromPatterns($class->fresh(['course', 'weeklyPatterns']));
+            }
+        }
 
         ConnectActivity::query()->create([
             'title' => 'Nova turma criada',
@@ -90,6 +113,9 @@ class ClassController extends Controller
         $class->load(['course', 'teacher']);
 
         $this->enrollment->syncTeacherCourseFromClass($class);
+
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->connectClassAssigned($class, $request->user());
 
         return response()->json([
             'data' => new ConnectClassResource($class),
@@ -107,17 +133,40 @@ class ClassController extends Controller
             'code' => ['sometimes', 'string', 'max:50', Rule::unique('connect_classes', 'code')->ignore($connectClass->id)],
             'name' => ['sometimes', 'string', 'max:255'],
             'shift' => ['nullable', Rule::in(['manha', 'tarde', 'noite'])],
+            'semester' => ['nullable', 'string', 'max:20'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'weekly_patterns' => ['nullable', 'array'],
+            'weekly_patterns.*.day_of_week' => ['required_with:weekly_patterns', 'integer', 'min:0', 'max:6'],
+            'weekly_patterns.*.start_time' => ['required_with:weekly_patterns', 'date_format:H:i'],
+            'weekly_patterns.*.end_time' => ['required_with:weekly_patterns', 'date_format:H:i'],
+            'weekly_patterns.*.lessons_count' => ['nullable', 'integer', 'min:1', 'max:5'],
+            'weekly_patterns.*.subject' => ['nullable', 'string', 'max:255'],
+            'generate_schedule' => ['nullable', 'boolean'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
             'default_lessons_per_day' => ['nullable', 'integer', 'min:1', 'max:5'],
             'max_absences_allowed' => ['nullable', 'integer', 'min:1', 'max:999'],
             'status' => ['nullable', Rule::in(['active', 'inactive', 'finished'])],
         ]);
 
+        $weeklyPatterns = $validated['weekly_patterns'] ?? null;
+        $generateSchedule = $request->boolean('generate_schedule');
+        unset($validated['weekly_patterns'], $validated['generate_schedule']);
+
         $connectClass->update($validated);
         $connectClass->load(['course', 'teacher']);
+        $this->schedule->validateClassAssignment($connectClass);
         $this->enrollment->syncTeacherCourseFromClass($connectClass);
+
+        if (is_array($weeklyPatterns)) {
+            $this->schedule->syncWeeklyPatterns($connectClass, $weeklyPatterns);
+            if ($generateSchedule) {
+                $this->schedule->generateFromPatterns($connectClass->fresh(['course', 'weeklyPatterns']));
+            }
+        }
+
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->connectClassAssigned($connectClass, $request->user());
 
         return response()->json([
             'data' => new ConnectClassResource($connectClass),

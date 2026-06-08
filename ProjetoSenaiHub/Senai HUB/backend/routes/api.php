@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Connect\AttendanceController;
+use App\Http\Controllers\Api\Connect\CalendarController;
 use App\Http\Controllers\Api\Connect\AttendanceManageController;
 use App\Http\Controllers\Api\Connect\ClassController;
 use App\Http\Controllers\Api\Connect\ClassRosterController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\Admin\UserManagementController;
 use App\Http\Controllers\Api\CustomReportController;
 use App\Http\Controllers\Api\GlobalSearchController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ReportPresetController;
 use App\Http\Controllers\Api\SpreadsheetController;
 use Illuminate\Support\Facades\Route;
@@ -52,12 +54,22 @@ Route::prefix('auth')->group(function (): void {
         Route::post('/avatar', [AuthController::class, 'updateAvatar']);
         Route::delete('/avatar', [AuthController::class, 'deleteAvatar']);
         Route::put('/password', [AuthController::class, 'changePassword']);
+        Route::get('/notification-preferences', [NotificationController::class, 'preferences']);
+        Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences']);
         Route::post('/logout', [AuthController::class, 'logout']);
     });
 });
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/search', GlobalSearchController::class);
+
+    Route::prefix('notifications')->group(function (): void {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/read-all', [NotificationController::class, 'markAllRead']);
+        Route::patch('/{notification}/read', [NotificationController::class, 'markRead']);
+        Route::delete('/{notification}', [NotificationController::class, 'destroy']);
+    });
 
     Route::get('/applications', [ApplicationController::class, 'index']);
 
@@ -157,6 +169,17 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('/courses/{course}/roster', [CourseRosterController::class, 'index']);
             Route::post('/courses/{course}/roster', [CourseRosterController::class, 'store']);
             Route::delete('/courses/{course}/roster/{person}', [CourseRosterController::class, 'destroy']);
+        });
+
+        Route::get('/calendar', [CalendarController::class, 'index'])->middleware('permission:connect.calendar.view,connect.calendar.manage');
+        Route::get('/classes/{connectClass}/weekly-patterns', [CalendarController::class, 'weeklyPatterns'])->middleware('permission:connect.calendar.view,connect.calendar.manage,connect.classes.view,connect.classes.manage');
+        Route::get('/classes/{connectClass}/schedule-plan', [CalendarController::class, 'schedulePlan'])->middleware('permission:connect.calendar.view,connect.calendar.manage,connect.classes.view,connect.classes.manage');
+        Route::middleware('permission:connect.calendar.manage,connect.classes.manage')->group(function (): void {
+            Route::post('/calendar/lessons', [CalendarController::class, 'storeLesson']);
+            Route::put('/calendar/lessons/{connectLessonSchedule}', [CalendarController::class, 'updateLesson']);
+            Route::delete('/calendar/lessons/{connectLessonSchedule}', [CalendarController::class, 'destroyLesson']);
+            Route::put('/classes/{connectClass}/weekly-patterns', [CalendarController::class, 'syncWeeklyPatterns']);
+            Route::post('/classes/{connectClass}/generate-schedule', [CalendarController::class, 'generateSchedule']);
         });
 
         Route::get('/attendance/session', [AttendanceController::class, 'show'])->middleware('permission:connect.attendance.view,connect.attendance.view_own,connect.attendance.manage');
