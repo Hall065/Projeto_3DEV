@@ -122,17 +122,29 @@ export const reportService = {
     }
 
     const html = await response.text()
-    const printWindow = window.open('', '_blank')
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer')
     if (!printWindow) {
       throw new Error('Permita pop-ups para abrir o relatorio em PDF.')
     }
+
+    printWindow.document.open()
     printWindow.document.write(html)
     printWindow.document.close()
     printWindow.focus()
-    if (options?.print !== false) {
-      printWindow.addEventListener('load', () => {
-        printWindow.print()
-      })
+
+    if (options?.print !== false && !html.includes('data-auto-print="1"')) {
+      const triggerPrint = () => {
+        window.setTimeout(() => {
+          printWindow.focus()
+          printWindow.print()
+        }, 450)
+      }
+
+      if (printWindow.document.readyState === 'complete') {
+        triggerPrint()
+      } else {
+        printWindow.addEventListener('load', triggerPrint, { once: true })
+      }
     }
   },
 

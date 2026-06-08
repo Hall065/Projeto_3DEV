@@ -19,10 +19,10 @@ interface ConnectSidebarProps {
 export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }: ConnectSidebarProps) {
   const isCollapsed = collapsed && !mobileOpen
   const location = useLocation()
-  const { can, isAdmin } = usePermissions()
+  const { can, canAny } = usePermissions()
   const mainNav = filterNavItems(connectNavItems, can)
-  const showContracts = can('connect.contracts.manage')
-  const showSalary = isAdmin
+  const showContracts = canAny('connect.contracts.view', 'connect.contracts.view_own', 'connect.contracts.manage')
+  const showSalary = canAny('connect.salary.view', 'connect.salary.view_own')
   const [contractsOpen, setContractsOpen] = useState(location.pathname.startsWith('/connect/contratos'))
   const [supportOpen, setSupportOpen] = useState(false)
   const supportRef = useRef<HTMLDivElement>(null)
@@ -55,8 +55,8 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
         mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } ${isCollapsed ? 'w-[88px] px-4 lg:w-[88px]' : 'w-[85vw] max-w-[280px] px-6 lg:w-[280px]'} py-6 sm:py-8`}
     >
-      <div className={`mb-4 shrink-0 flex items-start justify-between gap-2 sm:mb-6 ${isCollapsed ? 'flex-col items-center' : ''}`}>
-        <div className={isCollapsed ? 'flex justify-center' : 'min-w-0 flex-1'}>
+      <div className={`mb-4 shrink-0 flex items-start justify-between gap-2 sm:mb-5 ${isCollapsed ? 'flex-col items-center' : ''}`}>
+        <div className={isCollapsed ? 'flex w-full justify-center px-0' : 'min-w-0 flex-1'}>
           <SidebarAppLogo app="connect" collapsed={isCollapsed} onNavigate={onMobileClose} />
         </div>
         {mobileOpen && (
@@ -126,7 +126,7 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
         )}
 
         {showSalary && (
-          <NavLink to="/connect/salario" className={linkClass} title="Salario" onClick={onMobileClose}>
+          <NavLink to={connectSalaryNav.to} className={linkClass} title="Salario" onClick={onMobileClose}>
             <connectSalaryNav.icon className="h-5 w-5 shrink-0" />
             {!isCollapsed && <span>{connectSalaryNav.label}</span>}
           </NavLink>

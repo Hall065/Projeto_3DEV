@@ -1,7 +1,7 @@
 import { ChevronRight, Headphones, LayoutGrid, Mail, MessageCircle, Shield, Users, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
-import { logoSenaiHub } from '../../assets/brand'
+import { SidebarAppLogo } from '../layout/SidebarAppLogo'
 import { usePermissions } from '../../hooks/usePermissions'
 
 interface HubSidebarProps {
@@ -30,12 +30,8 @@ export function HubSidebar({ collapsed }: HubSidebarProps) {
         collapsed ? 'w-[88px] px-4' : 'w-[280px] px-6'
       } py-8`}
     >
-      <div className={`mb-10 ${collapsed ? 'flex justify-center' : ''}`}>
-        <img
-          src={logoSenaiHub}
-          alt="SENAI HUB"
-          className={`object-contain ${collapsed ? 'h-10 w-10' : 'h-auto w-full max-w-[220px]'}`}
-        />
+      <div className={`mb-8 shrink-0 ${collapsed ? 'flex justify-center px-0' : ''}`}>
+        <SidebarAppLogo app="hub" collapsed={collapsed} />
       </div>
 
       <nav className="flex flex-1 flex-col gap-2">
@@ -102,10 +98,13 @@ export function HubSidebar({ collapsed }: HubSidebarProps) {
                   </a>
                 </li>
                 <li>
-                  <button type="button" className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-white/10">
+                  <a
+                    href="mailto:suporte@senaihub.local?subject=Suporte%20SENAI%20HUB"
+                    className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-white/10"
+                  >
                     <MessageCircle className="h-4 w-4" />
                     Abrir chat
-                  </button>
+                  </a>
                 </li>
               </ul>
             </div>

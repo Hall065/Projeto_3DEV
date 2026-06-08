@@ -55,6 +55,12 @@ class UserSeeder extends Seeder
                 'role' => HubRole::CONNECT_AQV,
             ],
             [
+                'name' => 'Roberto Diretor',
+                'email' => 'roberto.diretor@senai.local',
+                'password' => 'password123',
+                'role' => HubRole::CONNECT_DIRETOR,
+            ],
+            [
                 'name' => 'Maria Silva',
                 'email' => 'maria.aluno@senai.local',
                 'password' => 'password123',
@@ -81,7 +87,7 @@ class UserSeeder extends Seeder
                 'company_name' => 'MetalTech Indústria',
             ],
             [
-                'name' => 'Joao Chefe Manutencao',
+                'name' => 'Joao Gerente Manutencao',
                 'email' => 'joao.chefe@grid.senai.local',
                 'password' => 'password123',
                 'role' => HubRole::GRID_CHEFE,
@@ -104,6 +110,18 @@ class UserSeeder extends Seeder
                 'password' => 'password123',
                 'role' => HubRole::GRID_FUNCIONARIO,
             ],
+            [
+                'name' => 'Marcos Professor Grid',
+                'email' => 'marcos.professor@grid.senai.local',
+                'password' => 'password123',
+                'role' => HubRole::GRID_PROFESSOR,
+            ],
+            [
+                'name' => 'Sandra Secretaria Grid',
+                'email' => 'sandra.secretaria@grid.senai.local',
+                'password' => 'password123',
+                'role' => HubRole::GRID_SECRETARIA,
+            ],
         ];
 
         foreach ($users as $user) {
@@ -113,6 +131,7 @@ class UserSeeder extends Seeder
                     'name' => $user['name'],
                     'password' => Hash::make($user['password']),
                     'role' => $user['role'],
+                    'custom_permissions' => null,
                     'company_name' => $user['company_name'] ?? null,
                     'email_verified_at' => now(),
                 ],

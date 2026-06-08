@@ -24,6 +24,7 @@ class HubPersonResource extends JsonResource
             'phone' => $this->phone,
             'birth_date' => $this->birth_date?->format('Y-m-d'),
             'specialty' => $this->specialty,
+            'metadata' => $this->metadata ?? [],
             'status' => $this->status,
             'pivot' => $this->when($this->pivot !== null, fn () => [
                 'role' => $this->pivot->role,

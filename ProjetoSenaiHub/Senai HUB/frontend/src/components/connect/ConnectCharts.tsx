@@ -6,6 +6,7 @@ import {
   resolveChartGradient,
   sanitizeChartSegmentKey,
 } from '../../constants/chartPalette'
+import { useAppearance } from '../../contexts/AppearanceContext'
 import { ConnectCard, ConnectLoadingSpinner } from './ConnectShared'
 
 /** Frequência — 3 tons da paleta harmônica de 5 */
@@ -110,8 +111,8 @@ function layoutDonutCallouts(
   })
 }
 
-/** Cards dos rótulos: mais estreitos; altura/fonte preservam leitura */
-const CALLOUT_BOX = { w: 100, h: 38 } as const
+/** Cards dos rótulos no SVG — largura suficiente para abreviações de status */
+const CALLOUT_BOX = { w: 112, h: 38 } as const
 
 function calloutLabelBox(labelX: number, labelY: number, viewW: number) {
   const { w, h } = CALLOUT_BOX
@@ -150,12 +151,12 @@ function ChartPanel({
   children: React.ReactNode
 }) {
   return (
-    <section className="flex min-w-0 w-full flex-col rounded-2xl border border-hub-border/50 bg-gradient-to-b from-white to-hub-bg/40 p-5 sm:p-6">
-      <header className="mb-5 shrink-0 border-b border-hub-border/40 pb-4">
+    <section className="chart-panel flex min-w-0 w-full flex-col rounded-2xl border border-hub-border/50 p-4 sm:p-5">
+      <header className="mb-4 shrink-0 border-b border-hub-border/30 pb-3">
         <h3 className="text-base font-semibold text-hub-navy sm:text-lg">{title}</h3>
-        <p className="mt-1 text-xs text-hub-text-muted sm:text-sm">{subtitle}</p>
+        <p className="mt-0.5 text-xs text-hub-text-muted sm:text-sm">{subtitle}</p>
       </header>
-      <div className="min-h-[200px] min-w-0 w-full flex-1">{children}</div>
+      <div className="min-h-[180px] min-w-0 w-full flex-1">{children}</div>
     </section>
   )
 }
@@ -228,6 +229,8 @@ export function IsometricDistributionDonut({
   emptyMessage?: string
   ariaLabel?: string
 }) {
+  const { wallpaperTone } = useAppearance()
+  const isDark = wallpaperTone === 'dark'
   const gid = useId().replace(/:/g, '')
   const [animated, setAnimated] = useState(false)
 
@@ -282,7 +285,7 @@ export function IsometricDistributionDonut({
 
   return (
     <ChartReveal delayMs={50}>
-      <div className="flex w-full min-w-0 flex-col gap-4 rounded-2xl border border-hub-border/50 bg-white p-3 shadow-sm sm:gap-5 sm:p-5">
+      <div className="surface-inset flex w-full min-w-0 flex-col gap-4 rounded-2xl border border-hub-border/50 p-3 shadow-sm sm:gap-5 sm:p-5">
         <div className="mx-auto w-full min-w-0 max-w-2xl">
           <div
             className="relative aspect-[520/240] w-full overflow-visible transition-opacity duration-700 motion-reduce:transition-none"
@@ -297,8 +300,8 @@ export function IsometricDistributionDonut({
             >
               <defs>
                 <radialGradient id={`${gid}-floorGlow`} cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor={arcs[0]?.color ?? '#e30613'} stopOpacity={0.12} />
-                  <stop offset="70%" stopColor="#f8fafc" stopOpacity={0} />
+                  <stop offset="0%" stopColor={arcs[0]?.color ?? '#e30613'} stopOpacity={isDark ? 0.2 : 0.12} />
+                  <stop offset="70%" stopColor={isDark ? '#0f172a' : '#f8fafc'} stopOpacity={0} />
                 </radialGradient>
                 {arcs.map((a) => (
                   <linearGradient
@@ -322,8 +325,8 @@ export function IsometricDistributionDonut({
                     x2="0%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor={a.gradient.from} stopOpacity={0.55} />
-                    <stop offset="100%" stopColor="#94a3b8" stopOpacity={0.75} />
+                    <stop offset="0%" stopColor={a.gradient.from} stopOpacity={isDark ? 0.45 : 0.55} />
+                    <stop offset="100%" stopColor={isDark ? '#1e293b' : '#94a3b8'} stopOpacity={isDark ? 0.85 : 0.75} />
                   </linearGradient>
                 ))}
               </defs>
@@ -382,7 +385,7 @@ export function IsometricDistributionDonut({
                           width={boxW}
                           height={boxH}
                           rx={7}
-                          fill="#ffffff"
+                          fill={isDark ? 'rgba(15, 23, 42, 0.94)' : '#ffffff'}
                           stroke={color}
                           strokeWidth={1.5}
                         />
@@ -401,7 +404,7 @@ export function IsometricDistributionDonut({
                           x={textX}
                           y={boxY + 29}
                           textAnchor="middle"
-                          fill="#475569"
+                          fill={isDark ? 'rgba(226, 232, 240, 0.82)' : '#475569'}
                           fontSize={10}
                           fontWeight={500}
                         >
@@ -428,7 +431,7 @@ export function IsometricDistributionDonut({
           {arcs.map((a, i) => (
             <div
               key={`legend-${a.key}`}
-              className="overflow-hidden rounded-xl border border-hub-border/50 bg-white shadow-sm transition-all duration-500 motion-reduce:transition-none"
+              className="surface-inset overflow-hidden rounded-xl border border-hub-border/50 shadow-sm transition-all duration-500 motion-reduce:transition-none"
               style={{
                 opacity,
                 transform: animated ? 'translateY(0)' : 'translateY(8px)',
@@ -436,20 +439,29 @@ export function IsometricDistributionDonut({
               }}
             >
               <div
-                className="px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white sm:text-xs"
+                className="px-3 py-2 text-[11px] font-bold leading-snug text-white sm:text-xs"
                 style={{
                   background: `linear-gradient(135deg, ${a.gradient.from}, ${a.gradient.to})`,
                 }}
               >
-                {a.short}
+                <span className="line-clamp-2">{a.label}</span>
               </div>
-              <div className="space-y-1 px-3 py-2.5 text-xs leading-relaxed text-hub-text-muted">
-                {a.legendHint ? <p>{a.legendHint}</p> : null}
-                <p className="text-sm font-semibold tabular-nums text-hub-navy">
+              <div className="flex items-center gap-2 px-3 py-2.5">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/25"
+                  style={{ backgroundColor: a.color }}
+                  aria-hidden
+                />
+                <p className="min-w-0 text-sm font-semibold tabular-nums text-hub-navy">
                   {a.count != null ? `${a.count.toLocaleString('pt-BR')} · ` : ''}
                   {a.pct.toFixed(1)}%
                 </p>
               </div>
+              {a.legendHint ? (
+                <p className="border-t border-hub-border/30 px-3 py-2 text-xs leading-relaxed text-hub-text-muted">
+                  {a.legendHint}
+                </p>
+              ) : null}
             </div>
           ))}
         </div>
@@ -528,6 +540,8 @@ export function TeacherSessionsBarChart({
   items: { name: string; sessions: number }[]
   loading?: boolean
 }) {
+  const { wallpaperTone } = useAppearance()
+  const isDark = wallpaperTone === 'dark'
   const [animated, setAnimated] = useState(false)
   const max = Math.max(...items.map((i) => i.sessions), 1)
 
@@ -560,9 +574,9 @@ export function TeacherSessionsBarChart({
                 </span>
                 <span className="shrink-0 font-bold tabular-nums text-hub-red">{item.sessions}</span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-hub-bg">
+              <div className="chart-bar-track h-3 overflow-hidden rounded-full">
                 <div
-                  className="h-full origin-left rounded-full bg-gradient-to-r from-hub-red to-[#ff4d58] motion-reduce:transition-none"
+                  className={`h-full origin-left rounded-full motion-reduce:transition-none ${isDark ? 'bg-gradient-to-r from-[#ff6b6b] to-[#ff8f96]' : 'bg-gradient-to-r from-hub-red to-[#ff4d58]'}`}
                   style={{
                     width: `${Math.max(widthPct, 8)}%`,
                     transform: animated ? 'scaleX(1)' : 'scaleX(0)',
@@ -596,7 +610,7 @@ export function TeacherSessionsBarChart({
                       className="relative w-10 sm:w-12"
                       style={{ height: `${heightPct}%` }}
                     >
-                      <span className="absolute -top-5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-xs font-bold tabular-nums text-hub-navy">
+                      <span className="absolute -top-5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-xs font-bold tabular-nums text-hub-text">
                         {item.sessions}
                       </span>
                       <div
@@ -607,11 +621,13 @@ export function TeacherSessionsBarChart({
                           transitionDelay: `${index * 60}ms`,
                         }}
                       >
-                        <div className="h-full w-full bg-gradient-to-t from-hub-red to-[#ff4d58] shadow-sm" />
+                        <div
+                          className={`h-full w-full shadow-sm ${isDark ? 'bg-gradient-to-t from-[#ff6b6b] to-[#ff9aa0]' : 'bg-gradient-to-t from-hub-red to-[#ff4d58]'}`}
+                        />
                       </div>
                     </div>
                   </div>
-                  <span className="line-clamp-2 w-full text-center text-[11px] leading-tight text-hub-text-muted">
+                  <span className="line-clamp-2 w-full text-center text-[11px] font-medium leading-tight text-hub-text">
                     {item.name.split(' ')[0]}
                   </span>
                 </div>
@@ -631,6 +647,8 @@ export function StudentsByCourseChart({
   items: { name: string; count: number }[]
   loading?: boolean
 }) {
+  const { wallpaperTone } = useAppearance()
+  const isDark = wallpaperTone === 'dark'
   const [animated, setAnimated] = useState(false)
   const max = Math.max(...items.map((i) => i.count), 1)
 
@@ -651,10 +669,10 @@ export function StudentsByCourseChart({
 
   return (
     <ChartReveal delayMs={150}>
-      <ul className="flex w-full min-w-0 flex-col gap-4 sm:gap-5">
+      <ul className="flex w-full min-w-0 flex-col gap-3 sm:gap-3.5">
         {items.map((course, index) => {
           const widthPct = (course.count / max) * 100
-          const color = chartColorByIndex(index)
+          const color = chartColorByIndex(index, isDark)
 
           return (
             <li key={course.name} className="min-w-0">
@@ -662,11 +680,11 @@ export function StudentsByCourseChart({
                 <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-hub-text" title={course.name}>
                   {course.name}
                 </span>
-                <span className="shrink-0 rounded-lg bg-hub-bg px-2.5 py-1 text-sm font-bold tabular-nums text-hub-navy">
+                <span className="chart-stat-badge shrink-0 rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums">
                   {course.count}
                 </span>
               </div>
-              <div className="relative h-3 overflow-hidden rounded-full bg-hub-bg sm:h-3.5">
+              <div className="chart-bar-track relative h-3 overflow-hidden rounded-full sm:h-3.5">
                 <div
                   className="absolute inset-y-0 left-0 origin-left rounded-full motion-reduce:transition-none"
                   style={{

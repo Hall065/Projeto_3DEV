@@ -23,6 +23,8 @@ export interface HubUserDetail extends User {
   email_verified_at?: string | null
   role_description?: string | null
   role_module?: string | null
+  custom_permissions?: string[] | null
+  default_permissions?: string[]
   applications_detail?: HubApplicationDetail[]
 }
 

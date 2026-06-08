@@ -11,7 +11,7 @@ export function ConnectDrawerHeroCard({ onBack, children }: ConnectDrawerHeroCar
       <button
         type="button"
         onClick={onBack}
-        className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-lg border border-hub-border/60 bg-white/90 px-2.5 py-1.5 text-xs font-medium text-hub-navy shadow-sm backdrop-blur-sm hover:bg-hub-bg"
+        className="glass-input absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-hub-navy shadow-sm hover:bg-hub-bg"
         aria-label="Voltar"
       >
         <ArrowLeft className="h-4 w-4" />

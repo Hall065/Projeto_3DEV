@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   chartColorByIndex,
+  chartColorForTheme,
   chartGradientByIndex,
   resolveChartGradient,
   sanitizeChartSegmentKey,
 } from '../../constants/chartPalette'
+import { useAppearance } from '../../contexts/AppearanceContext'
 import { IsometricDistributionDonut, type IsometricDonutSegmentInput } from '../connect/ConnectCharts'
 import { ConnectLoadingSpinner } from '../connect/ConnectShared'
 
@@ -31,12 +33,12 @@ function ChartPanel({
   children: React.ReactNode
 }) {
   return (
-    <section className="flex min-w-0 w-full flex-col overflow-visible rounded-2xl border border-hub-border/50 bg-gradient-to-b from-white to-hub-bg/40 p-4 sm:p-6">
-      <header className="mb-5 shrink-0 border-b border-hub-border/40 pb-4">
+    <section className="chart-panel flex min-w-0 w-full flex-col overflow-visible rounded-2xl border border-hub-border/50 p-4 sm:p-5">
+      <header className="mb-4 shrink-0 border-b border-hub-border/30 pb-3">
         <h3 className="text-base font-semibold text-hub-navy sm:text-lg">{title}</h3>
-        <p className="mt-1 text-xs text-hub-text-muted sm:text-sm">{subtitle}</p>
+        <p className="mt-0.5 text-xs text-hub-text-muted sm:text-sm">{subtitle}</p>
       </header>
-      <div className="min-h-[200px] min-w-0 w-full flex-1">{children}</div>
+      <div className="min-h-[180px] min-w-0 w-full flex-1">{children}</div>
     </section>
   )
 }
@@ -61,9 +63,16 @@ function ChartReveal({ children, delayMs = 0 }: { children: React.ReactNode; del
   )
 }
 
-function shortenDonutLabel(label: string, max = 14): string {
-  if (label.length <= max) return label
-  return `${label.slice(0, max - 1)}…`
+const GRID_DONUT_SHORT_LABELS: Record<string, string> = {
+  'Aguardando aprovação': 'Aguard. aprov.',
+  'Avaliação pendente': 'Aval. pendente',
+  'Em atendimento': 'Em atendimento',
+}
+
+function gridDonutShortLabel(label: string): string {
+  if (GRID_DONUT_SHORT_LABELS[label]) return GRID_DONUT_SHORT_LABELS[label]
+  if (label.length <= 16) return label
+  return `${label.slice(0, 15)}…`
 }
 
 /** Donut isométrico — mesmo componente visual do Connect */
@@ -80,18 +89,21 @@ export function GridDistributionDonut({
   loading?: boolean
   emptyMessage?: string
 }) {
+  const { wallpaperTone } = useAppearance()
+  const isDark = wallpaperTone === 'dark'
   const totalCount = breakdownTotalCount(items)
   const pctSum = items.reduce((sum, item) => sum + item.value, 0) || 1
 
   const segments: IsometricDonutSegmentInput[] = items.map((item, index) => {
-    const color = item.color?.trim() ? item.color : chartColorByIndex(index)
+    const lightColor = item.color?.trim() ? item.color : chartColorByIndex(index, false)
+    const color = chartColorForTheme(lightColor, index, isDark)
     return {
       key: sanitizeChartSegmentKey(item.label, index),
       label: item.label,
-      short: shortenDonutLabel(item.label),
+      short: gridDonutShortLabel(item.label),
       pct: item.count != null && totalCount > 0 ? (item.count / totalCount) * 100 : (item.value / pctSum) * 100,
       color,
-      gradient: resolveChartGradient(color, index),
+      gradient: resolveChartGradient(lightColor, index, isDark),
       count: item.count,
     }
   })
@@ -122,6 +134,8 @@ export function GridMonthlyBarChart({
   items: { label: string; count: number }[]
   loading?: boolean
 }) {
+  const { wallpaperTone } = useAppearance()
+  const isDark = wallpaperTone === 'dark'
   const [animated, setAnimated] = useState(false)
   const max = Math.max(...items.map((i) => i.count), 1)
 
@@ -142,11 +156,11 @@ export function GridMonthlyBarChart({
 
   return (
     <ChartReveal delayMs={100}>
-      <ul className="flex w-full min-w-0 flex-col gap-4 xl:hidden">
+      <ul className="flex w-full min-w-0 flex-col gap-3 xl:hidden">
         {items.map((item, index) => {
           const widthPct = (item.count / max) * 100
-          const { from, to } = chartGradientByIndex(index)
-          const color = chartColorByIndex(index)
+          const { from, to } = chartGradientByIndex(index, isDark)
+          const color = chartColorByIndex(index, isDark)
           return (
             <li key={item.label} className="min-w-0">
               <div className="mb-2 flex items-center justify-between gap-2 text-sm">
@@ -155,7 +169,7 @@ export function GridMonthlyBarChart({
                   {item.count}
                 </span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-hub-bg">
+              <div className="chart-bar-track h-3 overflow-hidden rounded-full">
                 <div
                   className="h-full origin-left rounded-full motion-reduce:transition-none"
                   style={{
@@ -180,7 +194,7 @@ export function GridMonthlyBarChart({
           >
             {items.map((item, index) => {
               const heightPct = Math.max((item.count / max) * 100, 12)
-              const { from, to } = chartGradientByIndex(index)
+              const { from, to } = chartGradientByIndex(index, isDark)
               return (
                 <div
                   key={item.label}
@@ -189,7 +203,7 @@ export function GridMonthlyBarChart({
                 >
                   <div className="relative flex h-36 w-full items-end justify-center">
                     <div className="relative w-10 sm:w-12" style={{ height: `${heightPct}%` }}>
-                      <span className="absolute -top-5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-xs font-bold tabular-nums text-hub-navy">
+                      <span className="absolute -top-5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-xs font-bold tabular-nums text-hub-text">
                         {item.count}
                       </span>
                       <div
@@ -207,7 +221,7 @@ export function GridMonthlyBarChart({
                       </div>
                     </div>
                   </div>
-                  <span className="line-clamp-2 w-full text-center text-[11px] leading-tight text-hub-text-muted">
+                  <span className="line-clamp-2 w-full text-center text-[11px] font-medium leading-tight text-hub-text">
                     {item.label}
                   </span>
                 </div>
@@ -229,6 +243,8 @@ export function GridHorizontalBarChart({
   loading?: boolean
   valueLabel?: string
 }) {
+  const { wallpaperTone } = useAppearance()
+  const isDark = wallpaperTone === 'dark'
   const [animated, setAnimated] = useState(false)
   const max = Math.max(...items.map((i) => i.count), 1)
 
@@ -249,29 +265,27 @@ export function GridHorizontalBarChart({
 
   return (
     <ChartReveal delayMs={150}>
-      <ul className="flex w-full min-w-0 flex-col gap-4 sm:gap-5">
+      <ul className="flex w-full min-w-0 flex-col gap-3 sm:gap-3.5">
         {items.map((item, index) => {
           const widthPct = (item.count / max) * 100
-          const { from, to } = chartGradientByIndex(index)
+          const { from, to } = chartGradientByIndex(index, isDark)
+          const color = chartColorByIndex(index, isDark)
           return (
             <li key={item.name} className="min-w-0">
               <div className="mb-2 flex items-start justify-between gap-3">
                 <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-hub-text" title={item.name}>
                   {item.name}
                 </span>
-                <span
-                  className="shrink-0 rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums text-white"
-                  style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
-                >
+                <span className="chart-stat-badge shrink-0 rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums">
                   {item.count} {valueLabel}
                 </span>
               </div>
-              <div className="relative h-3 overflow-hidden rounded-full bg-hub-bg sm:h-3.5">
+              <div className="chart-bar-track relative h-3 overflow-hidden rounded-full sm:h-3.5">
                 <div
                   className="absolute inset-y-0 left-0 origin-left rounded-full motion-reduce:transition-none"
                   style={{
                     width: `${Math.max(widthPct, 4)}%`,
-                    background: `linear-gradient(to right, ${from}, ${to})`,
+                    background: isDark ? color : `linear-gradient(to right, ${from}, ${to})`,
                     transform: animated ? 'scaleX(1)' : 'scaleX(0)',
                     transition: `transform 0.68s ${CHART_EASE}`,
                     transitionDelay: `${index * 55}ms`,

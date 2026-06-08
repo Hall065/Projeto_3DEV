@@ -15,20 +15,24 @@ use App\Models\Connect\ConnectCourse;
 use App\Models\Connect\ConnectAttendanceSession;
 use App\Models\Connect\ConnectStudent;
 use App\Models\Connect\ConnectTeacher;
+use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $activeClasses = ConnectClass::query()->where('status', 'active')->count();
-        $totalTeachers = ConnectTeacher::query()->where('status', 'active')->count();
-        $totalStudents = ConnectStudent::query()->where('status', 'active')->count();
-        $seededStudents = ConnectStudent::query()->count();
+        $user = $request->user();
 
-        $attendanceRate = $this->calculateAttendanceRate();
+        $activeClasses = UserAccessScope::connectClassQuery($user)->where('status', 'active')->count();
+        $totalTeachers = UserAccessScope::connectTeacherQuery($user)->where('status', 'active')->count();
+        $totalStudents = UserAccessScope::connectStudentQuery($user)->where('status', 'active')->count();
+        $seededStudents = UserAccessScope::connectStudentQuery($user)->count();
+
+        $attendanceRate = $this->calculateAttendanceRate($user);
 
         $chartData = $this->resolveAttendanceChart();
 
@@ -42,22 +46,22 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        $recentCadastros = ConnectStudent::query()
+        $recentCadastros = UserAccessScope::connectStudentQuery($user)
             ->with(['connectClass.course', 'hubPerson'])
             ->orderByDesc('created_at')
             ->limit(5)
             ->get();
 
-        $activeCourses = ConnectCourse::query()->where('status', 'active')->count();
-        $activeContracts = ConnectContract::query()->where('status', 'active')->count();
+        $activeCourses = UserAccessScope::connectCourseQuery($user)->where('status', 'active')->count();
+        $activeContracts = UserAccessScope::connectContractQuery($user)->where('status', 'active')->count();
 
-        $attendanceBreakdown = $this->attendanceBreakdown();
-        $studentsByCourse = ConnectCourse::query()
+        $attendanceBreakdown = $this->attendanceBreakdown($user);
+        $studentsByCourse = UserAccessScope::connectCourseQuery($user)
             ->withCount('classes')
             ->get()
             ->map(fn ($course) => [
                 'name' => $course->name,
-                'count' => ConnectStudent::query()
+                'count' => UserAccessScope::connectStudentQuery($user)
                     ->whereHas('connectClass', fn ($q) => $q->where('connect_course_id', $course->id))
                     ->count(),
             ])
@@ -66,7 +70,7 @@ class DashboardController extends Controller
 
         $weekStart = Carbon::now()->subDays(7)->toDateString();
 
-        $classesByTeacher = ConnectTeacher::query()
+        $classesByTeacher = UserAccessScope::connectTeacherQuery($user)
             ->with('hubPerson')
             ->withCount([
                 'attendanceSessions as sessions_count' => fn ($query) => $query->whereDate('session_date', '>=', $weekStart),
@@ -82,7 +86,7 @@ class DashboardController extends Controller
             ->values();
 
         if ($classesByTeacher->isEmpty()) {
-            $classesByTeacher = ConnectTeacher::query()
+            $classesByTeacher = UserAccessScope::connectTeacherQuery($user)
                 ->with('hubPerson')
                 ->withCount('attendanceSessions as sessions_count')
                 ->orderByDesc('sessions_count')
@@ -123,9 +127,9 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function calculateAttendanceRate(): float
+    private function calculateAttendanceRate(\App\Models\User $user): float
     {
-        $totals = ConnectAttendanceMark::query()
+        $totals = UserAccessScope::attendanceMarkQuery($user)
             ->select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -143,9 +147,9 @@ class DashboardController extends Controller
     /**
      * @return array<string, int|float>
      */
-    private function attendanceBreakdown(): array
+    private function attendanceBreakdown(\App\Models\User $user): array
     {
-        $totals = ConnectAttendanceMark::query()
+        $totals = UserAccessScope::attendanceMarkQuery($user)
             ->select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->pluck('total', 'status');

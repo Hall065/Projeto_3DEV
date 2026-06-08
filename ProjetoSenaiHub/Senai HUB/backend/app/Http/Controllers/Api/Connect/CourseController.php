@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Connect\ConnectCourseResource;
 use App\Models\Connect\ConnectActivity;
 use App\Models\Connect\ConnectCourse;
+use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -14,7 +15,7 @@ class CourseController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = ConnectCourse::query()
+        $query = UserAccessScope::connectCourseQuery($request->user())
             ->withCount('classes')
             ->orderBy('name');
 

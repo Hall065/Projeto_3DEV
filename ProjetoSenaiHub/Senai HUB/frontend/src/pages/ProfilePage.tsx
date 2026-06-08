@@ -396,7 +396,7 @@ export function ProfilePage() {
                   return (
                     <li
                       key={app.id}
-                      className="flex overflow-hidden rounded-xl border border-hub-border/60 bg-white shadow-sm transition hover:border-hub-navy/20 hover:shadow-md"
+                      className="surface-inset flex overflow-hidden rounded-xl border border-hub-border/60 shadow-sm transition hover:border-hub-navy/20 hover:shadow-md"
                     >
                       <img src={cover} alt="" className="hidden h-auto w-24 shrink-0 object-cover sm:block" />
                       <div className="flex min-w-0 flex-1 flex-col p-4">

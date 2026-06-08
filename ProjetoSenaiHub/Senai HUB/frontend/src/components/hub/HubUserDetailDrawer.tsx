@@ -119,7 +119,7 @@ export function HubUserDetailDrawer({
                 </p>
               )}
 
-              <dl className="rounded-2xl border border-hub-border/50 bg-white px-4">
+              <dl className="surface-inset rounded-2xl border border-hub-border/50 px-4">
                 <DetailRow label="ID" value={detail.id} />
                 <DetailRow label="E-mail" value={detail.email} />
                 <DetailRow label="Perfil" value={detail.role_label ?? detail.role ?? '—'} />
@@ -144,7 +144,7 @@ export function HubUserDetailDrawer({
                     {detail.applications_detail?.map((app) => (
                       <li
                         key={app.slug}
-                        className="rounded-xl border border-hub-border/50 bg-white px-4 py-3 text-sm"
+                        className="surface-inset rounded-xl border border-hub-border/50 px-4 py-3 text-sm"
                       >
                         <p className="font-medium text-hub-navy">{app.name}</p>
                         {app.description && <p className="mt-0.5 text-xs text-hub-text-muted">{app.description}</p>}
@@ -164,7 +164,7 @@ export function HubUserDetailDrawer({
                 ) : (
                   <div className="space-y-4">
                     {permissionGroups.map((group) => (
-                      <div key={group.module} className="rounded-xl border border-hub-border/50 bg-white px-4 py-3">
+                      <div key={group.module} className="surface-inset rounded-xl border border-hub-border/50 px-4 py-3">
                         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-hub-text-muted">{group.module}</p>
                         <ul className="space-y-1">
                           {group.items.map((item) => (

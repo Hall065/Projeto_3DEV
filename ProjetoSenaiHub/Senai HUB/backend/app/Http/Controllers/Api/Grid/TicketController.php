@@ -10,6 +10,8 @@ use App\Models\Grid\GridTask;
 use App\Models\Grid\GridTicket;
 use App\Services\Grid\GridWorkflowService;
 use App\Support\GridCode;
+use App\Support\HubRole;
+use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -20,7 +22,9 @@ class TicketController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = GridTicket::query()->withCount('tasks')->orderByDesc('opened_at');
+        $query = UserAccessScope::gridTicketQuery($request->user())
+            ->withCount('tasks')
+            ->orderByDesc('opened_at');
 
         $query->search($request->string('search')->trim()->toString() ?: null);
 
@@ -50,8 +54,10 @@ class TicketController extends Controller
         return GridTicketResource::collection($tickets)->response();
     }
 
-    public function show(GridTicket $ticket): JsonResponse
+    public function show(Request $request, GridTicket $ticket): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessGridTicket($request->user(), $ticket), 403);
+
         $ticket->load(['tasks']);
 
         return response()->json([
@@ -59,8 +65,10 @@ class TicketController extends Controller
         ]);
     }
 
-    public function report(GridTicket $ticket): JsonResponse
+    public function report(Request $request, GridTicket $ticket): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessGridTicket($request->user(), $ticket), 403);
+
         $report = $this->workflow->buildTicketReport($ticket);
 
         return response()->json([
@@ -105,6 +113,11 @@ class TicketController extends Controller
             $validated['status'] ?? null,
         );
 
+        $user = $request->user();
+        if (in_array($user?->role, [HubRole::GRID_PROFESSOR, HubRole::GRID_SECRETARIA], true)) {
+            $validated['requester'] = $user->name;
+        }
+
         $ticket = GridTicket::query()->create([
             ...$validated,
             'code' => GridCode::nextTicketCode(),
@@ -121,6 +134,8 @@ class TicketController extends Controller
 
     public function update(Request $request, GridTicket $ticket): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessGridTicket($request->user(), $ticket), 403);
+
         $validated = $request->validate([
             'requester' => ['sometimes', 'string', 'max:255'],
             'title' => ['sometimes', 'string', 'max:255'],
@@ -233,8 +248,10 @@ class TicketController extends Controller
         ], 201);
     }
 
-    public function destroy(GridTicket $ticket): JsonResponse
+    public function destroy(Request $request, GridTicket $ticket): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessGridTicket($request->user(), $ticket), 403);
+
         GridTask::query()->where('grid_ticket_id', $ticket->id)->each(function (GridTask $task) {
             $this->workflow->releaseReservations($task);
         });

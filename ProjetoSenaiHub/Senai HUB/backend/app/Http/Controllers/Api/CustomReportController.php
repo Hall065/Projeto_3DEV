@@ -79,8 +79,9 @@ class CustomReportController extends Controller
         $this->authorizeModule($request->user(), $module);
 
         $download = $request->boolean('download');
+        $autoPrint = $request->boolean('print');
 
-        return $this->reports->exportHtml($module, $request->all(), $request->user(), $download);
+        return $this->reports->exportHtml($module, $request->all(), $request->user(), $download, $autoPrint);
     }
 
     public function exportXlsx(Request $request, string $module): StreamedResponse

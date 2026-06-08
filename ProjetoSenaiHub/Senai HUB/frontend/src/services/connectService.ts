@@ -4,7 +4,6 @@ import type {
   ConnectClass,
   ConnectContract,
   ConnectCourse,
-  ConnectSalaryRecord,
   ConnectStudent,
   ConnectStudentLocation,
   ConnectTeacher,
@@ -14,7 +13,9 @@ import type {
   HubPerson,
   HubPersonKind,
   PaginatedResponse,
+  SalariesListResponse,
   SalaryCalculationResult,
+  SalaryPreviewData,
 } from '../types/connect'
 import type {
   ClassProfileData,
@@ -163,9 +164,19 @@ export const connectService = {
     await api.delete(`/connect/contracts/${id}`)
   },
 
-  async getSalaries(params?: Record<string, string | number>): Promise<PaginatedResponse<ConnectSalaryRecord>> {
-    const { data } = await api.get<PaginatedResponse<ConnectSalaryRecord>>('/connect/salaries', { params })
-    return unwrapPaginated(data)
+  async getSalaries(params?: Record<string, string | number>): Promise<SalariesListResponse> {
+    const { data } = await api.get<SalariesListResponse>('/connect/salaries', { params })
+    return data
+  },
+
+  async previewSalary(params: {
+    connect_student_id: number
+    reference_month: string
+    bonuses?: number
+    deductions?: number
+  }): Promise<SalaryPreviewData> {
+    const { data } = await api.get<{ data: SalaryPreviewData }>('/connect/salaries/preview', { params })
+    return data.data
   },
 
   async calculateSalary(payload: {
@@ -175,6 +186,13 @@ export const connectService = {
     deductions?: number
   }): Promise<SalaryCalculationResult> {
     const { data } = await api.post<SalaryCalculationResult>('/connect/salaries/calculate', payload)
+    return data
+  },
+
+  async calculateSalaryBatch(reference_month: string): Promise<{ processed: number; message: string }> {
+    const { data } = await api.post<{ processed: number; message: string }>('/connect/salaries/calculate-batch', {
+      reference_month,
+    })
     return data
   },
 

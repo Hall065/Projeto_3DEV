@@ -95,12 +95,13 @@ class CustomReportService
     /**
      * @param  array<string, mixed>  $payload
      */
-    public function exportHtml(string $module, array $payload, ?User $user = null, bool $download = false): \Illuminate\View\View|\Illuminate\Http\Response
+    public function exportHtml(string $module, array $payload, ?User $user = null, bool $download = false, bool $autoPrint = false): \Illuminate\View\View|\Illuminate\Http\Response
     {
         $report = $this->build($module, $payload, $user);
         $view = view('reports.print', [
             'report' => $report,
             'module' => $module,
+            'autoPrint' => $autoPrint,
         ]);
 
         if (! $download) {

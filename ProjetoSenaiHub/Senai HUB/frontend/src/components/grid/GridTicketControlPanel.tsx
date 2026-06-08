@@ -49,7 +49,7 @@ export function GridTicketControlPanel({
         </div>
       </div>
 
-      <ConnectCard className="!border-hub-border/40 !bg-white/60 p-4 sm:p-5">
+      <ConnectCard className="surface-inset !border-hub-border/40 p-4 sm:p-5">
         <GridTicketWorkflowStepper currentStatus={ticket.status} />
       </ConnectCard>
 

@@ -67,6 +67,11 @@ export function GridKanbanBoard<TItem extends ItemWithId, TCol extends string>({
     if (activeId === null) setLocalItems(items)
   }, [items, activeId])
 
+  useEffect(() => {
+    document.body.classList.toggle('is-dragging', activeId !== null)
+    return () => document.body.classList.remove('is-dragging')
+  }, [activeId])
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -286,7 +291,9 @@ function SortableKanbanCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`kanban-sortable-card touch-none ${isDragging ? 'opacity-35' : 'opacity-100'}`}
+      className={`kanban-sortable-card touch-none ${
+        disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'
+      } ${isDragging ? 'opacity-35' : 'opacity-100'}`}
       {...attributes}
       {...listeners}
     >

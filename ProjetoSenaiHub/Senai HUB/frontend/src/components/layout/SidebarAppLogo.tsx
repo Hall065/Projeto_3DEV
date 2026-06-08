@@ -1,16 +1,34 @@
 import { Link } from 'react-router-dom'
-import { logoConnectBlack, logoGridBlack } from '../../assets/brand'
+import {
+  connectLogoExpanded,
+  connectLogoIcon,
+  gridLogoExpanded,
+  gridLogoIcon,
+  hubLogoExpanded,
+  hubLogoIcon,
+} from '../../assets/brand'
 
-type SidebarApp = 'connect' | 'grid'
+type SidebarApp = 'hub' | 'connect' | 'grid'
 
-const appConfig: Record<SidebarApp, { src: string; alt: string; dashboardTo: string }> = {
+const appConfig: Record<
+  SidebarApp,
+  { expanded: string; icon: string; alt: string; dashboardTo: string }
+> = {
+  hub: {
+    expanded: hubLogoExpanded,
+    icon: hubLogoIcon,
+    alt: 'SENAI HUB',
+    dashboardTo: '/hub',
+  },
   connect: {
-    src: logoConnectBlack,
+    expanded: connectLogoExpanded,
+    icon: connectLogoIcon,
     alt: 'SENAI Connect',
     dashboardTo: '/connect',
   },
   grid: {
-    src: logoGridBlack,
+    expanded: gridLogoExpanded,
+    icon: gridLogoIcon,
     alt: 'SENAI Grid',
     dashboardTo: '/grid',
   },
@@ -25,7 +43,8 @@ export function SidebarAppLogo({
   collapsed: boolean
   onNavigate?: () => void
 }) {
-  const { src, alt, dashboardTo } = appConfig[app]
+  const { expanded, icon, alt, dashboardTo } = appConfig[app]
+  const src = collapsed ? icon : expanded
 
   return (
     <Link
@@ -37,7 +56,11 @@ export function SidebarAppLogo({
       <img
         src={src}
         alt={alt}
-        className={`object-contain ${collapsed ? 'h-10 w-10' : 'h-auto w-full max-w-[200px]'}`}
+        className={
+          collapsed
+            ? 'mx-auto h-11 w-11 object-contain object-center'
+            : 'h-auto w-full max-w-[220px] object-contain'
+        }
       />
     </Link>
   )

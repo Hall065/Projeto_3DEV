@@ -297,9 +297,9 @@ export function FormField({
 }
 
 export const inputClass =
-  'glass-input h-11 w-full rounded-xl px-3 text-sm text-hub-text placeholder:text-hub-text-muted/70 outline-none transition focus:border-hub-red focus:ring-2 focus:ring-hub-red/15'
+  'glass-input h-11 w-full cursor-text rounded-xl px-3 text-sm text-hub-text placeholder:text-hub-text-muted/70 outline-none transition focus:border-hub-red focus:ring-2 focus:ring-hub-red/15'
 
-export const selectClass = inputClass
+export const selectClass = `${inputClass} cursor-pointer`
 
 export function PrimaryButton({
   children,
@@ -317,7 +317,7 @@ export function PrimaryButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-hub-red px-5 text-sm font-semibold text-white transition hover:bg-hub-red-hover disabled:opacity-60"
+      className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-hub-red px-5 text-sm font-semibold text-white transition hover:bg-hub-red-hover disabled:cursor-not-allowed disabled:opacity-60"
     >
       {children}
     </button>
@@ -340,7 +340,7 @@ export function OutlineButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="glass-input inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium text-hub-text transition hover:bg-white/60 disabled:opacity-60"
+      className="glass-input inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium text-hub-text transition hover:bg-hub-bg disabled:cursor-not-allowed disabled:opacity-60"
     >
       {children}
     </button>

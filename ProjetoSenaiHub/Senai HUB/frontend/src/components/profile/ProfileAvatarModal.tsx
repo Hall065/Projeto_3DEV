@@ -4,6 +4,7 @@ import { UserAvatar } from '../ui/UserAvatar'
 import { OutlineButton, PrimaryButton } from '../connect/ConnectShared'
 import { useAuth } from '../../contexts/AuthContext'
 import { prepareAvatarFile, readAvatarPreview, validateAvatarFile } from '../../utils/avatarImage'
+import { resolveMediaUrl } from '../../utils/mediaUrl'
 
 interface ProfileAvatarModalProps {
   open: boolean
@@ -46,7 +47,7 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
     return null
   }
 
-  const displayUrl = previewUrl ?? user.avatar_url ?? null
+  const displayUrl = previewUrl ?? resolveMediaUrl(user.avatar_url)
   const busy = isSubmitting || processing
 
   async function handleFileChange(file: File | null) {

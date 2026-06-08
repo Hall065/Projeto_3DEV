@@ -220,7 +220,7 @@ export function AttendancePage() {
               className={`h-8 min-w-8 rounded-lg border px-2 text-xs font-bold ${
                 missed
                   ? 'border-red-500 bg-red-50 text-red-600'
-                  : 'border-hub-border bg-white text-hub-text-muted'
+                  : 'surface-inset border-hub-border text-hub-text-muted'
               }`}
             >
               {missed ? 'X' : n}

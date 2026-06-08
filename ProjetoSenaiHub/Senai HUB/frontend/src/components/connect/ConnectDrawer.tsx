@@ -42,7 +42,7 @@ export function ConnectDrawer({ open, onClose, title, subtitle, children, footer
         role="dialog"
         aria-modal="true"
       >
-        <div className="sticky top-0 z-10 flex shrink-0 items-start justify-between border-b border-hub-border bg-white/95 px-4 py-4 backdrop-blur-md sm:static sm:bg-transparent sm:px-6 sm:py-5 sm:backdrop-blur-none">
+        <div className="sticky top-0 z-10 flex shrink-0 items-start justify-between border-b border-hub-border bg-inherit px-4 py-4 backdrop-blur-md sm:static sm:px-6 sm:py-5 sm:backdrop-blur-none">
           <div>
             <h2 className="text-lg font-bold text-hub-navy">{title}</h2>
             {subtitle && <p className="mt-1 text-sm text-hub-text-muted">{subtitle}</p>}

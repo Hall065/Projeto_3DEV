@@ -22,6 +22,12 @@ class ConnectSalaryRecordResource extends JsonResource
             'bonuses' => (float) $this->bonuses,
             'net_amount' => (float) $this->net_amount,
             'status' => $this->status,
+            'status_label' => match ($this->status) {
+                'calculated' => 'Calculado',
+                'pending' => 'Pendente',
+                'paid' => 'Pago',
+                default => ucfirst((string) $this->status),
+            },
             'calculated_at' => $this->calculated_at?->toIso8601String(),
             'student' => new ConnectStudentResource($this->whenLoaded('student')),
         ];

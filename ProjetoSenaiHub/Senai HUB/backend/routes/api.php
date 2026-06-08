@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::prefix('admin')->middleware('admin')->group(function (): void {
         Route::get('/roles', [UserManagementController::class, 'roles']);
+        Route::get('/nav-permissions', [UserManagementController::class, 'navPermissions']);
         Route::get('/users', [UserManagementController::class, 'index']);
         Route::get('/users/{user}', [UserManagementController::class, 'show']);
         Route::post('/users', [UserManagementController::class, 'store']);
@@ -71,26 +72,43 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
 
     Route::prefix('reports/{module}')->whereIn('module', ['connect', 'grid'])->group(function (): void {
-        Route::get('/schema', [CustomReportController::class, 'schema']);
-        Route::get('/filter-options', [CustomReportController::class, 'filterOptions']);
-        Route::get('/presets', [ReportPresetController::class, 'index']);
-        Route::post('/presets', [ReportPresetController::class, 'store']);
-        Route::put('/presets/{preset}', [ReportPresetController::class, 'update']);
-        Route::delete('/presets/{preset}', [ReportPresetController::class, 'destroy']);
-        Route::post('/build', [CustomReportController::class, 'build']);
-        Route::post('/export-csv', [CustomReportController::class, 'exportCsv']);
-        Route::post('/export-xlsx', [CustomReportController::class, 'exportXlsx']);
-        Route::post('/export-json', [CustomReportController::class, 'exportJson']);
-        Route::post('/export-html', [CustomReportController::class, 'exportHtml']);
+        Route::get('/schema', [CustomReportController::class, 'schema'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::get('/filter-options', [CustomReportController::class, 'filterOptions'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::get('/presets', [ReportPresetController::class, 'index'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::post('/presets', [ReportPresetController::class, 'store'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::put('/presets/{preset}', [ReportPresetController::class, 'update'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::delete('/presets/{preset}', [ReportPresetController::class, 'destroy'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::post('/build', [CustomReportController::class, 'build'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::post('/export-csv', [CustomReportController::class, 'exportCsv'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::post('/export-xlsx', [CustomReportController::class, 'exportXlsx'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::post('/export-json', [CustomReportController::class, 'exportJson'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
+        Route::post('/export-html', [CustomReportController::class, 'exportHtml'])
+            ->middleware('permission:connect.reports.view,connect.reports.manage,grid.reports.view');
     });
 
     Route::prefix('spreadsheets/{module}')->whereIn('module', ['connect', 'grid'])->group(function (): void {
-        Route::get('/', [SpreadsheetController::class, 'index']);
-        Route::get('/import-logs', [SpreadsheetController::class, 'logs']);
-        Route::get('/{key}/template', [SpreadsheetController::class, 'template']);
-        Route::get('/{key}/export', [SpreadsheetController::class, 'export']);
-        Route::post('/{key}/preview', [SpreadsheetController::class, 'preview']);
-        Route::post('/{key}/import', [SpreadsheetController::class, 'import']);
+        Route::get('/', [SpreadsheetController::class, 'index'])
+            ->middleware('permission:connect.spreadsheets,grid.spreadsheets');
+        Route::get('/import-logs', [SpreadsheetController::class, 'logs'])
+            ->middleware('permission:connect.spreadsheets,grid.spreadsheets');
+        Route::get('/{key}/template', [SpreadsheetController::class, 'template'])
+            ->middleware('permission:connect.spreadsheets,grid.spreadsheets');
+        Route::get('/{key}/export', [SpreadsheetController::class, 'export'])
+            ->middleware('permission:connect.spreadsheets,grid.spreadsheets');
+        Route::post('/{key}/preview', [SpreadsheetController::class, 'preview'])
+            ->middleware('permission:connect.spreadsheets,grid.spreadsheets');
+        Route::post('/{key}/import', [SpreadsheetController::class, 'import'])
+            ->middleware('permission:connect.spreadsheets,grid.spreadsheets');
     });
 
     Route::prefix('connect')->middleware('permission:connect.access')->group(function (): void {
@@ -112,9 +130,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::delete('/students/{student}', [StudentController::class, 'destroy']);
         });
 
+        Route::get('/teachers/{teacher}/profile', [ProfileController::class, 'teacher'])->middleware('permission:connect.teachers.view,connect.teachers.manage');
+        Route::get('/teachers', [TeacherController::class, 'index'])->middleware('permission:connect.teachers.view,connect.teachers.manage');
         Route::middleware('permission:connect.teachers.manage')->group(function (): void {
-            Route::get('/teachers/{teacher}/profile', [ProfileController::class, 'teacher']);
-            Route::get('/teachers', [TeacherController::class, 'index']);
             Route::post('/teachers', [TeacherController::class, 'store']);
             Route::put('/teachers/{teacher}', [TeacherController::class, 'update']);
             Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy']);
@@ -131,9 +149,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::delete('/classes/{connectClass}/roster/{person}', [ClassRosterController::class, 'destroy']);
         });
 
+        Route::get('/courses/{course}/profile', [ProfileController::class, 'course'])->middleware('permission:connect.courses.view,connect.courses.manage');
+        Route::get('/courses', [CourseController::class, 'index'])->middleware('permission:connect.courses.view,connect.courses.manage');
         Route::middleware('permission:connect.courses.manage')->group(function (): void {
-            Route::get('/courses/{course}/profile', [ProfileController::class, 'course']);
-            Route::get('/courses', [CourseController::class, 'index']);
             Route::post('/courses', [CourseController::class, 'store']);
             Route::put('/courses/{course}', [CourseController::class, 'update']);
             Route::get('/courses/{course}/roster', [CourseRosterController::class, 'index']);
@@ -149,16 +167,18 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
         Route::get('/locations', [LocationController::class, 'index'])->middleware('permission:connect.location.view');
 
-        Route::get('/contracts/{contract}/profile', [ProfileController::class, 'contract'])->middleware('permission:connect.contracts.manage');
+        Route::get('/contracts/{contract}/profile', [ProfileController::class, 'contract'])->middleware('permission:connect.contracts.view,connect.contracts.view_own,connect.contracts.manage');
+        Route::get('/contracts', [ContractController::class, 'index'])->middleware('permission:connect.contracts.view,connect.contracts.view_own,connect.contracts.manage');
         Route::middleware('permission:connect.contracts.manage')->group(function (): void {
-            Route::get('/contracts', [ContractController::class, 'index']);
             Route::post('/contracts', [ContractController::class, 'store']);
             Route::put('/contracts/{contract}', [ContractController::class, 'update']);
             Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
         });
 
-        Route::get('/salaries', [SalaryController::class, 'index'])->middleware('admin');
+        Route::get('/salaries', [SalaryController::class, 'index'])->middleware('permission:connect.salary.view,connect.salary.view_own');
+        Route::get('/salaries/preview', [SalaryController::class, 'preview'])->middleware('permission:connect.salary.view,connect.salary.view_own');
         Route::post('/salaries/calculate', [SalaryController::class, 'calculate'])->middleware('admin');
+        Route::post('/salaries/calculate-batch', [SalaryController::class, 'calculateBatch'])->middleware('admin');
     });
 
     Route::prefix('grid')->middleware('permission:grid.access')->group(function (): void {

@@ -76,7 +76,8 @@ export function GridTicketKanbanCard({
         <div className="flex items-start gap-2">
 
           <span
-            className={`mt-0.5 shrink-0 text-hub-text-muted ${locked ? '' : 'cursor-grab active:cursor-grabbing'}`}
+            className={`mt-0.5 shrink-0 text-hub-text-muted ${locked ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'}`}
+            data-cursor={locked ? 'not-allowed' : 'grab'}
             aria-hidden
           >
             {locked ? <Lock className="h-4 w-4 text-amber-600" /> : <GripVertical className="h-4 w-4" />}

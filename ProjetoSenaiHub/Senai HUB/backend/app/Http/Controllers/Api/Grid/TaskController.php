@@ -9,6 +9,8 @@ use App\Models\Grid\GridTask;
 use App\Services\Grid\GridWorkflowService;
 use App\Support\GridCode;
 use App\Support\GridForm;
+use App\Support\HubRole;
+use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,7 +21,9 @@ class TaskController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = GridTask::query()->with('ticket:id,code')->orderByDesc('opened_at');
+        $query = UserAccessScope::gridTaskQuery($request->user())
+            ->with('ticket:id,code')
+            ->orderByDesc('opened_at');
 
         if ($request->filled('column')) {
             $query->where('column', $request->string('column')->toString());
@@ -86,6 +90,11 @@ class TaskController extends Controller
             ], 201);
         }
 
+        $user = $request->user();
+        if (in_array($user?->role, [HubRole::GRID_PROFESSOR, HubRole::GRID_SECRETARIA], true)) {
+            $validated['opened_by'] = $user->name;
+        }
+
         $task = GridTask::query()->create([
             ...$validated,
             'inventory_items' => $inventoryItems,
@@ -107,6 +116,8 @@ class TaskController extends Controller
 
     public function update(Request $request, GridTask $task): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessGridTask($request->user(), $task), 403);
+
         GridForm::mergeNullableForeignIds($request, ['grid_ticket_id']);
 
         $validated = $request->validate([
@@ -167,8 +178,10 @@ class TaskController extends Controller
         ]);
     }
 
-    public function destroy(GridTask $task): JsonResponse
+    public function destroy(Request $request, GridTask $task): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessGridTask($request->user(), $task), 403);
+
         $this->workflow->releaseReservations($task);
         $task->delete();
 

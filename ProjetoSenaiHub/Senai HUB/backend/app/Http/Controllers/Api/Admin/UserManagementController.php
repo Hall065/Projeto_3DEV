@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\HubUserDetailResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\Auth\PermissionService;
 use App\Support\HubRole;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,10 +22,20 @@ class UserManagementController extends Controller
             'label' => $meta['label'],
             'module' => $meta['module'],
             'description' => $meta['description'],
-            'assignable' => $key !== HubRole::ADMIN,
+            'assignable' => $key !== HubRole::ADMIN
+                && $key !== HubRole::UNASSIGNED
+                && ($meta['assignable'] ?? true),
+            'default_permissions' => app(PermissionService::class)->defaultPermissionsForRole($key),
         ])->values();
 
         return response()->json(['data' => $roles]);
+    }
+
+    public function navPermissions(): JsonResponse
+    {
+        return response()->json([
+            'data' => config('permissions.nav_permissions', []),
+        ]);
     }
 
     public function index(Request $request): JsonResponse
@@ -60,17 +71,24 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', Rule::in(HubRole::all())],
+            'role' => ['nullable', Rule::in(HubRole::all())],
             'company_name' => ['nullable', 'string', 'max:255'],
+            'custom_permissions' => ['nullable', 'array'],
+            'custom_permissions.*' => ['string', 'max:120'],
         ]);
 
+        $role = $validated['role'] ?? HubRole::UNASSIGNED;
+        $validated['role'] = $role;
         $this->validateRoleExtras($validated);
+
+        $customPermissions = $this->resolveCustomPermissions($role, $validated['custom_permissions'] ?? null);
 
         $user = User::query()->create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
+            'role' => $role,
+            'custom_permissions' => $customPermissions,
             'company_name' => $validated['company_name'] ?? null,
             'email_verified_at' => now(),
         ]);
@@ -91,17 +109,30 @@ class UserManagementController extends Controller
             'password' => ['nullable', 'string', 'min:8'],
             'role' => ['sometimes', Rule::in(HubRole::all())],
             'company_name' => ['nullable', 'string', 'max:255'],
+            'custom_permissions' => ['nullable', 'array'],
+            'custom_permissions.*' => ['string', 'max:120'],
+            'reset_permissions' => ['sometimes', 'boolean'],
         ]);
 
-        if (isset($validated['role'])) {
-            $this->validateRoleExtras(array_merge($user->only(['role', 'company_name']), $validated));
-        }
+        $nextRole = $validated['role'] ?? $user->role;
+        $this->validateRoleExtras(array_merge($user->only(['role', 'company_name']), ['role' => $nextRole], $validated));
 
         if (! empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
         }
+
+        if (($validated['reset_permissions'] ?? false) === true) {
+            $validated['custom_permissions'] = null;
+        } elseif (array_key_exists('custom_permissions', $validated)) {
+            $validated['custom_permissions'] = $this->resolveCustomPermissions(
+                $nextRole,
+                $validated['custom_permissions'],
+            );
+        }
+
+        unset($validated['reset_permissions']);
 
         $user->update($validated);
         $this->syncApplicationAccess($user->fresh());
@@ -135,9 +166,32 @@ class UserManagementController extends Controller
         }
     }
 
+    /**
+     * @param  list<string>|null  $selected
+     * @return list<string>|null
+     */
+    private function resolveCustomPermissions(string $role, ?array $selected): ?array
+    {
+        if ($role === HubRole::UNASSIGNED || $role === HubRole::ADMIN) {
+            return null;
+        }
+
+        if ($selected === null) {
+            return null;
+        }
+
+        $defaults = app(PermissionService::class)->defaultPermissionsForRole($role);
+        $built = app(PermissionService::class)->buildCustomPermissions($role, $selected);
+
+        sort($defaults);
+        sort($built);
+
+        return $defaults === $built ? null : $built;
+    }
+
     private function syncApplicationAccess(User $user): void
     {
-        $slugs = app(\App\Services\Auth\PermissionService::class)->applicationSlugsFor($user);
+        $slugs = app(PermissionService::class)->applicationSlugsFor($user);
         $ids = \App\Models\Application::query()->whereIn('slug', $slugs)->pluck('id');
         $user->applications()->sync($ids);
     }

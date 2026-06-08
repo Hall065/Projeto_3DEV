@@ -3,8 +3,11 @@
 namespace App\Services\Auth;
 
 use App\Models\Application;
+use App\Models\Connect\ConnectStudent;
+use App\Models\HubPerson;
 use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -40,18 +43,37 @@ class AuthService
      */
     public function register(array $data): array
     {
-        $user = User::query()->create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'role' => 'connect_aluno',
-        ]);
+        $user = DB::transaction(function () use ($data) {
+            $user = User::query()->create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'role' => 'connect_aluno',
+            ]);
 
-        $connect = Application::query()->where('slug', 'connect')->first();
+            $person = HubPerson::query()->create([
+                'kind' => 'student',
+                'user_id' => $user->id,
+                'full_name' => $data['name'],
+                'email' => $data['email'],
+                'status' => 'active',
+            ]);
 
-        if ($connect) {
-            $user->applications()->sync([$connect->id]);
-        }
+            ConnectStudent::query()->create([
+                'hub_person_id' => $person->id,
+                'user_id' => $user->id,
+                'full_name' => $data['name'],
+                'email' => $data['email'],
+                'status' => 'active',
+            ]);
+
+            $connect = Application::query()->where('slug', 'connect')->first();
+            if ($connect) {
+                $user->applications()->sync([$connect->id]);
+            }
+
+            return $user;
+        });
 
         $token = $user->createToken('senai-hub-api')->plainTextToken;
 
@@ -79,9 +101,8 @@ class AuthService
         $this->deleteStoredAvatar($user);
 
         $path = $file->store('avatars/'.$user->id, 'public');
-        $url = Storage::disk('public')->url($path);
 
-        $user->update(['avatar_url' => $url]);
+        $user->update(['avatar_url' => '/storage/'.$path]);
 
         return $user->fresh();
     }
@@ -102,13 +123,11 @@ class AuthService
             return;
         }
 
-        $publicBase = rtrim(Storage::disk('public')->url(''), '/').'/';
+        $relativePath = $this->avatarStoragePath($avatarUrl);
 
-        if (! str_starts_with($avatarUrl, $publicBase)) {
+        if ($relativePath === null) {
             return;
         }
-
-        $relativePath = ltrim(substr($avatarUrl, strlen($publicBase)), '/');
 
         if ($relativePath !== '') {
             Storage::disk('public')->delete($relativePath);
@@ -126,6 +145,27 @@ class AuthService
         $user->update([
             'password' => $newPassword,
         ]);
+    }
+
+    private function avatarStoragePath(string $avatarUrl): ?string
+    {
+        if (str_starts_with($avatarUrl, '/storage/')) {
+            return ltrim(substr($avatarUrl, strlen('/storage/')), '/');
+        }
+
+        $publicBase = rtrim(Storage::disk('public')->url(''), '/').'/';
+
+        if (str_starts_with($avatarUrl, $publicBase)) {
+            return ltrim(substr($avatarUrl, strlen($publicBase)), '/');
+        }
+
+        $parsedPath = parse_url($avatarUrl, PHP_URL_PATH);
+
+        if (is_string($parsedPath) && str_starts_with($parsedPath, '/storage/')) {
+            return ltrim(substr($parsedPath, strlen('/storage/')), '/');
+        }
+
+        return null;
     }
 
     public function logout(?Authenticatable $user): void

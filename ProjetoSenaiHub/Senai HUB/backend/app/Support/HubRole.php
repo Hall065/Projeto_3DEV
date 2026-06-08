@@ -10,6 +10,8 @@ class HubRole
 
     public const CONNECT_SECRETARIA = 'connect_secretaria';
 
+    public const CONNECT_DIRETOR = 'connect_diretor';
+
     public const CONNECT_AQV = 'connect_aqv';
 
     public const CONNECT_EMPRESA = 'connect_empresa';
@@ -20,6 +22,12 @@ class HubRole
 
     public const GRID_FUNCIONARIO = 'grid_funcionario';
 
+    public const GRID_PROFESSOR = 'grid_professor';
+
+    public const GRID_SECRETARIA = 'grid_secretaria';
+
+    public const UNASSIGNED = 'unassigned';
+
     /** @return list<string> */
     public static function all(): array
     {
@@ -29,7 +37,12 @@ class HubRole
     /** @return list<string> */
     public static function assignable(): array
     {
-        return array_values(array_filter(self::all(), fn (string $role) => $role !== self::ADMIN));
+        return array_values(array_filter(
+            self::all(),
+            fn (string $role) => $role !== self::ADMIN
+                && $role !== self::UNASSIGNED
+                && (config("permissions.roles.{$role}.assignable") ?? true),
+        ));
     }
 
     public static function isAdmin(?string $role): bool

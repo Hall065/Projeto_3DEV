@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { ConnectHeader } from '../components/connect/ConnectHeader'
 import { ConnectSidebar } from '../components/connect/ConnectSidebar'
 import { GlassShell } from '../components/layout/GlassShell'
+import { SidebarRailToggle } from '../components/layout/SidebarRailToggle'
 
 export function ConnectLayout() {
   const [collapsed, setCollapsed] = useState(false)
@@ -40,9 +41,13 @@ export function ConnectLayout() {
         onMobileClose={() => setMobileNavOpen(false)}
       />
 
-      <div className="relative z-0 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <SidebarRailToggle
+        collapsed={collapsed}
+        onClick={() => setCollapsed((v) => !v)}
+      />
+
+      <div className="relative z-0 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:z-50">
         <ConnectHeader
-          collapsed={collapsed}
           onToggleSidebar={() => {
             if (window.innerWidth < 1024) {
               setMobileNavOpen((open) => !open)

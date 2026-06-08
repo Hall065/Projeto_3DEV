@@ -43,7 +43,7 @@ export function ApplicationHubPage() {
       )}
 
       {!loading && !error && applications.length === 0 && (
-        <p className="rounded-xl border border-hub-border bg-white px-4 py-8 text-center text-sm text-hub-text-muted">
+        <p className="glass-panel rounded-xl border border-hub-border px-4 py-8 text-center text-sm text-hub-text-muted">
           Nenhum aplicativo disponivel para o seu perfil.
         </p>
       )}

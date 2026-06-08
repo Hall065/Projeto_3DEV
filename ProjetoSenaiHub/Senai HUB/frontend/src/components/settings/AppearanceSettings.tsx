@@ -34,7 +34,7 @@ function WallpaperPreviewCard({
       type="button"
       onClick={onClick}
       className={`group relative overflow-hidden rounded-xl border-2 p-1 text-left transition ${
-        selected ? 'border-hub-red ring-2 ring-hub-red/25' : 'border-white/60 hover:border-hub-navy/30'
+        selected ? 'border-hub-red ring-2 ring-hub-red/25' : 'border-hub-border/50 hover:border-hub-navy/30'
       }`}
     >
       {children}

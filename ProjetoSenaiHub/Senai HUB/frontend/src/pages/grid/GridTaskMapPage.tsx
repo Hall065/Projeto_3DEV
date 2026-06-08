@@ -1,7 +1,6 @@
 import { AlertTriangle, CheckCircle2, ClipboardList, ListTodo, MapPin, Wrench } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import mapPlaceholder from '../../assets/map-placeholder.svg'
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
 import {
   ConnectCard,
@@ -9,9 +8,11 @@ import {
   ConnectPageHeader,
 } from '../../components/connect/ConnectShared'
 import { GridPriorityBadge, GridTicketStatusBadge } from '../../components/grid/GridBadges'
+import { CampusMapContainer } from '../../components/map/CampusMap3DViewer'
 import { gridService } from '../../services/gridService'
 import type { GridTaskCard, GridTicket } from '../../types/grid'
 import { UserAvatar } from '../../components/ui/UserAvatar'
+import { buildCampusTicketMarkers } from '../../utils/campusTicketMarkers'
 
 export function GridTaskMapPage() {
   const [tasks, setTasks] = useState<GridTaskCard[]>([])
@@ -30,29 +31,26 @@ export function GridTaskMapPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  const ticketMarkers = useMemo(() => buildCampusTicketMarkers(tasks, tickets), [tasks, tickets])
+
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
         title="Mapa de tarefas"
-        subtitle="O mapa interativo será disponibilizado em breve. Abaixo, a lista de atendimentos ativos por local."
+        subtitle="Visualize chamados e tarefas no campus 3D com marcadores por bloco e local."
       />
 
       <ConnectCard className="mb-6 min-w-0 overflow-hidden p-4 sm:p-6">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="glass-panel-solid relative flex min-h-[240px] items-center justify-center rounded-xl lg:col-span-1 lg:min-h-[320px]">
-            {loading ? (
-              <ConnectLoadingSpinner label="Carregando..." />
-            ) : (
-              <>
-                <img src={mapPlaceholder} alt="" className="max-h-full max-w-full object-contain opacity-40" aria-hidden />
-                <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm font-medium text-hub-text-muted">
-                  Mapa do campus em desenvolvimento
-                </p>
-              </>
-            )}
-          </div>
+        <div className="mb-6">
+          {loading ? (
+            <ConnectLoadingSpinner label="Carregando mapa..." className="min-h-[420px]" />
+          ) : (
+            <CampusMapContainer ticketMarkers={ticketMarkers} minHeight="420px" />
+          )}
+        </div>
 
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 gap-6">
+          <div>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="flex items-center gap-2 font-semibold text-hub-navy">
                 <MapPin className="h-4 w-4 text-hub-red" />

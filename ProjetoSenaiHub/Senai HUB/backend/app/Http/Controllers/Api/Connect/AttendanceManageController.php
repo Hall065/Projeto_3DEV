@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Connect;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Connect\ConnectAttendanceSessionResource;
 use App\Models\Connect\ConnectAttendanceSession;
+use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -12,7 +13,10 @@ class AttendanceManageController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $scopedClassIds = UserAccessScope::connectClassQuery($request->user())->select('id');
+
         $query = ConnectAttendanceSession::query()
+            ->whereIn('connect_class_id', $scopedClassIds)
             ->with(['connectClass.course', 'teacher.hubPerson', 'connectClass.teacher.hubPerson', 'marks.student.hubPerson'])
             ->withCount('marks')
             ->orderByDesc('session_date');

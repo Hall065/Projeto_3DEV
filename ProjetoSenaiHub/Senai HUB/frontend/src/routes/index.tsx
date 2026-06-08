@@ -20,6 +20,7 @@ import { ThemesPage } from '../pages/ThemesPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { ModuleAccessRoute } from './ModuleAccessRoute'
+import { PermissionRoute } from './PermissionRoute'
 import { AdminRoute } from './AdminRoute'
 import { HubUsersPage } from '../pages/hub/HubUsersPage'
 import { ConnectOverviewPage } from '../pages/connect/ConnectOverviewPage'
@@ -35,6 +36,8 @@ import { LocationPage } from '../pages/connect/LocationPage'
 import { ContractsPage } from '../pages/connect/ContractsPage'
 import { SalaryPage } from '../pages/connect/SalaryPage'
 import { SpreadsheetHubPage } from '../pages/spreadsheet/SpreadsheetHubPage'
+import { AccessDeniedPage } from '../pages/AccessDeniedPage'
+import { NotFoundPage } from '../pages/NotFoundPage'
 
 export function AppRoutes() {
   return (
@@ -53,9 +56,11 @@ export function AppRoutes() {
           <Route path="/configuracoes" element={<SettingsPage />} />
           <Route path="/temas" element={<ThemesPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
+          <Route path="/acesso-negado" element={<AccessDeniedPage />} />
         </Route>
 
         <Route element={<ModuleAccessRoute module="grid" />}>
+        <Route element={<PermissionRoute module="grid" />}>
         <Route element={<GridLayout />}>
           <Route path="/grid" element={<GridDashboardPage />} />
           <Route path="/grid/chamados" element={<GridTicketsPage />} />
@@ -68,8 +73,10 @@ export function AppRoutes() {
           <Route path="/grid/planilhas" element={<SpreadsheetHubPage module="grid" />} />
         </Route>
         </Route>
+        </Route>
 
         <Route element={<ModuleAccessRoute module="connect" />}>
+        <Route element={<PermissionRoute module="connect" />}>
         <Route element={<ConnectLayout />}>
           <Route path="/connect" element={<ConnectOverviewPage />} />
           <Route path="/connect/pessoas" element={<PeoplePage />} />
@@ -86,11 +93,12 @@ export function AppRoutes() {
           <Route path="/connect/planilhas" element={<SpreadsheetHubPage module="connect" />} />
         </Route>
         </Route>
+        </Route>
       </Route>
 
       <Route path="/" element={<LandingPage />} />
-      <Route path="/dashboard" element={<Navigate to="/" replace />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/dashboard" element={<Navigate to="/hub" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }

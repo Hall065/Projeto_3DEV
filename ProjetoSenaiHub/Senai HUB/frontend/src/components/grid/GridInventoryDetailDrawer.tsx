@@ -156,7 +156,7 @@ export function GridInventoryDetailDrawer({
                 <StockKpi label="Consumido" value={detail.qty_consumed} variant="muted" />
               </div>
 
-              <dl className="rounded-2xl border border-hub-border/50 bg-white px-4">
+              <dl className="surface-inset rounded-2xl border border-hub-border/50 px-4">
                 <DetailRow label="Quantidade total (estoque)" value={detail.qty_total} />
                 <DetailRow label="Quantidade mínima" value={detail.qty_min} />
                 <DetailRow label="Reservado" value={detail.qty_reserved ?? detail.qty_committed} />

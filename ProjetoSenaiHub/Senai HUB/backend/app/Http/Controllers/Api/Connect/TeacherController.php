@@ -7,6 +7,7 @@ use App\Http\Resources\Connect\ConnectTeacherResource;
 use App\Models\Connect\ConnectActivity;
 use App\Models\Connect\ConnectTeacher;
 use App\Models\HubPerson;
+use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ class TeacherController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = ConnectTeacher::query()
+        $query = UserAccessScope::connectTeacherQuery($request->user())
             ->with('hubPerson')
             ->withCount('classes')
             ->orderBy('full_name');
@@ -27,6 +28,10 @@ class TeacherController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status')->toString());
+        }
+
+        if ($specialty = $request->string('specialty')->trim()->toString()) {
+            $query->where('specialty', $specialty);
         }
 
         $teachers = $query->paginate($request->integer('per_page', 15));

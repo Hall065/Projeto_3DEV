@@ -275,9 +275,80 @@ class GridSampleTicketsSeeder extends Seeder
             }
         }
 
+        $this->seedRoleScopedTickets();
+
         $this->recalculateInventoryReserved($inventoryBySku->pluck('id')->all());
 
         $this->command?->info('12 chamados (2 por etapa), tarefas e vínculos de estoque criados/atualizados.');
+    }
+
+    private function seedRoleScopedTickets(): void
+    {
+        $scoped = [
+            [
+                'code' => '#CH-2026-ROLE-P1',
+                'requester' => 'Marcos Professor Grid',
+                'assignee' => 'Pedro Tecnico',
+                'title' => 'Ar-condicionado com ruido na sala 204',
+                'status' => 'em_atendimento',
+                'priority' => 'media',
+            ],
+            [
+                'code' => '#CH-2026-ROLE-S1',
+                'requester' => 'Sandra Secretaria Grid',
+                'assignee' => 'Julia Tecnica',
+                'title' => 'Impressora da secretaria sem toner',
+                'status' => 'pendente',
+                'priority' => 'baixa',
+            ],
+            [
+                'code' => '#CH-2026-ROLE-T1',
+                'requester' => 'Ana Costa',
+                'assignee' => 'Pedro Tecnico',
+                'title' => 'Tomada sem energia no corredor B',
+                'status' => 'em_atendimento',
+                'priority' => 'alta',
+            ],
+        ];
+
+        foreach ($scoped as $index => $sample) {
+            $openedAt = Carbon::now()->subDays(3 - $index)->setHour(10);
+
+            $ticket = GridTicket::query()->updateOrCreate(
+                ['code' => $sample['code']],
+                [
+                    'requester' => $sample['requester'],
+                    'title' => $sample['title'],
+                    'summary' => 'Chamado de demonstracao para teste de escopo por perfil.',
+                    'room' => (string) (204 + $index),
+                    'block' => 'B',
+                    'priority' => $sample['priority'],
+                    'status' => $sample['status'],
+                    'assignee' => $sample['assignee'],
+                    'opened_at' => $openedAt,
+                    'started_at' => $sample['status'] === 'em_atendimento' ? $openedAt->copy()->addHours(2) : null,
+                ],
+            );
+
+            GridTask::query()->updateOrCreate(
+                ['code' => $sample['code'].'-T1'],
+                [
+                    'grid_ticket_id' => $ticket->id,
+                    'opened_by' => $sample['requester'],
+                    'title' => $sample['title'],
+                    'description' => $ticket->summary,
+                    'room' => $ticket->room,
+                    'block' => $ticket->block,
+                    'assignee' => $sample['assignee'],
+                    'items' => [],
+                    'inventory_items' => [],
+                    'priority' => $sample['priority'],
+                    'column' => $sample['status'] === 'em_atendimento' ? 'em_andamento' : 'a_fazer',
+                    'status_label' => $sample['status'] === 'em_atendimento' ? 'Em atendimento' : 'A fazer',
+                    'opened_at' => $openedAt,
+                ],
+            );
+        }
     }
 
     /**

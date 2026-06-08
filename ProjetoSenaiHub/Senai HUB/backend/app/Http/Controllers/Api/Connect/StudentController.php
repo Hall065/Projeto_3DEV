@@ -57,6 +57,9 @@ class StudentController extends Controller
             'birth_date' => ['nullable', 'date'],
             'status' => ['nullable', Rule::in(['active', 'inactive', 'graduated'])],
             'user_id' => ['nullable', 'exists:users,id'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'guardian_name' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $student = DB::transaction(function () use ($validated, $request) {
@@ -70,6 +73,7 @@ class StudentController extends Controller
                 'phone' => $validated['phone'] ?? null,
                 'birth_date' => $validated['birth_date'] ?? null,
                 'specialty' => null,
+                'metadata' => $this->studentMetadataFromValidated($validated),
                 'status' => $validated['status'] ?? 'active',
             ]);
 
@@ -122,6 +126,9 @@ class StudentController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'birth_date' => ['nullable', 'date'],
             'status' => ['nullable', Rule::in(['active', 'inactive', 'graduated'])],
+            'address' => ['nullable', 'string', 'max:500'],
+            'guardian_name' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
         DB::transaction(function () use ($validated, $student): void {
@@ -129,8 +136,14 @@ class StudentController extends Controller
                 'full_name', 'cpf', 'registration_number', 'email', 'phone', 'birth_date', 'status',
             ])->filter(fn ($v) => $v !== null)->all();
 
-            if ($student->hubPerson && $profileFields !== []) {
-                $student->hubPerson->update($profileFields);
+            if ($student->hubPerson) {
+                $metadata = $this->studentMetadataFromValidated($validated, $student->hubPerson->metadata ?? []);
+                if ($metadata !== ($student->hubPerson->metadata ?? [])) {
+                    $profileFields['metadata'] = $metadata;
+                }
+                if ($profileFields !== []) {
+                    $student->hubPerson->update($profileFields);
+                }
             }
 
             $student->update($validated);
@@ -156,5 +169,28 @@ class StudentController extends Controller
         });
 
         return response()->json(['message' => 'Aluno excluído com sucesso.']);
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @param  array<string, mixed>  $existing
+     * @return array<string, mixed>
+     */
+    private function studentMetadataFromValidated(array $validated, array $existing = []): array
+    {
+        $metadata = $existing;
+
+        foreach (['address', 'guardian_name', 'notes'] as $key) {
+            if (array_key_exists($key, $validated)) {
+                $value = $validated[$key];
+                if ($value === null || $value === '') {
+                    unset($metadata[$key]);
+                } else {
+                    $metadata[$key] = $value;
+                }
+            }
+        }
+
+        return $metadata;
     }
 }

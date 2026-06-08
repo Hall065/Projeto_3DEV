@@ -35,6 +35,7 @@ export interface HubPerson {
   birth_date?: string | null
   specialty?: string | null
   status: string
+  metadata?: Record<string, string | undefined>
   pivot?: HubPersonPivot
   created_at?: string
 }
@@ -142,10 +143,12 @@ export interface ConnectContract {
   id: number
   connect_student_id: number
   contract_type: string
+  weekly_hours?: number | null
   start_date: string
   end_date?: string
   monthly_value: number
   company_name?: string
+  company_email?: string | null
   status: string
   student?: ConnectStudent
 }
@@ -159,7 +162,53 @@ export interface ConnectSalaryRecord {
   bonuses: number
   net_amount: number
   status: string
+  status_label?: string
+  calculated_at?: string | null
   student?: ConnectStudent
+}
+
+export interface SalaryListSummary {
+  total_records: number
+  total_base: number
+  total_net: number
+  total_deductions: number
+  total_bonuses: number
+}
+
+export interface SalaryAttendanceSummary {
+  total_days: number
+  present_days: number
+  justified_absences: number
+  unjustified_absences: number
+  rate: number
+}
+
+export interface SalaryPreviewData {
+  student: {
+    id: number
+    full_name: string
+    registration_number?: string
+    class_name?: string
+    course_name?: string
+  }
+  reference_month: string
+  attendance: SalaryAttendanceSummary
+  daily_rate: number
+  contract: {
+    id: number
+    company_name: string
+    monthly_value: number
+    status: string
+  } | null
+  amounts: {
+    base: number
+    bonuses: number
+    deductions: number
+    net: number
+    absence_deduction: number
+  }
+  breakdown: { label: string; value: number; type: 'base' | 'bonus' | 'deduction' | 'net' }[]
+  work_days: number
 }
 
 export interface ConnectAttendanceAbsenceSummary {
@@ -252,12 +301,15 @@ export interface DashboardData {
 
 export interface SalaryCalculationResult {
   data: ConnectSalaryRecord
-  attendance: {
-    total_days: number
-    present_days: number
-    justified_absences: number
-    unjustified_absences: number
-    rate: number
-  }
+  attendance: SalaryAttendanceSummary
   daily_rate: number
+  contract?: SalaryPreviewData['contract']
+  breakdown?: SalaryPreviewData['breakdown']
+  message?: string
+}
+
+export interface SalariesListResponse {
+  data: ConnectSalaryRecord[]
+  meta: PaginatedMeta
+  summary?: SalaryListSummary
 }

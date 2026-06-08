@@ -1,4 +1,4 @@
-import { Download, Filter, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Download, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
@@ -23,6 +23,7 @@ import { connectService } from '../../services/connectService'
 import type { ConnectClass, ConnectStudent, PaginatedMeta } from '../../types/connect'
 import { confirmDelete } from '../../utils/confirmAction'
 import { optionalForeignIdOrNull } from '../../utils/connectForm'
+import { downloadCsv } from '../../utils/csvExport'
 
 const emptyStudentForm = {
   full_name: '',
@@ -33,6 +34,9 @@ const emptyStudentForm = {
   phone: '',
   connect_class_id: '',
   status: 'active',
+  address: '',
+  guardian_name: '',
+  notes: '',
 }
 
 export function StudentsPage() {
@@ -41,27 +45,34 @@ export function StudentsPage() {
   const [classes, setClasses] = useState<ConnectClass[]>([])
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [classFilter, setClassFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyStudentForm)
   const [viewId, setViewId] = useState<number | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
 
   const load = () => {
     setLoading(true)
+    const params: Record<string, string | number> = { page, search, per_page: 10 }
+    if (classFilter) params.connect_class_id = classFilter
+    if (statusFilter) params.status = statusFilter
     connectService
-      .getStudents({ page, search, per_page: 10 })
+      .getStudents(params)
       .then((res) => {
         setStudents(res.data)
         setMeta(res.meta)
+        setSelectedIds(new Set())
       })
       .finally(() => setLoading(false))
   }
 
   useEffect(() => {
     load()
-  }, [page, search])
+  }, [page, search, classFilter, statusFilter])
 
   useEffect(() => {
     connectService.getClasses({ per_page: 50 }).then((res) => setClasses(res.data))
@@ -74,6 +85,7 @@ export function StudentsPage() {
   }
 
   const openEdit = (student: ConnectStudent) => {
+    const metadata = student.hub_person?.metadata ?? {}
     setEditingId(student.id)
     setForm({
       full_name: student.full_name,
@@ -84,11 +96,28 @@ export function StudentsPage() {
       phone: student.phone ?? '',
       connect_class_id: String(student.connect_class_id ?? student.class?.id ?? ''),
       status: student.status ?? 'active',
+      address: metadata.address ?? '',
+      guardian_name: metadata.guardian_name ?? '',
+      notes: metadata.notes ?? '',
     })
     setDrawerOpen(true)
   }
 
-  const handleSave = async () => {
+  const buildPayload = () => ({
+    full_name: form.full_name.trim(),
+    connect_class_id: optionalForeignIdOrNull(form.connect_class_id),
+    registration_number: form.registration_number.trim() || undefined,
+    cpf: form.cpf.trim() || undefined,
+    email: form.email.trim() || undefined,
+    phone: form.phone.trim() || undefined,
+    birth_date: form.birth_date || undefined,
+    status: form.status,
+    address: form.address.trim() || undefined,
+    guardian_name: form.guardian_name.trim() || undefined,
+    notes: form.notes.trim() || undefined,
+  })
+
+  const handleSave = async (keepOpen = false) => {
     if (!form.full_name.trim()) {
       window.alert('Informe o nome completo do aluno.')
       return
@@ -96,34 +125,71 @@ export function StudentsPage() {
 
     setSaving(true)
     try {
-      const payload = {
-        ...form,
-        full_name: form.full_name.trim(),
-        connect_class_id: optionalForeignIdOrNull(form.connect_class_id),
-        registration_number: form.registration_number.trim() || undefined,
-        cpf: form.cpf.trim() || undefined,
-        email: form.email.trim() || undefined,
-        phone: form.phone.trim() || undefined,
-        birth_date: form.birth_date || undefined,
-      }
+      const payload = buildPayload()
       if (editingId) {
         await connectService.updateStudent(editingId, payload)
       } else {
         await connectService.createStudent(payload)
       }
-      setDrawerOpen(false)
-      setEditingId(null)
-      setForm(emptyStudentForm)
+      if (keepOpen) {
+        setEditingId(null)
+        setForm(emptyStudentForm)
+      } else {
+        setDrawerOpen(false)
+        setEditingId(null)
+        setForm(emptyStudentForm)
+      }
       load()
     } finally {
       setSaving(false)
     }
   }
 
+  const handleExport = () => {
+    downloadCsv(
+      'alunos',
+      ['Nome', 'RM', 'Turma', 'Curso', 'Data de nascimento', 'Status'],
+      students.map((student) => [
+        student.full_name,
+        student.registration_number ?? '-',
+        student.class?.name ?? '-',
+        student.class?.course?.name ?? '-',
+        formatDate(student.birth_date),
+        student.status,
+      ]),
+    )
+  }
+
   const handleDelete = async (student: ConnectStudent) => {
     if (!confirmDelete(`o aluno "${student.full_name}"`)) return
     await connectService.deleteStudent(student.id)
     load()
+  }
+
+  const allSelected = students.length > 0 && students.every((s) => selectedIds.has(s.id))
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(students.map((s) => s.id)))
+    }
+  }
+
+  const toggleOne = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const clearFilters = () => {
+    setPage(1)
+    setSearch('')
+    setClassFilter('')
+    setStatusFilter('')
   }
 
   return (
@@ -133,7 +199,9 @@ export function StudentsPage() {
         subtitle="Consulte, filtre e gerencie os alunos cadastrados."
         actions={
           <>
-            <OutlineButton><Download className="h-4 w-4" /> Exportar</OutlineButton>
+            <OutlineButton onClick={handleExport}>
+              <Download className="h-4 w-4" /> Exportar
+            </OutlineButton>
             <OutlineButton><Filter className="h-4 w-4" /> Filtros</OutlineButton>
             <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
           </>
@@ -143,21 +211,47 @@ export function StudentsPage() {
       <ConnectCard className="mb-4 p-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <FormField label="Turma">
-            <select className={selectClass} value="" onChange={() => {}}>
+            <select
+              className={selectClass}
+              value={classFilter}
+              onChange={(e) => {
+                setPage(1)
+                setClassFilter(e.target.value)
+              }}
+            >
               <option value="">Todas as turmas</option>
               {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </FormField>
           <FormField label="Nome">
-            <input className={inputClass} placeholder="Buscar por nome..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input
+              className={inputClass}
+              placeholder="Buscar por nome..."
+              value={search}
+              onChange={(e) => {
+                setPage(1)
+                setSearch(e.target.value)
+              }}
+            />
           </FormField>
           <FormField label="Status">
-            <select className={selectClass}><option value="">Todos os status</option><option value="active">Ativo</option><option value="inactive">Inativo</option></select>
+            <select
+              className={selectClass}
+              value={statusFilter}
+              onChange={(e) => {
+                setPage(1)
+                setStatusFilter(e.target.value)
+              }}
+            >
+              <option value="">Todos os status</option>
+              <option value="active">Ativo</option>
+              <option value="inactive">Inativo</option>
+              <option value="graduated">Formado</option>
+            </select>
           </FormField>
         </div>
         <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end [&_button]:w-full sm:[&_button]:w-auto">
-          <OutlineButton onClick={() => setSearch('')}>Limpar Filtros</OutlineButton>
-          <PrimaryButton><Search className="h-4 w-4" /> Pesquisar</PrimaryButton>
+          <OutlineButton onClick={clearFilters}>Limpar Filtros</OutlineButton>
         </div>
       </ConnectCard>
 
@@ -173,7 +267,9 @@ export function StudentsPage() {
           <table className="w-full min-w-[720px] text-sm">
             <thead className="glass-thead text-hub-text-muted">
               <tr>
-                <th className="px-4 py-3"><input type="checkbox" /></th>
+                <th className="px-4 py-3">
+                  <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Selecionar todos" />
+                </th>
                 <th className="px-4 py-3 text-left">Nome</th>
                 <th className="px-4 py-3 text-left">RM</th>
                 <th className="px-4 py-3 text-left">Turma</th>
@@ -186,7 +282,14 @@ export function StudentsPage() {
             <tbody>
               {students.map((student) => (
                 <tr key={student.id} className="border-t border-hub-border/40">
-                  <td className="px-4 py-3"><input type="checkbox" /></td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(student.id)}
+                      onChange={() => toggleOne(student.id)}
+                      aria-label={`Selecionar ${student.full_name}`}
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <UserAvatar name={student.full_name} size="sm" />
@@ -235,7 +338,7 @@ export function StudentsPage() {
         footer={
           <div className="flex justify-end gap-2">
             <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
-            <OutlineButton>Salvar e Novo</OutlineButton>
+            <OutlineButton onClick={() => void handleSave(true)} disabled={saving}>Salvar e Novo</OutlineButton>
             <PrimaryButton onClick={() => void handleSave()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</PrimaryButton>
           </div>
         }
@@ -276,19 +379,35 @@ export function StudentsPage() {
               <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                 <option value="active">Ativo</option>
                 <option value="inactive">Inativo</option>
+                <option value="graduated">Formado</option>
               </select>
             </FormField>
           </section>
           <section>
             <h3 className="mb-3 font-semibold text-hub-navy">Informações adicionais</h3>
             <FormField label="Endereço">
-              <input className={inputClass} placeholder="Rua, número, bairro, cidade" />
+              <input
+                className={inputClass}
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                placeholder="Rua, número, bairro, cidade"
+              />
             </FormField>
             <FormField label="Nome do responsável">
-              <input className={inputClass} placeholder="Nome do responsável legal" />
+              <input
+                className={inputClass}
+                value={form.guardian_name}
+                onChange={(e) => setForm({ ...form, guardian_name: e.target.value })}
+                placeholder="Nome do responsável legal"
+              />
             </FormField>
             <FormField label="Observações">
-              <textarea className={`${inputClass} min-h-[80px] py-2`} placeholder="Alergias, necessidades especiais, etc." />
+              <textarea
+                className={`${inputClass} min-h-[80px] py-2`}
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                placeholder="Alergias, necessidades especiais, etc."
+              />
             </FormField>
           </section>
         </div>

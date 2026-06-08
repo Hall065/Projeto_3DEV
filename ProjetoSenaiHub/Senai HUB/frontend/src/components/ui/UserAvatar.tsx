@@ -1,5 +1,6 @@
 import { ImagePlus, User } from 'lucide-react'
-import type { ReactElement } from 'react'
+import { useEffect, useState, type ReactElement } from 'react'
+import { resolveMediaUrl } from '../../utils/mediaUrl'
 
 interface UserAvatarProps {
   name?: string
@@ -52,15 +53,22 @@ export function UserAvatar({
   const sizeClass = sizeClasses[size]
   const iconSize = iconSizes[size]
   const overlayIconSize = overlayIconSizes[size]
+  const resolvedAvatarUrl = resolveMediaUrl(avatarUrl)
+  const [imageFailed, setImageFailed] = useState(false)
+
+  useEffect(() => {
+    setImageFailed(false)
+  }, [resolvedAvatarUrl])
 
   let content: ReactElement
 
-  if (avatarUrl) {
+  if (resolvedAvatarUrl && !imageFailed) {
     content = (
       <img
-        src={avatarUrl}
-        alt={name ? `Avatar de ${name}` : 'Avatar do usuario'}
+        src={resolvedAvatarUrl}
+        alt=""
         className={`rounded-full object-cover ${sizeClass} ${className}`}
+        onError={() => setImageFailed(true)}
       />
     )
   } else if (name?.trim()) {

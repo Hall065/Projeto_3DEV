@@ -24,7 +24,9 @@ class ConnectSeeder extends Seeder
     public function run(): void
     {
         $carlosUser = User::query()->where('email', 'carlos.professor@senai.local')->first();
+        $patriciaUser = User::query()->where('email', 'patricia.professor@senai.local')->first();
         $mariaUser = User::query()->where('email', 'maria.aluno@senai.local')->first();
+        $joaoUser = User::query()->where('email', 'joao.aluno@senai.local')->first();
 
         $courses = collect([
             [
@@ -97,6 +99,14 @@ class ConnectSeeder extends Seeder
                 'email' => 'ricardo.souza@senai.local',
                 'phone' => '(11) 95432-1098',
                 'specialty' => 'Informática Industrial',
+            ],
+            [
+                'full_name' => 'Patricia Professor',
+                'cpf' => '567.890.123-45',
+                'email' => 'patricia.professor@senai.local',
+                'phone' => '(11) 94321-0987',
+                'specialty' => 'Logística',
+                'user_id' => $patriciaUser?->id,
             ],
         ])->map(fn (array $teacher) => ConnectTeacher::query()->updateOrCreate(
             ['email' => $teacher['email']],

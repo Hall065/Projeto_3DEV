@@ -15,8 +15,12 @@ class HubUserDetailResource extends JsonResource
 
         $this->loadMissing('applications');
 
+        $permissionService = app(\App\Services\Auth\PermissionService::class);
+
         return [
             ...(new UserResource($this))->toArray($request),
+            'custom_permissions' => $this->custom_permissions,
+            'default_permissions' => $permissionService->defaultPermissionsForRole((string) $this->role),
             'updated_at' => $this->updated_at?->toIso8601String(),
             'email_verified_at' => $this->email_verified_at?->toIso8601String(),
             'role_description' => $roleMeta['description'] ?? null,

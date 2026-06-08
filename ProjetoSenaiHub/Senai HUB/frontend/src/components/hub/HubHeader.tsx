@@ -3,15 +3,9 @@ import { Bell, LogOut, Paintbrush, Settings, User as UserIcon } from 'lucide-rea
 import { GlobalSearchTrigger } from '../search/GlobalSearchTrigger'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { SidebarRailToggle } from '../layout/SidebarRailToggle'
 import { UserAvatar } from '../ui/UserAvatar'
 
-interface HubHeaderProps {
-  collapsed: boolean
-  onToggleSidebar: () => void
-}
-
-export function HubHeader({ collapsed, onToggleSidebar }: HubHeaderProps) {
+export function HubHeader() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -35,8 +29,6 @@ export function HubHeader({ collapsed, onToggleSidebar }: HubHeaderProps) {
 
   return (
     <header className="glass-nav relative z-50 flex items-center gap-4 border-b px-8 py-4">
-      <SidebarRailToggle collapsed={collapsed} onClick={onToggleSidebar} />
-
       <div className="mx-auto hidden max-w-xl flex-1 md:block">
         <GlobalSearchTrigger />
       </div>

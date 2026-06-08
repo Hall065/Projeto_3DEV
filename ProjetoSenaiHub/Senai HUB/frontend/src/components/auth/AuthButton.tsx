@@ -10,7 +10,8 @@ export function AuthButton({ isLoading = false, disabled, children, className = 
     <button
       type="submit"
       disabled={disabled || isLoading}
-      className={`flex h-12 w-full items-center justify-center rounded-xl bg-hub-red text-sm font-semibold text-white transition hover:bg-hub-red-hover disabled:cursor-not-allowed disabled:opacity-70 ${className}`}
+      aria-busy={isLoading || undefined}
+      className={`flex h-12 w-full cursor-pointer items-center justify-center rounded-xl bg-hub-red text-sm font-semibold text-white transition hover:bg-hub-red-hover disabled:cursor-not-allowed disabled:opacity-70 ${className}`}
       {...props}
     >
       {isLoading ? (

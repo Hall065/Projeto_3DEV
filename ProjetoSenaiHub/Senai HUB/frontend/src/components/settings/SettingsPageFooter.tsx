@@ -22,7 +22,7 @@ export function SettingsPageFooter({
   const navigate = useNavigate()
 
   return (
-    <footer className="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-white/50 pt-6">
+    <footer className="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-hub-border/40 pt-6">
       <Button
         type="button"
         variant="secondary"

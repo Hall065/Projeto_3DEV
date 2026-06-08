@@ -3,16 +3,14 @@ import { Bell, LayoutGrid, LogOut, Menu, Paintbrush, Settings, User as UserIcon 
 import { GlobalSearchTrigger } from '../search/GlobalSearchTrigger'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { SidebarRailToggle } from '../layout/SidebarRailToggle'
 import { UserAvatar } from '../ui/UserAvatar'
 
 interface ConnectHeaderProps {
-  collapsed: boolean
   onToggleSidebar: () => void
   isMobileNavOpen?: boolean
 }
 
-export function ConnectHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: ConnectHeaderProps) {
+export function ConnectHeader({ onToggleSidebar, isMobileNavOpen }: ConnectHeaderProps) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -38,12 +36,6 @@ export function ConnectHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: C
 
   return (
     <header className="glass-nav relative z-50 flex shrink-0 items-center gap-2 border-b px-4 py-4 sm:gap-4 sm:px-6 lg:px-8">
-      <SidebarRailToggle
-        collapsed={collapsed}
-        onClick={onToggleSidebar}
-        className="max-lg:hidden"
-      />
-
       <button
         type="button"
         onClick={onToggleSidebar}

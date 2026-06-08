@@ -1,28 +1,48 @@
 import { ChevronsLeft, ChevronsRight } from 'lucide-react'
 
-/** Botão de recolher/expandir sidebar — mesmo visual em Hub, Connect e Grid */
+export const SIDEBAR_WIDTH_EXPANDED = 280
+export const SIDEBAR_WIDTH_COLLAPSED = 88
+
+/**
+ * Botão flutuante na borda da sidebar — renderizar no layout (GlassShell), não no header,
+ * para ficar acima da sidebar e centralizado na divisória.
+ */
 export function SidebarRailToggle({
   collapsed,
   onClick,
-  className = '',
+  expandedWidth = SIDEBAR_WIDTH_EXPANDED,
+  collapsedWidth = SIDEBAR_WIDTH_COLLAPSED,
 }: {
   collapsed: boolean
   onClick: () => void
-  /** ex.: max-lg:hidden no Connect */
-  className?: string
+  expandedWidth?: number
+  collapsedWidth?: number
 }) {
+  const seamLeft = collapsed ? collapsedWidth : expandedWidth
+  // Centraliza na divisória, levemente para o painel principal e abaixo da área da logo.
+  const toggleLeft = seamLeft + 2
+  const toggleTop = collapsed ? '5.25rem' : '2.75rem'
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`absolute -left-4 top-1/2 z-[60] flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-hub-navy text-white shadow-md transition hover:brightness-110 ${className}`}
-      aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+    <div
+      className="pointer-events-none absolute z-[100] hidden -translate-x-1/2 transition-[left,top] duration-300 ease-in-out lg:block"
+      style={{ left: toggleLeft, top: toggleTop }}
+      aria-hidden
     >
-      {collapsed ? (
-        <ChevronsRight className="h-4 w-4 shrink-0" strokeWidth={2} />
-      ) : (
-        <ChevronsLeft className="h-4 w-4 shrink-0" strokeWidth={2} />
-      )}
-    </button>
+      <button
+        type="button"
+        onClick={onClick}
+        className="pointer-events-auto flex h-10 w-10 cursor-pointer touch-manipulation items-center justify-center rounded-full border-0 bg-transparent p-0 transition active:scale-95"
+        aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+      >
+        <span className="sidebar-rail-toggle-face flex h-8 w-8 items-center justify-center rounded-full border ring-2 ring-[var(--tw-ring-color)] transition">
+          {collapsed ? (
+            <ChevronsRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+          ) : (
+            <ChevronsLeft className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+          )}
+        </span>
+      </button>
+    </div>
   )
 }

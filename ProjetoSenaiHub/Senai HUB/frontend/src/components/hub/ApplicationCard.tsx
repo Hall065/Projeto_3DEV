@@ -1,20 +1,18 @@
-import { ArrowUpRight, Building2, Users } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useAppearance } from '../../contexts/AppearanceContext'
 import type { HubApplication } from '../../types/application'
+import { getAppBrandMark } from '../../utils/appBrandMarks'
 import { getApplicationCover } from '../../utils/applicationCovers'
 
 interface ApplicationCardProps {
   application: HubApplication
 }
 
-const iconMap = {
-  users: Users,
-  building: Building2,
-}
-
 export function ApplicationCard({ application }: ApplicationCardProps) {
   const navigate = useNavigate()
-  const Icon = iconMap[application.icon as keyof typeof iconMap] ?? Users
+  const { wallpaperTone } = useAppearance()
+  const appMark = getAppBrandMark(application.slug, wallpaperTone)
   const cover = getApplicationCover(application.slug)
 
   return (
@@ -25,9 +23,18 @@ export function ApplicationCard({ application }: ApplicationCardProps) {
 
       <div className="flex flex-1 flex-col p-6">
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-hub-red text-white">
-            <Icon className="h-5 w-5" />
-          </span>
+          {appMark ? (
+            <img
+              src={appMark}
+              alt=""
+              className="h-10 w-10 shrink-0 object-contain"
+              aria-hidden
+            />
+          ) : (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-hub-bg text-hub-navy">
+              {application.name.charAt(0)}
+            </span>
+          )}
           <h2 className="text-xl font-bold text-hub-navy">{application.name}</h2>
         </div>
 

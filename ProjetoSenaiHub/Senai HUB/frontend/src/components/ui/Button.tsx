@@ -11,10 +11,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-white hover:bg-primary-dark',
-  secondary: 'bg-white text-slate-800 border border-slate-200 hover:bg-slate-50',
-  ghost: 'bg-transparent text-slate-600 hover:bg-slate-100',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
+  primary: 'border border-transparent bg-hub-red text-white hover:bg-hub-red-hover',
+  secondary:
+    'glass-input border border-hub-border text-hub-text hover:bg-hub-bg',
+  ghost:
+    'border border-transparent bg-transparent text-hub-text-muted hover:bg-hub-bg hover:text-hub-text',
+  danger: 'border border-transparent bg-red-600 text-white hover:bg-red-700',
 }
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -36,7 +38,8 @@ export function Button({
     <button
       type="button"
       disabled={disabled || isLoading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      aria-busy={isLoading || undefined}
+      className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
       {...props}
     >
       {isLoading && (

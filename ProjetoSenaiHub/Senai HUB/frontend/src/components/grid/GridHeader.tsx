@@ -3,16 +3,14 @@ import { Bell, LayoutGrid, LogOut, Menu, Paintbrush, Settings, User as UserIcon 
 import { GlobalSearchTrigger } from '../search/GlobalSearchTrigger'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { SidebarRailToggle } from '../layout/SidebarRailToggle'
 import { UserAvatar } from '../ui/UserAvatar'
 
 interface GridHeaderProps {
-  collapsed: boolean
   onToggleSidebar: () => void
   isMobileNavOpen?: boolean
 }
 
-export function GridHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: GridHeaderProps) {
+export function GridHeader({ onToggleSidebar, isMobileNavOpen }: GridHeaderProps) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -38,12 +36,10 @@ export function GridHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: Grid
 
   return (
     <header className="glass-nav relative z-50 flex shrink-0 items-center gap-2 border-b px-4 py-4 sm:gap-4 sm:px-6 lg:px-8">
-      <SidebarRailToggle collapsed={collapsed} onClick={onToggleSidebar} className="max-lg:hidden" />
-
       <button
         type="button"
         onClick={onToggleSidebar}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hub-border text-hub-navy transition hover:bg-white/40 lg:hidden"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hub-border text-hub-navy transition hover:bg-hub-bg lg:hidden"
         aria-label={mobileMenuLabel}
       >
         <Menu className="h-5 w-5" />
@@ -56,7 +52,7 @@ export function GridHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: Grid
       <div className="ml-auto flex shrink-0 items-center gap-4">
         <button
           type="button"
-          className="rounded-lg p-2 text-hub-text-muted transition hover:bg-white/40 hover:text-hub-text"
+          className="rounded-lg p-2 text-hub-text-muted transition hover:bg-hub-bg hover:text-hub-text"
           aria-label="Notificações"
         >
           <Bell className="h-5 w-5" />
@@ -66,7 +62,7 @@ export function GridHeader({ collapsed, onToggleSidebar, isMobileNavOpen }: Grid
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
-            className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-white/40"
+            className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-hub-bg"
             aria-expanded={menuOpen}
             aria-haspopup="menu"
           >

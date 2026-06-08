@@ -18,7 +18,7 @@ import { courseStatusLabel } from '../../utils/courseThemes'
 
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-hub-border/50 bg-white/60 p-4">
+    <section className="surface-inset rounded-xl border border-hub-border/50 p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-hub-navy">{title}</h3>
       {children}
     </section>
@@ -384,16 +384,22 @@ function ContractProfileView({ data }: { data: ContractProfileData }) {
 }
 
 function SalarySnapshotView({ record }: { record: ConnectSalaryRecord }) {
+  const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
   return (
     <div className="space-y-5">
-      <DetailSection title="Registro de salário">
+      <DetailSection title="Registro de salario">
         <DetailGrid>
           <DetailRow label="Aluno" value={record.student?.full_name} />
+          <DetailRow label="Matricula" value={record.student?.registration_number} />
+          <DetailRow label="Turma" value={record.student?.class?.name} />
           <DetailRow label="Curso" value={record.student?.class?.course?.name} />
-          <DetailRow label="Referência" value={record.reference_month} />
-          <DetailRow label="Base" value={`R$ ${record.base_amount.toFixed(2)}`} />
-          <DetailRow label="Líquido" value={`R$ ${record.net_amount.toFixed(2)}`} />
-          <DetailRow label="Status" value={<StatusBadge status={record.status} />} />
+          <DetailRow label="Referencia" value={record.reference_month} />
+          <DetailRow label="Salario base" value={brl.format(record.base_amount)} />
+          <DetailRow label="Bonificacoes" value={brl.format(record.bonuses)} />
+          <DetailRow label="Descontos" value={brl.format(record.deductions)} />
+          <DetailRow label="Valor liquido" value={brl.format(record.net_amount)} />
+          <DetailRow label="Status" value={<StatusBadge status={record.status_label ?? record.status} />} />
+          <DetailRow label="Calculado em" value={record.calculated_at ? formatDateTime(record.calculated_at) : undefined} />
         </DetailGrid>
       </DetailSection>
     </div>

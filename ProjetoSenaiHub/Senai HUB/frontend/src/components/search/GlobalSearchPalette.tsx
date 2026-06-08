@@ -55,7 +55,7 @@ export function GlobalSearchPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar aluno, turma, chamado #CH-..., estoque..."
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+            className="min-w-0 flex-1 cursor-text bg-transparent text-sm outline-none"
           />
           <kbd className="hidden rounded border border-hub-border px-1.5 py-0.5 text-[10px] text-hub-text-muted sm:inline">
             Esc

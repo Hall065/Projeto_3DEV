@@ -1,134 +1,190 @@
-# Mapa 3D — Notas para implementação (SENAI HUB)
-
-Documento de referência consolidado a partir do planejamento com o time/modelagem.  
-**Status:** modelagem em andamento — implementação no app virá depois.
-
----
+# Implementação do Mapa 3D do Campus SENAI
 
 ## Objetivo
 
-Mapa interativo do campus no módulo **Grid**, rota existente: `/grid/mapa` (`GridTaskMapPage.tsx` — hoje placeholder “Mapa do campus em desenvolvimento”).
+Implementar um visualizador 3D do campus SENAI utilizando Three.js para apoio ao sistema de infraestrutura e chamados internos.
 
-Montagem estilo **Lego**: blocos + secretaria, andares empilhados, salas clicáveis quando possível.
+Neste primeiro momento NÃO será realizado controle por sala individual.
 
----
-
-## Stack técnica
-
-| Camada | Escolha |
-|--------|---------|
-| Web 3D | **Three.js** (provável **React Three Fiber** no frontend React) |
-| Protótipo | Carregar **`.obj` + `.mtl`** (`OBJLoader` + `MTLLoader`) |
-| Produção | Preferir **`.glb`** (glTF Binary) — mais leve e padrão web |
+A navegação será feita por blocos do prédio.
 
 ---
 
-## Pipeline de assets (modelagem)
+# Arquivos Disponíveis
 
-1. **Sweet Home 3D** — planta JPG de fundo, traçar paredes/cômodos, exportar OBJ.
-   - Export: menu **Visão 3D → Exportar para o formato OBJ...** (não fica em Arquivo).
-2. **Blender** (conversão opcional/recomendada para produção):
-   - `Arquivo → Importar → Wavefront (.obj)`
-   - Atenção à **escala**: Sweet Home exporta em **mm** → no Blender usar fator **`0.001`** para metros (ou manter consistente entre todos os blocos).
-   - `Arquivo → Exportar → glTF 2.0` → formato **glTF Binary (.glb)**.
-3. **Mesma escala** em todos os arquivos (Bloco A, B, C, D, Secretaria, cada andar).
+Modelos exportados em formato GLB:
 
-### Estrutura de pastas atual
+* BlocoA.glb
+* BlocoB.glb
+* BlocoC.glb
+* BlocoD.glb
 
-```
-Arquivos/Map/
-  JPG/          # plantas (Páginas 1–7)
-  Obj/
-    Bloco A/
-      Bloco A.obj
-      Bloco_A.mtl
-  MAPA_3D_NOTAS_IMPLEMENTACAO.md  # este arquivo
-```
+Os arquivos já foram alinhados e posicionados corretamente no Blender.
 
-Expandir conforme novos blocos/andares forem exportados (ex.: `Bloco A/terreo.obj`, `Bloco A/2andar.obj`).
+Ao carregar todos os modelos simultaneamente eles devem formar o campus completo.
 
 ---
 
-## O que o export Sweet Home traz (Bloco A — validado)
+# Requisitos da Primeira Versão
 
-O OBJ **não** é um bloco único: vem segmentado em grupos (`g`):
+## Carregamento
 
-| Prefixo | Significado |
-|---------|-------------|
-| `ground_*` | Piso/chão geral |
-| `wall_*_*` | Trechos de parede |
-| `room_*_*` | **Cômodos/salas** (~140 grupos `room_` no Bloco A) |
+Utilizar:
 
-**Importante:** nomes são IDs (`room_223_1331`), não “Laboratório 3”. Para UI legível, criar **mapa de nomes** (JSON/planilha): `room_223` → label, setor, andar, etc.
+* Three.js
+* GLTFLoader
 
-**Clicar em sala no Three.js:** filtrar meshes/grupos cujo nome começa com `room_`.
+Carregar os 4 blocos automaticamente.
 
 ---
 
-## Montagem “Lego” no código
+## Navegação
 
-Cada peça = um arquivo + transform no mundo:
+Permitir:
 
-```json
-{
-  "pieces": [
-    { "id": "bloco-a-terreo", "file": "bloco-a-terreo.glb", "position": [0, 0, 0], "rotation": [0, 0, 0] },
-    { "id": "bloco-a-p2", "file": "bloco-a-p2.glb", "position": [0, 0, 3.2], "rotation": [0, 0, 0] },
-    { "id": "secretaria", "file": "secretaria.glb", "position": [12, 0, -8], "rotation": [0, 90, 0] }
-  ]
-}
-```
+* Rotação livre (OrbitControls)
+* Zoom
+* Pan
 
-Valores reais virão da documentação do modelador (colagem + regras abaixo).
+A câmera deve iniciar mostrando o campus completo.
 
 ---
 
-## Como o modelador vai explicar o encaixe (combinado)
+## Seleção de Bloco
 
-1. **Colagem** de todas as plantas (Canva/Paint/etc.) com rótulos claros:
-   - Bloco A – térreo, Bloco A – 2º andar, Bloco B, Secretaria, etc.
-   - Seta ou indicação de **norte** (ex.: “topo da imagem = norte”).
-2. **Regra de alinhamento vertical:** *“Os andares seguintes se alinham no desenho das escadas.”*
-   - Marco comum em **X/Y** para empilhar andares do **mesmo bloco**.
-3. **3D:** andares superiores podem já vir **empilhados** no export OBJ/glb do Sweet Home — a colagem serve para **conferência** e encaixe **horizontal** entre blocos.
-4. Para blocos lado a lado: colagem do **térreo geral** ou texto do tipo “Bloco B encosta na face leste do A”.
+Ao clicar em um bloco:
 
-### O que planta sozinha NÃO resolve
-
-- Posição exata entre Bloco A e B no eixo X/Y (sem colagem geral ou tabela).
-- Rotação de um bloco inteiro.
-- Altura entre andares — se o OBJ não vier empilhado, anotar pé-direito (ex.: 3,2 m) ou medir na planta.
+* Identificar qual bloco foi selecionado.
+* Centralizar a câmera no bloco.
+* Destacar visualmente o bloco selecionado.
 
 ---
 
-## Peças previstas
+## Destaque Visual
 
-- Bloco A (vários andares)
-- Blocos B, C, D
-- Secretaria
-- (Futuro) mapear `room_*` → salas do sistema / chamados / tarefas no Grid
+Quando um bloco for selecionado:
 
----
+Bloco selecionado:
 
-## Checklist antes de implementar no frontend
+* Opacidade 100%
 
-- [ ] Todos os OBJ/glb na pasta `Arquivos/Map/` (ou `public/models/map/`) com convenção de nomes clara
-- [ ] Mesma escala em todos os exports
-- [ ] Colagem das plantas + notas de encaixe (escadas, blocos)
-- [ ] Lista: arquivo → descrição (ex.: “Bloco A, 2º andar”)
-- [ ] (Opcional) JSON de posições Lego + JSON de nomes das salas
-- [ ] Decidir: só OBJ no protótipo ou já glb
-- [ ] Instalar deps: `three`, `@react-three/fiber`, `@react-three/drei` (se usar R3F)
-- [ ] Integrar em `GridTaskMapPage` — carregar modelo(s), controles de câmera, highlight/click em `room_*`
+Demais blocos:
 
----
+* Opacidade entre 10% e 30%
 
-## Referências rápidas
+Exemplo:
 
-- IA/planta→3D automático: útil para **visual**, não para mesh precisa no app.
-- Ferramentas modelagem: Sweet Home 3D → Blender → glb.
-- Página alvo: `Senai HUB/frontend/src/pages/grid/GridTaskMapPage.tsx`
+Bloco C selecionado:
+
+* Bloco A = 20%
+* Bloco B = 20%
+* Bloco C = 100%
+* Bloco D = 20%
 
 ---
 
-*Última atualização: maio/2026 — planejamento; implementação pendente.*
+## Painel de Informações
+
+Criar estrutura para exibição de:
+
+* Nome do bloco
+* Quantidade de chamados
+* Quantidade de chamados abertos
+* Quantidade de chamados concluídos
+
+Os dados poderão ser simulados inicialmente.
+
+---
+
+## Estrutura Esperada
+
+Campus
+
+* Bloco A
+* Bloco B
+* Bloco C
+* Bloco D
+
+Cada bloco deve possuir identificação própria para permitir integração futura com chamados.
+
+---
+
+# Funcionalidades Futuras (não implementar agora)
+
+## Salas
+
+Inicialmente NÃO haverá separação por salas.
+
+A associação de chamados será feita por bloco.
+
+---
+
+## Marcadores
+
+Planejado para versões futuras:
+
+* Marcadores por sala
+* Marcadores por laboratório
+* Marcadores por setor
+
+---
+
+## Integração com Banco
+
+Planejado para versões futuras:
+
+* API de chamados
+* Histórico de manutenção
+* Fotos
+* Status em tempo real
+
+---
+
+# Requisitos Técnicos
+
+## Performance
+
+Os modelos possuem aproximadamente:
+
+* 57.500 vértices
+* 103.000 faces
+* 109.000 triângulos
+
+Não realizar simplificação de malha neste momento.
+
+---
+
+## Organização
+
+Ao carregar cada GLB:
+
+* Registrar referência do objeto
+* Armazenar em coleção/lista de blocos
+* Permitir controle individual de visibilidade e opacidade
+
+---
+
+# Verificação Inicial
+
+Após carregar os GLBs executar:
+
+gltf.scene.traverse((obj) => {
+console.log(obj.name);
+});
+
+Objetivo:
+
+Mapear todos os meshes e estruturas internas exportadas pelo Blender para possíveis controles futuros (paredes, portas, escadas etc).
+
+---
+
+# Resultado Esperado
+
+O usuário deve conseguir:
+
+1. Visualizar o campus completo.
+2. Navegar livremente.
+3. Selecionar um bloco.
+4. Destacar o bloco selecionado.
+5. Visualizar informações associadas ao bloco.
+6. Preparar a estrutura para integração futura com o sistema de chamados.

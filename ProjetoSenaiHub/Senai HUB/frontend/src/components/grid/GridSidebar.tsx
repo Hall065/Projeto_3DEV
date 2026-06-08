@@ -40,8 +40,8 @@ export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: Gr
         mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } ${isCollapsed ? 'w-[88px] px-4 lg:w-[88px]' : 'w-[85vw] max-w-[280px] px-6 lg:w-[280px]'} py-6 sm:py-8`}
     >
-      <div className={`relative mb-4 flex shrink-0 items-start justify-between gap-2 sm:mb-6 ${isCollapsed ? 'flex-col items-center' : ''}`}>
-        <div className={isCollapsed ? 'flex justify-center' : 'min-w-0 flex-1'}>
+      <div className={`relative mb-4 flex shrink-0 items-start justify-between gap-2 sm:mb-5 ${isCollapsed ? 'flex-col items-center' : ''}`}>
+        <div className={isCollapsed ? 'flex w-full justify-center px-0' : 'min-w-0 flex-1'}>
           <SidebarAppLogo app="grid" collapsed={isCollapsed} onNavigate={onMobileClose} />
         </div>
         {mobileOpen && (

@@ -1,5 +1,5 @@
 import { Download, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
@@ -21,6 +21,7 @@ import { UserAvatar } from '../../components/ui/UserAvatar'
 import { connectService } from '../../services/connectService'
 import type { ConnectTeacher, PaginatedMeta } from '../../types/connect'
 import { confirmDelete } from '../../utils/confirmAction'
+import { downloadCsv } from '../../utils/csvExport'
 
 const emptyTeacherForm = { full_name: '', email: '', specialty: '', cpf: '', phone: '', status: 'active' }
 
@@ -29,26 +30,39 @@ export function TeachersPage() {
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [specialtyFilter, setSpecialtyFilter] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyTeacherForm)
   const [viewId, setViewId] = useState<number | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+
+  const specialties = useMemo(
+    () => [...new Set(teachers.map((t) => t.specialty).filter(Boolean) as string[])].sort(),
+    [teachers],
+  )
 
   const load = () => {
     setLoading(true)
+    const params: Record<string, string | number> = { page, search, per_page: 10 }
+    if (statusFilter) params.status = statusFilter
+    if (specialtyFilter) params.specialty = specialtyFilter
     connectService
-      .getTeachers({ page, search, per_page: 10 })
+      .getTeachers(params)
       .then((res) => {
         setTeachers(res.data)
         setMeta(res.meta)
+        setSelectedIds(new Set())
       })
       .finally(() => setLoading(false))
   }
 
   useEffect(() => {
     load()
-  }, [page, search])
+  }, [page, search, statusFilter, specialtyFilter])
 
   const openCreate = () => {
     setEditingId(null)
@@ -99,10 +113,43 @@ export function TeachersPage() {
     load()
   }
 
+  const handleExport = () => {
+    downloadCsv(
+      'professores',
+      ['Nome', 'E-mail', 'Especialidade', 'Turmas', 'Status'],
+      teachers.map((teacher) => [
+        teacher.full_name,
+        teacher.email,
+        teacher.specialty ?? '-',
+        teacher.classes_count ?? 0,
+        teacher.status,
+      ]),
+    )
+  }
+
   const handleDelete = async (teacher: ConnectTeacher) => {
     if (!confirmDelete(`o professor "${teacher.full_name}"`)) return
     await connectService.deleteTeacher(teacher.id)
     load()
+  }
+
+  const allSelected = teachers.length > 0 && teachers.every((t) => selectedIds.has(t.id))
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(teachers.map((t) => t.id)))
+    }
+  }
+
+  const toggleOne = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
   return (
@@ -112,7 +159,9 @@ export function TeachersPage() {
         subtitle="Cadastre, edite e acompanhe as informacoes dos professores."
         actions={
           <>
-            <OutlineButton><Download className="h-4 w-4" /> Exportar</OutlineButton>
+            <OutlineButton onClick={handleExport}>
+              <Download className="h-4 w-4" /> Exportar
+            </OutlineButton>
             <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
           </>
         }
@@ -124,12 +173,48 @@ export function TeachersPage() {
             className={`${inputClass} min-w-0 flex-1 sm:min-w-[200px]`}
             placeholder="Buscar por nome, e-mail ou CPF..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setPage(1)
+              setSearch(e.target.value)
+            }}
           />
-          <select className={`${selectClass} w-full sm:w-40`}><option value="active">Ativos</option><option value="inactive">Inativos</option><option value="">Todos</option></select>
-          <select className={`${selectClass} w-full sm:w-40`}><option value="">Todas as especialidades</option></select>
-          <OutlineButton><Filter className="h-4 w-4" /> Filtros</OutlineButton>
+          <OutlineButton onClick={() => setShowFilters((v) => !v)}>
+            <Filter className="h-4 w-4" /> Filtros
+          </OutlineButton>
         </div>
+        {showFilters && (
+          <div className="mt-4 grid gap-4 border-t border-hub-border/60 pt-4 sm:grid-cols-2">
+            <FormField label="Status">
+              <select
+                className={selectClass}
+                value={statusFilter}
+                onChange={(e) => {
+                  setPage(1)
+                  setStatusFilter(e.target.value)
+                }}
+              >
+                <option value="">Todos</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+              </select>
+            </FormField>
+            <FormField label="Especialidade">
+              <select
+                className={selectClass}
+                value={specialtyFilter}
+                onChange={(e) => {
+                  setPage(1)
+                  setSpecialtyFilter(e.target.value)
+                }}
+              >
+                <option value="">Todas as especialidades</option>
+                {specialties.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </FormField>
+          </div>
+        )}
       </ConnectCard>
 
       <ConnectCard>
@@ -141,7 +226,9 @@ export function TeachersPage() {
           <table className="w-full min-w-[640px] text-sm">
             <thead className="glass-thead text-hub-text-muted">
               <tr>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3">
+                  <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Selecionar todos" />
+                </th>
                 <th className="px-4 py-3 text-left">Nome</th>
                 <th className="px-4 py-3 text-left">E-mail institucional</th>
                 <th className="px-4 py-3 text-left">Especialidade</th>
@@ -153,7 +240,14 @@ export function TeachersPage() {
             <tbody>
               {teachers.map((teacher) => (
                 <tr key={teacher.id} className="border-t border-hub-border/40">
-                  <td className="px-4 py-3"><input type="checkbox" /></td>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(teacher.id)}
+                      onChange={() => toggleOne(teacher.id)}
+                      aria-label={`Selecionar ${teacher.full_name}`}
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <UserAvatar name={teacher.full_name} size="sm" />

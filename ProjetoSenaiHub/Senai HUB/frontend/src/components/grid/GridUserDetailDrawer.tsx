@@ -133,7 +133,7 @@ export function GridUserDetailDrawer({
                 <StatKpi label="Chamados" value={detail.stats.tickets_assigned} variant="muted" />
               </div>
 
-              <dl className="rounded-2xl border border-hub-border/50 bg-white px-4">
+              <dl className="surface-inset rounded-2xl border border-hub-border/50 px-4">
                 <DetailRow label="ID" value={detail.id} />
                 <DetailRow label="E-mail institucional" value={detail.email} />
                 <DetailRow label="Telefone" value={detail.phone || '—'} />
