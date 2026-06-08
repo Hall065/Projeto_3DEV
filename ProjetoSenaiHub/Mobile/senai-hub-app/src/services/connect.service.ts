@@ -126,7 +126,7 @@ async function hydrateProfessores(rows: Row[]) {
     await selectHubRowsByIds(
       'usuarios',
       uniqueIds(rows.map((row) => row.usuario_id)),
-      'id,nome,email,email_institucional,cpf,telefone'
+      'id,nome,email,email_institucional,cpf,telefone,foto_arquivo_id,foto_url'
     )
   );
 
@@ -271,6 +271,15 @@ async function attachAlunoPhoto(
   }
 }
 
+async function attachProfilePhoto(
+  usuarioId: string | null | undefined,
+  uri: string | null | undefined
+) {
+  const imageUri = nullIfEmpty(uri);
+  if (!usuarioId || !imageUri || imageUri.startsWith('http')) return;
+  await uploadService.uploadProfilePhoto(imageUri, usuarioId);
+}
+
 async function insertWithFallback(table: string, payloads: Row[]) {
   let lastError: unknown = null;
   for (const payload of payloads) {
@@ -331,6 +340,73 @@ async function updateHubUser(usuarioId: string | null | undefined, values: FormV
   await supabase.schema('hub').from('usuarios').update(payload).eq('id', usuarioId);
 }
 
+async function syncAlunoTurmaLink(alunoId: string, turmaId: string | null) {
+  if (!turmaId) return;
+
+  const deactivate = await supabase
+    .schema(schema)
+    .from('turma_alunos')
+    .update({ ativo: false, data_saida: new Date().toISOString().slice(0, 10) })
+    .eq('aluno_id', alunoId)
+    .neq('turma_id', turmaId);
+  if (deactivate.error) throw deactivate.error;
+
+  const { data: existing } = await supabase
+    .schema(schema)
+    .from('turma_alunos')
+    .select('id')
+    .eq('aluno_id', alunoId)
+    .eq('turma_id', turmaId)
+    .maybeSingle();
+
+  if ((existing as Row | null)?.id) {
+    const update = await supabase
+      .schema(schema)
+      .from('turma_alunos')
+      .update({ ativo: true, data_saida: null })
+      .eq('id', (existing as Row).id);
+    if (update.error) throw update.error;
+    return;
+  }
+
+  const insert = await supabase.schema(schema).from('turma_alunos').insert({ aluno_id: alunoId, turma_id: turmaId, ativo: true });
+  if (insert.error) throw insert.error;
+}
+
+async function syncProfessorTurmaLink(turmaId: string, professorId: string | null) {
+  if (!professorId) return;
+
+  const deactivate = await supabase
+    .schema(schema)
+    .from('professor_turmas')
+    .update({ ativo: false })
+    .eq('turma_id', turmaId)
+    .neq('professor_id', professorId);
+  if (deactivate.error) throw deactivate.error;
+
+  const { data: existing } = await supabase
+    .schema(schema)
+    .from('professor_turmas')
+    .select('id')
+    .eq('turma_id', turmaId)
+    .eq('professor_id', professorId)
+    .is('disciplina', null)
+    .maybeSingle();
+
+  if ((existing as Row | null)?.id) {
+    const update = await supabase.schema(schema).from('professor_turmas').update({ ativo: true }).eq('id', (existing as Row).id);
+    if (update.error) throw update.error;
+    return;
+  }
+
+  const insert = await supabase.schema(schema).from('professor_turmas').insert({
+    turma_id: turmaId,
+    professor_id: professorId,
+    ativo: true,
+  });
+  if (insert.error) throw insert.error;
+}
+
 function mapAluno(row: Row): Aluno {
   const usuario = relation(row, 'usuario') ?? relation(row, 'usuarios') ?? {};
   const turma = relation(row, 'turma') ?? relation(row, 'turmas') ?? {};
@@ -365,6 +441,8 @@ function mapProfessor(row: Row): Professor {
   return {
     id: row.id,
     usuario_id: row.usuario_id,
+    foto_arquivo_id: usuario.foto_arquivo_id,
+    foto_url: usuario.foto_url,
     nome: row.nome ?? usuario.nome ?? 'Professor sem nome',
     email: row.email ?? usuario.email_institucional ?? usuario.email,
     cpf: row.cpf ?? usuario.cpf,
@@ -539,6 +617,7 @@ export const connectService = {
         status: normalizeStatus(values.status),
       },
     ]);
+    await syncAlunoTurmaLink((aluno as Row).id, turmaId);
     await attachAlunoPhoto((aluno as Row).id, values.foto_uri, enviadoPor ?? usuarioId, usuarioId);
     return aluno;
   },
@@ -562,6 +641,7 @@ export const connectService = {
         status: normalizeStatus(values.status),
       },
     ]);
+    await syncAlunoTurmaLink(id, turmaId);
     await attachAlunoPhoto(id, values.foto_uri, enviadoPor ?? usuarioId, usuarioId);
     return aluno;
   },
@@ -575,7 +655,7 @@ export const connectService = {
 
   async createProfessor(values: FormValues) {
     const usuarioId = await createHubUser(values, 'professor');
-    return insertWithFallback('professores', [
+    const professor = await insertWithFallback('professores', [
       {
         usuario_id: usuarioId,
         especialidade: nullIfEmpty(values.especialidade),
@@ -595,12 +675,15 @@ export const connectService = {
         status: normalizeStatus(values.status),
       },
     ]);
+    await attachProfilePhoto(usuarioId, values.foto_uri);
+    return professor;
   },
 
   async updateProfessor(id: string, values: FormValues) {
     const { data } = await supabase.schema(schema).from('professores').select('usuario_id').eq('id', id).single();
-    await updateHubUser((data as Row | null)?.usuario_id, values);
-    return updateWithFallback('professores', id, [
+    const usuarioId = (data as Row | null)?.usuario_id as string | null | undefined;
+    await updateHubUser(usuarioId, values);
+    const professor = await updateWithFallback('professores', id, [
       {
         especialidade: nullIfEmpty(values.especialidade),
         data_contratacao: nullIfEmpty(values.data_contratacao),
@@ -619,6 +702,8 @@ export const connectService = {
         status: normalizeStatus(values.status),
       },
     ]);
+    await attachProfilePhoto(usuarioId, values.foto_uri);
+    return professor;
   },
 
   deleteProfessor: (id: string) => deleteRow('professores', id),
@@ -665,12 +750,13 @@ export const connectService = {
     return rows.map(mapTurma);
   },
 
-  createTurma(values: FormValues) {
-    return insertWithFallback('turmas', [
+  async createTurma(values: FormValues) {
+    const professorId = uuidOrNull(values.professor_responsavel_id, 'professor');
+    const turma = await insertWithFallback('turmas', [
       {
         nome: nullIfEmpty(values.nome),
         curso_id: uuidOrNull(values.curso_id, 'curso'),
-        professor_responsavel_id: uuidOrNull(values.professor_responsavel_id, 'professor'),
+        professor_responsavel_id: professorId,
         periodo: normalizeStatus(values.periodo, 'manha'),
         data_inicio: nullIfEmpty(values.data_inicio),
         data_termino: nullIfEmpty(values.data_termino),
@@ -679,14 +765,17 @@ export const connectService = {
         status: normalizeStatus(values.status, 'ativa'),
       },
     ]);
+    await syncProfessorTurmaLink((turma as Row).id, professorId);
+    return turma;
   },
 
-  updateTurma(id: string, values: FormValues) {
-    return updateWithFallback('turmas', id, [
+  async updateTurma(id: string, values: FormValues) {
+    const professorId = uuidOrNull(values.professor_responsavel_id, 'professor');
+    const turma = await updateWithFallback('turmas', id, [
       {
         nome: nullIfEmpty(values.nome),
         curso_id: uuidOrNull(values.curso_id, 'curso'),
-        professor_responsavel_id: uuidOrNull(values.professor_responsavel_id, 'professor'),
+        professor_responsavel_id: professorId,
         periodo: normalizeStatus(values.periodo, 'manha'),
         data_inicio: nullIfEmpty(values.data_inicio),
         data_termino: nullIfEmpty(values.data_termino),
@@ -695,6 +784,8 @@ export const connectService = {
         status: normalizeStatus(values.status, 'ativa'),
       },
     ]);
+    await syncProfessorTurmaLink(id, professorId);
+    return turma;
   },
 
   deleteTurma: (id: string) => deleteRow('turmas', id),

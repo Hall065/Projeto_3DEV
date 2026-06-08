@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { Platform } from 'react-native';
@@ -20,6 +21,10 @@ export const SENAI_GEOFENCE = {
 interface GeofenceContext {
   userId: string;
   alunoId: string;
+}
+
+function canUseBackgroundGeofencing() {
+  return Platform.OS !== 'web' && Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
 }
 
 async function getAlunoIdByUserId(userId: string) {
@@ -79,7 +84,7 @@ if (!TaskManager.isTaskDefined(SENAI_GEOFENCE_TASK)) {
 }
 
 export async function startStudentGeofence(session: AuthSession | null) {
-  if (Platform.OS === 'web' || session?.perfil?.tipo !== 'aluno') return;
+  if (!canUseBackgroundGeofencing() || session?.perfil?.tipo !== 'aluno') return;
 
   const alunoId = await getAlunoIdByUserId(session.userId);
   if (!alunoId) return;
@@ -102,10 +107,14 @@ export async function startStudentGeofence(session: AuthSession | null) {
 
 export async function stopStudentGeofence() {
   await AsyncStorage.removeItem(CONTEXT_KEY);
-  if (Platform.OS === 'web') return;
+  if (!canUseBackgroundGeofencing()) return;
 
-  const hasStarted = await Location.hasStartedGeofencingAsync(SENAI_GEOFENCE_TASK);
-  if (hasStarted) {
-    await Location.stopGeofencingAsync(SENAI_GEOFENCE_TASK);
+  try {
+    const hasStarted = await Location.hasStartedGeofencingAsync(SENAI_GEOFENCE_TASK);
+    if (hasStarted) {
+      await Location.stopGeofencingAsync(SENAI_GEOFENCE_TASK);
+    }
+  } catch (error) {
+    console.warn('[Geofence] Nao foi possivel parar o monitoramento:', error);
   }
 }

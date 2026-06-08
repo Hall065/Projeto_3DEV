@@ -35,10 +35,15 @@ export const CURSO_MODALIDADE_OPTIONS: CrudOption[] = [
 ];
 
 export const USER_ROLE_OPTIONS: CrudOption[] = [
+  { value: 'grid_funcionario', label: 'Funcionario Grid' },
+  { value: 'grid_chefe', label: 'Chefe Grid' },
   { value: 'manutencao', label: 'Manutencao' },
   { value: 'gerente_manutencao', label: 'Gerente de manutencao' },
   { value: 'secretaria', label: 'Secretaria' },
+  { value: 'connect_secretaria', label: 'Secretaria Connect' },
+  { value: 'connect_aqv', label: 'AQV Connect' },
   { value: 'professor', label: 'Professor' },
+  { value: 'connect_professor', label: 'Professor Connect' },
   { value: 'direcao', label: 'Direcao' },
   { value: 'admin', label: 'Admin' },
 ];

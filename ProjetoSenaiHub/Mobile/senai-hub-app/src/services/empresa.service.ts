@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { connectService } from '@/services/connect.service';
 import { createAuthUserProfile } from '@/services/user-profile.service';
+import { uploadService } from '@/services/upload.service';
 import type { AuthSession } from '@/types/auth.types';
 import type { ContratoAluno, Empresa, FrequenciaRegistro, SalarioAluno } from '@/types/connect.types';
 
@@ -63,13 +64,12 @@ async function findUserIdByEmail(email: string): Promise<string | null> {
 }
 
 async function linkUserToEmpresa(userId: string, empresaId: string) {
-  // O acesso da empresa e resolvido pelo e-mail cadastrado quando o schema nao possui FKs de vinculo.
-  void userId;
-  void empresaId;
+  await supabase.schema('hub').from('usuarios').update({ empresa_id: empresaId }).eq('id', userId);
+  await supabase.schema(schema).from('empresas').update({ usuario_id: userId }).eq('id', empresaId);
 }
 
 export async function resolveEmpresaForSession(session: AuthSession | null): Promise<Empresa | null> {
-  if (!session?.perfil || session.perfil.tipo !== 'empresa') return null;
+  if (!session?.perfil || !['empresa', 'connect_empresa'].includes(session.perfil.tipo)) return null;
 
   if (session.perfil.empresa_id) {
     const byProfile = await getEmpresaById(session.perfil.empresa_id);
@@ -85,6 +85,7 @@ export async function resolveEmpresaForSession(session: AuthSession | null): Pro
 
 type EmpresaUserAccessInput = Pick<Empresa, 'id' | 'nome' | 'email' | 'responsavel_nome'> & {
   senha?: string | null;
+  foto_uri?: string | null;
 };
 
 export async function ensureEmpresaUserAccess(empresa: EmpresaUserAccessInput): Promise<string | null> {
@@ -111,6 +112,10 @@ export async function ensureEmpresaUserAccess(empresa: EmpresaUserAccessInput): 
   if (!userId) return null;
 
   await linkUserToEmpresa(userId, empresa.id);
+  const imageUri = empresa.foto_uri?.trim();
+  if (imageUri && !imageUri.startsWith('http')) {
+    await uploadService.uploadProfilePhoto(imageUri, userId);
+  }
   return userId;
 }
 

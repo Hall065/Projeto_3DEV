@@ -56,17 +56,17 @@ serve(async (req) => {
 
   const normalizedEmail = String(email ?? '').trim().toLowerCase();
   const initialPassword = String(password ?? senha ?? '').trim();
-  const tipoUsuario = String(tipo_usuario ?? tipo ?? 'aluno').trim();
+  const tipoUsuario = String(tipo_usuario ?? tipo ?? 'aluno').trim().toLowerCase().replace(/\s+/g, '_');
   const allowPasswordUpdate = allow_password_update === true;
 
   const callerRole = String(callerProfile?.tipo_usuario ?? '');
   const canCreateUsers =
     callerProfile?.status === 'ativo' &&
-    ['admin', 'secretaria', 'direcao'].includes(callerRole);
+    ['admin', 'secretaria', 'direcao', 'connect_secretaria', 'connect_aqv'].includes(callerRole);
   const canCreateMaintenanceUser =
     callerProfile?.status === 'ativo' &&
-    callerRole === 'gerente_manutencao' &&
-    tipoUsuario === 'manutencao';
+    ['gerente_manutencao', 'grid_chefe'].includes(callerRole) &&
+    ['manutencao', 'grid_funcionario'].includes(tipoUsuario);
 
   if (callerProfileError || (!canCreateUsers && !canCreateMaintenanceUser)) {
     return new Response(

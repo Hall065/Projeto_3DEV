@@ -10,9 +10,10 @@ import { useCrudResource } from '@/hooks/useCrudResource';
 import { gridService } from '@/services/grid.service';
 import type { HubUsuario } from '@/types/auth.types';
 
-const CONNECT_ADMIN_ROLES = ['secretaria', 'direcao', 'admin'] as const;
+const CONNECT_ADMIN_ROLES = ['secretaria', 'connect_secretaria', 'connect_aqv', 'direcao', 'admin'] as const;
 
 const fields: CrudField[] = [
+  { name: 'foto_uri', label: 'Foto de perfil', type: 'image' },
   { name: 'nome', label: 'Nome completo', required: true },
   { name: 'email_institucional', label: 'E-mail institucional', required: true, keyboardType: 'email-address' },
   { name: 'senha', label: 'Senha inicial', placeholder: 'Senai@123456', secureTextEntry: true },
@@ -34,9 +35,10 @@ function initials(nome: string) {
 function formValues(usuario: HubUsuario): Record<string, string> {
   return {
     nome: usuario.nome ?? '',
+    foto_uri: usuario.foto_url ?? '',
     email_institucional: usuario.email_institucional ?? '',
     senha: '',
-    tipo: usuario.tipo ?? 'secretaria',
+    tipo: usuario.tipo ?? 'connect_secretaria',
     telefone: usuario.telefone ?? '',
     cpf: usuario.cpf ?? '',
     status: usuario.status ?? 'ativo',
@@ -113,7 +115,7 @@ export default function UsuariosConnectScreen() {
         visible={modalOpen}
         title={editing ? 'Editar usuário' : 'Novo usuário'}
         fields={fields}
-        initialValues={editing ? formValues(editing) : { tipo: 'secretaria', status: 'ativo' }}
+        initialValues={editing ? formValues(editing) : { tipo: 'connect_secretaria', status: 'ativo' }}
         isSubmitting={submitting}
         submitLabel={editing ? 'Salvar alterações' : 'Criar usuário'}
         onClose={() => setModalOpen(false)}

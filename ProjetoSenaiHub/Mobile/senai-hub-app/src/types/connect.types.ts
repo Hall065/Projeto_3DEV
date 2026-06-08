@@ -25,6 +25,8 @@ export interface Aluno {
 export interface Professor {
   id: string;
   usuario_id?: string | null;
+  foto_arquivo_id?: string | null;
+  foto_url?: string | null;
   nome: string;
   especialidade?: string | null;
   data_contratacao?: string | null;
@@ -95,6 +97,7 @@ export interface Empresa {
   responsavel_nome?: string | null;
   status?: string | null;
   usuario_id?: string | null;
+  foto_url?: string | null;
 }
 
 export interface ContratoAluno {

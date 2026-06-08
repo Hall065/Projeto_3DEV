@@ -11,6 +11,7 @@ import { connectService } from '@/services/connect.service';
 import type { Professor } from '@/types/connect.types';
 
 const fields: CrudField[] = [
+  { name: 'foto_uri', label: 'Foto de perfil', type: 'image' },
   { name: 'nome', label: 'Nome completo', required: true },
   { name: 'email', label: 'E-mail institucional', required: true, keyboardType: 'email-address' },
   { name: 'senha', label: 'Senha inicial', placeholder: 'Senai@123456', secureTextEntry: true },
@@ -30,6 +31,7 @@ function initials(nome: string) {
 function formValues(professor: Professor): Record<string, string> {
   return {
     nome: professor.nome ?? '',
+    foto_uri: professor.foto_url ?? '',
     email: professor.email ?? '',
     senha: '',
     cpf: professor.cpf ?? '',
@@ -91,6 +93,7 @@ export default function ProfessoresScreen() {
               badgeVariant={professor.status === 'ativo' ? 'success' : 'neutral'}
               meta="BD"
               initials={initials(professor.nome)}
+              imageUri={professor.foto_url}
               accent={colors.green}
               onEdit={() => {
                 setEditing(professor);

@@ -400,11 +400,16 @@ async function createHubUsuario(values: FormValues) {
     nome: nullIfEmpty(values.nome) ?? 'Sem nome',
     email: nullIfEmpty(values.email_institucional ?? values.email) ?? '',
     senha: nullIfEmpty(values.senha),
-    tipoUsuario: normalizeStatus(values.tipo, 'manutencao'),
+    tipoUsuario: normalizeStatus(values.tipo, 'grid_funcionario'),
     telefone: nullIfEmpty(values.telefone),
     cpf: nullIfEmpty(values.cpf),
     status: normalizeStatus(values.status, 'ativo'),
   });
+
+  const imageUri = nullIfEmpty(values.foto_uri);
+  if (imageUri && !imageUri.startsWith('http')) {
+    await uploadService.uploadProfilePhoto(imageUri, userId);
+  }
 
   const { data, error } = await supabase.schema('hub').from('usuarios').select('*').eq('id', userId).single();
   if (error) throw error;
@@ -420,8 +425,8 @@ async function updateHubUsuario(id: string, values: FormValues) {
     status: normalizeStatus(values.status, 'ativo'),
   };
   const payloads = [
-    { ...base, tipo_usuario: normalizeStatus(values.tipo, 'manutencao') },
-    { ...base, tipo: normalizeStatus(values.tipo, 'manutencao') },
+    { ...base, tipo_usuario: normalizeStatus(values.tipo, 'grid_funcionario') },
+    { ...base, tipo: normalizeStatus(values.tipo, 'grid_funcionario') },
   ];
   let lastError: unknown = null;
   for (const targetSchema of ['hub', 'public']) {
@@ -433,7 +438,13 @@ async function updateHubUsuario(id: string, values: FormValues) {
         .eq('id', id)
         .select('*')
         .single();
-      if (!error) return data;
+      if (!error) {
+        const imageUri = nullIfEmpty(values.foto_uri);
+        if (imageUri && !imageUri.startsWith('http')) {
+          await uploadService.uploadProfilePhoto(imageUri, id);
+        }
+        return data;
+      }
       lastError = error;
     }
   }
@@ -498,7 +509,9 @@ async function attachChamadoImage(
 }
 
 function onlyMaintenanceUsers(usuarios: HubUsuario[]) {
-  return usuarios.filter((usuario) => usuario.tipo === 'manutencao' || usuario.tipo === 'gerente_manutencao');
+  return usuarios.filter((usuario) =>
+    ['manutencao', 'gerente_manutencao', 'grid_funcionario', 'grid_chefe'].includes(usuario.tipo)
+  );
 }
 
 export const gridService = {

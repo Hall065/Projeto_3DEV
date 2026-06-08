@@ -70,7 +70,7 @@ export default function TarefasScreen() {
   const [editing, setEditing] = useState<Tarefa | null>(null);
   const [search, setSearch] = useState('');
   const session = useAuthStore((s) => s.session);
-  const isMaintenanceWorker = session?.perfil?.tipo === 'manutencao';
+  const isMaintenanceWorker = session?.perfil?.tipo === 'manutencao' || session?.perfil?.tipo === 'grid_funcionario';
   const { options, error: optionsError } = useSelectOptions(tarefaOptionLoaders);
   const fields = getFields(options, isMaintenanceWorker);
   const loadTarefas = useCallback(async () => {

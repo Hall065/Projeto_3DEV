@@ -14,6 +14,7 @@ import type { Empresa } from '@/types/connect.types';
 const PASSWORD_MIN_LENGTH = 6;
 
 const companyFields: CrudField[] = [
+  { name: 'foto_uri', label: 'Foto de perfil do acesso', type: 'image' },
   { name: 'nome', label: 'Nome da empresa', required: true },
   { name: 'cnpj', label: 'CNPJ', placeholder: '00.000.000/0000-00', mask: 'cnpj' },
   { name: 'email', label: 'E-mail', keyboardType: 'email-address', required: true },
@@ -49,6 +50,7 @@ function getFields(isEditing: boolean): CrudField[] {
 function formValues(empresa: Empresa): Record<string, string> {
   return {
     nome: empresa.nome ?? '',
+    foto_uri: empresa.foto_url ?? '',
     cnpj: empresa.cnpj ?? '',
     email: empresa.email ?? '',
     telefone: empresa.telefone ?? '',
@@ -80,7 +82,7 @@ function normalizePassword(values: Record<string, string>, isEditing: boolean) {
 }
 
 function getEmpresaValues(values: Record<string, string>) {
-  const { senha_acesso: _senha, confirmar_senha: _confirmacao, ...empresaValues } = values;
+  const { senha_acesso: _senha, confirmar_senha: _confirmacao, foto_uri: _foto, ...empresaValues } = values;
   return empresaValues;
 }
 
@@ -166,6 +168,7 @@ export default function EmpresasScreen() {
               email: empresaValues.email ?? editing.email,
               responsavel_nome: empresaValues.responsavel_nome ?? editing.responsavel_nome,
               senha,
+              foto_uri: values.foto_uri,
             });
           } else {
             await createItem(empresaValues);
@@ -176,7 +179,7 @@ export default function EmpresasScreen() {
                 (empresaValues.email && empresa.email?.toLowerCase() === empresaValues.email.toLowerCase())
             );
             if (created) {
-              await ensureEmpresaUserAccess({ ...created, senha });
+              await ensureEmpresaUserAccess({ ...created, senha, foto_uri: values.foto_uri });
             }
           }
           setModalOpen(false);

@@ -13,11 +13,12 @@ import { useAuthStore } from '@/stores/auth.store';
 import type { HubUsuario } from '@/types/auth.types';
 
 const GRID_USER_ROLE_OPTIONS = USER_ROLE_OPTIONS.filter((option) =>
-  option.value === 'manutencao' || option.value === 'gerente_manutencao'
+  ['grid_funcionario', 'grid_chefe', 'manutencao', 'gerente_manutencao'].includes(option.value)
 );
 
 function getFields(managerOnly: boolean): CrudField[] {
   return [
+  { name: 'foto_uri', label: 'Foto de perfil', type: 'image' },
   { name: 'nome', label: 'Nome completo', required: true },
   { name: 'email_institucional', label: 'E-mail institucional', required: true, keyboardType: 'email-address' },
   { name: 'senha', label: 'Senha inicial', placeholder: 'Senai@123456', secureTextEntry: true },
@@ -25,7 +26,7 @@ function getFields(managerOnly: boolean): CrudField[] {
     name: 'tipo',
     label: 'Perfil',
     required: true,
-    options: managerOnly ? GRID_USER_ROLE_OPTIONS.filter((option) => option.value === 'manutencao') : GRID_USER_ROLE_OPTIONS,
+    options: managerOnly ? GRID_USER_ROLE_OPTIONS.filter((option) => option.value === 'grid_funcionario') : GRID_USER_ROLE_OPTIONS,
   },
   { name: 'telefone', label: 'Telefone', placeholder: '(19) 98999-9999', mask: 'phone' },
   { name: 'cpf', label: 'CPF', placeholder: '111.111.111-11', mask: 'cpf' },
@@ -40,9 +41,10 @@ function initials(nome: string) {
 function formValues(usuario: HubUsuario): Record<string, string> {
   return {
     nome: usuario.nome ?? '',
+    foto_uri: usuario.foto_url ?? '',
     email_institucional: usuario.email_institucional ?? '',
     senha: '',
-    tipo: usuario.tipo ?? 'manutencao',
+    tipo: usuario.tipo ?? 'grid_funcionario',
     telefone: usuario.telefone ?? '',
     cpf: usuario.cpf ?? '',
     status: usuario.status ?? 'ativo',
@@ -54,7 +56,7 @@ export default function UsuariosGridScreen() {
   const [editing, setEditing] = useState<HubUsuario | null>(null);
   const [search, setSearch] = useState('');
   const role = useAuthStore((s) => s.session?.perfil?.tipo);
-  const managerOnly = role === 'gerente_manutencao';
+  const managerOnly = role === 'gerente_manutencao' || role === 'grid_chefe';
   const fields = getFields(managerOnly);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<HubUsuario, Record<string, string>>({
@@ -64,7 +66,9 @@ export default function UsuariosGridScreen() {
       remove: gridService.deleteUsuario,
     });
 
-  const visibleItems = managerOnly ? items.filter((usuario) => usuario.tipo === 'manutencao') : items;
+  const visibleItems = managerOnly
+    ? items.filter((usuario) => usuario.tipo === 'manutencao' || usuario.tipo === 'grid_funcionario')
+    : items;
   const filtered = visibleItems.filter((usuario) =>
     `${usuario.nome} ${usuario.email_institucional} ${usuario.tipo}`.toLowerCase().includes(search.toLowerCase())
   );
@@ -103,6 +107,7 @@ export default function UsuariosGridScreen() {
               badgeVariant={usuario.status === 'ativo' ? 'success' : 'neutral'}
               meta="BD"
               initials={initials(usuario.nome)}
+              imageUri={usuario.foto_url}
               accent={isMaintenanceRole(usuario.tipo) ? colors.blue : colors.red}
               onEdit={() => {
                 setEditing(usuario);
@@ -118,7 +123,7 @@ export default function UsuariosGridScreen() {
         visible={modalOpen}
         title={editing ? 'Editar usuário' : 'Novo usuário'}
         fields={fields}
-        initialValues={editing ? formValues(editing) : { tipo: 'manutencao', status: 'ativo' }}
+        initialValues={editing ? formValues(editing) : { tipo: 'grid_funcionario', status: 'ativo' }}
         isSubmitting={submitting}
         submitLabel={editing ? 'Salvar alterações' : 'Criar usuário'}
         onClose={() => setModalOpen(false)}
