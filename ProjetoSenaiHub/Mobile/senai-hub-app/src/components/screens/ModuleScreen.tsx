@@ -3,6 +3,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppButton, LoadingState } from '@/components/common/VisualPrimitives';
 import { EmptyState } from '@/components/common/EmptyState';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface ModuleScreenProps {
   title: string;
@@ -29,19 +31,21 @@ export function ModuleScreen({
   emptyTitle = 'Nenhum registro encontrado',
   children,
 }: ModuleScreenProps) {
-  const dark = tone === 'dark';
+  const theme = useThemeColors();
+  const { t } = useI18n();
+  const dark = tone === 'dark' || theme.isDark;
 
   return (
     <ScrollView
-      style={[styles.container, dark && styles.containerDark]}
+      style={[styles.container, { backgroundColor: dark ? theme.appBackground : colors.background }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.heading}>
         <View style={styles.headingText}>
-          {kicker ? <Text style={[styles.kicker, dark && styles.kickerDark]}>{kicker}</Text> : null}
-          <Text style={[styles.title, dark && styles.titleDark]}>{title}</Text>
-          <Text style={[styles.description, dark && styles.descriptionDark]}>{description}</Text>
+          {kicker ? <Text style={[styles.kicker, dark && styles.kickerDark]}>{t(kicker)}</Text> : null}
+          <Text style={[styles.title, { color: dark ? theme.text : colors.navy }]}>{t(title)}</Text>
+          <Text style={[styles.description, { color: dark ? theme.textMuted : colors.grayText }]}>{t(description)}</Text>
         </View>
         {actionLabel ? (
           <AppButton

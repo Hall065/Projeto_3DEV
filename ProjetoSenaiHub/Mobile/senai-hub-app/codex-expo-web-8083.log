@@ -1,0 +1,17 @@
+env: load .env
+env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_EMAIL_FROM SMTP_PASS EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET EXPO_PUBLIC_SENAI_LATITUDE EXPO_PUBLIC_SENAI_LONGITUDE EXPO_PUBLIC_SENAI_RAIO_METROS
+Starting project at C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+React Compiler enabled
+Starting Metro Bundler
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Waiting on http://localhost:8083
+Logs for your project will appear below.
+Web node_modules\expo-router\entry.js ▓▓░░░░░░░░░░░░░░ 13.2% ( 4/11)
+λ node_modules\expo-router\node\render.js ░░░░░░░░░░░░░░░░  4.7% ( 12/124)

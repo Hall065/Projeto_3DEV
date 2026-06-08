@@ -7,35 +7,41 @@ import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { connectService } from '@/services/connect.service';
-import type { Aluno, Curso, LocalizacaoAluno } from '@/types/connect.types';
+import { useAuthStore } from '@/stores/auth.store';
+import type { Aluno, LocalizacaoAluno, Turma } from '@/types/connect.types';
 
-type Tab = 'cursos' | 'alunos';
+type Tab = 'turmas' | 'alunos';
 
 const makeChannelName = (prefix: string, id: string) =>
   `${prefix}-${id}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export default function LocalizacaoScreen() {
+  const session = useAuthStore((s) => s.session);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>('cursos');
+  const [tab, setTab] = useState<Tab>('turmas');
   const [search, setSearch] = useState('');
-  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [turmas, setTurmas] = useState<Turma[]>([]);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [localizacoes, setLocalizacoes] = useState<LocalizacaoAluno[]>([]);
-  const [selectedCursoId, setSelectedCursoId] = useState<string | null>(null);
+  const [selectedTurmaId, setSelectedTurmaId] = useState<string | null>(null);
   const [selectedAlunoId, setSelectedAlunoId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setError(null);
-    const [cursosData, alunosData, localizacoesData] = await Promise.all([
-      connectService.listCursos(),
-      connectService.listAlunos(),
-      connectService.listLocalizacoes(),
-    ]);
-    setCursos(cursosData);
+    const isProfessor = session?.perfil?.tipo === 'professor';
+    const turmasData = isProfessor && session?.userId
+      ? await connectService.listTurmasForProfessorUser(session.userId)
+      : await connectService.listTurmas();
+    const alunosData = isProfessor
+      ? (await Promise.all(turmasData.map((turma) => connectService.listAlunosByTurma(turma.id)))).flat()
+      : await connectService.listAlunos();
+    const localizacoesData = await connectService.listLocalizacoes();
+    const alunoIds = new Set(alunosData.map((aluno) => aluno.id));
+    setTurmas(turmasData);
     setAlunos(alunosData);
-    setLocalizacoes(localizacoesData);
-  }, []);
+    setLocalizacoes(isProfessor ? localizacoesData.filter((item) => alunoIds.has(item.aluno_id)) : localizacoesData);
+  }, [session?.perfil?.tipo, session?.userId]);
 
   useEffect(() => {
     reload()
@@ -69,12 +75,12 @@ export default function LocalizacaoScreen() {
     () => new Map(localizacoes.map((item) => [item.aluno_id, item])),
     [localizacoes]
   );
-  const filteredCursos = cursos.filter((curso) =>
-    `${curso.nome} ${curso.periodo ?? ''}`.toLowerCase().includes(search.toLowerCase())
+  const filteredTurmas = turmas.filter((turma) =>
+    `${turma.nome} ${turma.curso_nome ?? ''} ${turma.periodo ?? ''}`.toLowerCase().includes(search.toLowerCase())
   );
   const filteredAlunos = alunos.filter((aluno) => {
-    const inCurso = selectedCursoId ? aluno.curso_id === selectedCursoId : true;
-    return inCurso && `${aluno.nome} ${aluno.email ?? ''} ${aluno.curso_nome ?? ''}`.toLowerCase().includes(search.toLowerCase());
+    const inTurma = selectedTurmaId ? aluno.turma_id === selectedTurmaId : true;
+    return inTurma && `${aluno.nome} ${aluno.email ?? ''} ${aluno.turma_nome ?? ''}`.toLowerCase().includes(search.toLowerCase());
   });
   const selectedLocation = localizacoes.find((item) => item.aluno_id === selectedAlunoId) ?? null;
   const noCampus = localizacoes.filter((item) => item.dentro_do_senai ?? item.dentro_perimetro).length;
@@ -85,7 +91,7 @@ export default function LocalizacaoScreen() {
     <ModuleScreen
       kicker="SENAI Connect"
       title="Localizacao"
-      description="Monitoramento por curso, aluno e geofence."
+      description="Monitoramento por turma, aluno e geofence."
       isLoading={false}
     >
       <View style={styles.metricGrid}>
@@ -97,26 +103,26 @@ export default function LocalizacaoScreen() {
       {error ? <FeedbackMessage variant="danger" message={error} /> : null}
 
       <View style={styles.layout}>
-        <SurfaceCard title="Lista" subtitle="Cursos e alunos">
+        <SurfaceCard title="Lista" subtitle="Turmas e alunos">
           <View style={styles.tabs}>
-            <AppButton label="Cursos" variant={tab === 'cursos' ? 'primary' : 'secondary'} accent={connectTheme.accent} onPress={() => setTab('cursos')} wrapperStyle={styles.tab} />
+            <AppButton label="Turmas" variant={tab === 'turmas' ? 'primary' : 'secondary'} accent={connectTheme.accent} onPress={() => setTab('turmas')} wrapperStyle={styles.tab} />
             <AppButton label="Alunos" variant={tab === 'alunos' ? 'primary' : 'secondary'} accent={connectTheme.accent} onPress={() => setTab('alunos')} wrapperStyle={styles.tab} />
           </View>
-          <SearchField placeholder="Buscar cursos ou alunos..." value={search} onChangeText={setSearch} />
+          <SearchField placeholder="Buscar turmas ou alunos..." value={search} onChangeText={setSearch} />
 
           <ScrollView style={styles.listPanel} nestedScrollEnabled>
-            {tab === 'cursos'
-              ? filteredCursos.map((curso) => (
+            {tab === 'turmas'
+              ? filteredTurmas.map((turma) => (
                   <ListRow
-                    key={curso.id}
-                    title={curso.nome}
-                    subtitle={`${alunos.filter((aluno) => aluno.curso_id === curso.id).length} alunos vinculados`}
-                    badge={selectedCursoId === curso.id ? 'Selecionado' : curso.status}
-                    badgeVariant={selectedCursoId === curso.id ? 'info' : curso.status === 'ativo' ? 'success' : 'neutral'}
-                    initials={curso.nome.slice(0, 2).toUpperCase()}
+                    key={turma.id}
+                    title={turma.nome}
+                    subtitle={`${alunos.filter((aluno) => aluno.turma_id === turma.id).length} alunos vinculados - ${turma.curso_nome ?? 'Curso não vinculado'}`}
+                    badge={selectedTurmaId === turma.id ? 'Selecionada' : turma.status}
+                    badgeVariant={selectedTurmaId === turma.id ? 'info' : turma.status === 'ativa' ? 'success' : 'neutral'}
+                    initials={turma.nome.slice(0, 2).toUpperCase()}
                     accent={colors.blue}
                     onPress={() => {
-                      setSelectedCursoId((current) => (current === curso.id ? null : curso.id));
+                      setSelectedTurmaId((current) => (current === turma.id ? null : turma.id));
                       setTab('alunos');
                     }}
                   />

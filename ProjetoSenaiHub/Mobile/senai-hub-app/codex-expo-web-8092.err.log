@@ -1,0 +1,11 @@
+No linha:1 caractere:21
++ $env:NODE_OPTIONS=--max-old-space-size=8192; npx expo start --web --p ...
++                     ~
+Express∆o ausente ap¢s operador un†rio '--'.
+No linha:1 caractere:21
++ $env:NODE_OPTIONS=--max-old-space-size=8192; npx expo start --web --p ...
++                     ~~~~~~~~~~~~~~~~~~~~~~~
+Token 'max-old-space-size=8192' inesperado na express∆o ou instruá∆o.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
+ 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AlertCircle, CheckCircle2, Clock3, Wrench } from 'lucide-react-native';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
@@ -21,17 +21,24 @@ const chamadoOptionLoaders = {
 type ChamadoOptionKey = keyof typeof chamadoOptionLoaders;
 type ChamadoOptions = Record<ChamadoOptionKey, CrudOption[]>;
 
-function getFields(options: Partial<ChamadoOptions>): CrudField[] {
-  return [
+function getFields(options: Partial<ChamadoOptions>, requesterOnly = false): CrudField[] {
+  const baseFields: CrudField[] = [
   { name: 'titulo', label: 'Título', required: true },
   { name: 'descricao', label: 'Descrição', required: true, multiline: true },
   { name: 'prioridade', label: 'Prioridade', required: true, options: CHAMADO_PRIORIDADE_OPTIONS },
-  { name: 'status', label: 'Status', required: true, options: CHAMADO_STATUS_OPTIONS },
   { name: 'categoria_id', label: 'Categoria', options: options.categorias ?? [], emptyOptionLabel: 'Sem categoria' },
   { name: 'bloco_id', label: 'Bloco', options: options.blocos ?? [], emptyOptionLabel: 'Sem bloco' },
   { name: 'sala_id', label: 'Sala', options: options.salas ?? [], emptyOptionLabel: 'Sem sala' },
   { name: 'anexo_uri', label: 'Imagem de abertura', type: 'image' },
-  { name: 'evidencia_uri', label: 'Evidencia de conclusao', type: 'image' },
+  ];
+
+  if (requesterOnly) return baseFields;
+
+  return [
+    ...baseFields.slice(0, 3),
+    { name: 'status', label: 'Status', required: true, options: CHAMADO_STATUS_OPTIONS },
+    ...baseFields.slice(3),
+    { name: 'evidencia_uri', label: 'Evidencia de conclusao', type: 'image' },
   ];
 }
 
@@ -54,11 +61,19 @@ export default function ChamadosScreen() {
   const [editing, setEditing] = useState<Chamado | null>(null);
   const [search, setSearch] = useState('');
   const session = useAuthStore((s) => s.session);
+  const requesterOnly = session?.perfil?.tipo === 'professor';
   const { options, error: optionsError } = useSelectOptions(chamadoOptionLoaders);
-  const fields = getFields(options);
+  const fields = getFields(options, requesterOnly);
+  const loadChamados = useCallback(async () => {
+    const chamados = await gridService.listChamados();
+    if (!requesterOnly || !session?.userId) return chamados;
+    return chamados.filter((chamado) =>
+      chamado.aberto_por === session.userId || chamado.solicitante_id === session.userId
+    );
+  }, [requesterOnly, session?.userId]);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<Chamado, Record<string, string>>({
-      load: gridService.listChamados,
+      load: loadChamados,
       create: (values) => gridService.createChamado(values, session?.userId),
       update: gridService.updateChamado,
       remove: gridService.deleteChamado,
@@ -73,7 +88,7 @@ export default function ChamadosScreen() {
       <ModuleScreen
         kicker="SENAI Grid"
         title="Chamados"
-        description="Abertura, triagem e acompanhamento de solicitações."
+        description={requesterOnly ? 'Abertura e acompanhamento dos seus chamados.' : 'Abertura, triagem e acompanhamento de solicitações.'}
         tone="dark"
         isLoading={loading}
         actionLabel="+ Abrir chamado"
@@ -112,11 +127,11 @@ export default function ChamadosScreen() {
               imageUri={chamado.evidencia_url ?? chamado.imagem_url}
               accent={chamado.prioridade === 'urgente' ? colors.red : colors.orange}
               tone="dark"
-              onEdit={() => {
+              onEdit={requesterOnly ? undefined : () => {
                 setEditing(chamado);
                 setModalOpen(true);
               }}
-              onDelete={() => deleteItem(chamado.id, chamado.titulo)}
+              onDelete={requesterOnly ? undefined : () => deleteItem(chamado.id, chamado.titulo)}
             />
           ))}
         </SurfaceCard>

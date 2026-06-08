@@ -1,6 +1,8 @@
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { AppButton } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -21,12 +23,14 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.card}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+      <View style={[styles.overlay, { backgroundColor: theme.overlay }]}>
+        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+          <Text style={[styles.title, { color: theme.text }]}>{t(title)}</Text>
+          <Text style={[styles.message, { color: theme.textMuted }]}>{t(message)}</Text>
           <View style={styles.actions}>
             <AppButton
               label={cancelLabel}
@@ -61,6 +65,9 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: colors.border,
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
   },
   title: {
     fontSize: 18,

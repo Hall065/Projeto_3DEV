@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Inbox } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface EmptyStateProps {
   title: string;
@@ -8,13 +10,15 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ title, description }: EmptyStateProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   return (
     <View style={styles.container}>
-      <View style={styles.iconWrap}>
+      <View style={[styles.iconWrap, { backgroundColor: theme.isDark ? theme.surfaceSoft : '#E8F1FF', borderColor: theme.isDark ? theme.line : '#C7DAFF' }]}>
         <Inbox size={26} color={colors.blue} />
       </View>
-      <Text style={styles.title}>{title}</Text>
-      {description ? <Text style={styles.description}>{description}</Text> : null}
+      <Text style={[styles.title, { color: theme.text }]}>{t(title)}</Text>
+      {description ? <Text style={[styles.description, { color: theme.textMuted }]}>{t(description)}</Text> : null}
     </View>
   );
 }

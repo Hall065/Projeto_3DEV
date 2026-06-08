@@ -12,14 +12,16 @@ import {
 } from 'react-native';
 import { Mail } from 'lucide-react-native';
 import { AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
+import { getBrandAsset } from '@/constants/brandAssets';
 import { colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { resetPasswordForEmail } from '@/lib/auth';
 import { recuperarSenhaSchema, type RecuperarSenhaFormData } from '@/utils/validators';
 
 const circuitBg = require('../assets/brand/senai-circuit-bg.png');
-const hubLogo = require('../assets/brand/senai-hub-logo-2.png');
 
 export default function RecuperarSenhaScreen() {
+  const theme = useThemeColors();
   const [message, setMessage] = useState<{ text: string; variant: 'success' | 'danger' } | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -41,13 +43,17 @@ export default function RecuperarSenhaScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground source={circuitBg} style={styles.hero}>
-        <Image source={hubLogo} style={styles.logo} resizeMode="contain" />
+    <View style={[styles.container, { backgroundColor: theme.appBackground }]}>
+      <ImageBackground
+        source={circuitBg}
+        style={[styles.hero, { backgroundColor: theme.isDark ? colors.navy : colors.white }]}
+        imageStyle={[styles.heroImage, { opacity: theme.isDark ? 0.42 : 0.08 }]}
+      >
+        <Image source={getBrandAsset('hub', 'slogan', theme.isDark)} style={styles.logo} resizeMode="contain" />
       </ImageBackground>
-      <View style={styles.sheet}>
-        <Text style={styles.title}>Recuperar senha</Text>
-        <Text style={styles.subtitle}>
+      <View style={[styles.sheet, { backgroundColor: theme.surface }]}>
+        <Text style={[styles.title, { color: theme.text }]}>Recuperar senha</Text>
+        <Text style={[styles.subtitle, { color: theme.textMuted }]}>
           Informe o e-mail institucional para receber as instruções de redefinição.
         </Text>
 
@@ -56,13 +62,13 @@ export default function RecuperarSenhaScreen() {
           name="email"
           render={({ field: { onChange, value }, fieldState: { error } }) => (
             <View style={styles.field}>
-              <Text style={styles.label}>E-mail</Text>
-              <View style={styles.inputWrap}>
-                <Mail size={17} color={colors.grayText} />
+              <Text style={[styles.label, { color: theme.text }]}>E-mail</Text>
+              <View style={[styles.inputWrap, { backgroundColor: theme.input, borderColor: theme.line }]}>
+                <Mail size={17} color={theme.textMuted} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.text }]}
                   placeholder="seu@email.com"
-                  placeholderTextColor={colors.mutedText}
+                  placeholderTextColor={theme.textSubtle}
                   autoCapitalize="none"
                   keyboardType="email-address"
                   value={value}
@@ -95,6 +101,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 52,
   },
+  heroImage: { resizeMode: 'cover' },
   logo: { width: '92%', height: 90 },
   sheet: {
     flex: 1,

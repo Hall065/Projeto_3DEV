@@ -22,6 +22,8 @@ import {
   XCircle,
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 type Tone = 'light' | 'dark';
 type StatusVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
@@ -143,10 +145,12 @@ export function AppButton({
   textStyle,
   ...props
 }: AppButtonProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const dark = tone === 'dark';
   const isPrimary = variant === 'primary';
   const isGhost = variant === 'ghost';
-  const textColor = isPrimary ? colors.white : dark ? colors.white : accent;
+  const textColor = isPrimary ? colors.white : dark || theme.isDark ? theme.text : accent;
 
   return (
     <AnimatedPressable
@@ -159,7 +163,10 @@ export function AppButton({
         isPrimary && { backgroundColor: accent, borderColor: accent },
         variant === 'secondary' && [
           styles.appButtonSecondary,
-          { borderColor: dark ? colors.borderDark : softAccent(accent) },
+          {
+            borderColor: dark || theme.isDark ? theme.line : softAccent(accent),
+            backgroundColor: dark || theme.isDark ? theme.surfaceSoft : theme.surface,
+          },
         ],
         isGhost && styles.appButtonGhost,
         style,
@@ -170,7 +177,7 @@ export function AppButton({
       ) : (
         <View style={styles.appButtonContent}>
           {icon}
-          <Text style={[styles.appButtonText, { color: textColor }, textStyle]}>{label}</Text>
+          <Text style={[styles.appButtonText, { color: textColor }, textStyle]}>{t(label)}</Text>
         </View>
       )}
     </AnimatedPressable>
@@ -183,6 +190,8 @@ interface LoadingStateProps {
 }
 
 export function LoadingState({ label = 'Carregando informações...', tone = 'light' }: LoadingStateProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const dark = tone === 'dark';
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -215,11 +224,13 @@ export function LoadingState({ label = 'Carregando informações...', tone = 'li
       <Animated.View
         style={[
           styles.loadingHalo,
-          { opacity: pulseOpacity, backgroundColor: dark ? colors.darkPanelSoft : colors.panelSoft },
+          { opacity: pulseOpacity, backgroundColor: dark || theme.isDark ? theme.surfaceSoft : theme.surfaceSoft },
         ]}
       />
-      <ActivityIndicator size="large" color={dark ? colors.white : colors.navy} />
-      <Text style={[styles.loadingText, dark && styles.mutedOnDark]}>{label}</Text>
+      <ActivityIndicator size="large" color={dark || theme.isDark ? theme.text : colors.navy} />
+      <Text style={[styles.loadingText, { color: dark || theme.isDark ? theme.textMuted : colors.grayText }]}>
+        {t(label)}
+      </Text>
     </View>
   );
 }
@@ -237,8 +248,10 @@ export function FeedbackMessage({
   tone = 'light',
   style,
 }: FeedbackMessageProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const palette = statusPalette[variant];
-  const dark = tone === 'dark';
+  const dark = tone === 'dark' || theme.isDark;
   const revealStyle = useRevealAnimation();
   const iconColor = dark ? colors.white : palette.text;
   const icon =
@@ -258,7 +271,7 @@ export function FeedbackMessage({
         styles.feedback,
         {
           backgroundColor: dark ? 'rgba(255,255,255,0.08)' : palette.bg,
-          borderColor: dark ? colors.borderDark : palette.border,
+          borderColor: dark ? theme.line : palette.border,
         },
         revealStyle,
         style,
@@ -266,7 +279,7 @@ export function FeedbackMessage({
     >
       {icon}
       <Text style={[styles.feedbackText, { color: dark ? colors.white : palette.text }]}>
-        {message}
+        {t(message)}
       </Text>
     </Animated.View>
   );
@@ -291,27 +304,41 @@ export function SurfaceCard({
   children,
   style,
 }: SurfaceCardProps) {
-  const dark = tone === 'dark';
+  const theme = useThemeColors();
+  const { t } = useI18n();
+  const dark = tone === 'dark' || theme.isDark;
   const revealStyle = useRevealAnimation();
 
   return (
-    <Animated.View style={[styles.surface, dark && styles.surfaceDark, revealStyle, style]}>
+    <Animated.View
+      style={[
+        styles.surface,
+        {
+          backgroundColor: dark ? theme.surface : colors.panel,
+          borderColor: dark ? theme.line : colors.border,
+        },
+        revealStyle,
+        style,
+      ]}
+    >
       {title ? (
         <View style={styles.surfaceHeader}>
           <View style={styles.surfaceTitleWrap}>
-            <Text style={[styles.surfaceTitle, dark && styles.textOnDark]}>{title}</Text>
+            <Text style={[styles.surfaceTitle, { color: dark ? theme.text : colors.navy }]}>{t(title)}</Text>
             {subtitle ? (
-              <Text style={[styles.surfaceSubtitle, dark && styles.mutedOnDark]}>{subtitle}</Text>
+              <Text style={[styles.surfaceSubtitle, { color: dark ? theme.textMuted : colors.grayText }]}>
+                {t(subtitle)}
+              </Text>
             ) : null}
           </View>
           {actionLabel ? (
             <AnimatedPressable
-              style={[styles.surfaceAction, dark && styles.surfaceActionDark]}
+              style={[styles.surfaceAction, { borderColor: dark ? theme.line : colors.border }]}
               onPress={onActionPress}
               disabled={!onActionPress}
             >
-              <Text style={[styles.surfaceActionText, dark && styles.surfaceActionTextDark]}>
-                {actionLabel}
+              <Text style={[styles.surfaceActionText, { color: dark ? theme.text : colors.navy }]}>
+                {t(actionLabel)}
               </Text>
             </AnimatedPressable>
           ) : null}
@@ -341,19 +368,30 @@ export function MetricTile({
   tone = 'light',
   style,
 }: MetricTileProps) {
-  const dark = tone === 'dark';
+  const theme = useThemeColors();
+  const { t } = useI18n();
+  const dark = tone === 'dark' || theme.isDark;
   const revealStyle = useRevealAnimation();
 
   return (
     <Animated.View
-      style={[styles.metric, dark && styles.metricDark, { borderLeftColor: accent }, revealStyle, style]}
+      style={[
+        styles.metric,
+        {
+          borderLeftColor: accent,
+          backgroundColor: dark ? theme.surface : colors.panel,
+          borderColor: dark ? theme.line : colors.border,
+        },
+        revealStyle,
+        style,
+      ]}
     >
       <View style={styles.metricTop}>
         <View style={[styles.metricIcon, { backgroundColor: softAccent(accent) }]}>{icon}</View>
-        {hint ? <Text style={[styles.metricHint, dark && styles.mutedOnDark]}>{hint}</Text> : null}
+        {hint ? <Text style={[styles.metricHint, { color: dark ? theme.textMuted : colors.grayText }]}>{t(hint)}</Text> : null}
       </View>
-      <Text style={[styles.metricValue, dark && styles.textOnDark]}>{value}</Text>
-      <Text style={[styles.metricLabel, dark && styles.mutedOnDark]}>{label}</Text>
+      <Text style={[styles.metricValue, { color: dark ? theme.text : colors.navy }]}>{value}</Text>
+      <Text style={[styles.metricLabel, { color: dark ? theme.textMuted : colors.grayText }]}>{t(label)}</Text>
     </Animated.View>
   );
 }
@@ -365,17 +403,19 @@ interface PillProps {
 }
 
 export function Pill({ label, variant = 'neutral', tone = 'light' }: PillProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const palette = statusPalette[variant];
-  const dark = tone === 'dark';
+  const dark = tone === 'dark' || theme.isDark;
 
   return (
     <View
       style={[
         styles.pill,
-        { backgroundColor: dark ? 'rgba(255,255,255,0.08)' : palette.bg, borderColor: dark ? colors.borderDark : palette.border },
+        { backgroundColor: dark ? 'rgba(255,255,255,0.08)' : palette.bg, borderColor: dark ? theme.line : palette.border },
       ]}
     >
-      <Text style={[styles.pillText, { color: dark ? colors.white : palette.text }]}>{label}</Text>
+      <Text style={[styles.pillText, { color: dark ? colors.white : palette.text }]}>{t(label)}</Text>
     </View>
   );
 }
@@ -388,15 +428,25 @@ interface SearchFieldProps {
 }
 
 export function SearchField({ placeholder, value, onChangeText, tone = 'light' }: SearchFieldProps) {
-  const dark = tone === 'dark';
+  const theme = useThemeColors();
+  const { t } = useI18n();
+  const dark = tone === 'dark' || theme.isDark;
 
   return (
-    <View style={[styles.search, dark && styles.searchDark]}>
-      <Search size={17} color={dark ? colors.mutedText : colors.grayText} />
+    <View
+      style={[
+        styles.search,
+        {
+          backgroundColor: dark ? theme.input : colors.white,
+          borderColor: dark ? theme.line : colors.border,
+        },
+      ]}
+    >
+      <Search size={17} color={dark ? theme.textSubtle : colors.grayText} />
       <TextInput
-        style={[styles.searchInput, dark && styles.searchInputDark]}
-        placeholder={placeholder}
-        placeholderTextColor={dark ? colors.mutedText : colors.grayText}
+        style={[styles.searchInput, { color: dark ? theme.text : colors.navy }]}
+        placeholder={t(placeholder)}
+        placeholderTextColor={dark ? theme.textSubtle : colors.grayText}
         value={value}
         onChangeText={onChangeText}
       />
@@ -433,12 +483,13 @@ export function ListRow({
   onEdit,
   onDelete,
 }: ListRowProps) {
-  const dark = tone === 'dark';
-
-  return (
-    <Pressable style={[styles.row, dark && styles.rowDark]} onPress={onPress} disabled={!onPress}>
+  const theme = useThemeColors();
+  const { t } = useI18n();
+  const dark = tone === 'dark' || theme.isDark;
+  const rowMainContent = (
+    <>
       {imageUri || initials ? (
-        <View style={[styles.avatar, { backgroundColor: dark ? colors.darkPanelSoft : softAccent(accent) }]}>
+        <View style={[styles.avatar, { backgroundColor: dark ? theme.surface : softAccent(accent) }]}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.avatarImage} />
           ) : (
@@ -447,34 +498,94 @@ export function ListRow({
         </View>
       ) : null}
       <View style={styles.rowBody}>
-        <Text numberOfLines={1} style={[styles.rowTitle, dark && styles.textOnDark]}>
-          {title}
+        <Text numberOfLines={1} style={[styles.rowTitle, { color: dark ? theme.text : colors.navy }]}>
+          {t(title)}
         </Text>
         {subtitle ? (
-          <Text numberOfLines={1} style={[styles.rowSubtitle, dark && styles.mutedOnDark]}>
-            {subtitle}
+          <Text numberOfLines={1} style={[styles.rowSubtitle, { color: dark ? theme.textMuted : colors.grayText }]}>
+            {t(subtitle)}
           </Text>
         ) : null}
       </View>
       <View style={styles.rowAside}>
         {badge ? <Pill label={badge} variant={badgeVariant} tone={tone} /> : null}
-        {meta ? <Text style={[styles.rowMeta, dark && styles.mutedOnDark]}>{meta}</Text> : null}
+        {meta ? <Text style={[styles.rowMeta, { color: dark ? theme.textMuted : colors.grayText }]}>{t(meta)}</Text> : null}
       </View>
-      {onEdit || onDelete ? (
-        <View style={styles.rowActions}>
-          {onEdit ? (
-            <Pressable style={[styles.rowActionButton, dark && styles.rowActionButtonDark]} onPress={onEdit}>
-              <Pencil size={14} color={dark ? colors.white : colors.navy} />
-            </Pressable>
-          ) : null}
-          {onDelete ? (
-            <Pressable style={[styles.rowActionButton, dark && styles.rowActionButtonDark]} onPress={onDelete}>
-              <Trash2 size={14} color={colors.red} />
-            </Pressable>
-          ) : null}
-        </View>
+    </>
+  );
+  const rowActions = onEdit || onDelete ? (
+    <View style={styles.rowActions}>
+      {onEdit ? (
+        <AnimatedPressable
+          accessibilityRole="button"
+          accessibilityLabel={`Editar ${title}`}
+          hitSlop={8}
+          style={[
+            styles.rowActionButton,
+            { backgroundColor: dark ? theme.surface : colors.white, borderColor: dark ? theme.line : colors.border },
+          ]}
+          onPress={onEdit}
+        >
+          <Pencil size={14} color={dark ? theme.text : colors.navy} />
+        </AnimatedPressable>
       ) : null}
-    </Pressable>
+      {onDelete ? (
+        <AnimatedPressable
+          accessibilityRole="button"
+          accessibilityLabel={`Excluir ${title}`}
+          hitSlop={8}
+          style={[
+            styles.rowActionButton,
+            { backgroundColor: dark ? theme.surface : colors.white, borderColor: dark ? theme.line : colors.border },
+          ]}
+          onPress={onDelete}
+        >
+          <Trash2 size={14} color={colors.red} />
+        </AnimatedPressable>
+      ) : null}
+    </View>
+  ) : null;
+
+  const rowStyle = [
+    styles.row,
+    {
+      backgroundColor: dark ? theme.surfaceSoft : colors.white,
+      borderColor: dark ? theme.line : colors.border,
+    },
+  ];
+
+  if (onPress && rowActions) {
+    return (
+      <View style={rowStyle}>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.rowMain}
+          onPress={onPress}
+        >
+          {rowMainContent}
+        </Pressable>
+        {rowActions}
+      </View>
+    );
+  }
+
+  if (onPress) {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        style={rowStyle}
+        onPress={onPress}
+      >
+        {rowMainContent}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={rowStyle}>
+      {rowMainContent}
+      {rowActions}
+    </View>
   );
 }
 
@@ -485,11 +596,12 @@ interface ProgressBarProps {
 }
 
 export function ProgressBar({ value, accent = colors.red, tone = 'light' }: ProgressBarProps) {
+  const theme = useThemeColors();
   const safeValue = Math.max(0, Math.min(100, value));
-  const dark = tone === 'dark';
+  const dark = tone === 'dark' || theme.isDark;
 
   return (
-    <View style={[styles.progressTrack, dark && styles.progressTrackDark]}>
+    <View style={[styles.progressTrack, { backgroundColor: dark ? theme.surfaceSoft : colors.panelSoft }]}>
       <View style={[styles.progressFill, { width: `${safeValue}%`, backgroundColor: accent }]} />
     </View>
   );
@@ -501,8 +613,10 @@ interface MiniBarsProps {
 }
 
 export function MiniBars({ data, tone = 'light' }: MiniBarsProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const max = Math.max(...data.map((item) => item.value), 1);
-  const dark = tone === 'dark';
+  const dark = tone === 'dark' || theme.isDark;
 
   return (
     <View style={styles.bars}>
@@ -510,7 +624,7 @@ export function MiniBars({ data, tone = 'light' }: MiniBarsProps) {
         const height = Math.max(14, Math.round((item.value / max) * 78));
         return (
           <View key={item.label} style={styles.barColumn}>
-            <View style={[styles.barTrack, dark && styles.barTrackDark]}>
+            <View style={[styles.barTrack, { backgroundColor: dark ? theme.surfaceSoft : colors.panelSoft }]}>
               <View
                 style={[
                   styles.barFill,
@@ -518,7 +632,7 @@ export function MiniBars({ data, tone = 'light' }: MiniBarsProps) {
                 ]}
               />
             </View>
-            <Text style={[styles.barLabel, dark && styles.mutedOnDark]}>{item.label}</Text>
+            <Text style={[styles.barLabel, { color: dark ? theme.textMuted : colors.grayText }]}>{t(item.label)}</Text>
           </View>
         );
       })}
@@ -534,14 +648,16 @@ interface RingMetricProps {
 }
 
 export function RingMetric({ value, label, accent = colors.green, tone = 'light' }: RingMetricProps) {
-  const dark = tone === 'dark';
+  const theme = useThemeColors();
+  const { t } = useI18n();
+  const dark = tone === 'dark' || theme.isDark;
 
   return (
     <View style={styles.ringWrap}>
-      <View style={[styles.ring, { borderColor: accent }, dark && styles.ringDark]}>
-        <Text style={[styles.ringValue, { color: dark ? colors.white : accent }]}>{value}</Text>
+      <View style={[styles.ring, { borderColor: accent, backgroundColor: dark ? theme.surfaceSoft : colors.white }]}>
+        <Text style={[styles.ringValue, { color: dark ? theme.text : accent }]}>{value}</Text>
       </View>
-      <Text style={[styles.ringLabel, dark && styles.mutedOnDark]}>{label}</Text>
+      <Text style={[styles.ringLabel, { color: dark ? theme.textMuted : colors.grayText }]}>{t(label)}</Text>
     </View>
   );
 }
@@ -599,11 +715,13 @@ export function CampusMap({ tone = 'light' }: { tone?: Tone }) {
 }
 
 export function FieldPreview({ label, value }: { label: string; value: string }) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   return (
-    <View style={styles.fieldPreview}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <Text numberOfLines={1} style={styles.fieldValue}>
-        {value}
+    <View style={[styles.fieldPreview, { backgroundColor: theme.isDark ? theme.surface : colors.white, borderColor: theme.isDark ? theme.line : colors.border }]}>
+      <Text style={[styles.fieldLabel, { color: theme.isDark ? theme.textMuted : colors.grayText }]}>{t(label)}</Text>
+      <Text numberOfLines={1} style={[styles.fieldValue, { color: theme.isDark ? theme.text : colors.navy }]}>
+        {t(value)}
       </Text>
     </View>
   );
@@ -796,12 +914,19 @@ const styles = StyleSheet.create({
   },
   avatarImage: { width: '100%', height: '100%' },
   avatarText: { fontSize: 12, fontWeight: '900' },
+  rowMain: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   rowBody: { flex: 1, minWidth: 0 },
   rowTitle: { color: colors.navy, fontSize: 13, fontWeight: '800' },
   rowSubtitle: { color: colors.grayText, fontSize: 11, marginTop: 3 },
   rowAside: { alignItems: 'flex-end', gap: 4 },
   rowMeta: { color: colors.grayText, fontSize: 10, fontWeight: '700' },
-  rowActions: { flexDirection: 'row', gap: 6 },
+  rowActions: { flexDirection: 'row', gap: 6, zIndex: 2 },
   rowActionButton: {
     width: 30,
     height: 30,

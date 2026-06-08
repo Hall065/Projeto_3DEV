@@ -4,12 +4,14 @@ import { FileText } from 'lucide-react-native';
 import { ExportModal } from '@/components/common/ExportModal';
 import { AppButton, ListRow, LoadingState, ProgressBar, RingMetric, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { colors, connectTheme } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { exportService } from '@/services/export.service';
 import { studentService, type StudentDashboardData } from '@/services/student.service';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function AlunoFrequenciaScreen() {
   const session = useAuthStore((s) => s.session);
+  const theme = useThemeColors();
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [loading, setLoading] = useState(true);
   const [exportOpen, setExportOpen] = useState(false);
@@ -44,17 +46,17 @@ export default function AlunoFrequenciaScreen() {
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.appBackground }]} contentContainerStyle={styles.content}>
       <SurfaceCard title="Frequencia e salario" subtitle="Calculo automatico do mes">
         <View style={styles.monthRow}>
           <AppButton label="Mes anterior" variant="secondary" accent={colors.navy} onPress={() => setMonth((current) => shiftMonth(current, -1))} />
-          <Text style={styles.month}>{month}</Text>
+          <Text style={[styles.month, { color: theme.text }]}>{month}</Text>
           <AppButton label="Proximo" variant="secondary" accent={colors.navy} onPress={() => setMonth((current) => shiftMonth(current, 1))} />
         </View>
         <View style={styles.ringRow}>
           <RingMetric value={`${salario?.frequencia_percentual ?? percentual}%`} label="frequencia" accent={colors.green} />
           <View style={styles.salaryBox}>
-            <Text style={styles.salaryLabel}>Valor final</Text>
+            <Text style={[styles.salaryLabel, { color: theme.textMuted }]}>Valor final</Text>
             <Text style={styles.salaryValue}>R$ {Math.round(salario?.salario_final ?? 0).toLocaleString('pt-BR')}</Text>
             <ProgressBar value={salario?.frequencia_percentual ?? percentual} accent={colors.green} />
           </View>
@@ -88,7 +90,7 @@ export default function AlunoFrequenciaScreen() {
             accent={colors.green}
           />
         ))}
-        {frequencias.length === 0 ? <Text style={styles.empty}>Nenhum lancamento encontrado para este mes.</Text> : null}
+        {frequencias.length === 0 ? <Text style={[styles.empty, { color: theme.textMuted }]}>Nenhum lancamento encontrado para este mes.</Text> : null}
       </SurfaceCard>
 
       <ExportModal

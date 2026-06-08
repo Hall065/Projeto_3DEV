@@ -1,0 +1,24 @@
+The following packages should be updated for best compatibility with the installed expo version:
+  expo@54.0.34 - expected version: ~54.0.35
+  expo-file-system@19.0.22 - expected version: ~19.0.23
+  expo-font@14.0.11 - expected version: ~14.0.12
+  expo-router@6.0.23 - expected version: ~6.0.24
+Your project may not work correctly until you install the expected versions of the packages.
+"shadow*" style props are deprecated. Use "boxShadow".
+
+<--- Last few GCs --->
+
+[38744:0000028021C30000]    90295 ms: Scavenge (interleaved) 842.8 (909.6) -> 836.5 (945.1) MB, pooled: 0 MB, 1342.68 / 0.00 ms  (average mu = 0.993, current mu = 0.988) allocation failure; 
+[38744:0000028021C30000]    91067 ms: Scavenge (interleaved) 878.1 (945.1) -> 860.9 (968.3) MB, pooled: 0 MB, 46.73 / 0.00 ms  (average mu = 0.993, current mu = 0.988) allocation failure; 
+
+FATAL ERROR: AlignedAlloc Allocation failed - process out of memory
+----- Native stack trace -----
+
+ 1: 00007FF79935C36F node::OnFatalError+1343
+ 2: 00007FF799FA4D77 v8::Function::NewInstance+423
+ 3: 00007FF799922B1E v8::internal::Version::GetSONAME+11038
+ 4: 00007FF799A9CB6B v8::MemorySpan<unsigned __int64>::operator[]+82043
+ 5: 00007FF799A9AF72 v8::MemorySpan<unsigned __int64>::operator[]+74882
+ 6: 00007FF799DE4385 uv_timer_set_repeat+129029
+ 7: 00007FF79997BE52 v8::String::Utf8Value::~Utf8Value+8594
+ 8: 000002805A33733A 

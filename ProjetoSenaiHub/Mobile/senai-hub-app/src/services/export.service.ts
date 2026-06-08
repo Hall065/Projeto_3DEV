@@ -2,6 +2,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as XLSX from 'xlsx';
+import { Platform } from 'react-native';
 
 type ExportRow = Record<string, string | number | boolean | null | undefined>;
 
@@ -62,6 +63,23 @@ function gerarHTMLRelatorio(dados: ExportRow[], titulo: string) {
   `;
 }
 
+function downloadBlobWeb(blob: Blob, fileName: string) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    throw new Error('Download web indisponivel neste ambiente.');
+  }
+
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return fileName;
+}
+
 async function shareFile(uri: string, mimeType: string, dialogTitle: string) {
   const available = await Sharing.isAvailableAsync();
   if (!available) return uri;
@@ -72,6 +90,19 @@ async function shareFile(uri: string, mimeType: string, dialogTitle: string) {
 export const exportService = {
   async exportarPDF(dados: ExportRow[], titulo: string) {
     const html = gerarHTMLRelatorio(dados, titulo);
+    if (Platform.OS === 'web') {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        return downloadBlobWeb(new Blob([html], { type: 'text/html;charset=utf-8' }), `${sanitizeFileName(titulo)}.html`);
+      }
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      return 'web-print';
+    }
+
     const { uri } = await Print.printToFileAsync({ html });
     return shareFile(uri, 'application/pdf', `Exportar ${titulo}`);
   },
@@ -80,8 +111,20 @@ export const exportService = {
     const ws = XLSX.utils.json_to_sheet(dados.length ? dados : [{ mensagem: 'Nenhum dado encontrado.' }]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Dados');
+    const fileName = `${sanitizeFileName(nomeArquivo)}.xlsx`;
+
+    if (Platform.OS === 'web') {
+      const wbout = XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as BlobPart;
+      return downloadBlobWeb(
+        new Blob([wbout], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+        fileName
+      );
+    }
+
     const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
-    const uri = `${FileSystem.documentDirectory}${sanitizeFileName(nomeArquivo)}.xlsx`;
+    const uri = `${FileSystem.documentDirectory}${fileName}`;
     await FileSystem.writeAsStringAsync(uri, wbout, {
       encoding: FileSystem.EncodingType.Base64,
     });

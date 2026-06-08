@@ -5,16 +5,22 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SidebarDrawer } from '@/components/layout/SidebarDrawer';
 import { NotificationsModal } from '@/components/notifications/NotificationsModal';
-import { colors, gridTheme } from '@/constants/colors';
+import { gridTheme } from '@/constants/colors';
 import { GRID_BOTTOM_NAV, GRID_DRAWER_ITEMS } from '@/constants/navigation';
-import { canAccessGrid, canAccessGridRoute } from '@/lib/permissions';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { canAccessGrid, canAccessGridRoute, getDefaultGridRoute, getPostLoginRoute } from '@/lib/permissions';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuthStore } from '@/stores/auth.store';
+
+function isGridPath(pathname: string) {
+  return pathname === '/grid' || pathname.startsWith('/grid/');
+}
 
 export default function GridLayout() {
   const router = useRouter();
   const pathname = usePathname();
   const session = useAuthStore((s) => s.session);
+  const theme = useThemeColors();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notifications = useNotifications(session?.userId);
 
@@ -24,10 +30,11 @@ export default function GridLayout() {
       return;
     }
     if (session.perfil && !canAccessGrid(session.perfil, session.aplicacoes)) {
-      router.replace('/hub');
+      router.replace(getPostLoginRoute(session) as never);
+      return;
     }
-    if (session.perfil && !canAccessGridRoute(session.perfil.tipo, pathname)) {
-      router.replace('/grid/chamados');
+    if (session.perfil && isGridPath(pathname) && !canAccessGridRoute(session.perfil.tipo, pathname)) {
+      router.replace(getDefaultGridRoute(session.perfil.tipo) as never);
     }
   }, [pathname, session, router]);
 
@@ -39,19 +46,20 @@ export default function GridLayout() {
   );
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: theme.appBackground }}>
       <AppHeader
         title="SENAI Grid"
-        accentColor={gridTheme.primary}
+        brandArea="grid"
+        accentColor={theme.isDark ? theme.gridHeader : gridTheme.primary}
         notificationCount={notifications.unreadCount}
         onNotificationsPress={() => setNotificationsOpen(true)}
       />
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: theme.appBackground }}>
         <Stack
           screenOptions={{
             headerShown: false,
             animation: 'fade_from_bottom',
-            contentStyle: { backgroundColor: colors.background },
+            contentStyle: { backgroundColor: theme.appBackground },
           }}
         />
       </View>

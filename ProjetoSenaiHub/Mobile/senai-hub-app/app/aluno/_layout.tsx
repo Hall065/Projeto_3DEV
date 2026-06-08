@@ -4,14 +4,16 @@ import { View } from 'react-native';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { NotificationsModal } from '@/components/notifications/NotificationsModal';
-import { colors, connectTheme } from '@/constants/colors';
+import { connectTheme } from '@/constants/colors';
 import { ALUNO_BOTTOM_NAV } from '@/constants/navigation';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function AlunoLayout() {
   const router = useRouter();
   const session = useAuthStore((s) => s.session);
+  const theme = useThemeColors();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notifications = useNotifications(session?.userId);
 
@@ -26,20 +28,21 @@ export default function AlunoLayout() {
   }, [router, session]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: theme.appBackground }}>
       <AppHeader
         title="SENAI Aluno"
+        brandArea="connect"
         showMenu={false}
-        accentColor={connectTheme.primary}
+        accentColor={theme.isDark ? theme.connectHeader : connectTheme.primary}
         notificationCount={notifications.unreadCount}
         onNotificationsPress={() => setNotificationsOpen(true)}
       />
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: theme.appBackground }}>
         <Stack
           screenOptions={{
             headerShown: false,
             animation: 'fade_from_bottom',
-            contentStyle: { backgroundColor: colors.background },
+            contentStyle: { backgroundColor: theme.appBackground },
           }}
         />
       </View>

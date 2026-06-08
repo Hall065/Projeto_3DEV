@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname, useRouter } from 'expo-router';
 import { AnimatedPressable } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export interface NavItem {
   label: string;
@@ -16,18 +18,45 @@ interface BottomNavProps {
   accentColor?: string;
 }
 
+function isRootModuleRoute(route: string) {
+  return route.split('/').filter(Boolean).length <= 1;
+}
+
+function isActiveRoute(pathname: string, route: string) {
+  if (pathname === route) return true;
+  if (isRootModuleRoute(route)) return false;
+  return pathname.startsWith(`${route}/`);
+}
+
 export function BottomNav({ items, accentColor = colors.navy }: BottomNavProps) {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const router = useRouter();
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const activeBg =
-    accentColor === colors.red ? '#FFE7E9' : accentColor === colors.green ? '#E6F8EE' : colors.panelSoft;
+    theme.isDark
+      ? accentColor === colors.green
+        ? 'rgba(0,168,90,0.18)'
+        : accentColor === colors.red
+          ? 'rgba(227,6,19,0.18)'
+          : theme.surfaceSoft
+      : accentColor === colors.red ? '#FFE7E9' : accentColor === colors.green ? '#E6F8EE' : colors.panelSoft;
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom + 8 }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingBottom: insets.bottom + 8,
+          backgroundColor: theme.isDark ? theme.nav : colors.white,
+          borderTopColor: theme.isDark ? theme.line : colors.border,
+        },
+      ]}
+    >
       {items.map((item) => {
-        const active = pathname === item.route || pathname.startsWith(item.route + '/');
-        const iconColor = active ? accentColor : colors.grayText;
+        const active = isActiveRoute(pathname, item.route);
+        const iconColor = active ? accentColor : theme.isDark ? theme.textMuted : colors.grayText;
         const icon = isValidElement(item.icon)
           ? cloneElement(item.icon, { color: iconColor, size: active ? 22 : 20 })
           : item.icon;
@@ -40,8 +69,8 @@ export function BottomNav({ items, accentColor = colors.navy }: BottomNavProps) 
           >
             {active ? <View style={[styles.activeBar, { backgroundColor: accentColor }]} /> : null}
             {icon}
-            <Text style={[styles.label, active && { color: accentColor, fontWeight: '700' }]}>
-              {item.label}
+            <Text style={[styles.label, { color: theme.isDark ? theme.textMuted : colors.grayText }, active && { color: accentColor, fontWeight: '700' }]}>
+              {t(item.label)}
             </Text>
           </AnimatedPressable>
         );

@@ -1,0 +1,711 @@
+env: load .env
+env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_EMAIL_FROM SMTP_PASS EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET EXPO_PUBLIC_SENAI_LATITUDE EXPO_PUBLIC_SENAI_LONGITUDE EXPO_PUBLIC_SENAI_RAIO_METROS
+Starting project at C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+React Compiler enabled
+Starting Metro Bundler
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+Waiting on http://localhost:8093
+Logs for your project will appear below.
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓░░░░░░░░░░ 41.3% (416/647)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 62.9% (578/744)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.1% ( 844/2663)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 87.9% (2534/2717)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 64.1% ( 906/2703)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.9% (2695/2826)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.2% (2751/2867)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.2% (2878/2949)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 97.5% (2952/2989)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 97.3% (3011/3055)
+λ Bundled 19305ms node_modules\expo-router\node\render.js (3083 modules)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3056/3056)
+Web Bundled 21480ms node_modules\expo-router\entry.js (3056 modules)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 140ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 3813ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓░░░░░░░░░░ 42.3% (154/289)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓░░░░░░░░░░ 42.3% (264/475)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.6% (457/693)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 60.6% (579/744)
+| ◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+| node:internal/child_process/serialization:114
+|     ser.writeValue(message);
+|         ^
+| 
+| Error: Data cannot be cloned, out of memory.
+| [90m    at writeChannelMessage (node:internal/child_process/serialization:114:9)[39m
+| [90m    at target._send (node:internal/child_process:850:17)[39m
+| [90m    at target.send (node:internal/child_process:751:19)[39m
+|     at reportSuccess [90m(C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\[39mnode_modules\[4mjest-worker[24m\build\workers\processChild.js:82:11[90m)[39m
+| [90m    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+| 
+| Node.js v24.14.0
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 66.0% (713/911)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 71.6% ( 922/1118)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.9% (1118/1234)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.8% (1270/1333)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.9% (1271/1333)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.2% (1314/1354)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.2% (1595/2976)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.2% (1861/2986)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.2% (2163/2986)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.2% (2532/2986)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3053/3055)
+Web Bundled 68886ms node_modules\expo-router\entry.js (3057 modules)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 166ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 4192ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 302ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1954ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 241ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+λ Bundled 177ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 1779ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 129ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 87ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1052ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 116ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 78ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1077ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 96ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 86ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1206ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 92ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 86ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 967ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 143ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 130ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1302ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 109ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 167ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1146ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 91ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 94ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2078ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 151ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 128ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1272ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 123ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 96ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1178ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 124ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 83ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1113ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 94ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 122ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1251ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 108ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 91ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1459ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 143ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 118ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2036ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 114ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 109ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 970ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 103ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 86ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1231ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 98ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 85ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1194ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 104ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 94ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1254ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 127ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 82ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1248ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 140ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 79ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1527ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 193ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+λ Bundled 88ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1474ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 137ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 153ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1747ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 193ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 123ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1781ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 120ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+λ Bundled 92ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1219ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 110ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+λ Bundled 87ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1375ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 94ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+λ Bundled 83ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1087ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 113ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 84ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1078ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 211ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 117ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1602ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 164ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 111ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1505ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 151ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 83ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1096ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 240ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 71ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1322ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 136ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 79ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1064ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 617ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 105ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2218ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 147ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 116ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 1476ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 127ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 113ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 997ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 232ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 81ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1412ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 110ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 105ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1340ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 127ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 89ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2206ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 189ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+λ Bundled 130ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1500ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 144ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 261ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 7007ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 264ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 506ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2141ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 179ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 158ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2209ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 129ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 154ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1897ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 147ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+λ Bundled 229ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2611ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 116ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 359ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 3581ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 177ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 154ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2668ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 154ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 459ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2222ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 179ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 372ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2022ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 202ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 186ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1820ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 133ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 157ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2345ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 132ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 128ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 3728ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 166ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 450ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2156ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 145ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 164ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2670ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 164ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 736ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2468ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 169ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 192ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1985ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 269ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 1006ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2860ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 151ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 201ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 1895ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 207ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 1159ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2920ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 686ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 955ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2744ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 457ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 293ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1991ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 1637ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 9858ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 12260ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 139ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 140ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1402ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 1498ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 104ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2001ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 188ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 138ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1732ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 148ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 91ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1871ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 265ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 457ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 3762ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 103ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 119ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1971ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 136ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 187ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2636ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 254ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 202ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2019ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 178ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 320ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2030ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 304ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 334ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2280ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 114ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 77ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2217ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 195ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 538ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 6276ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 122ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 841ms node_modules\expo-router\node\render.js (1 module)
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 3123ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 123ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 236ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 6214ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 141ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 100ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2242ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 100ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+λ Bundled 103ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1777ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 127ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 118ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1155ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 135ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 98ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1936ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 184ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 100ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1689ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 135ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 95ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1659ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 107ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+λ Bundled 91ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2472ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 127ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 117ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1800ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 131ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 111ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1060ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 189ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 167ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2703ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 138ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 118ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1258ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 2663ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+λ Bundled 105ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1939ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 152ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+λ Bundled 126ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2236ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 331ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 125ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 6331ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 178ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 499ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 3322ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 181ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 1717ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 3362ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 166ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 160ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1507ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 2531ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 151ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1763ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 526ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 1762ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 5851ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 2341ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 4019ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+λ Bundled 495ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2944ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 4253ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+λ Bundled 615ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2303ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2435ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 943ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2704ms node_modules\expo-router\entry.js (1 module)
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+Web Bundled 691ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 171ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 2151ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 161ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+λ Bundled 268ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 3594ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 231ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+λ Bundled 729ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2475ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 139ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 109ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1796ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 299ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 201ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 4378ms node_modules\expo-router\entry.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 3934ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+λ Bundled 122ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1892ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 329ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 347ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2257ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 127ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+λ Bundled 169ms node_modules\expo-router\node\render.js (1 module)
+Web Bundled 1847ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 271ms node_modules\expo-router\entry.js (1 module)
+ LOG  [web] Logs will appear in the browser console
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+λ Bundled 442ms node_modules\expo-router\node\render.js (1 module)
+Web node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 2320ms node_modules\expo-router\entry.js (1 module)
+Web Bundled 172ms node_modules\expo-router\entry.js (1 module)

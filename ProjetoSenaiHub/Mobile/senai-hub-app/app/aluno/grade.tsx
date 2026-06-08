@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppButton, ListRow, LoadingState, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { studentService, type StudentDashboardData } from '@/services/student.service';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -9,6 +10,7 @@ const DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 
 export default function AlunoGradeScreen() {
   const session = useAuthStore((s) => s.session);
+  const theme = useThemeColors();
   const [activeDay, setActiveDay] = useState(DIAS[0]);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<StudentDashboardData | null>(null);
@@ -26,7 +28,26 @@ export default function AlunoGradeScreen() {
   if (loading) return <LoadingState />;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.appBackground }]} contentContainerStyle={styles.content}>
+      <SurfaceCard title="Curso vinculado" subtitle="Informações acadêmicas do aluno">
+        <ListRow
+          title={data?.aluno?.curso_nome ?? 'Curso não vinculado'}
+          subtitle={`${data?.aluno?.turma_nome ?? 'Turma não vinculada'} - ${data?.aluno?.status ?? 'sem status'}`}
+          badge={data?.aluno?.rm ? `RM ${data.aluno.rm}` : 'Sem RM'}
+          badgeVariant={data?.aluno?.status === 'ativo' ? 'success' : 'neutral'}
+          initials="CR"
+          accent={colors.red}
+        />
+        {data?.contratos[0] ? (
+          <ListRow
+            title={data.contratos[0].empresa_nome ?? 'Empresa não informada'}
+            subtitle={`Contrato ${data.contratos[0].status ?? 'sem status'} - ${data.contratos[0].carga_horaria ?? 'carga não informada'}`}
+            initials="CT"
+            accent={colors.green}
+          />
+        ) : null}
+      </SurfaceCard>
+
       <SurfaceCard title="Grade de aulas" subtitle="Aulas registradas e presenca">
         <View style={styles.tabs}>
           {DIAS.map((dia) => (
@@ -40,7 +61,7 @@ export default function AlunoGradeScreen() {
             />
           ))}
         </View>
-        <Text style={styles.hint}>Exibindo registros disponiveis para {activeDay}.</Text>
+        <Text style={[styles.hint, { color: theme.textMuted }]}>Exibindo registros disponiveis para {activeDay}.</Text>
       </SurfaceCard>
 
       <SurfaceCard title="Aulas do dia" subtitle="Horario, disciplina e status">
@@ -55,7 +76,7 @@ export default function AlunoGradeScreen() {
             accent={colors.blue}
           />
         ))}
-        {aulas.length === 0 ? <Text style={styles.empty}>Nenhuma aula registrada ainda.</Text> : null}
+        {aulas.length === 0 ? <Text style={[styles.empty, { color: theme.textMuted }]}>Nenhuma aula registrada ainda.</Text> : null}
       </SurfaceCard>
     </ScrollView>
   );

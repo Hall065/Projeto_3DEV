@@ -6,16 +6,24 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LoadingState } from '@/components/common/VisualPrimitives';
-import { colors } from '@/constants/colors';
+import { ConfirmDialogProvider } from '@/hooks/useConfirmDialog';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useAppStore } from '@/stores/app.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { startStudentGeofence } from '@/tasks/geofenceTask';
 
 export default function RootLayout() {
   const { hydrate, isInitialized, session } = useAuthStore();
+  const { hydratePreferences, preferencesInitialized } = useAppStore();
+  const theme = useThemeColors();
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  useEffect(() => {
+    hydratePreferences();
+  }, [hydratePreferences]);
 
   useEffect(() => {
     startStudentGeofence(session).catch((error) => {
@@ -23,11 +31,11 @@ export default function RootLayout() {
     });
   }, [session]);
 
-  if (!isInitialized) {
+  if (!isInitialized || !preferencesInitialized) {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.appBackground }}>
             <LoadingState label="Preparando o SENAI Hub..." />
           </View>
         </SafeAreaProvider>
@@ -38,24 +46,26 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: 'fade_from_bottom',
-            contentStyle: { backgroundColor: colors.background },
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="recuperar-senha" />
-          <Stack.Screen name="redefinir-senha" />
-          <Stack.Screen name="hub" />
-          <Stack.Screen name="connect" />
-          <Stack.Screen name="grid" />
-          <Stack.Screen name="aluno" />
-          <Stack.Screen name="perfil" />
-        </Stack>
-        <StatusBar style="light" />
+        <ConfirmDialogProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: 'fade_from_bottom',
+              contentStyle: { backgroundColor: theme.appBackground },
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="login" />
+            <Stack.Screen name="recuperar-senha" />
+            <Stack.Screen name="redefinir-senha" />
+            <Stack.Screen name="hub" />
+            <Stack.Screen name="connect" />
+            <Stack.Screen name="grid" />
+            <Stack.Screen name="aluno" />
+            <Stack.Screen name="perfil" />
+          </Stack>
+          <StatusBar style="light" />
+        </ConfirmDialogProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

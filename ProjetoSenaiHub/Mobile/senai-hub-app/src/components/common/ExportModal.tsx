@@ -2,6 +2,8 @@ import { Modal, StyleSheet, Text, View } from 'react-native';
 import { FileSpreadsheet, FileText, X } from 'lucide-react-native';
 import { AnimatedPressable, AppButton } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface ExportModalProps {
   visible: boolean;
@@ -20,14 +22,16 @@ export function ExportModal({
   onPDF,
   onExcel,
 }: ExportModalProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.dialog}>
+      <View style={[styles.overlay, { backgroundColor: theme.overlay }]}>
+        <View style={[styles.dialog, { backgroundColor: theme.surface }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
-            <AnimatedPressable style={styles.closeButton} onPress={onClose}>
-              <X size={18} color={colors.navy} />
+            <Text style={[styles.title, { color: theme.text }]}>{t(title)}</Text>
+            <AnimatedPressable style={[styles.closeButton, { backgroundColor: theme.surfaceSoft }]} onPress={onClose}>
+              <X size={18} color={theme.text} />
             </AnimatedPressable>
           </View>
 

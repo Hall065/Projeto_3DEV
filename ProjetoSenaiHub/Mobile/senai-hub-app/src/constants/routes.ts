@@ -9,6 +9,7 @@ export const ROUTES = {
     index: '/connect',
     alunos: '/connect/alunos',
     professores: '/connect/professores',
+    usuarios: '/connect/usuarios',
     turmas: '/connect/turmas',
     cursos: '/connect/cursos',
     empresas: '/connect/empresas',

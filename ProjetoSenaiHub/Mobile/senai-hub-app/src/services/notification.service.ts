@@ -23,15 +23,15 @@ export const notificationService = {
   },
 
   async countUnread(userId: string): Promise<number> {
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .schema('hub')
       .from('notificacoes')
-      .select('id', { count: 'exact', head: true })
+      .select('id')
       .eq('usuario_id', userId)
       .eq('lida', false);
 
     if (error) return 0;
-    return count ?? 0;
+    return data?.length ?? 0;
   },
 
   async markAsRead(id: string): Promise<void> {

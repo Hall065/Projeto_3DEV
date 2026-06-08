@@ -1,6 +1,11 @@
 import { supabase } from '@/lib/supabase';
 import type { HubUsuario, UsuarioAplicacao } from '@/types/auth.types';
 
+function nonEmptyString(value?: string | null) {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
+
 async function fetchArquivoUrl(arquivoId?: string | null) {
   if (!arquivoId) return null;
 
@@ -18,51 +23,87 @@ async function fetchArquivoUrl(arquivoId?: string | null) {
   return null;
 }
 
+function isAlunoRole(tipo?: string | null) {
+  return tipo === 'aluno' || tipo === 'connect_aluno';
+}
+
+async function fetchAlunoProfilePhoto(usuarioId: string) {
+  const selects = ['foto_url,foto_arquivo_id', 'foto_arquivo_id', 'foto_url'];
+
+  for (const select of selects) {
+    const { data, error } = await supabase
+      .schema('connect')
+      .from('alunos')
+      .select(select)
+      .eq('usuario_id', usuarioId)
+      .maybeSingle();
+
+    if (error || !data) continue;
+
+    const row = data as { foto_url?: string | null; foto_arquivo_id?: string | null };
+    const fotoArquivoId = nonEmptyString(row.foto_arquivo_id);
+    const fotoUrl = nonEmptyString(row.foto_url) ?? (await fetchArquivoUrl(fotoArquivoId));
+
+    return {
+      fotoArquivoId,
+      fotoUrl,
+    };
+  }
+
+  return {
+    fotoArquivoId: null,
+    fotoUrl: null,
+  };
+}
+
 export async function fetchUserProfile(email: string): Promise<HubUsuario | null> {
   const normalizedEmail = email.trim().toLowerCase();
-  const { data, error } = await supabase
-    .from('usuarios')
-    .select(
-      `
-      id,
-      nome,
-      email,
-      email_institucional,
-      tipo_usuario,
-      status,
-      telefone,
-      cpf,
-      foto_arquivo_id,
-      criado_em,
-      atualizado_em,
-      created_at,
-      updated_at
-    `
-    )
-    .or(`email.ilike.${normalizedEmail},email_institucional.ilike.${normalizedEmail}`)
-    .maybeSingle();
+  let data: Record<string, any> | null = null;
+  let lastError: unknown = null;
 
-  if (error) {
-    console.error('Erro ao buscar perfil:', error);
+  for (const targetSchema of ['hub', 'public']) {
+    const result = await supabase
+      .schema(targetSchema)
+      .from('usuarios')
+      .select('*')
+      .or(`email.ilike.${normalizedEmail},email_institucional.ilike.${normalizedEmail}`)
+      .maybeSingle();
+
+    if (!result.error) {
+      lastError = null;
+      data = (result.data as Record<string, any> | null) ?? null;
+      if (data) break;
+      continue;
+    }
+    lastError = result.error;
+  }
+
+  if (lastError && !data) {
+    console.error('Erro ao buscar perfil:', lastError);
     return null;
   }
 
   if (!data) return null;
 
-  const row = data as Record<string, any>;
-  const fotoArquivoId = row.foto_arquivo_id as string | null | undefined;
+  const row = data;
+  const fotoArquivoId = nonEmptyString(row.foto_arquivo_id);
   const fotoUrl = await fetchArquivoUrl(fotoArquivoId);
+  const rowFotoUrl = nonEmptyString(row.foto_url);
+  const tipo = row.tipo_usuario ?? row.tipo;
+  const alunoPhoto =
+    !rowFotoUrl && !fotoUrl && isAlunoRole(tipo) ? await fetchAlunoProfilePhoto(row.id as string) : null;
 
   return {
     id: row.id,
     nome: row.nome,
     email_institucional: row.email_institucional ?? row.email,
-    tipo: row.tipo_usuario,
+    tipo,
     status: row.status,
+    empresa_id: row.empresa_id ?? null,
     telefone: row.telefone,
     cpf: row.cpf,
-    foto_arquivo_id: fotoArquivoId,
-    foto_url: fotoUrl,
+    foto_arquivo_id: fotoArquivoId ?? alunoPhoto?.fotoArquivoId,
+    foto_url: rowFotoUrl ?? fotoUrl ?? alunoPhoto?.fotoUrl,
     created_at: row.criado_em ?? row.created_at,
     updated_at: row.atualizado_em ?? row.updated_at,
   } as HubUsuario;
@@ -94,16 +135,21 @@ export async function updateUserProfile(
   throw lastError;
 }
 
-export async function updateUserPhoto(userId: string, arquivoId: string) {
+export async function updateUserPhoto(userId: string, arquivoId: string, fotoUrl?: string | null) {
+  const payloads: Record<string, string>[] = fotoUrl
+    ? [{ foto_arquivo_id: arquivoId, foto_url: fotoUrl }, { foto_arquivo_id: arquivoId }, { foto_url: fotoUrl }]
+    : [{ foto_arquivo_id: arquivoId }];
   let lastError: unknown = null;
   for (const targetSchema of ['hub', 'public']) {
-    const { error } = await supabase
-      .schema(targetSchema)
-      .from('usuarios')
-      .update({ foto_arquivo_id: arquivoId } as never)
-      .eq('id', userId);
-    if (!error) return;
-    lastError = error;
+    for (const payload of payloads) {
+      const { error } = await supabase
+        .schema(targetSchema)
+        .from('usuarios')
+        .update(payload as never)
+        .eq('id', userId);
+      if (!error) return;
+      lastError = error;
+    }
   }
   throw lastError;
 }

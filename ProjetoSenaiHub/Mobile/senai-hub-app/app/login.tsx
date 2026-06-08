@@ -18,21 +18,26 @@ import { AnimatedPressable, AppButton, FeedbackMessage } from '@/components/comm
 import { DEV_TEST_ACCOUNT } from '@/constants/dev-test-account';
 import { colors } from '@/constants/colors';
 import { getSupabaseKeyHint, isSupabaseConfigured } from '@/lib/supabase-config';
+import { getPostLoginRoute as resolvePostLoginRoute } from '@/lib/permissions';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAuthStore } from '@/stores/auth.store';
 import { loginSchema, type LoginFormData } from '@/utils/validators';
 
 const circuitBg = require('../assets/brand/senai-circuit-bg.png');
-const hubLogo = require('../assets/brand/senai-hub-logo-2.png');
+const hubLoginLogo = require('../assets/brand/logo_slogan_branco_hub.png');
 
-function getPostLoginRoute() {
+function getLoginRedirectRoute() {
   const session = useAuthStore.getState().session;
-  return session?.perfil?.tipo === 'aluno' ? '/aluno/dashboard' : '/hub';
+  return resolvePostLoginRoute(session);
 }
 
 export default function LoginScreen() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -56,7 +61,7 @@ export default function LoginScreen() {
       setError(`Não foi possível autenticar a conta de demonstração: ${err}`);
       return;
     }
-    router.replace(getPostLoginRoute() as never);
+    router.replace(getLoginRedirectRoute() as never);
   };
 
   const onSubmit = async (data: LoginFormData) => {
@@ -70,7 +75,7 @@ export default function LoginScreen() {
         return;
       }
       console.log('[Login] Sucesso! Redirecionando para a area correta');
-      router.replace(getPostLoginRoute() as never);
+      router.replace(getLoginRedirectRoute() as never);
     } catch (e: any) {
       console.error('[Login] Erro inesperado:', e);
       setError('Ocorreu um erro inesperado ao tentar entrar.');
@@ -79,21 +84,25 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.isDark ? theme.appBackground : colors.white }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { backgroundColor: theme.isDark ? theme.appBackground : colors.white }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <ImageBackground source={circuitBg} style={styles.hero} imageStyle={styles.heroImage}>
-          <Image source={hubLogo} style={styles.logo} resizeMode="contain" />
+        <ImageBackground
+          source={circuitBg}
+          style={styles.hero}
+          imageStyle={styles.heroImage}
+        >
+          <Image source={hubLoginLogo} style={styles.logo} resizeMode="contain" />
         </ImageBackground>
 
-        <View style={styles.sheet}>
-          <Text style={styles.title}>Acesse sua conta</Text>
-          <Text style={styles.subtitle}>Informe seu e-mail e senha para continuar.</Text>
+        <View style={[styles.sheet, { backgroundColor: theme.surface }]}>
+          <Text style={[styles.title, { color: theme.text }]}>{t('Acesse sua conta')}</Text>
+          <Text style={[styles.subtitle, { color: theme.textMuted }]}>{t('Informe seu e-mail e senha para continuar.')}</Text>
 
           {__DEV__ && !isSupabaseConfigured ? (
             <FeedbackMessage
@@ -110,13 +119,13 @@ export default function LoginScreen() {
             name="email"
             render={({ field: { onChange, value }, fieldState: { error: fieldError } }) => (
               <View style={styles.field}>
-                <Text style={styles.label}>E-mail</Text>
-                <View style={styles.inputWrap}>
-                  <Mail size={17} color={colors.grayText} />
+                <Text style={[styles.label, { color: theme.text }]}>{t('E-mail')}</Text>
+                <View style={[styles.inputWrap, { backgroundColor: theme.input, borderColor: theme.line }]}>
+                  <Mail size={17} color={theme.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: theme.text }]}
                     placeholder="seu@email.com"
-                    placeholderTextColor={colors.mutedText}
+                    placeholderTextColor={theme.textSubtle}
                     autoCapitalize="none"
                     keyboardType="email-address"
                     value={value}
@@ -133,22 +142,22 @@ export default function LoginScreen() {
             name="password"
             render={({ field: { onChange, value }, fieldState: { error: fieldError } }) => (
               <View style={styles.field}>
-                <Text style={styles.label}>Senha</Text>
-                <View style={styles.inputWrap}>
-                  <Lock size={17} color={colors.grayText} />
+                <Text style={[styles.label, { color: theme.text }]}>{t('Senha')}</Text>
+                <View style={[styles.inputWrap, { backgroundColor: theme.input, borderColor: theme.line }]}>
+                  <Lock size={17} color={theme.textMuted} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: theme.text }]}
                     placeholder="••••••••"
-                    placeholderTextColor={colors.mutedText}
+                    placeholderTextColor={theme.textSubtle}
                     secureTextEntry={!showPassword}
                     value={value}
                     onChangeText={onChange}
                   />
                   <AnimatedPressable style={styles.eyeButton} onPress={() => setShowPassword(!showPassword)}>
                     {showPassword ? (
-                      <EyeOff size={17} color={colors.grayText} />
+                      <EyeOff size={17} color={theme.textMuted} />
                     ) : (
-                      <Eye size={17} color={colors.grayText} />
+                      <Eye size={17} color={theme.textMuted} />
                     )}
                   </AnimatedPressable>
                 </View>
@@ -159,7 +168,7 @@ export default function LoginScreen() {
 
           <View style={styles.forgotRow}>
             <Link href="/recuperar-senha" style={styles.link}>
-              Recuperar senha
+              {t('Recuperar senha')}
             </Link>
           </View>
 
@@ -168,7 +177,7 @@ export default function LoginScreen() {
           <AppButton label="Entrar" accent={colors.red} onPress={handleSubmit(onSubmit)} loading={isLoading} />
 
           <AnimatedPressable style={styles.testAccess} onPress={handleBypass} disabled={isLoading}>
-            <Text style={styles.testAccessText}>Acesso rápido para demonstração</Text>
+            <Text style={[styles.testAccessText, { color: theme.text }]}>{t('Acesso rápido para demonstração')}</Text>
           </AnimatedPressable>
         </View>
       </ScrollView>

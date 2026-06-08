@@ -22,13 +22,39 @@ export interface CloudinaryUploadResult {
   bytes: number;
 }
 
+function getDataUriMimeType(uri: string) {
+  const match = uri.match(/^data:([^;,]+)[;,]/);
+  return match?.[1]?.toLowerCase();
+}
+
+function getExtensionForMimeType(mimeType: string | undefined, resourceType: 'image' | 'video' | 'raw') {
+  const byMime: Record<string, string> = {
+    'image/gif': 'gif',
+    'image/heic': 'heic',
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'video/mp4': 'mp4',
+    'application/pdf': 'pdf',
+  };
+
+  if (mimeType && byMime[mimeType]) return byMime[mimeType];
+  if (resourceType === 'image') return 'jpg';
+  if (resourceType === 'video') return 'mp4';
+  return 'bin';
+}
+
 function getFileName(uri: string, resourceType: 'image' | 'video' | 'raw') {
-  const fallback = resourceType === 'image' ? 'upload.jpg' : resourceType === 'video' ? 'upload.mp4' : 'upload.pdf';
-  if (uri.startsWith('data:')) return fallback;
+  const fallback = `upload.${getExtensionForMimeType(undefined, resourceType)}`;
+  if (uri.startsWith('data:')) {
+    return `upload.${getExtensionForMimeType(getDataUriMimeType(uri), resourceType)}`;
+  }
 
   const cleanUri = uri.split('?')[0]?.split('#')[0] ?? '';
   const lastSegment = cleanUri.split('/').pop()?.trim();
-  return lastSegment ? decodeURIComponent(lastSegment) : fallback;
+  const decoded = lastSegment ? decodeURIComponent(lastSegment) : fallback;
+  return decoded.includes('.') ? decoded : fallback;
 }
 
 function getMimeType(filename: string, resourceType: 'image' | 'video' | 'raw') {
@@ -58,13 +84,25 @@ async function appendUploadFile(
   const filename = getFileName(uri, resourceType);
 
   if (Platform.OS === 'web') {
+    if (uri.startsWith('data:')) {
+      formData.append('file', uri);
+      return;
+    }
+
     const blobResponse = await fetch(uri);
     if (!blobResponse.ok) {
       throw new Error('Nao foi possivel ler o arquivo selecionado antes do envio.');
     }
 
     const blob = await blobResponse.blob();
-    formData.append('file', blob, filename);
+    if (blob.size === 0) {
+      throw new Error('O arquivo selecionado esta vazio ou nao pode ser lido pelo navegador.');
+    }
+
+    const fileExtension = getExtensionForMimeType(blob.type, resourceType);
+    const safeFilename = filename.includes('.') ? filename : `upload.${fileExtension}`;
+    const file = new File([blob], safeFilename, { type: blob.type || getMimeType(safeFilename, resourceType) });
+    formData.append('file', file);
     return;
   }
 

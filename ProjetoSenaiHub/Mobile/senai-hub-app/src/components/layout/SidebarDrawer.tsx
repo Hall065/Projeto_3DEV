@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronRight, Home, LogOut, X } from 'lucide-react-native';
 import { AnimatedPressable } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/app.store';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -30,6 +32,16 @@ interface SidebarDrawerProps {
   accentColor?: string;
 }
 
+function isRootModuleRoute(route: string) {
+  return route.split('/').filter(Boolean).length <= 1;
+}
+
+function isActiveRoute(pathname: string, route: string) {
+  if (pathname === route) return true;
+  if (isRootModuleRoute(route)) return false;
+  return pathname.startsWith(`${route}/`);
+}
+
 export function SidebarDrawer({ items, moduleTitle, accentColor = colors.red }: SidebarDrawerProps) {
   const { sidebarOpen, setSidebarOpen } = useAppStore();
   const logout = useAuthStore((s) => s.logout);
@@ -37,6 +49,8 @@ export function SidebarDrawer({ items, moduleTitle, accentColor = colors.red }: 
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(sidebarOpen);
   const progress = useRef(new Animated.Value(sidebarOpen ? 1 : 0)).current;
 
@@ -85,7 +99,7 @@ export function SidebarDrawer({ items, moduleTitle, accentColor = colors.red }: 
   return (
     <Modal visible={mounted} animationType="none" transparent onRequestClose={() => setSidebarOpen(false)}>
       <View style={styles.root}>
-        <Animated.View style={[styles.backdrop, { opacity: overlayOpacity }]} />
+        <Animated.View style={[styles.backdrop, { opacity: overlayOpacity, backgroundColor: theme.isDark ? 'rgba(2,6,23,0.78)' : 'rgba(2,6,23,0.62)' }]} />
         <Pressable style={StyleSheet.absoluteFill} onPress={() => setSidebarOpen(false)} />
 
         <Animated.View
@@ -126,7 +140,7 @@ export function SidebarDrawer({ items, moduleTitle, accentColor = colors.red }: 
 
           <ScrollView style={styles.menu} contentContainerStyle={styles.menuContent} showsVerticalScrollIndicator={false}>
             {items.map((item) => {
-              const active = pathname === item.route || pathname.startsWith(`${item.route}/`);
+              const active = isActiveRoute(pathname, item.route);
               const showSection = item.section && item.section !== currentSection;
               if (item.section) currentSection = item.section;
               const iconColor = active ? colors.white : colors.mutedText;
@@ -137,14 +151,14 @@ export function SidebarDrawer({ items, moduleTitle, accentColor = colors.red }: 
 
               return (
                 <View key={item.route}>
-                  {showSection ? <Text style={styles.sectionLabel}>{item.section}</Text> : null}
+                  {showSection ? <Text style={styles.sectionLabel}>{t(item.section)}</Text> : null}
                   <AnimatedPressable
                     style={[styles.menuItem, active && { backgroundColor: accentColor }]}
                     onPress={() => navigate(item.route)}
                   >
                     <View style={styles.menuItemLeft}>
                       <View style={[styles.menuIcon, active && styles.menuIconActive]}>{icon}</View>
-                      <Text style={[styles.menuText, active && styles.menuTextActive]}>{item.label}</Text>
+                      <Text style={[styles.menuText, active && styles.menuTextActive]}>{t(item.label)}</Text>
                     </View>
                     <ChevronRight size={16} color={active ? colors.white : colors.mutedText} />
                   </AnimatedPressable>
@@ -156,14 +170,14 @@ export function SidebarDrawer({ items, moduleTitle, accentColor = colors.red }: 
               style={styles.menuItem}
               onPress={() => {
                 setSidebarOpen(false);
-                router.push('/hub');
+                router.replace('/hub' as never);
               }}
             >
               <View style={styles.menuItemLeft}>
                 <View style={styles.menuIcon}>
                   <Home size={18} color={colors.mutedText} />
                 </View>
-                <Text style={styles.menuText}>Voltar ao Hub</Text>
+                <Text style={styles.menuText}>{t('Voltar ao Hub')}</Text>
               </View>
               <ChevronRight size={16} color={colors.mutedText} />
             </AnimatedPressable>
@@ -178,7 +192,7 @@ export function SidebarDrawer({ items, moduleTitle, accentColor = colors.red }: 
             }}
           >
             <LogOut size={18} color={colors.red} />
-            <Text style={styles.logoutText}>Sair</Text>
+            <Text style={styles.logoutText}>{t('Sair')}</Text>
           </AnimatedPressable>
         </Animated.View>
       </View>

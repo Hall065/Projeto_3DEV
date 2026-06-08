@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
+import { useI18n } from '@/hooks/useI18n';
 
 interface CrudResourceConfig<T, FormValues> {
   load: () => Promise<T[]>;
@@ -21,6 +22,8 @@ export function useCrudResource<T extends { id: string }, FormValues>(
   config: CrudResourceConfig<T, FormValues>
 ) {
   const { load, create, update, remove } = config;
+  const { confirm } = useConfirmDialog();
+  const { language } = useI18n();
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -33,7 +36,7 @@ export function useCrudResource<T extends { id: string }, FormValues>(
       const data = await load();
       setItems(data);
     } catch (err) {
-      const message = getErrorMessage(err, 'Não foi possível carregar os dados.');
+      const message = getErrorMessage(err, 'Nao foi possivel carregar os dados.');
       setError(message);
       setItems([]);
     } finally {
@@ -52,7 +55,7 @@ export function useCrudResource<T extends { id: string }, FormValues>(
       await create(values);
       await reload();
     } catch (err) {
-      const message = getErrorMessage(err, 'Não foi possível criar o registro.');
+      const message = getErrorMessage(err, 'Nao foi possivel criar o registro.');
       setError(message);
       throw err;
     } finally {
@@ -67,7 +70,7 @@ export function useCrudResource<T extends { id: string }, FormValues>(
       await update(id, values);
       await reload();
     } catch (err) {
-      const message = getErrorMessage(err, 'Não foi possível atualizar o registro.');
+      const message = getErrorMessage(err, 'Nao foi possivel atualizar o registro.');
       setError(message);
       throw err;
     } finally {
@@ -75,27 +78,34 @@ export function useCrudResource<T extends { id: string }, FormValues>(
     }
   };
 
-  const deleteItem = (id: string, label = 'este registro') => {
-    Alert.alert('Excluir registro', `Deseja excluir ${label}?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          setSubmitting(true);
-          try {
-            setError(null);
-            await remove(id);
-            await reload();
-          } catch (err) {
-            const message = getErrorMessage(err, 'Não foi possível excluir o registro.');
-            setError(message);
-          } finally {
-            setSubmitting(false);
-          }
-        },
-      },
-    ]);
+  const deleteItem = (id: string, label?: string) => {
+    const performDelete = async () => {
+      setSubmitting(true);
+      try {
+        setError(null);
+        await remove(id);
+        await reload();
+      } catch (err) {
+        const message = getErrorMessage(err, 'Nao foi possivel excluir o registro.');
+        setError(message);
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+    const targetLabel = label ?? (language === 'en-US' ? 'this record' : 'este registro');
+
+    void confirm({
+      title: 'Excluir registro',
+      message:
+        language === 'en-US'
+          ? `Do you want to delete ${targetLabel}?`
+          : `Deseja excluir ${targetLabel}?`,
+      confirmLabel: 'Excluir',
+      cancelLabel: 'Cancelar',
+    }).then((confirmed) => {
+      if (confirmed) void performDelete();
+    });
   };
 
   return {

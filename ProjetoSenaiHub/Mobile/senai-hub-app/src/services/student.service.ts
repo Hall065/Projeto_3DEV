@@ -9,6 +9,14 @@ export interface StudentDashboardData {
   localizacao: LocalizacaoAluno | null;
 }
 
+async function safeResult<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await promise;
+  } catch {
+    return fallback;
+  }
+}
+
 export const studentService = {
   async getDashboard(userId: string, mesReferencia = new Date().toISOString().slice(0, 7)): Promise<StudentDashboardData> {
     const aluno = await connectService.getAlunoByUserId(userId);
@@ -17,10 +25,10 @@ export const studentService = {
     }
 
     const [frequencias, salario, contratos, localizacoes] = await Promise.all([
-      connectService.listFrequenciasByAluno(aluno.id, mesReferencia),
-      connectService.calculateSalaryForAluno(aluno.id, mesReferencia),
-      connectService.listContratosByAluno(aluno.id),
-      connectService.listLocalizacoes(),
+      safeResult(connectService.listFrequenciasByAluno(aluno.id, mesReferencia), []),
+      safeResult(connectService.calculateSalaryForAluno(aluno.id, mesReferencia), null),
+      safeResult(connectService.listContratosByAluno(aluno.id), []),
+      safeResult(connectService.listLocalizacoes(), []),
     ]);
 
     return {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BookOpen, CalendarDays, GraduationCap, Users } from 'lucide-react-native';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
@@ -9,7 +9,8 @@ import { PERIODO_OPTIONS, TURMA_STATUS_OPTIONS } from '@/constants/form-options'
 import { useCrudResource } from '@/hooks/useCrudResource';
 import { useSelectOptions } from '@/hooks/useSelectOptions';
 import { connectService } from '@/services/connect.service';
-import type { Turma } from '@/types/connect.types';
+import { useAuthStore } from '@/stores/auth.store';
+import type { Aluno, Turma } from '@/types/connect.types';
 
 const turmaOptionLoaders = {
   cursos: connectService.listCursoOptions,
@@ -51,18 +52,51 @@ export default function TurmasScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Turma | null>(null);
   const [search, setSearch] = useState('');
+  const [selectedTurma, setSelectedTurma] = useState<Turma | null>(null);
+  const [alunoSearch, setAlunoSearch] = useState('');
+  const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [loadingAlunos, setLoadingAlunos] = useState(false);
+  const session = useAuthStore((s) => s.session);
+  const isProfessor = session?.perfil?.tipo === 'professor';
   const { options, error: optionsError } = useSelectOptions(turmaOptionLoaders);
   const fields = getFields(options);
+  const loadTurmas = useCallback(async () => {
+    if (isProfessor && session?.userId) {
+      return connectService.listTurmasForProfessorUser(session.userId);
+    }
+    return connectService.listTurmas();
+  }, [isProfessor, session?.userId]);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<Turma, Record<string, string>>({
-      load: connectService.listTurmas,
+      load: loadTurmas,
       create: connectService.createTurma,
       update: connectService.updateTurma,
       remove: connectService.deleteTurma,
     });
 
+  useEffect(() => {
+    if (selectedTurma && items.some((turma) => turma.id === selectedTurma.id)) return;
+    setSelectedTurma(isProfessor ? items[0] ?? null : null);
+  }, [isProfessor, items, selectedTurma]);
+
+  useEffect(() => {
+    if (!selectedTurma?.id) {
+      setAlunos([]);
+      return;
+    }
+    setLoadingAlunos(true);
+    connectService
+      .listAlunosByTurma(selectedTurma.id)
+      .then(setAlunos)
+      .catch(() => setAlunos([]))
+      .finally(() => setLoadingAlunos(false));
+  }, [selectedTurma?.id]);
+
   const filtered = items.filter((turma) =>
-    `${turma.nome} ${turma.curso_nome ?? ''} ${turma.periodo ?? ''}`.toLowerCase().includes(search.toLowerCase())
+    `${turma.nome} ${turma.curso_nome ?? ''} ${turma.professor_nome ?? ''} ${turma.periodo ?? ''}`.toLowerCase().includes(search.toLowerCase())
+  );
+  const filteredAlunos = alunos.filter((aluno) =>
+    `${aluno.nome} ${aluno.rm ?? ''} ${aluno.email_institucional ?? aluno.email ?? ''}`.toLowerCase().includes(alunoSearch.toLowerCase())
   );
 
   return (
@@ -70,10 +104,10 @@ export default function TurmasScreen() {
       <ModuleScreen
         kicker="SENAI Connect"
         title="Turmas e Cursos"
-        description="Gerencie turmas, cursos e vínculos acadêmicos."
+        description={isProfessor ? 'Consulte suas turmas e os alunos vinculados.' : 'Gerencie turmas, cursos e vínculos acadêmicos.'}
         isLoading={loading}
-        actionLabel="+ Criar turma"
-        onActionPress={() => {
+        actionLabel={isProfessor ? undefined : '+ Criar turma'}
+        onActionPress={isProfessor ? undefined : () => {
           setEditing(null);
           setModalOpen(true);
         }}
@@ -99,14 +133,35 @@ export default function TurmasScreen() {
               badgeVariant={turma.status === 'ativa' ? 'success' : 'neutral'}
               initials={turma.nome.slice(0, 2).toUpperCase()}
               accent={colors.green}
-              onEdit={() => {
+              onPress={() => setSelectedTurma(turma)}
+              onEdit={isProfessor ? undefined : () => {
                 setEditing(turma);
                 setModalOpen(true);
               }}
-              onDelete={() => deleteItem(turma.id, turma.nome)}
+              onDelete={isProfessor ? undefined : () => deleteItem(turma.id, turma.nome)}
             />
           ))}
         </SurfaceCard>
+
+        {selectedTurma ? (
+          <SurfaceCard title="Alunos da turma" subtitle={`${selectedTurma.nome} - ${selectedTurma.curso_nome ?? 'Curso não vinculado'}`}>
+            <SearchField placeholder="Pesquisar aluno por nome, RM ou e-mail..." value={alunoSearch} onChangeText={setAlunoSearch} />
+            {loadingAlunos ? <Text style={styles.empty}>Carregando alunos...</Text> : null}
+            {!loadingAlunos && filteredAlunos.length === 0 ? <Text style={styles.empty}>Nenhum aluno encontrado nesta turma.</Text> : null}
+            {!loadingAlunos && filteredAlunos.map((aluno) => (
+              <ListRow
+                key={aluno.id}
+                title={aluno.nome}
+                subtitle={`RM ${aluno.rm ?? 'sem RM'} - ${aluno.email_institucional ?? aluno.email ?? 'Sem e-mail'}`}
+                badge={aluno.status === 'ativo' ? 'Ativo' : aluno.status}
+                badgeVariant={aluno.status === 'ativo' ? 'success' : 'neutral'}
+                initials={aluno.nome.slice(0, 2).toUpperCase()}
+                imageUri={aluno.foto_url}
+                accent={connectTheme.accent}
+              />
+            ))}
+          </SurfaceCard>
+        ) : null}
       </ModuleScreen>
 
       <CrudModal

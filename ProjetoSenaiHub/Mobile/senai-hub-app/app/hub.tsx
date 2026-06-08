@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import {
@@ -13,17 +12,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowRight,
   Bell,
-  BookOpen,
   CheckCircle2,
-  Grid3x3,
   LogOut,
 } from 'lucide-react-native';
 import { AnimatedPressable, FeedbackMessage } from '@/components/common/VisualPrimitives';
+import { getBrandAsset } from '@/constants/brandAssets';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { canAccessConnect, canAccessGrid } from '@/lib/permissions';
 import { useAuthStore } from '@/stores/auth.store';
 
-const hubLogo = require('../assets/brand/senai-hub-logo.png');
 const connectCardImage = require('../assets/brand/hub-connect-card.png');
 const gridCardImage = require('../assets/brand/hub-grid-card.png');
 
@@ -32,29 +31,33 @@ interface AppCardProps {
   description: string;
   accent: string;
   onPress: () => void;
-  icon: ReactNode;
+  logo: ImageSourcePropType;
   image: ImageSourcePropType;
 }
 
-function AppCard({ title, description, accent, onPress, icon, image }: AppCardProps) {
+function AppCard({ title, description, accent, onPress, logo, image }: AppCardProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   return (
-    <AnimatedPressable accessibilityRole="button" style={styles.card} onPress={onPress}>
-      <View style={styles.illustration}>
+    <AnimatedPressable accessibilityRole="button" style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.line }]} onPress={onPress}>
+      <View style={[styles.illustration, { backgroundColor: theme.surfaceSoft }]}>
         <Image source={image} style={styles.illustrationImage} resizeMode="cover" />
       </View>
       <View style={styles.cardHeader}>
-        <View style={[styles.appIcon, { backgroundColor: accent }]}>{icon}</View>
+        <View style={[styles.appIcon, { backgroundColor: theme.surfaceSoft, borderColor: theme.line }]}>
+          <Image source={logo} style={styles.appIconImage} resizeMode="contain" />
+        </View>
         <View style={styles.cardTitleWrap}>
-          <Text style={styles.cardTitle}>{title}</Text>
-          <Text style={styles.cardDesc}>{description}</Text>
+          <Text style={[styles.cardTitle, { color: theme.text }]}>{t(title)}</Text>
+          <Text style={[styles.cardDesc, { color: theme.textMuted }]}>{t(description)}</Text>
         </View>
       </View>
       <View style={styles.cardMeta}>
         <CheckCircle2 size={15} color={colors.green} />
-        <Text style={styles.cardMetaText}>Acesso liberado conforme seu perfil</Text>
+        <Text style={[styles.cardMetaText, { color: theme.textMuted }]}>{t('Acesso liberado conforme seu perfil')}</Text>
       </View>
-      <View style={styles.accessBtn}>
-        <Text style={styles.accessBtnText}>Acessar aplicativo</Text>
+      <View style={[styles.accessBtn, { backgroundColor: accent }]}>
+        <Text style={styles.accessBtnText}>{t('Acessar aplicativo')}</Text>
         <ArrowRight size={16} color={colors.white} />
       </View>
     </AnimatedPressable>
@@ -64,6 +67,8 @@ function AppCard({ title, description, accent, onPress, icon, image }: AppCardPr
 export default function HubScreen() {
   const router = useRouter();
   const { session, logout } = useAuthStore();
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -90,7 +95,7 @@ export default function HubScreen() {
       description: 'Gestão completa de alunos, turmas, frequência, contratos e informações acadêmicas.',
       accent: colors.red,
       route: '/connect' as const,
-      icon: <BookOpen color={colors.white} size={26} />,
+      logo: getBrandAsset('connect', 'icon', theme.isDark),
       image: connectCardImage,
     });
   }
@@ -101,42 +106,42 @@ export default function HubScreen() {
       description: 'Gestão de manutenção predial, infraestrutura, chamados, estoque e equipes.',
       accent: colors.green,
       route: '/grid' as const,
-      icon: <Grid3x3 color={colors.white} size={26} />,
+      logo: getBrandAsset('grid', 'icon', theme.isDark),
       image: gridCardImage,
     });
   }
 
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 18 }]}
+      style={[styles.container, { backgroundColor: theme.appBackground }]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 18, backgroundColor: theme.appBackground }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.topbar}>
-        <Image source={hubLogo} style={styles.logo} resizeMode="contain" />
+        <Image source={getBrandAsset('hub', 'slogan', theme.isDark)} style={styles.logo} resizeMode="contain" />
         <View style={styles.topActions}>
-          <View style={styles.iconAction}>
-            <Bell size={19} color={colors.navy} />
+          <View style={[styles.iconAction, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+            <Bell size={19} color={theme.text} />
           </View>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
           <AnimatedPressable
-            style={styles.iconAction}
+            style={[styles.iconAction, { backgroundColor: theme.surface, borderColor: theme.line }]}
             onPress={async () => {
               await logout();
               router.replace('/login');
             }}
             hitSlop={8}
           >
-            <LogOut size={19} color={colors.grayText} />
+            <LogOut size={19} color={theme.textMuted} />
           </AnimatedPressable>
         </View>
       </View>
 
-      <Text style={styles.eyebrow}>Bem-vindo, {session.perfil.nome.split(' ')[0]}</Text>
-      <Text style={styles.hubTitle}>Hub de Aplicações</Text>
-      <Text style={styles.description}>Acesse os sistemas disponíveis para o seu perfil.</Text>
+      <Text style={[styles.eyebrow, { color: theme.textMuted }]}>{t('Bem-vindo')}, {session.perfil.nome.split(' ')[0]}</Text>
+      <Text style={[styles.hubTitle, { color: theme.text }]}>{t('Hub de Aplicações')}</Text>
+      <Text style={[styles.description, { color: theme.textMuted }]}>{t('Acesse os sistemas disponíveis para o seu perfil.')}</Text>
 
       <FeedbackMessage
         variant="info"
@@ -151,7 +156,7 @@ export default function HubScreen() {
             title={app.title}
             description={app.description}
             accent={app.accent}
-            icon={app.icon}
+            logo={app.logo}
             image={app.image}
             onPress={() => router.push(app.route)}
           />
@@ -235,9 +240,11 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 8,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  appIconImage: { width: 30, height: 30 },
   cardTitleWrap: { flex: 1, minWidth: 0 },
   cardTitle: { color: colors.navy, fontSize: 19, fontWeight: '900' },
   cardDesc: { color: colors.grayText, fontSize: 12, lineHeight: 17, marginTop: 3 },

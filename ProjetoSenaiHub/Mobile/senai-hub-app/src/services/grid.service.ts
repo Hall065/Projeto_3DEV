@@ -72,16 +72,16 @@ function isSupabaseSchemaError(error: unknown) {
   );
 }
 
-function getSupabaseErrorMessage(error: unknown, table: string) {
+function getSupabaseErrorMessage(error: unknown, table: string, action = 'salvar') {
   if (isSupabasePermissionError(error)) {
-    return `Sem permissão para salvar em grid.${table}. Entre com uma conta autenticada do Supabase e verifique as policies RLS de INSERT/UPDATE no banco.`;
+    return `Sem permissao para ${action} em grid.${table}. Entre com uma conta autenticada do Supabase e verifique as policies RLS no banco.`;
   }
   if (error instanceof Error) return error.message;
   if (error && typeof error === 'object' && 'message' in error) {
     const message = String((error as { message?: unknown }).message ?? '').trim();
     if (message) return message;
   }
-  return `Não foi possível salvar em grid.${table}.`;
+  return `Nao foi possivel ${action} em grid.${table}.`;
 }
 
 async function getAuthenticatedUserId(action: string) {
@@ -103,6 +103,14 @@ async function selectRows(table: string, select = '*', targetSchema = schema): P
     return (fallback.data ?? []) as Row[];
   }
   return (data ?? []) as Row[];
+}
+
+async function safeSelectRows(table: string, select = '*', targetSchema = schema): Promise<Row[]> {
+  try {
+    return await selectRows(table, select, targetSchema);
+  } catch {
+    return [];
+  }
 }
 
 function uniqueIds(values: (string | null | undefined)[]) {
@@ -141,6 +149,17 @@ async function hydrateChamados(rows: Row[]) {
   let anexosByChamado = new Map<string, Row[]>();
   try {
     const chamadoIds = uniqueIds(rows.map((row) => row.id));
+    if (chamadoIds.length === 0) {
+      return rows.map((row) => ({
+        ...row,
+        categoria: row.categoria ?? categorias.get(row.categoria_id),
+        bloco: row.bloco ?? blocos.get(row.bloco_id),
+        sala: row.sala ?? salas.get(row.sala_id),
+        solicitante: row.solicitante ?? usuarios.get(row.aberto_por ?? row.solicitante_id),
+        responsavel: row.responsavel ?? usuarios.get(row.responsavel_id),
+        anexos: row.anexos ?? [],
+      }));
+    }
     const { data: anexosData, error: anexosError } = await supabase
       .schema(schema)
       .from('anexos_chamado')
@@ -241,8 +260,11 @@ async function updateWithFallback(table: string, id: string, payloads: Row[]) {
 }
 
 async function deleteRow(table: string, id: string) {
-  const { error } = await supabase.schema(schema).from(table).delete().eq('id', id);
-  if (error) throw new Error(getSupabaseErrorMessage(error, table));
+  const { data, error } = await supabase.schema(schema).from(table).delete().eq('id', id).select('id');
+  if (error) throw new Error(getSupabaseErrorMessage(error, table, 'excluir'));
+  if (!data || data.length === 0) {
+    throw new Error(`Nao foi possivel excluir em grid.${table}. O registro nao foi encontrado ou seu usuario nao tem permissao.`);
+  }
 }
 
 function makeCodigo() {
@@ -421,9 +443,16 @@ async function updateHubUsuario(id: string, values: FormValues) {
 async function deleteHubUsuario(id: string) {
   let lastError: unknown = null;
   for (const targetSchema of ['hub', 'public']) {
-    const { error } = await supabase.schema(targetSchema).from('usuarios').delete().eq('id', id);
-    if (!error) return;
-    lastError = error;
+    const { data, error } = await supabase.schema(targetSchema).from('usuarios').delete().eq('id', id).select('id');
+    if (!error && data && data.length > 0) return;
+    lastError =
+      error ??
+      new Error(
+        `Nao foi possivel excluir em ${targetSchema}.usuarios. O registro nao foi encontrado ou seu usuario nao tem permissao.`
+      );
+  }
+  if (isSupabasePermissionError(lastError)) {
+    throw new Error('Sem permissao para excluir em hub.usuarios. Entre com uma conta autenticada e verifique as policies RLS do banco.');
   }
   throw lastError;
 }
@@ -459,10 +488,17 @@ async function attachChamadoImage(
     },
   ];
 
+  let lastError: unknown = null;
   for (const payload of payloads) {
     const { error } = await supabase.schema(schema).from('anexos_chamado').insert(payload as never);
     if (!error) return;
+    lastError = error;
   }
+  throw new Error(getSupabaseErrorMessage(lastError, 'anexos_chamado'));
+}
+
+function onlyMaintenanceUsers(usuarios: HubUsuario[]) {
+  return usuarios.filter((usuario) => usuario.tipo === 'manutencao' || usuario.tipo === 'gerente_manutencao');
 }
 
 export const gridService = {
@@ -507,6 +543,12 @@ export const gridService = {
 
     const chamado = await updateWithFallback('chamados', id, [
       {
+        titulo: nullIfEmpty(values.titulo),
+        descricao: nullIfEmpty(values.descricao) ?? '',
+        prioridade: normalizeStatus(values.prioridade, 'media'),
+        status: normalizeStatus(values.status, 'aberto'),
+      },
+      {
         codigo: nullIfEmpty(values.codigo),
         categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
         titulo: nullIfEmpty(values.titulo),
@@ -515,12 +557,6 @@ export const gridService = {
         sala_id: uuidOrNull(values.sala_id, 'sala'),
         prioridade: normalizeStatus(values.prioridade, 'media') as ChamadoPrioridade,
         status: normalizeStatus(values.status, 'aberto') as ChamadoStatus,
-      },
-      {
-        titulo: nullIfEmpty(values.titulo),
-        descricao: nullIfEmpty(values.descricao) ?? '',
-        prioridade: normalizeStatus(values.prioridade, 'media'),
-        status: normalizeStatus(values.status, 'aberto'),
       },
     ]);
     await attachChamadoImage(id, values.anexo_uri, actorId, 'abertura');
@@ -596,6 +632,23 @@ export const gridService = {
         prioridade: normalizeStatus(values.prioridade, 'media'),
         responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
         status: normalizeStatus(values.status, 'a_fazer'),
+      },
+    ]);
+  },
+
+  updateTarefaStatus(id: string, values: FormValues) {
+    return updateWithFallback('tarefas', id, [
+      {
+        status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
+        observacao: nullIfEmpty(values.observacao ?? values.descricao),
+      },
+      {
+        status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
+        observacoes: nullIfEmpty(values.observacao ?? values.descricao),
+      },
+      {
+        status: normalizeStatus(values.status, 'a_fazer'),
+        descricao: nullIfEmpty(values.descricao ?? values.observacao),
       },
     ]);
   },
@@ -686,6 +739,15 @@ export const gridService = {
     }));
   },
 
+  async listMaintenanceUsuarioOptions() {
+    const usuarios = onlyMaintenanceUsers(await gridService.listUsuarios());
+    return usuarios.map((usuario) => ({
+      value: usuario.id,
+      label: usuario.nome,
+      description: usuario.tipo ?? usuario.email_institucional,
+    }));
+  },
+
   async listChamadoOptions() {
     const chamados = await gridService.listChamados();
     return chamados.map((chamado) => ({
@@ -717,39 +779,28 @@ export const gridService = {
   },
 
   listUsuarios: listHubUsuarios,
+  async listMaintenanceUsuarios() {
+    return onlyMaintenanceUsers(await listHubUsuarios());
+  },
   createUsuario: createHubUsuario,
   updateUsuario: updateHubUsuario,
   deleteUsuario: deleteHubUsuario,
 
   async getDashboardMetrics() {
-    const [abertos, emAndamento, estoque, concluidos] = await Promise.all([
-      supabase
-        .schema(schema)
-        .from('chamados')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'aberto'),
-      supabase
-        .schema(schema)
-        .from('chamados')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'em_andamento'),
-      supabase
-        .schema(schema)
-        .from('itens_estoque')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'indisponivel'),
-      supabase
-        .schema(schema)
-        .from('chamados')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'concluido'),
+    const [chamados, estoque] = await Promise.all([
+      safeSelectRows('chamados', 'id,status'),
+      safeSelectRows('itens_estoque', 'id,status,quantidade_disponivel,quantidade_minima'),
     ]);
 
     return {
-      chamadosAbertos: abertos.count ?? 0,
-      chamadosEmAndamento: emAndamento.count ?? 0,
-      itensEstoqueBaixo: estoque.count ?? 0,
-      chamadosConcluidos: concluidos.count ?? 0,
+      chamadosAbertos: chamados.filter((chamado) => chamado.status === 'aberto').length,
+      chamadosEmAndamento: chamados.filter((chamado) => chamado.status === 'em_andamento').length,
+      itensEstoqueBaixo: estoque.filter((item) => {
+        const quantidade = Number(item.quantidade_disponivel ?? 0);
+        const minima = Number(item.quantidade_minima ?? 0);
+        return item.status === 'indisponivel' || quantidade <= minima;
+      }).length,
+      chamadosConcluidos: chamados.filter((chamado) => chamado.status === 'concluido').length,
     };
   },
 };

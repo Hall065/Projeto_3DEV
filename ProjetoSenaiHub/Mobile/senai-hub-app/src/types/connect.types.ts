@@ -94,6 +94,7 @@ export interface Empresa {
   telefone?: string | null;
   responsavel_nome?: string | null;
   status?: string | null;
+  usuario_id?: string | null;
 }
 
 export interface ContratoAluno {

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CheckCircle2, Clock3, Plus, Wrench } from 'lucide-react-native';
 import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
@@ -15,13 +15,20 @@ import type { Tarefa } from '@/types/grid.types';
 
 const tarefaOptionLoaders = {
   chamados: gridService.listChamadoOptions,
-  responsaveis: gridService.listUsuarioOptions,
+  responsaveis: gridService.listMaintenanceUsuarioOptions,
 };
 
 type TarefaOptionKey = keyof typeof tarefaOptionLoaders;
 type TarefaOptions = Record<TarefaOptionKey, CrudOption[]>;
 
-function getFields(options: Partial<TarefaOptions>): CrudField[] {
+function getFields(options: Partial<TarefaOptions>, limited = false): CrudField[] {
+  if (limited) {
+    return [
+      { name: 'status', label: 'Status', required: true, options: TAREFA_STATUS_OPTIONS },
+      { name: 'observacao', label: 'Observação', multiline: true },
+    ];
+  }
+
   return [
   { name: 'titulo', label: 'Título da tarefa', required: true },
   { name: 'descricao', label: 'Descrição', multiline: true },
@@ -63,13 +70,19 @@ export default function TarefasScreen() {
   const [editing, setEditing] = useState<Tarefa | null>(null);
   const [search, setSearch] = useState('');
   const session = useAuthStore((s) => s.session);
+  const isMaintenanceWorker = session?.perfil?.tipo === 'manutencao';
   const { options, error: optionsError } = useSelectOptions(tarefaOptionLoaders);
-  const fields = getFields(options);
+  const fields = getFields(options, isMaintenanceWorker);
+  const loadTarefas = useCallback(async () => {
+    const tarefas = await gridService.listTarefas();
+    if (!isMaintenanceWorker || !session?.userId) return tarefas;
+    return tarefas.filter((tarefa) => tarefa.responsavel_id === session.userId);
+  }, [isMaintenanceWorker, session?.userId]);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<Tarefa, Record<string, string>>({
-      load: gridService.listTarefas,
+      load: loadTarefas,
       create: (values) => gridService.createTarefa(values, session?.userId),
-      update: gridService.updateTarefa,
+      update: (id, values) => isMaintenanceWorker ? gridService.updateTarefaStatus(id, values) : gridService.updateTarefa(id, values),
       remove: gridService.deleteTarefa,
     });
 
@@ -97,7 +110,7 @@ export default function TarefasScreen() {
         setEditing(task);
         setModalOpen(true);
       }}
-      onDelete={() => deleteItem(task.id, task.titulo)}
+      onDelete={isMaintenanceWorker ? undefined : () => deleteItem(task.id, task.titulo)}
     />
   );
 
@@ -106,11 +119,11 @@ export default function TarefasScreen() {
       <ModuleScreen
         kicker="SENAI Grid"
         title="Tarefas"
-        description="Kanban de serviços de manutenção e acompanhamento."
+        description={isMaintenanceWorker ? 'Suas tarefas atribuídas e atualização de status.' : 'Kanban de serviços de manutenção e acompanhamento.'}
         tone="dark"
         isLoading={loading}
-        actionLabel="+ Adicionar"
-        onActionPress={() => {
+        actionLabel={isMaintenanceWorker ? undefined : '+ Adicionar'}
+        onActionPress={isMaintenanceWorker ? undefined : () => {
           setEditing(null);
           setModalOpen(true);
         }}

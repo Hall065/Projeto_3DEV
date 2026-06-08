@@ -6,6 +6,7 @@ export interface HubUsuario {
   email_institucional: string;
   tipo: UserRole;
   status: 'ativo' | 'inativo' | 'bloqueado';
+  empresa_id?: string | null;
   telefone?: string | null;
   cpf?: string | null;
   foto_arquivo_id?: string | null;

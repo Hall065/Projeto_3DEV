@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { createAuthUserProfile } from '@/services/user-profile.service';
+import { updateUserPhoto } from '@/services/hub.service';
 import { uploadService } from '@/services/upload.service';
 import type {
   Aluno,
@@ -55,6 +56,31 @@ function relation(row: Row, key: string) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function isSupabasePermissionError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const supabaseError = error as { code?: string; status?: number; message?: string };
+  const message = supabaseError.message?.toLowerCase() ?? '';
+  return (
+    supabaseError.status === 401 ||
+    supabaseError.status === 403 ||
+    supabaseError.code === '42501' ||
+    message.includes('permission denied') ||
+    message.includes('row-level security')
+  );
+}
+
+function getSupabaseErrorMessage(error: unknown, table: string, action = 'salvar') {
+  if (isSupabasePermissionError(error)) {
+    return `Sem permissao para ${action} em connect.${table}. Entre com uma conta autenticada e verifique as policies RLS do banco.`;
+  }
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = String((error as { message?: unknown }).message ?? '').trim();
+    if (message) return message;
+  }
+  return `Nao foi possivel ${action} em connect.${table}.`;
+}
+
 async function selectRows(table: string, select = '*'): Promise<Row[]> {
   const { data, error } = await supabase.schema(schema).from(table).select(select);
   if (error) {
@@ -63,6 +89,14 @@ async function selectRows(table: string, select = '*'): Promise<Row[]> {
     return (fallback.data ?? []) as Row[];
   }
   return (data ?? []) as Row[];
+}
+
+async function countRows(table: string) {
+  try {
+    return (await selectRows(table, 'id')).length;
+  } catch {
+    return 0;
+  }
 }
 
 function uniqueIds(values: (string | null | undefined)[]) {
@@ -193,22 +227,47 @@ async function hydrateLocalizacoes(rows: Row[]) {
   }));
 }
 
-async function attachAlunoPhoto(alunoId: string, uri: string | null | undefined, enviadoPor?: string | null) {
+async function getAlunoUsuarioId(alunoId: string) {
+  const { data, error } = await supabase
+    .schema(schema)
+    .from('alunos')
+    .select('usuario_id')
+    .eq('id', alunoId)
+    .maybeSingle();
+
+  if (error) return null;
+  return ((data as Row | null)?.usuario_id as string | null | undefined) ?? null;
+}
+
+async function attachAlunoPhoto(
+  alunoId: string,
+  uri: string | null | undefined,
+  enviadoPor?: string | null,
+  usuarioId?: string | null
+) {
   const imageUri = nullIfEmpty(uri);
   if (!imageUri || !enviadoPor || imageUri.startsWith('http')) return;
 
-  const result = await uploadService.uploadAndSave(imageUri, enviadoPor, 'aluno', 'image', {
-    tipo: 'aluno',
-    id: alunoId,
-  });
-
   try {
+    const result = await uploadService.uploadAndSave(imageUri, enviadoPor, 'aluno', 'image', {
+      tipo: 'aluno',
+      id: alunoId,
+    });
+
     await updateWithFallback('alunos', alunoId, [
+      { foto_arquivo_id: result.arquivoId, foto_url: result.cloudinary.secure_url },
       { foto_arquivo_id: result.arquivoId },
       { foto_url: result.cloudinary.secure_url },
     ]);
+
+    const targetUsuarioId = usuarioId ?? (await getAlunoUsuarioId(alunoId));
+    if (targetUsuarioId) {
+      await updateUserPhoto(targetUsuarioId, result.arquivoId, result.cloudinary.secure_url).catch((error) => {
+        console.warn('[Connect] Foto do aluno enviada, mas o perfil do usuario nao foi atualizado:', error);
+      });
+    }
   } catch (error) {
-    console.warn('[Connect] Foto do aluno enviada, mas a FK nao foi atualizada:', error);
+    console.warn('[Connect] Nao foi possivel anexar a foto do aluno:', error);
   }
 }
 
@@ -239,8 +298,11 @@ async function updateWithFallback(table: string, id: string, payloads: Row[]) {
 }
 
 async function deleteRow(table: string, id: string) {
-  const { error } = await supabase.schema(schema).from(table).delete().eq('id', id);
-  if (error) throw error;
+  const { data, error } = await supabase.schema(schema).from(table).delete().eq('id', id).select('id');
+  if (error) throw new Error(getSupabaseErrorMessage(error, table, 'excluir'));
+  if (!data || data.length === 0) {
+    throw new Error(`Nao foi possivel excluir em connect.${table}. O registro nao foi encontrado ou seu usuario nao tem permissao.`);
+  }
 }
 
 async function createHubUser(values: FormValues, tipoUsuario: string) {
@@ -477,15 +539,16 @@ export const connectService = {
         status: normalizeStatus(values.status),
       },
     ]);
-    await attachAlunoPhoto((aluno as Row).id, values.foto_uri, enviadoPor ?? usuarioId);
+    await attachAlunoPhoto((aluno as Row).id, values.foto_uri, enviadoPor ?? usuarioId, usuarioId);
     return aluno;
   },
 
   async updateAluno(id: string, values: FormValues, enviadoPor?: string | null) {
     const { data } = await supabase.schema(schema).from('alunos').select('usuario_id').eq('id', id).single();
+    const usuarioId = (data as Row | null)?.usuario_id as string | null | undefined;
     const cursoId = uuidOrNull(values.curso_id, 'curso');
     const turmaId = uuidOrNull(values.turma_id, 'turma');
-    await updateHubUser((data as Row | null)?.usuario_id, values);
+    await updateHubUser(usuarioId, values);
     const aluno = await updateWithFallback('alunos', id, [
       {
         curso_id: cursoId,
@@ -499,7 +562,7 @@ export const connectService = {
         status: normalizeStatus(values.status),
       },
     ]);
-    await attachAlunoPhoto(id, values.foto_uri, enviadoPor ?? (data as Row | null)?.usuario_id);
+    await attachAlunoPhoto(id, values.foto_uri, enviadoPor ?? usuarioId, usuarioId);
     return aluno;
   },
 
@@ -876,7 +939,7 @@ export const connectService = {
 
   async listTurmasForProfessorUser(userId: string): Promise<Turma[]> {
     const professor = await connectService.getProfessorByUserId(userId);
-    if (!professor) return connectService.listTurmas();
+    if (!professor) return [];
 
     const { data } = await supabase
       .schema(schema)
@@ -985,57 +1048,48 @@ export const connectService = {
     const diasTrabalhados = Math.max(0, diasUteis - totalFaltasInjustificadas);
     const carga = contrato?.carga_horaria ?? '';
     const base = carga.includes('4') ? 759 : 1518;
+    const cargaDiariaHoras = carga.includes('4') ? 4 : 6;
     const valorDia = base / diasUteis;
     const desconto = valorDia * totalFaltasInjustificadas;
     const salarioFinal = base - desconto;
     const frequenciaPerc = Math.round((diasTrabalhados / diasUteis) * 1000) / 10;
-    const payload = {
+
+    return mapSalario({
+      id: `${alunoId}-${mesReferencia}`,
       aluno_id: alunoId,
-      contrato_id: contrato?.id,
-      empresa_id: contrato?.empresa_id,
+      aluno_nome: contrato?.aluno_nome,
+      contrato_id: contrato?.id ?? null,
+      empresa_id: contrato?.empresa_id ?? null,
+      empresa_nome: contrato?.empresa_nome,
+      tipo_pagamento: 'mensal',
       mes_referencia: mesReferencia,
+      mes: mesReferencia,
       salario_base: base,
+      valor_hora: base / (diasUteis * cargaDiariaHoras),
+      carga_diaria_horas: cargaDiariaHoras,
+      dias_uteis_mes: diasUteis,
       valor_dia: valorDia,
       desconto,
       salario_final: salarioFinal,
       frequencia_percentual: frequenciaPerc,
       dias_trabalhados: diasTrabalhados,
       faltas_injustificadas: totalFaltasInjustificadas,
-    };
-
-    const tables = ['calculos_salario', 'salarios_alunos'];
-    for (const table of tables) {
-      const { data: existing } = await supabase
-        .schema(schema)
-        .from(table)
-        .select('id')
-        .eq('aluno_id', alunoId)
-        .eq('mes_referencia', mesReferencia)
-        .maybeSingle();
-
-      const result = existing
-        ? await supabase.schema(schema).from(table).update(payload as never).eq('id', (existing as Row).id).select('*').single()
-        : await supabase.schema(schema).from(table).insert(payload as never).select('*').single();
-
-      if (!result.error) return mapSalario({ ...(result.data as Row), aluno: { id: alunoId } });
-    }
-
-    return mapSalario({ id: `${alunoId}-${mesReferencia}`, ...payload });
+    });
   },
 
   async getDashboardMetrics() {
     const [alunos, professores, turmas, cursos] = await Promise.all([
-      supabase.schema(schema).from('alunos').select('id', { count: 'exact', head: true }),
-      supabase.schema(schema).from('professores').select('id', { count: 'exact', head: true }),
-      supabase.schema(schema).from('turmas').select('id', { count: 'exact', head: true }),
-      supabase.schema(schema).from('cursos').select('id', { count: 'exact', head: true }),
+      countRows('alunos'),
+      countRows('professores'),
+      countRows('turmas'),
+      countRows('cursos'),
     ]);
 
     return {
-      totalAlunos: alunos.count ?? 0,
-      totalProfessores: professores.count ?? 0,
-      totalTurmas: turmas.count ?? 0,
-      totalCursos: cursos.count ?? 0,
+      totalAlunos: alunos,
+      totalProfessores: professores,
+      totalTurmas: turmas,
+      totalCursos: cursos,
     };
   },
 };

@@ -15,6 +15,8 @@ import {
 import { Camera, X } from 'lucide-react-native';
 import { AnimatedPressable, AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import {
   applyInputMask,
   formatInitialFormValues,
@@ -75,6 +77,8 @@ export function CrudModal({
   onClose,
   onSubmit,
 }: CrudModalProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
@@ -116,24 +120,30 @@ export function CrudModal({
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.82,
+      base64: Platform.OS === 'web',
     });
 
-    if (!result.canceled && result.assets[0]?.uri) {
-      setValues((current) => ({ ...current, [fieldName]: result.assets[0].uri }));
+    const asset = result.canceled ? null : result.assets[0];
+    if (asset?.uri) {
+      const imageUri =
+        Platform.OS === 'web' && asset.base64
+          ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
+          : asset.uri;
+      setValues((current) => ({ ...current, [fieldName]: imageUri }));
     }
   };
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <KeyboardAvoidingView
-        style={styles.overlay}
+        style={[styles.overlay, { backgroundColor: theme.overlay }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { backgroundColor: theme.surface }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
-            <AnimatedPressable style={styles.closeButton} onPress={onClose}>
-              <X size={18} color={colors.navy} />
+            <Text style={[styles.title, { color: theme.text }]}>{t(title)}</Text>
+            <AnimatedPressable style={[styles.closeButton, { backgroundColor: theme.surfaceSoft }]} onPress={onClose}>
+              <X size={18} color={theme.text} />
             </AnimatedPressable>
           </View>
 
@@ -148,8 +158,8 @@ export function CrudModal({
                 : [];
               return (
                 <View key={field.name} style={styles.field}>
-                  <Text style={styles.label}>
-                    {field.label}
+                  <Text style={[styles.label, { color: theme.text }]}>
+                    {t(field.label)}
                     {field.required ? <Text style={styles.required}> *</Text> : null}
                   </Text>
                   {field.type === 'image' ? (
@@ -157,44 +167,52 @@ export function CrudModal({
                       {fieldValue ? (
                         <Image source={{ uri: fieldValue }} style={styles.imagePreview} />
                       ) : (
-                        <View style={styles.imagePlaceholder}>
-                          <Camera size={22} color={colors.grayText} />
+                        <View style={[styles.imagePlaceholder, { backgroundColor: theme.surfaceSoft, borderColor: theme.line }]}>
+                          <Camera size={22} color={theme.textMuted} />
                         </View>
                       )}
                       <AppButton
                         label={fieldValue ? 'Trocar imagem' : 'Selecionar imagem'}
                         variant="secondary"
                         accent={colors.navy}
-                        icon={<Camera size={16} color={colors.navy} />}
-                        onPress={() => pickImage(field.name)}
-                      />
+                          icon={<Camera size={16} color={theme.isDark ? theme.text : colors.navy} />}
+                          onPress={() => pickImage(field.name)}
+                        />
                     </View>
                   ) : field.options ? (
                     <View style={styles.optionList}>
                       {selectOptions.length === 0 ? (
-                        <Text style={styles.emptyOptions}>Nenhum dado cadastrado ainda.</Text>
+                        <Text style={[styles.emptyOptions, { color: theme.textMuted }]}>{t('Nenhum dado cadastrado ainda.')}</Text>
                       ) : (
                         selectOptions.map((option) => {
                           const selected = fieldValue === option.value;
                           return (
                             <AnimatedPressable
                               key={`${field.name}-${option.value || 'empty'}`}
-                              style={[styles.optionButton, selected && styles.optionButtonSelected]}
+                              style={[
+                                styles.optionButton,
+                                {
+                                  backgroundColor: theme.input,
+                                  borderColor: theme.line,
+                                },
+                                selected && styles.optionButtonSelected,
+                              ]}
                               onPress={() =>
                                 setValues((current) => ({ ...current, [field.name]: option.value }))
                               }
                             >
-                              <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
-                                {option.label}
+                              <Text style={[styles.optionLabel, { color: theme.text }, selected && styles.optionLabelSelected]}>
+                                {t(option.label)}
                               </Text>
                               {option.description ? (
                                 <Text
                                   style={[
                                     styles.optionDescription,
-                                    selected && styles.optionDescriptionSelected,
+                                    { color: theme.textMuted },
+                                    selected && { color: theme.isDark ? theme.text : colors.navy },
                                   ]}
                                 >
-                                  {option.description}
+                                  {t(option.description)}
                                 </Text>
                               ) : null}
                             </AnimatedPressable>
@@ -204,9 +222,18 @@ export function CrudModal({
                     </View>
                   ) : (
                     <TextInput
-                      style={[styles.input, field.multiline && styles.inputMultiline]}
-                      placeholder={field.placeholder}
-                      placeholderTextColor={colors.mutedText}
+                      accessibilityLabel={field.name}
+                      style={[
+                        styles.input,
+                        {
+                          backgroundColor: theme.input,
+                          borderColor: theme.line,
+                          color: theme.text,
+                        },
+                        field.multiline && styles.inputMultiline,
+                      ]}
+                      placeholder={t(field.placeholder ?? field.label)}
+                      placeholderTextColor={theme.textSubtle}
                       value={fieldValue}
                       onChangeText={(value) =>
                         setValues((current) => ({ ...current, [field.name]: applyInputMask(field, value) }))

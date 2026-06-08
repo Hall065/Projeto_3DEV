@@ -1,0 +1,2134 @@
+{
+  "baseUrl": "http://localhost:8095",
+  "prefix": "TESTE-CODEX-20260607191907",
+  "generatedAt": "2026-06-07T19:27:10.159Z",
+  "steps": [
+    {
+      "step": "Admin login abrir /login",
+      "status": "ok",
+      "detail": "Acesse sua conta Informe seu e-mail e senha para continuar. API: publishable (ok) E-mail Senha Recuperar senha Entrar Ac",
+      "at": "2026-06-07T19:19:17.410Z"
+    },
+    {
+      "step": "Login Admin",
+      "status": "ok",
+      "detail": "P Bem-vindo, Pedro Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo dependem do seu perfil",
+      "at": "2026-06-07T19:19:22.627Z"
+    },
+    {
+      "step": "Admin abrir /",
+      "status": "ok",
+      "detail": "P Bem-vindo, Pedro Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo de",
+      "at": "2026-06-07T19:19:26.575Z"
+    },
+    {
+      "step": "Admin abrir /login",
+      "status": "ok",
+      "detail": "Acesse sua conta Informe seu e-mail e senha para continuar. API: publishable (ok) E-mail Senha Recuperar senha Entrar Ac",
+      "at": "2026-06-07T19:19:35.100Z"
+    },
+    {
+      "step": "Admin abrir /hub",
+      "status": "ok",
+      "detail": "P Bem-vindo, Pedro Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo de",
+      "at": "2026-06-07T19:19:39.159Z"
+    },
+    {
+      "step": "Admin abrir /perfil",
+      "status": "ok",
+      "detail": "Voltar Perfil do usuario Dados da sua conta SENAI Hub P Pedro admin Trocar foto Preferências Tema e idioma do aplicativo",
+      "at": "2026-06-07T19:19:42.795Z"
+    },
+    {
+      "step": "Admin abrir /grid",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura P Pedro SENAI GRID Dashboard Resumo operacional da manutenção e infraes",
+      "at": "2026-06-07T19:19:46.539Z"
+    },
+    {
+      "step": "Admin abrir /grid/chamados",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura P Pedro SENAI GRID Chamados Abertura, triagem e acompanhamento de solic",
+      "at": "2026-06-07T19:19:50.517Z"
+    },
+    {
+      "step": "Admin abrir /grid/tarefas",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura P Pedro SENAI GRID Tarefas Kanban de serviços de manutenção e acompanha",
+      "at": "2026-06-07T19:19:54.201Z"
+    },
+    {
+      "step": "Admin abrir /grid/relatorios",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura P Pedro SENAI GRID Relatorios Indicadores de manutencao calculados a pa",
+      "at": "2026-06-07T19:19:57.693Z"
+    },
+    {
+      "step": "Admin abrir /grid/estoque",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura P Pedro SENAI GRID Estoque Controle de itens, reservas e movimentações.",
+      "at": "2026-06-07T19:20:01.269Z"
+    },
+    {
+      "step": "Admin abrir /grid/usuarios",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura P Pedro SENAI GRID Usuários Controle de acesso da equipe interna do Gri",
+      "at": "2026-06-07T19:20:04.873Z"
+    },
+    {
+      "step": "Admin abrir /connect",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Visão geral Dashboard acadêmico do SENAI Connect",
+      "at": "2026-06-07T19:20:08.328Z"
+    },
+    {
+      "step": "Admin abrir /connect/alunos",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Gerenciamento de alunos Cadastro, busca e atuali",
+      "at": "2026-06-07T19:20:12.022Z"
+    },
+    {
+      "step": "Admin abrir /connect/professores",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Gerenciamento de professores Cadastro, especiali",
+      "at": "2026-06-07T19:20:15.596Z"
+    },
+    {
+      "step": "Admin abrir /connect/usuarios",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Usuários Connect Cadastro de secretaria, direção",
+      "at": "2026-06-07T19:20:19.037Z"
+    },
+    {
+      "step": "Admin abrir /connect/turmas",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Turmas e Cursos Gerencie turmas, cursos e víncul",
+      "at": "2026-06-07T19:20:22.560Z"
+    },
+    {
+      "step": "Admin abrir /connect/cursos",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Cursos Catálogo de cursos, carga horária e turma",
+      "at": "2026-06-07T19:20:26.055Z"
+    },
+    {
+      "step": "Admin abrir /connect/empresas",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Empresas Cadastro das empresas parceiras dos con",
+      "at": "2026-06-07T19:20:29.850Z"
+    },
+    {
+      "step": "Admin abrir /connect/frequencia",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro 1 Turmas disponiveis 0 Alunos na chamada 1 Aulas do dia Cabeca",
+      "at": "2026-06-07T19:20:33.489Z"
+    },
+    {
+      "step": "Admin abrir /connect/gerenciar-frequencia",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Gerenciar frequencia Visualizacao, calculo e exp",
+      "at": "2026-06-07T19:20:36.967Z"
+    },
+    {
+      "step": "Admin abrir /connect/relatorios",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Relatorios Indicadores academicos calculados a p",
+      "at": "2026-06-07T19:20:40.307Z"
+    },
+    {
+      "step": "Admin abrir /connect/localizacao",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Localizacao Monitoramento por turma, aluno e geo",
+      "at": "2026-06-07T19:20:43.667Z"
+    },
+    {
+      "step": "Admin abrir /connect/contratos",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Contratos Contratos de aprendizagem vinculados à",
+      "at": "2026-06-07T19:20:47.133Z"
+    },
+    {
+      "step": "Admin abrir /connect/contrato-alunos",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Contratos Contratos de aprendizagem vinculados à",
+      "at": "2026-06-07T19:20:50.960Z"
+    },
+    {
+      "step": "Admin abrir /connect/salario",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Salário Cálculo mensal com base em faltas injust",
+      "at": "2026-06-07T19:20:54.966Z"
+    },
+    {
+      "step": "Admin abrir /aluno/dashboard",
+      "status": "ok",
+      "detail": "P Bem-vindo, Pedro Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo de",
+      "at": "2026-06-07T19:20:58.389Z"
+    },
+    {
+      "step": "Admin abrir /aluno/frequencia",
+      "status": "ok",
+      "detail": "Preparando o SENAI Hub...",
+      "at": "2026-06-07T19:21:02.188Z"
+    },
+    {
+      "step": "Admin abrir /aluno/grade",
+      "status": "ok",
+      "detail": "P Bem-vindo, Pedro Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo de",
+      "at": "2026-06-07T19:21:05.660Z"
+    },
+    {
+      "step": "Admin abrir /aluno/perfil",
+      "status": "ok",
+      "detail": "P Bem-vindo, Pedro Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo de",
+      "at": "2026-06-07T19:21:09.404Z"
+    },
+    {
+      "step": "CRUD /grid/chamados abrir /grid/chamados",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura P Pedro SENAI GRID Chamados Abertura, triagem e acompanhamento de solic",
+      "at": "2026-06-07T19:21:13.063Z"
+    },
+    {
+      "step": "Editar /grid/chamados",
+      "status": "ok",
+      "detail": "",
+      "at": "2026-06-07T19:21:23.828Z"
+    },
+    {
+      "step": "Excluir /grid/chamados",
+      "status": "ok",
+      "detail": "",
+      "at": "2026-06-07T19:21:27.968Z"
+    },
+    {
+      "step": "CRUD /grid/estoque abrir /grid/estoque",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura P Pedro SENAI GRID Estoque Controle de itens, reservas e movimentações.",
+      "at": "2026-06-07T19:21:31.992Z"
+    },
+    {
+      "step": "Criar /grid/estoque",
+      "status": "ok",
+      "detail": "TESTE-CODEX-20260607191907 Item",
+      "at": "2026-06-07T19:21:38.516Z"
+    },
+    {
+      "step": "Editar /grid/estoque",
+      "status": "ok",
+      "detail": "",
+      "at": "2026-06-07T19:21:42.721Z"
+    },
+    {
+      "step": "Excluir /grid/estoque",
+      "status": "ok",
+      "detail": "",
+      "at": "2026-06-07T19:21:46.823Z"
+    },
+    {
+      "step": "CRUD /connect/cursos abrir /connect/cursos",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Cursos Catálogo de cursos, carga horária e turma",
+      "at": "2026-06-07T19:21:50.599Z"
+    },
+    {
+      "step": "CRUD /connect/empresas abrir /connect/empresas",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Empresas Cadastro das empresas parceiras dos con",
+      "at": "2026-06-07T19:22:00.693Z"
+    },
+    {
+      "step": "Admin abrir /perfil",
+      "status": "ok",
+      "detail": "Voltar Perfil do usuario Dados da sua conta SENAI Hub P Pedro admin Trocar foto Preferências Tema e idioma do aplicativo",
+      "at": "2026-06-07T19:22:10.935Z"
+    },
+    {
+      "step": "Aluno login abrir /login",
+      "status": "ok",
+      "detail": "Acesse sua conta Informe seu e-mail e senha para continuar. API: publishable (ok) E-mail Senha Recuperar senha Entrar Ac",
+      "at": "2026-06-07T19:22:17.189Z"
+    },
+    {
+      "step": "Login Aluno",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Turma nao vinculada Ati",
+      "at": "2026-06-07T19:22:22.336Z"
+    },
+    {
+      "step": "Aluno abrir /",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:22:26.350Z"
+    },
+    {
+      "step": "Aluno abrir /login",
+      "status": "ok",
+      "detail": "Acesse sua conta Informe seu e-mail e senha para continuar. API: publishable (ok) E-mail Senha Recuperar senha Entrar Ac",
+      "at": "2026-06-07T19:22:30.156Z"
+    },
+    {
+      "step": "Aluno abrir /hub",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:22:33.708Z"
+    },
+    {
+      "step": "Aluno abrir /perfil",
+      "status": "ok",
+      "detail": "Voltar Perfil do usuario Dados da sua conta SENAI Hub P Pedro aluno Trocar foto Preferências Tema e idioma do aplicativo",
+      "at": "2026-06-07T19:22:37.607Z"
+    },
+    {
+      "step": "Aluno abrir /grid",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:22:41.309Z"
+    },
+    {
+      "step": "Aluno abrir /grid/chamados",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:22:44.933Z"
+    },
+    {
+      "step": "Aluno abrir /grid/tarefas",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:22:48.501Z"
+    },
+    {
+      "step": "Aluno abrir /grid/relatorios",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:22:52.381Z"
+    },
+    {
+      "step": "Aluno abrir /grid/estoque",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:22:56.010Z"
+    },
+    {
+      "step": "Aluno abrir /grid/usuarios",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:22:59.904Z"
+    },
+    {
+      "step": "Aluno abrir /connect",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:03.490Z"
+    },
+    {
+      "step": "Aluno abrir /connect/alunos",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:07.132Z"
+    },
+    {
+      "step": "Aluno abrir /connect/professores",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:11.133Z"
+    },
+    {
+      "step": "Aluno abrir /connect/usuarios",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:15.115Z"
+    },
+    {
+      "step": "Aluno abrir /connect/turmas",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:19.268Z"
+    },
+    {
+      "step": "Aluno abrir /connect/cursos",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:22.990Z"
+    },
+    {
+      "step": "Aluno abrir /connect/empresas",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:27.571Z"
+    },
+    {
+      "step": "Aluno abrir /connect/frequencia",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:31.325Z"
+    },
+    {
+      "step": "Aluno abrir /connect/gerenciar-frequencia",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:35.404Z"
+    },
+    {
+      "step": "Aluno abrir /connect/relatorios",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:39.308Z"
+    },
+    {
+      "step": "Aluno abrir /connect/localizacao",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:43.717Z"
+    },
+    {
+      "step": "Aluno abrir /connect/contratos",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:48.025Z"
+    },
+    {
+      "step": "Aluno abrir /connect/contrato-alunos",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:52.050Z"
+    },
+    {
+      "step": "Aluno abrir /connect/salario",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:23:55.973Z"
+    },
+    {
+      "step": "Aluno abrir /aluno/dashboard",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Meu perfil Dados academicos principais PE Pedro DEV - Tur",
+      "at": "2026-06-07T19:24:00.241Z"
+    },
+    {
+      "step": "Aluno abrir /aluno/frequencia",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Frequencia e salario Calculo automatico do mes Mes anteri",
+      "at": "2026-06-07T19:24:04.450Z"
+    },
+    {
+      "step": "Aluno abrir /aluno/grade",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Curso vinculado Informações acadêmicas do aluno CR DEV Tu",
+      "at": "2026-06-07T19:24:08.322Z"
+    },
+    {
+      "step": "Aluno abrir /aluno/perfil",
+      "status": "ok",
+      "detail": "SENAI Aluno Hub Unificado de Infraestrutura e Serviços P Pedro Dados pessoais Informacoes somente leitura PE Pedro p2@al",
+      "at": "2026-06-07T19:24:12.548Z"
+    },
+    {
+      "step": "Aluno abrir /perfil",
+      "status": "ok",
+      "detail": "Voltar Perfil do usuario Dados da sua conta SENAI Hub P Pedro aluno Trocar foto Preferências Tema e idioma do aplicativo",
+      "at": "2026-06-07T19:24:16.746Z"
+    },
+    {
+      "step": "Professor login abrir /login",
+      "status": "ok",
+      "detail": "Acesse sua conta Informe seu e-mail e senha para continuar. API: publishable (ok) E-mail Senha Recuperar senha Entrar Ac",
+      "at": "2026-06-07T19:24:23.790Z"
+    },
+    {
+      "step": "Login Professor",
+      "status": "ok",
+      "detail": "S Bem-vindo, Samuel Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo dependem do seu perfi",
+      "at": "2026-06-07T19:24:29.000Z"
+    },
+    {
+      "step": "Professor abrir /",
+      "status": "ok",
+      "detail": "S Bem-vindo, Samuel Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo d",
+      "at": "2026-06-07T19:24:34.241Z"
+    },
+    {
+      "step": "Professor abrir /login",
+      "status": "ok",
+      "detail": "Acesse sua conta Informe seu e-mail e senha para continuar. API: publishable (ok) E-mail Senha Recuperar senha Entrar Ac",
+      "at": "2026-06-07T19:24:42.615Z"
+    },
+    {
+      "step": "Professor abrir /hub",
+      "status": "ok",
+      "detail": "S Bem-vindo, Samuel Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo d",
+      "at": "2026-06-07T19:24:47.348Z"
+    },
+    {
+      "step": "Professor abrir /perfil",
+      "status": "ok",
+      "detail": "Voltar Perfil do usuario Dados da sua conta SENAI Hub S Samuel professor Trocar foto Preferências Tema e idioma do aplic",
+      "at": "2026-06-07T19:24:51.684Z"
+    },
+    {
+      "step": "Professor abrir /grid",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura S Samuel SENAI GRID Chamados Abertura e acompanhamento dos seus chamado",
+      "at": "2026-06-07T19:24:55.604Z"
+    },
+    {
+      "step": "Professor abrir /grid/chamados",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura S Samuel SENAI GRID Chamados Abertura e acompanhamento dos seus chamado",
+      "at": "2026-06-07T19:25:00.562Z"
+    },
+    {
+      "step": "Professor abrir /grid/tarefas",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura S Samuel SENAI GRID Chamados Abertura e acompanhamento dos seus chamado",
+      "at": "2026-06-07T19:25:05.032Z"
+    },
+    {
+      "step": "Professor abrir /grid/relatorios",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura S Samuel SENAI GRID Chamados Abertura e acompanhamento dos seus chamado",
+      "at": "2026-06-07T19:25:09.854Z"
+    },
+    {
+      "step": "Professor abrir /grid/estoque",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura S Samuel SENAI GRID Chamados Abertura e acompanhamento dos seus chamado",
+      "at": "2026-06-07T19:25:16.154Z"
+    },
+    {
+      "step": "Professor abrir /grid/usuarios",
+      "status": "ok",
+      "detail": "SENAI Grid Gestão de manutenção e infraestrutura S Samuel SENAI GRID Chamados Abertura e acompanhamento dos seus chamado",
+      "at": "2026-06-07T19:25:21.412Z"
+    },
+    {
+      "step": "Professor abrir /connect",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Visão geral Dashboard acadêmico do SENAI Connec",
+      "at": "2026-06-07T19:25:26.909Z"
+    },
+    {
+      "step": "Professor abrir /connect/alunos",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:25:33.330Z"
+    },
+    {
+      "step": "Professor abrir /connect/professores",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:25:38.845Z"
+    },
+    {
+      "step": "Professor abrir /connect/usuarios",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:25:42.720Z"
+    },
+    {
+      "step": "Professor abrir /connect/turmas",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:25:47.668Z"
+    },
+    {
+      "step": "Professor abrir /connect/cursos",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:25:53.368Z"
+    },
+    {
+      "step": "Professor abrir /connect/empresas",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:25:58.267Z"
+    },
+    {
+      "step": "Professor abrir /connect/frequencia",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel 0 Turmas disponiveis 0 Alunos na chamada 1 Aulas do dia Cabec",
+      "at": "2026-06-07T19:26:02.998Z"
+    },
+    {
+      "step": "Professor abrir /connect/gerenciar-frequencia",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Gerenciar frequencia Visualizacao, calculo e ex",
+      "at": "2026-06-07T19:26:09.742Z"
+    },
+    {
+      "step": "Professor abrir /connect/relatorios",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:26:15.494Z"
+    },
+    {
+      "step": "Professor abrir /connect/localizacao",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Localizacao Monitoramento por turma, aluno e ge",
+      "at": "2026-06-07T19:26:22.264Z"
+    },
+    {
+      "step": "Professor abrir /connect/contratos",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:26:29.759Z"
+    },
+    {
+      "step": "Professor abrir /connect/contrato-alunos",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:26:34.355Z"
+    },
+    {
+      "step": "Professor abrir /connect/salario",
+      "status": "ok",
+      "detail": "SENAI Connect Ensino conectado e gestão acadêmica S Samuel SENAI CONNECT Turmas e Cursos Consulte suas turmas e os aluno",
+      "at": "2026-06-07T19:26:39.339Z"
+    },
+    {
+      "step": "Professor abrir /aluno/dashboard",
+      "status": "ok",
+      "detail": "S Bem-vindo, Samuel Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo d",
+      "at": "2026-06-07T19:26:45.831Z"
+    },
+    {
+      "step": "Professor abrir /aluno/frequencia",
+      "status": "ok",
+      "detail": "S Bem-vindo, Samuel Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo d",
+      "at": "2026-06-07T19:26:53.472Z"
+    },
+    {
+      "step": "Professor abrir /aluno/grade",
+      "status": "ok",
+      "detail": "S Bem-vindo, Samuel Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo d",
+      "at": "2026-06-07T19:26:57.481Z"
+    },
+    {
+      "step": "Professor abrir /aluno/perfil",
+      "status": "ok",
+      "detail": "S Bem-vindo, Samuel Hub de Aplicações Acesse os sistemas disponíveis para o seu perfil. Os aplicativos exibidos abaixo d",
+      "at": "2026-06-07T19:27:01.757Z"
+    },
+    {
+      "step": "Professor abrir /perfil",
+      "status": "ok",
+      "detail": "Voltar Perfil do usuario Dados da sua conta SENAI Hub S Samuel professor Trocar foto Preferências Tema e idioma do aplic",
+      "at": "2026-06-07T19:27:06.530Z"
+    }
+  ],
+  "issues": [
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:16.317Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:16.474Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Image: style.resizeMode is deprecated. Please use props.resizeMode.",
+      "extra": {},
+      "at": "2026-06-07T19:19:16.523Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:25.134Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:25.189Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:33.671Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:33.734Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Image: style.resizeMode is deprecated. Please use props.resizeMode.",
+      "extra": {},
+      "at": "2026-06-07T19:19:33.869Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:37.752Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:37.802Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:41.365Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:41.422Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:45.112Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:45.172Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:49.130Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:49.203Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:52.788Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:52.842Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:56.303Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:56.372Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:19:59.838Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:19:59.920Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:03.452Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:03.506Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:06.899Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:06.961Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:10.598Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:10.659Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:14.179Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:14.249Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:17.608Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:17.671Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:21.127Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:21.194Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:24.628Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:24.697Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:28.429Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:28.497Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:32.057Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:32.121Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:35.533Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:35.596Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:38.879Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:38.937Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:42.236Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:42.294Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "props.pointerEvents is deprecated. Use style.pointerEvents",
+      "extra": {},
+      "at": "2026-06-07T19:20:42.999Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:45.703Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:45.764Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:49.532Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:49.581Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:53.512Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:53.557Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:20:56.961Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:20:57.040Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:21:00.762Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:21:00.821Z"
+    },
+    {
+      "type": "requestfailed",
+      "context": "Admin",
+      "message": "GET https://nmaftnueudtwizccenrm.supabase.co/rest/v1/usuarios?select=*&or=%28email.ilike.pedro%40gmail.com%2Cemail_institucional.ilike.pedro%40gmail.com%29",
+      "extra": {
+        "failure": "net::ERR_ABORTED"
+      },
+      "at": "2026-06-07T19:21:03.446Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:21:04.229Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:21:04.292Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:21:07.964Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:21:08.012Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:21:11.640Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:21:11.703Z"
+    },
+    {
+      "type": "crud.create.verify",
+      "context": "CRUD /grid/chamados",
+      "message": "Registro criado nao apareceu na tela. Texto buscado: TESTE-CODEX-20260607191907 Chamado",
+      "extra": {
+        "body": "SENAI Grid Gestão de manutenção e infraestrutura P Pedro SENAI GRID Chamados Abertura, triagem e acompanhamento de solicitações. + Abrir chamado 5 Abertos 0 Alta prioridade 1 Em análise 0 Resolvidos Fila de chamados Dados carregados do Supabase Todos Alta Em andamento Concluídos CH #CH-20260525-061832 - Manutenção Local não informado • media aberto BD CH FCH-286082 - 001-Tetzse Local não informado • media aberto BD CH FCH-161611 - oi Local não informado • media aberto BD CH FCH-441182 - rerer Lo"
+      },
+      "at": "2026-06-07T19:21:19.551Z"
+    },
+    {
+      "type": "http",
+      "context": "Admin",
+      "message": "400 PATCH https://nmaftnueudtwizccenrm.supabase.co/rest/v1/chamados?id=eq.d869b96d-23d2-40a3-8a10-3f828e7d0bf7&select=*",
+      "extra": {},
+      "at": "2026-06-07T19:21:20.899Z"
+    },
+    {
+      "type": "console.error",
+      "context": "Admin",
+      "message": "Failed to load resource: the server responded with a status of 400 ()",
+      "extra": {},
+      "at": "2026-06-07T19:21:20.899Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:21:30.543Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:21:30.594Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:21:49.146Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:21:49.201Z"
+    },
+    {
+      "type": "crud.create.verify",
+      "context": "CRUD /connect/cursos",
+      "message": "Registro criado nao apareceu na tela. Texto buscado: TESTE-CODEX-20260607191907 Curso",
+      "extra": {
+        "body": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Cursos Catálogo de cursos, carga horária e turmas vinculadas. + Novo curso 2 Cursos ativos 2 Períodos 70 Carga média Cursos por período Distribuição do catálogo atual Manhã Tarde Noite Integral Catálogo Cursos cadastrados DE DEV manha • 40h ativo EL ELETRMEC tarde • 100h ativo Início Alunos Turmas Frequência Novo curso Nome do curso * Descrição Modalidade * Tecnico Aprendizagem Qualificacao Periodo * Manha Tarde Noite Integr"
+      },
+      "at": "2026-06-07T19:21:56.887Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:21:59.258Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:21:59.312Z"
+    },
+    {
+      "type": "http",
+      "context": "Admin",
+      "message": "400 PATCH https://nmaftnueudtwizccenrm.supabase.co/rest/v1/usuarios?id=eq.51008b94-bb6a-4b56-91f3-64fd3bd270e2",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.765Z"
+    },
+    {
+      "type": "console.error",
+      "context": "Admin",
+      "message": "Failed to load resource: the server responded with a status of 400 ()",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.765Z"
+    },
+    {
+      "type": "http",
+      "context": "Admin",
+      "message": "400 PATCH https://nmaftnueudtwizccenrm.supabase.co/rest/v1/usuarios?id=eq.51008b94-bb6a-4b56-91f3-64fd3bd270e2",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.797Z"
+    },
+    {
+      "type": "console.error",
+      "context": "Admin",
+      "message": "Failed to load resource: the server responded with a status of 400 ()",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.797Z"
+    },
+    {
+      "type": "http",
+      "context": "Admin",
+      "message": "400 PATCH https://nmaftnueudtwizccenrm.supabase.co/rest/v1/usuarios?id=eq.51008b94-bb6a-4b56-91f3-64fd3bd270e2",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.845Z"
+    },
+    {
+      "type": "console.error",
+      "context": "Admin",
+      "message": "Failed to load resource: the server responded with a status of 400 ()",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.845Z"
+    },
+    {
+      "type": "http",
+      "context": "Admin",
+      "message": "400 PATCH https://nmaftnueudtwizccenrm.supabase.co/rest/v1/usuarios?id=eq.51008b94-bb6a-4b56-91f3-64fd3bd270e2",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.870Z"
+    },
+    {
+      "type": "console.error",
+      "context": "Admin",
+      "message": "Failed to load resource: the server responded with a status of 400 ()",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.870Z"
+    },
+    {
+      "type": "http",
+      "context": "Admin",
+      "message": "400 PATCH https://nmaftnueudtwizccenrm.supabase.co/rest/v1/empresas?id=eq.5b35118e-cf2f-475b-a4c1-82816df7be99",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.927Z"
+    },
+    {
+      "type": "console.error",
+      "context": "Admin",
+      "message": "Failed to load resource: the server responded with a status of 400 ()",
+      "extra": {},
+      "at": "2026-06-07T19:22:04.928Z"
+    },
+    {
+      "type": "crud.create.verify",
+      "context": "CRUD /connect/empresas",
+      "message": "Registro criado nao apareceu na tela. Texto buscado: TESTE-CODEX-20260607191907 Empresa",
+      "extra": {
+        "body": "SENAI Connect Ensino conectado e gestão acadêmica P Pedro SENAI CONNECT Empresas Cadastro das empresas parceiras dos contratos de aprendizagem. + Nova empresa 5 Empresas 5 Ativas 5 Com e-mail 5 Parceiras Empresas cadastradas Dados usados nos contratos Nenhuma empresa encontrada. Início Alunos Turmas Frequência"
+      },
+      "at": "2026-06-07T19:22:07.119Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:09.466Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:09.510Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Admin",
+      "message": "Image: style.resizeMode is deprecated. Please use props.resizeMode.",
+      "extra": {},
+      "at": "2026-06-07T19:22:11.008Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:15.920Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:16.016Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Image: style.resizeMode is deprecated. Please use props.resizeMode.",
+      "extra": {},
+      "at": "2026-06-07T19:22:16.045Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:24.883Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:24.927Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:28.721Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:28.766Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Image: style.resizeMode is deprecated. Please use props.resizeMode.",
+      "extra": {},
+      "at": "2026-06-07T19:22:28.874Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:32.292Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:32.367Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:36.164Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:36.209Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:39.853Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:39.896Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:43.516Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:43.598Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:47.086Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:47.155Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:50.926Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:50.989Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:54.595Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:54.657Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:22:58.435Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:22:58.486Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:02.071Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:02.132Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:05.694Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:05.752Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:09.680Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:09.722Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:13.665Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:13.737Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:17.821Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:17.881Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:21.555Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:21.644Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:26.111Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:26.168Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:29.913Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:29.977Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:33.961Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:34.009Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:37.887Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:37.951Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:42.292Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:42.343Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:46.563Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:46.628Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:50.628Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:50.699Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:54.545Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:54.611Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:23:58.809Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:23:58.879Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:03.021Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:03.105Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:06.904Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:06.960Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:11.114Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:11.161Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:15.317Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:15.373Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Aluno",
+      "message": "Image: style.resizeMode is deprecated. Please use props.resizeMode.",
+      "extra": {},
+      "at": "2026-06-07T19:24:16.913Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:22.571Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:22.713Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Image: style.resizeMode is deprecated. Please use props.resizeMode.",
+      "extra": {},
+      "at": "2026-06-07T19:24:22.754Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:32.819Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:32.885Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:41.197Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:41.268Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Image: style.resizeMode is deprecated. Please use props.resizeMode.",
+      "extra": {},
+      "at": "2026-06-07T19:24:41.414Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:45.906Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:45.971Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:50.248Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:50.312Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:54.179Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:54.234Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:24:59.129Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:24:59.187Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:03.604Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:03.659Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:08.425Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:08.504Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:14.738Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:14.835Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:20.022Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:20.093Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:25.486Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:25.584Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:31.918Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:31.993Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:37.428Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:37.489Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:41.304Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:41.369Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:46.265Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:46.334Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:51.948Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:52.046Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:25:56.860Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:25:56.918Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:01.596Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:01.660Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:08.335Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:08.428Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:14.104Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:14.202Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:20.951Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:21.002Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "props.pointerEvents is deprecated. Use style.pointerEvents",
+      "extra": {},
+      "at": "2026-06-07T19:26:21.617Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:28.318Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:28.392Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:32.982Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:33.055Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:37.932Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:38.014Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:44.371Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:44.572Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:52.054Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:52.118Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:26:56.079Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:26:56.151Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:27:00.329Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:27:00.400Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "\"shadow*\" style props are deprecated. Use \"boxShadow\".",
+      "extra": {},
+      "at": "2026-06-07T19:27:05.094Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make sure to run `bundle exec pod install` first. Read more about autolinking: https://github.com/react-native-community/cli/blob/master/docs/autolinking.md",
+      "extra": {},
+      "at": "2026-06-07T19:27:05.163Z"
+    },
+    {
+      "type": "console.warning",
+      "context": "Professor",
+      "message": "Image: style.resizeMode is deprecated. Please use props.resizeMode.",
+      "extra": {},
+      "at": "2026-06-07T19:27:06.779Z"
+    }
+  ]
+}

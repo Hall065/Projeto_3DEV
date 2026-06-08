@@ -3,11 +3,13 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BookOpen, CalendarCheck, MapPin, WalletCards } from 'lucide-react-native';
 import { ListRow, LoadingState, MetricTile, Pill, RingMetric, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { colors, connectTheme } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { studentService, type StudentDashboardData } from '@/services/student.service';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function AlunoDashboardScreen() {
   const session = useAuthStore((s) => s.session);
+  const theme = useThemeColors();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<StudentDashboardData | null>(null);
 
@@ -28,7 +30,7 @@ export default function AlunoDashboardScreen() {
   const dentro = Boolean(data?.localizacao?.dentro_do_senai ?? data?.localizacao?.dentro_perimetro);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.appBackground }]} contentContainerStyle={styles.content}>
       <SurfaceCard title="Meu perfil" subtitle="Dados academicos principais">
         <ListRow
           title={aluno?.nome ?? session?.perfil?.nome ?? 'Aluno'}
@@ -56,9 +58,9 @@ export default function AlunoDashboardScreen() {
         <View style={styles.ringRow}>
           <RingMetric value={`${frequenciaPerc}%`} label="presenca" accent={colors.green} />
           <View style={styles.summary}>
-            <Text style={styles.summaryText}>FJ: {frequencias.filter((item) => item.status === 'falta_justificada').length}</Text>
-            <Text style={styles.summaryText}>FI: {frequencias.filter((item) => item.status === 'falta_injustificada').length}</Text>
-            <Text style={styles.summaryText}>Registros: {frequencias.length}</Text>
+            <Text style={[styles.summaryText, { color: theme.text }]}>FJ: {frequencias.filter((item) => item.status === 'falta_justificada').length}</Text>
+            <Text style={[styles.summaryText, { color: theme.text }]}>FI: {frequencias.filter((item) => item.status === 'falta_injustificada').length}</Text>
+            <Text style={[styles.summaryText, { color: theme.text }]}>Registros: {frequencias.length}</Text>
           </View>
         </View>
       </SurfaceCard>
@@ -75,7 +77,7 @@ export default function AlunoDashboardScreen() {
             accent={colors.green}
           />
         ))}
-        {frequencias.length === 0 ? <Text style={styles.empty}>Nenhuma frequencia cadastrada.</Text> : null}
+        {frequencias.length === 0 ? <Text style={[styles.empty, { color: theme.textMuted }]}>Nenhuma frequencia cadastrada.</Text> : null}
       </SurfaceCard>
     </ScrollView>
   );

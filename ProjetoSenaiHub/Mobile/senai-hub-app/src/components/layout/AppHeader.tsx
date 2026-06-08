@@ -3,7 +3,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Bell, Menu } from 'lucide-react-native';
 import { AnimatedPressable } from '@/components/common/VisualPrimitives';
+import { getBrandAsset, type BrandArea } from '@/constants/brandAssets';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/app.store';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -14,6 +17,7 @@ interface AppHeaderProps {
   notificationCount?: number;
   onNotificationsPress?: () => void;
   accentColor?: string;
+  brandArea?: BrandArea;
 }
 
 export function AppHeader({
@@ -23,9 +27,12 @@ export function AppHeader({
   notificationCount = 0,
   onNotificationsPress,
   accentColor = colors.navy,
+  brandArea,
 }: AppHeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const theme = useThemeColors();
+  const { t } = useI18n();
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const session = useAuthStore((s) => s.session);
   const moduleName = title.replace('SENAI ', '');
@@ -44,41 +51,59 @@ export function AppHeader({
       : title.includes('Connect')
         ? 'Ensino conectado e gestão acadêmica'
         : 'Hub Unificado de Infraestrutura e Serviços');
+  const resolvedBrandArea =
+    brandArea ?? (title.includes('Grid') ? 'grid' : title.includes('Connect') || title.includes('Aluno') ? 'connect' : 'hub');
+  const brandLogo = getBrandAsset(resolvedBrandArea, 'slogan', theme.isDark);
+  const headerColor = theme.isDark
+    ? title.includes('Grid')
+      ? '#052E16'
+      : title.includes('Connect') || title.includes('Aluno')
+        ? '#450A0A'
+        : '#020617'
+    : theme.surface;
+  const headerBorderColor = theme.isDark ? 'rgba(255,255,255,0.08)' : theme.line;
+  const headerIconColor = theme.isDark ? colors.white : accentColor;
+  const headerIconBackground = theme.isDark ? 'rgba(255,255,255,0.1)' : theme.surfaceSoft;
+  const headerIconBorder = theme.isDark ? 'rgba(255,255,255,0.12)' : theme.line;
+  const avatarBackground = theme.isDark ? colors.white : accentColor;
+  const avatarTextColor = theme.isDark ? colors.navy : colors.white;
+  const profileTextColor = theme.isDark ? colors.white : theme.text;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 8, backgroundColor: accentColor }]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top + 8, backgroundColor: headerColor, borderBottomColor: headerBorderColor },
+      ]}
+    >
       <View style={styles.row}>
         {showMenu ? (
           <AnimatedPressable
             accessibilityLabel="Abrir menu"
-            style={styles.iconButton}
+            style={[styles.iconButton, { backgroundColor: headerIconBackground, borderColor: headerIconBorder }]}
             onPress={toggleSidebar}
             hitSlop={8}
           >
-            <Menu color={colors.white} size={21} />
+            <Menu color={headerIconColor} size={21} />
           </AnimatedPressable>
         ) : (
           <View style={styles.spacer} />
         )}
         <View style={styles.brandWrap}>
-          <View style={styles.senaiMark}>
-            <Text style={styles.senaiText}>SENAI</Text>
-          </View>
-          <View style={styles.brandDivider} />
-          <View style={styles.titleWrap}>
-            <Text style={styles.title}>{moduleName}</Text>
-            <Text numberOfLines={1} style={styles.subtitle}>
-              {moduleSubtitle}
-            </Text>
-          </View>
+          <Image
+            source={brandLogo}
+            style={styles.brandLogo}
+            resizeMode="contain"
+            accessibilityLabel={`${t(moduleName)}. ${t(moduleSubtitle)}`}
+          />
         </View>
         <AnimatedPressable
           accessibilityLabel="Abrir notificações"
-          style={styles.iconButton}
+          style={[styles.iconButton, { backgroundColor: headerIconBackground, borderColor: headerIconBorder }]}
           onPress={onNotificationsPress}
           hitSlop={8}
         >
-          <Bell color={colors.white} size={22} />
+          <Bell color={headerIconColor} size={22} />
           {notificationCount > 0 ? (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>
@@ -87,15 +112,21 @@ export function AppHeader({
             </View>
           ) : null}
         </AnimatedPressable>
-        <AnimatedPressable style={styles.profile} onPress={() => router.push('/perfil' as never)}>
-          <View style={styles.avatar}>
+        <AnimatedPressable
+          accessibilityLabel="Abrir perfil"
+          accessibilityRole="button"
+          style={styles.profile}
+          onPress={() => router.push('/perfil' as never)}
+          hitSlop={8}
+        >
+          <View style={[styles.avatar, { backgroundColor: avatarBackground }]}>
             {session?.perfil?.foto_url ? (
               <Image source={{ uri: session.perfil.foto_url }} style={styles.avatarImage} />
             ) : (
-              <Text style={styles.avatarText}>{initials}</Text>
+              <Text style={[styles.avatarText, { color: avatarTextColor }]}>{initials}</Text>
             )}
           </View>
-          <Text numberOfLines={1} style={styles.profileName}>
+          <Text numberOfLines={1} style={[styles.profileName, { color: profileTextColor }]}>
             {profileName}
           </Text>
         </AnimatedPressable>
@@ -135,24 +166,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 7,
   },
-  senaiMark: {
-    height: 24,
-    borderRadius: 3,
-    backgroundColor: colors.red,
-    paddingHorizontal: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  senaiText: {
-    color: colors.white,
-    fontSize: 12,
-    fontWeight: '900',
-    fontStyle: 'italic',
-  },
-  brandDivider: { width: 1, height: 26, backgroundColor: 'rgba(255,255,255,0.35)' },
-  titleWrap: { flex: 1, minWidth: 0 },
-  title: { fontSize: 13, fontWeight: '900', color: colors.white },
-  subtitle: { fontSize: 9, color: 'rgba(255,255,255,0.72)', marginTop: 1 },
+  brandLogo: { width: '100%', maxWidth: 150, height: 38 },
   badge: {
     position: 'absolute',
     top: 3,

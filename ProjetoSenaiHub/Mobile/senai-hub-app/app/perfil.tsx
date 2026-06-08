@@ -2,19 +2,27 @@ import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Camera, KeyRound } from 'lucide-react-native';
+import { ArrowLeft, Camera, KeyRound, Languages, LogOut, Moon, Sun } from 'lucide-react-native';
 import { AppButton, FeedbackMessage, ListRow, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { getPostLoginRoute } from '@/lib/permissions';
 import { supabase } from '@/lib/supabase';
 import { fetchUserApplications, fetchUserProfile, updateUserProfile } from '@/services/hub.service';
 import { uploadService } from '@/services/upload.service';
+import { useAppStore } from '@/stores/app.store';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function PerfilScreen() {
   const router = useRouter();
-  const { session, setSession } = useAuthStore();
+  const { session, setSession, logout } = useAuthStore();
+  const theme = useThemeColors();
+  const { language, t } = useI18n();
+  const { themeMode, toggleThemeMode, setLanguage } = useAppStore();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [values, setValues] = useState({
@@ -35,6 +43,14 @@ export default function PerfilScreen() {
       fetchUserApplications(session.userId),
     ]);
     setSession({ ...session, perfil: updatedPerfil, aplicacoes });
+  };
+
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace(getPostLoginRoute(session) as never);
   };
 
   const pickPhoto = async () => {
@@ -101,12 +117,33 @@ export default function PerfilScreen() {
     }
   };
 
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+      router.replace('/login' as never);
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: theme.appBackground }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.topActions}>
+          <AppButton
+            label="Voltar"
+            variant="secondary"
+            accent={colors.navy}
+            icon={<ArrowLeft size={16} color={theme.isDark ? theme.text : colors.navy} />}
+            onPress={goBack}
+            wrapperStyle={styles.backButtonWrap}
+          />
+        </View>
+
         <SurfaceCard title="Perfil do usuario" subtitle="Dados da sua conta SENAI Hub">
           <View style={styles.profileTop}>
-            <View style={styles.avatar}>
+            <View style={[styles.avatar, { backgroundColor: theme.isDark ? theme.surfaceSoft : colors.navy }]}>
               {perfil?.foto_url ? (
                 <Image source={{ uri: perfil.foto_url }} style={styles.avatarImage} />
               ) : (
@@ -114,17 +151,58 @@ export default function PerfilScreen() {
               )}
             </View>
             <View style={styles.profileBody}>
-              <Text style={styles.name}>{perfil?.nome}</Text>
-              <Text style={styles.role}>{perfil?.tipo}</Text>
+              <Text style={[styles.name, { color: theme.text }]}>{perfil?.nome}</Text>
+              <Text style={[styles.role, { color: theme.textMuted }]}>{t(perfil?.tipo)}</Text>
               <AppButton
                 label="Trocar foto"
                 variant="secondary"
                 accent={colors.navy}
-                icon={<Camera size={16} color={colors.navy} />}
+                icon={<Camera size={16} color={theme.isDark ? theme.text : colors.navy} />}
                 onPress={pickPhoto}
                 loading={saving}
               />
             </View>
+          </View>
+        </SurfaceCard>
+
+        <SurfaceCard title="Preferências" subtitle="Tema e idioma do aplicativo">
+          <ListRow
+            title="Tema atual"
+            subtitle={themeMode === 'dark' ? 'Modo escuro' : 'Modo claro'}
+            initials="TM"
+            accent={themeMode === 'dark' ? colors.purple : colors.orange}
+          />
+          <AppButton
+            label={themeMode === 'dark' ? 'Aplicar modo claro' : 'Aplicar modo escuro'}
+            variant="secondary"
+            accent={themeMode === 'dark' ? colors.orange : colors.purple}
+            icon={themeMode === 'dark' ? <Sun size={16} color={colors.orange} /> : <Moon size={16} color={colors.purple} />}
+            onPress={toggleThemeMode}
+          />
+          <View style={styles.preferenceGap} />
+          <ListRow
+            title="Idioma"
+            subtitle={language === 'en-US' ? 'Inglês' : 'Português'}
+            initials="ID"
+            accent={colors.blue}
+          />
+          <View style={styles.preferenceButtons}>
+            <AppButton
+              label="Usar português"
+              variant={language === 'pt-BR' ? 'primary' : 'secondary'}
+              accent={colors.blue}
+              icon={<Languages size={16} color={language === 'pt-BR' ? colors.white : colors.blue} />}
+              onPress={() => setLanguage('pt-BR')}
+              wrapperStyle={styles.preferenceButton}
+            />
+            <AppButton
+              label="Usar inglês"
+              variant={language === 'en-US' ? 'primary' : 'secondary'}
+              accent={colors.blue}
+              icon={<Languages size={16} color={language === 'en-US' ? colors.white : colors.blue} />}
+              onPress={() => setLanguage('en-US')}
+              wrapperStyle={styles.preferenceButton}
+            />
           </View>
         </SurfaceCard>
 
@@ -155,7 +233,7 @@ export default function PerfilScreen() {
             label="Abrir recuperacao de senha"
             variant="secondary"
             accent={colors.navy}
-            icon={<KeyRound size={16} color={colors.navy} />}
+            icon={<KeyRound size={16} color={theme.isDark ? theme.text : colors.navy} />}
             onPress={() => router.push('/recuperar-senha' as never)}
           />
         </SurfaceCard>
@@ -165,6 +243,17 @@ export default function PerfilScreen() {
           <ListRow title="Ultimo login" meta="Sessao atual" initials="UL" accent={colors.green} />
           <ListRow title="Versao do app" meta="1.0.0" initials="VS" accent={colors.orange} />
           <ListRow title="Conta protegida" subtitle="Confirmacao por senha ativa" initials="OK" accent={colors.green} />
+        </SurfaceCard>
+
+        <SurfaceCard title="Conta" subtitle="Sessao atual">
+          <AppButton
+            label="Sair"
+            variant="secondary"
+            accent={colors.red}
+            icon={<LogOut size={16} color={colors.red} />}
+            onPress={handleLogout}
+            loading={loggingOut}
+          />
         </SurfaceCard>
 
         {error ? <FeedbackMessage variant="danger" message={error} /> : null}
@@ -185,15 +274,24 @@ function Field({
   onChangeText: (value: string) => void;
   secureTextEntry?: boolean;
 }) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: theme.text }]}>{t(label)}</Text>
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            backgroundColor: theme.input,
+            borderColor: theme.line,
+            color: theme.text,
+          },
+        ]}
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
-        placeholderTextColor={colors.mutedText}
+        placeholderTextColor={theme.textSubtle}
       />
     </View>
   );
@@ -202,6 +300,11 @@ function Field({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 14, paddingBottom: 24 },
+  topActions: { flexDirection: 'row', marginBottom: 12 },
+  backButtonWrap: { alignSelf: 'flex-start' },
+  preferenceGap: { height: 10 },
+  preferenceButtons: { flexDirection: 'row', gap: 10 },
+  preferenceButton: { flex: 1 },
   profileTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   avatar: {
     width: 88,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BriefcaseBusiness, Building2, Mail, UserCheck } from 'lucide-react-native';
 import { CrudModal, type CrudField } from '@/components/common/CrudModal';
@@ -7,17 +7,44 @@ import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { EMPRESA_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { ensureEmpresaUserAccess } from '@/services/empresa.service';
 import { connectService } from '@/services/connect.service';
 import type { Empresa } from '@/types/connect.types';
 
-const fields: CrudField[] = [
+const PASSWORD_MIN_LENGTH = 6;
+
+const companyFields: CrudField[] = [
   { name: 'nome', label: 'Nome da empresa', required: true },
   { name: 'cnpj', label: 'CNPJ', placeholder: '00.000.000/0000-00', mask: 'cnpj' },
-  { name: 'email', label: 'E-mail', keyboardType: 'email-address' },
+  { name: 'email', label: 'E-mail', keyboardType: 'email-address', required: true },
+];
+
+const companyExtraFields: CrudField[] = [
   { name: 'telefone', label: 'Telefone', placeholder: '(19) 99999-9999', mask: 'phone' },
   { name: 'responsavel_nome', label: 'Responsavel' },
   { name: 'status', label: 'Status', required: true, options: EMPRESA_STATUS_OPTIONS },
 ];
+
+function getFields(isEditing: boolean): CrudField[] {
+  return [
+    ...companyFields,
+    {
+      name: 'senha_acesso',
+      label: isEditing ? 'Nova senha para login da empresa' : 'Senha para login da empresa',
+      placeholder: isEditing ? 'Deixe em branco para manter a senha atual' : 'Minimo 6 caracteres',
+      required: !isEditing,
+      secureTextEntry: true,
+    },
+    {
+      name: 'confirmar_senha',
+      label: 'Confirmar senha',
+      placeholder: isEditing ? 'Repita a nova senha, se informou uma' : 'Repita a senha',
+      required: !isEditing,
+      secureTextEntry: true,
+    },
+    ...companyExtraFields,
+  ];
+}
 
 function formValues(empresa: Empresa): Record<string, string> {
   return {
@@ -27,13 +54,41 @@ function formValues(empresa: Empresa): Record<string, string> {
     telefone: empresa.telefone ?? '',
     responsavel_nome: empresa.responsavel_nome ?? '',
     status: empresa.status ?? 'ativa',
+    senha_acesso: '',
+    confirmar_senha: '',
   };
+}
+
+function normalizePassword(values: Record<string, string>, isEditing: boolean) {
+  const senha = values.senha_acesso?.trim() ?? '';
+  const confirmacao = values.confirmar_senha?.trim() ?? '';
+
+  if (!isEditing && !senha) {
+    throw new Error('Informe a senha de acesso da empresa.');
+  }
+
+  if (senha || confirmacao) {
+    if (senha.length < PASSWORD_MIN_LENGTH) {
+      throw new Error(`A senha precisa ter pelo menos ${PASSWORD_MIN_LENGTH} caracteres.`);
+    }
+    if (senha !== confirmacao) {
+      throw new Error('A confirmacao da senha nao confere.');
+    }
+  }
+
+  return senha || null;
+}
+
+function getEmpresaValues(values: Record<string, string>) {
+  const { senha_acesso: _senha, confirmar_senha: _confirmacao, ...empresaValues } = values;
+  return empresaValues;
 }
 
 export default function EmpresasScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Empresa | null>(null);
   const [search, setSearch] = useState('');
+  const fields = useMemo(() => getFields(Boolean(editing)), [editing]);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<Empresa, Record<string, string>>({
       load: connectService.listEmpresas,
@@ -100,8 +155,30 @@ export default function EmpresasScreen() {
         submitLabel={editing ? 'Salvar alteracoes' : 'Criar empresa'}
         onClose={() => setModalOpen(false)}
         onSubmit={async (values) => {
-          if (editing) await updateItem(editing.id, values);
-          else await createItem(values);
+          const senha = normalizePassword(values, Boolean(editing));
+          const empresaValues = getEmpresaValues(values);
+
+          if (editing) {
+            await updateItem(editing.id, empresaValues);
+            await ensureEmpresaUserAccess({
+              id: editing.id,
+              nome: empresaValues.nome ?? editing.nome,
+              email: empresaValues.email ?? editing.email,
+              responsavel_nome: empresaValues.responsavel_nome ?? editing.responsavel_nome,
+              senha,
+            });
+          } else {
+            await createItem(empresaValues);
+            const empresas = await connectService.listEmpresas();
+            const created = empresas.find(
+              (empresa) =>
+                empresa.nome === empresaValues.nome ||
+                (empresaValues.email && empresa.email?.toLowerCase() === empresaValues.email.toLowerCase())
+            );
+            if (created) {
+              await ensureEmpresaUserAccess({ ...created, senha });
+            }
+          }
           setModalOpen(false);
         }}
       />

@@ -55,7 +55,7 @@ export const uploadService = {
       id: usuarioId,
     });
 
-    await updateUserPhoto(usuarioId, result.arquivoId);
+    await updateUserPhoto(usuarioId, result.arquivoId, result.cloudinary.secure_url);
 
     return result;
   },

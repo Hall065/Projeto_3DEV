@@ -2,6 +2,8 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Bell, CheckCheck, X } from 'lucide-react-native';
 import { AnimatedPressable, AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
+import { useI18n } from '@/hooks/useI18n';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import type { Notificacao } from '@/services/notification.service';
 
 interface NotificationsModalProps {
@@ -21,17 +23,19 @@ export function NotificationsModal({
   onMarkAsRead,
   onMarkAllAsRead,
 }: NotificationsModalProps) {
+  const theme = useThemeColors();
+  const { t } = useI18n();
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <View style={styles.sheet}>
+      <View style={[styles.overlay, { backgroundColor: theme.overlay }]}>
+        <View style={[styles.sheet, { backgroundColor: theme.surface }]}>
           <View style={styles.header}>
             <View style={styles.titleWrap}>
-              <Bell size={18} color={colors.navy} />
-              <Text style={styles.title}>Notificacoes</Text>
+              <Bell size={18} color={theme.text} />
+              <Text style={[styles.title, { color: theme.text }]}>{t('Notificacoes')}</Text>
             </View>
-            <AnimatedPressable style={styles.closeButton} onPress={onClose}>
-              <X size={18} color={colors.navy} />
+            <AnimatedPressable style={[styles.closeButton, { backgroundColor: theme.surfaceSoft }]} onPress={onClose}>
+              <X size={18} color={theme.text} />
             </AnimatedPressable>
           </View>
 
@@ -39,7 +43,7 @@ export function NotificationsModal({
             label="Marcar todas como lidas"
             variant="secondary"
             accent={colors.navy}
-            icon={<CheckCheck size={16} color={colors.navy} />}
+            icon={<CheckCheck size={16} color={theme.isDark ? theme.text : colors.navy} />}
             onPress={onMarkAllAsRead}
             disabled={notifications.every((notification) => notification.lida)}
           />
@@ -52,15 +56,21 @@ export function NotificationsModal({
             {notifications.map((notification) => (
               <AnimatedPressable
                 key={notification.id}
-                style={[styles.item, !notification.lida && styles.itemUnread]}
+                style={[
+                  styles.item,
+                  {
+                    backgroundColor: !notification.lida && !theme.isDark ? '#E8F1FF' : theme.surfaceSoft,
+                    borderColor: !notification.lida ? colors.blue : theme.line,
+                  },
+                ]}
                 onPress={() => onMarkAsRead(notification.id)}
               >
                 <View style={styles.itemTop}>
-                  <Text style={styles.itemTitle}>{notification.titulo}</Text>
+                  <Text style={[styles.itemTitle, { color: theme.text }]}>{t(notification.titulo)}</Text>
                   {!notification.lida ? <View style={styles.dot} /> : null}
                 </View>
-                <Text style={styles.itemText}>{notification.mensagem}</Text>
-                <Text style={styles.itemDate}>
+                <Text style={[styles.itemText, { color: theme.textMuted }]}>{t(notification.mensagem)}</Text>
+                <Text style={[styles.itemDate, { color: theme.textMuted }]}>
                   {new Date(notification.created_at).toLocaleString('pt-BR')}
                 </Text>
               </AnimatedPressable>

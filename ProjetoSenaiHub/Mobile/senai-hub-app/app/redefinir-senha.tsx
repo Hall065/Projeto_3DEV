@@ -12,15 +12,17 @@ import {
 } from 'react-native';
 import { Eye, Lock } from 'lucide-react-native';
 import { AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
+import { getBrandAsset } from '@/constants/brandAssets';
 import { colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { updatePassword } from '@/lib/auth';
 import { redefinirSenhaSchema, type RedefinirSenhaFormData } from '@/utils/validators';
 
 const circuitBg = require('../assets/brand/senai-circuit-bg.png');
-const hubLogo = require('../assets/brand/senai-hub-logo-2.png');
 
 export default function RedefinirSenhaScreen() {
   const router = useRouter();
+  const theme = useThemeColors();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,31 +44,35 @@ export default function RedefinirSenhaScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground source={circuitBg} style={styles.hero}>
-        <Image source={hubLogo} style={styles.logo} resizeMode="contain" />
+    <View style={[styles.container, { backgroundColor: theme.appBackground }]}>
+      <ImageBackground
+        source={circuitBg}
+        style={[styles.hero, { backgroundColor: theme.isDark ? colors.navy : colors.white }]}
+        imageStyle={[styles.heroImage, { opacity: theme.isDark ? 0.42 : 0.08 }]}
+      >
+        <Image source={getBrandAsset('hub', 'slogan', theme.isDark)} style={styles.logo} resizeMode="contain" />
       </ImageBackground>
-      <View style={styles.sheet}>
-        <Text style={styles.title}>Redefinir senha</Text>
-        <Text style={styles.subtitle}>Digite uma nova senha para continuar usando o SENAI Hub.</Text>
+      <View style={[styles.sheet, { backgroundColor: theme.surface }]}>
+        <Text style={[styles.title, { color: theme.text }]}>Redefinir senha</Text>
+        <Text style={[styles.subtitle, { color: theme.textMuted }]}>Digite uma nova senha para continuar usando o SENAI Hub.</Text>
 
         <Controller
           control={control}
           name="password"
           render={({ field: { onChange, value }, fieldState: { error: fieldError } }) => (
             <View style={styles.field}>
-              <Text style={styles.label}>Nova senha</Text>
-              <View style={styles.inputWrap}>
-                <Lock size={17} color={colors.grayText} />
+              <Text style={[styles.label, { color: theme.text }]}>Nova senha</Text>
+              <View style={[styles.inputWrap, { backgroundColor: theme.input, borderColor: theme.line }]}>
+                <Lock size={17} color={theme.textMuted} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.text }]}
                   placeholder="••••••••"
-                  placeholderTextColor={colors.mutedText}
+                  placeholderTextColor={theme.textSubtle}
                   secureTextEntry
                   value={value}
                   onChangeText={onChange}
                 />
-                <Eye size={17} color={colors.grayText} />
+                <Eye size={17} color={theme.textMuted} />
               </View>
               {fieldError ? <Text style={styles.error}>{fieldError.message}</Text> : null}
             </View>
@@ -78,18 +84,18 @@ export default function RedefinirSenhaScreen() {
           name="confirmPassword"
           render={({ field: { onChange, value }, fieldState: { error: fieldError } }) => (
             <View style={styles.field}>
-              <Text style={styles.label}>Confirmar senha</Text>
-              <View style={styles.inputWrap}>
-                <Lock size={17} color={colors.grayText} />
+              <Text style={[styles.label, { color: theme.text }]}>Confirmar senha</Text>
+              <View style={[styles.inputWrap, { backgroundColor: theme.input, borderColor: theme.line }]}>
+                <Lock size={17} color={theme.textMuted} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.text }]}
                   placeholder="••••••••"
-                  placeholderTextColor={colors.mutedText}
+                  placeholderTextColor={theme.textSubtle}
                   secureTextEntry
                   value={value}
                   onChangeText={onChange}
                 />
-                <Eye size={17} color={colors.grayText} />
+                <Eye size={17} color={theme.textMuted} />
               </View>
               {fieldError ? <Text style={styles.error}>{fieldError.message}</Text> : null}
             </View>
@@ -113,6 +119,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 52,
   },
+  heroImage: { resizeMode: 'cover' },
   logo: { width: '92%', height: 90 },
   sheet: {
     flex: 1,

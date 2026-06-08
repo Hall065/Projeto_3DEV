@@ -7,18 +7,31 @@ import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { USER_ROLE_OPTIONS, USER_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { isMaintenanceRole } from '@/lib/permissions';
 import { gridService } from '@/services/grid.service';
+import { useAuthStore } from '@/stores/auth.store';
 import type { HubUsuario } from '@/types/auth.types';
 
-const fields: CrudField[] = [
+const GRID_USER_ROLE_OPTIONS = USER_ROLE_OPTIONS.filter((option) =>
+  option.value === 'manutencao' || option.value === 'gerente_manutencao'
+);
+
+function getFields(managerOnly: boolean): CrudField[] {
+  return [
   { name: 'nome', label: 'Nome completo', required: true },
   { name: 'email_institucional', label: 'E-mail institucional', required: true, keyboardType: 'email-address' },
   { name: 'senha', label: 'Senha inicial', placeholder: 'Senai@123456', secureTextEntry: true },
-  { name: 'tipo', label: 'Perfil', required: true, options: USER_ROLE_OPTIONS },
+  {
+    name: 'tipo',
+    label: 'Perfil',
+    required: true,
+    options: managerOnly ? GRID_USER_ROLE_OPTIONS.filter((option) => option.value === 'manutencao') : GRID_USER_ROLE_OPTIONS,
+  },
   { name: 'telefone', label: 'Telefone', placeholder: '(19) 98999-9999', mask: 'phone' },
   { name: 'cpf', label: 'CPF', placeholder: '111.111.111-11', mask: 'cpf' },
   { name: 'status', label: 'Status', required: true, options: USER_STATUS_OPTIONS },
-];
+  ];
+}
 
 function initials(nome: string) {
   return nome.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
@@ -40,15 +53,19 @@ export default function UsuariosGridScreen() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<HubUsuario | null>(null);
   const [search, setSearch] = useState('');
+  const role = useAuthStore((s) => s.session?.perfil?.tipo);
+  const managerOnly = role === 'gerente_manutencao';
+  const fields = getFields(managerOnly);
   const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
     useCrudResource<HubUsuario, Record<string, string>>({
-      load: gridService.listUsuarios,
+      load: gridService.listMaintenanceUsuarios,
       create: gridService.createUsuario,
       update: gridService.updateUsuario,
       remove: gridService.deleteUsuario,
     });
 
-  const filtered = items.filter((usuario) =>
+  const visibleItems = managerOnly ? items.filter((usuario) => usuario.tipo === 'manutencao') : items;
+  const filtered = visibleItems.filter((usuario) =>
     `${usuario.nome} ${usuario.email_institucional} ${usuario.tipo}`.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -66,10 +83,10 @@ export default function UsuariosGridScreen() {
         }}
       >
         <View style={styles.metricGrid}>
-          <MetricTile label="Usuários ativos" value={items.filter((u) => u.status === 'ativo').length} accent={gridTheme.accent} icon={<Users size={16} color={gridTheme.accent} />} style={styles.metric} />
-          <MetricTile label="Manutenção" value={items.filter((u) => `${u.tipo}`.includes('manutencao')).length} accent={colors.blue} icon={<UserCheck size={16} color={colors.blue} />} style={styles.metric} />
-          <MetricTile label="Administradores" value={items.filter((u) => u.tipo === 'admin').length} accent={colors.red} icon={<ShieldCheck size={16} color={colors.red} />} style={styles.metric} />
-          <MetricTile label="Total" value={items.length} accent={colors.orange} icon={<UserPlus size={16} color={colors.orange} />} style={styles.metric} />
+          <MetricTile label="Usuários ativos" value={visibleItems.filter((u) => u.status === 'ativo').length} accent={gridTheme.accent} icon={<Users size={16} color={gridTheme.accent} />} style={styles.metric} />
+          <MetricTile label="Manutenção" value={visibleItems.filter((u) => `${u.tipo}`.includes('manutencao')).length} accent={colors.blue} icon={<UserCheck size={16} color={colors.blue} />} style={styles.metric} />
+          <MetricTile label="Gerentes" value={visibleItems.filter((u) => u.tipo === 'gerente_manutencao').length} accent={colors.red} icon={<ShieldCheck size={16} color={colors.red} />} style={styles.metric} />
+          <MetricTile label="Total" value={visibleItems.length} accent={colors.orange} icon={<UserPlus size={16} color={colors.orange} />} style={styles.metric} />
         </View>
 
         <SearchField placeholder="Buscar usuário, e-mail, cargo ou permissão..." value={search} onChangeText={setSearch} />
@@ -86,7 +103,7 @@ export default function UsuariosGridScreen() {
               badgeVariant={usuario.status === 'ativo' ? 'success' : 'neutral'}
               meta="BD"
               initials={initials(usuario.nome)}
-              accent={usuario.tipo === 'admin' ? colors.red : colors.blue}
+              accent={isMaintenanceRole(usuario.tipo) ? colors.blue : colors.red}
               onEdit={() => {
                 setEditing(usuario);
                 setModalOpen(true);
