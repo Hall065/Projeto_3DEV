@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Connect;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\HubPersonResource;
 use App\Models\Connect\ConnectClass;
+use App\Models\Connect\ConnectStudent;
 use App\Models\HubPerson;
 use App\Services\Connect\ConnectEnrollmentService;
 use Illuminate\Http\JsonResponse;
@@ -37,8 +38,20 @@ class ClassRosterController extends Controller
             return response()->json(['message' => 'Somente cadastros do tipo aluno podem ser matriculados na turma.'], 422);
         }
 
+        $class->load('course');
         $this->enrollment->attachStudentToClass($person, $class);
         $this->enrollment->attachPersonToCourse($person, $class->course, 'student');
+
+        $student = ConnectStudent::query()->where('hub_person_id', $person->id)->first();
+        $triggers = app(\App\Services\Notification\SystemNotificationTriggers::class);
+        if ($student) {
+            if ($student->connect_class_id !== $class->id) {
+                $student->update(['connect_class_id' => $class->id]);
+            }
+            $triggers->connectStudentEnrolled($student->fresh(), $request->user());
+        } else {
+            $triggers->connectCourseRosterAdded($person, 'aluno', $class->course_id, $class->course->name, $request->user());
+        }
 
         return response()->json([
             'message' => 'Aluno vinculado a turma e ao curso.',

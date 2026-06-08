@@ -15,7 +15,12 @@ import {
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import { spreadsheetService } from '../../services/spreadsheetService'
-import type { ConnectAttendanceMark, ConnectAttendanceSession, ConnectClass } from '../../types/connect'
+import type {
+  ConnectAttendanceMark,
+  ConnectAttendanceSession,
+  ConnectClass,
+  ConnectLessonSchedule,
+} from '../../types/connect'
 
 type MarkStatus = 'present' | 'justified' | 'absent'
 
@@ -59,6 +64,8 @@ export function AttendancePage() {
   const [searchParams] = useSearchParams()
   const [classes, setClasses] = useState<ConnectClass[]>([])
   const [classId, setClassId] = useState(searchParams.get('class') ?? '')
+  const [lessonId, setLessonId] = useState(searchParams.get('lesson') ?? '')
+  const [scheduledLessons, setScheduledLessons] = useState<ConnectLessonSchedule[]>([])
   const [session, setSession] = useState<ConnectAttendanceSession | null>(null)
   const [marks, setMarks] = useState<Record<number, StudentMarkState>>({})
   const [date, setDate] = useState(searchParams.get('date') ?? new Date().toISOString().slice(0, 10))
@@ -73,6 +80,17 @@ export function AttendancePage() {
   }, [])
 
   useEffect(() => {
+    if (!classId || !date) {
+      setScheduledLessons([])
+      return
+    }
+    connectService
+      .getCalendar({ from: date, to: date, connect_class_id: classId })
+      .then(setScheduledLessons)
+      .catch(() => setScheduledLessons([]))
+  }, [classId, date])
+
+  useEffect(() => {
     if (!classId) {
       setSession(null)
       setMarks({})
@@ -82,11 +100,12 @@ export function AttendancePage() {
 
     setLoading(true)
     setLoadError(null)
+    const params: Record<string, string | number> = lessonId
+      ? { connect_lesson_schedule_id: lessonId }
+      : { connect_class_id: classId, session_date: date }
+
     connectService
-      .getAttendanceSession({
-        connect_class_id: classId,
-        session_date: date,
-      })
+      .getAttendanceSession(params)
       .then((data) => {
         setSession(data)
         const lessonCount = clampLessons(
@@ -115,7 +134,7 @@ export function AttendancePage() {
         setLoadError(attendanceLoadErrorMessage(error))
       })
       .finally(() => setLoading(false))
-  }, [classId, date])
+  }, [classId, date, lessonId])
 
   useEffect(() => {
     setMarks((prev) => {
@@ -258,7 +277,7 @@ export function AttendancePage() {
     <div className="w-full min-w-0">
       <ConnectPageHeader
         title="Frequencia"
-        subtitle="Registre a frequencia diaria da turma com aulas e faltas personalizaveis."
+        subtitle="Vincule a chamada as aulas do calendario ou registre manualmente por data."
         actions={
           <>
             <OutlineButton type="button" onClick={handleExport} disabled={exporting || !classId}>
@@ -291,7 +310,29 @@ export function AttendancePage() {
             </select>
           </FormField>
           <FormField label="Data">
-            <input type="date" className={inputClass} value={date} onChange={(e) => setDate(e.target.value)} />
+            <input
+              type="date"
+              className={inputClass}
+              value={date}
+              onChange={(e) => {
+                setDate(e.target.value)
+                setLessonId('')
+              }}
+            />
+          </FormField>
+          <FormField label="Aula no calendario" hint={scheduledLessons.length ? 'Selecione o horario agendado' : 'Sem aulas agendadas — modo manual'}>
+            <select
+              className={selectClass}
+              value={lessonId}
+              onChange={(e) => setLessonId(e.target.value)}
+            >
+              <option value="">Chamada manual (sem horario)</option>
+              {scheduledLessons.map((lesson) => (
+                <option key={lesson.id} value={lesson.id}>
+                  {lesson.start_time}–{lesson.end_time} · {lesson.subject} ({lesson.lessons_count} aula(s))
+                </option>
+              ))}
+            </select>
           </FormField>
           <FormField label="Aulas no dia">
             <div className="flex flex-wrap gap-2">
@@ -299,8 +340,9 @@ export function AttendancePage() {
                 <button
                   key={n}
                   type="button"
+                  disabled={Boolean(lessonId)}
                   onClick={() => setLessons(n)}
-                  className={`h-9 w-9 rounded-lg border text-sm font-medium ${
+                  className={`h-9 w-9 rounded-lg border text-sm font-medium disabled:opacity-50 ${
                     lessons === n ? 'border-hub-red text-hub-red' : 'border-hub-border'
                   }`}
                 >
@@ -309,7 +351,13 @@ export function AttendancePage() {
               ))}
             </div>
           </FormField>
-        </div>        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        </div>
+        <p className="mt-2 text-xs text-hub-text-muted">
+          <Link to="/connect/calendario" className="text-hub-red hover:underline">
+            Ver calendario completo
+          </Link>
+        </p>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-3 text-xs text-hub-text-muted sm:gap-4">
             <span>
               <span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500" /> P Presente
@@ -325,7 +373,10 @@ export function AttendancePage() {
         </div>
         {session?.session_date && (
           <p className="mt-3 text-xs text-hub-text-muted">
-            Registro do dia {session.session_date} · {lessons} aula(s) · historico salvo por turma e data.
+            Registro do dia {session.session_date}
+            {session.lesson_schedule ? ` · ${session.lesson_schedule.start_time}–${session.lesson_schedule.end_time}` : ''}
+            {' '}· {lessons} aula(s)
+            {session.connect_lesson_schedule_id ? ' · vinculado ao calendario' : ' · chamada manual'}.
           </p>
         )}
       </ConnectCard>

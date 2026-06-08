@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   BookOpen,
+  Calendar,
   CalendarCheck,
   ClipboardList,
   Contact,
@@ -44,6 +45,7 @@ export const connectNavItems: NavItem[] = [
   { to: '/connect/professores', label: 'Professores', icon: Users, permission: ['connect.teachers.view', 'connect.teachers.manage'] },
   { to: '/connect/turmas', label: 'Turmas', icon: School, permission: ['connect.classes.view', 'connect.classes.manage'] },
   { to: '/connect/cursos', label: 'Cursos', icon: BookOpen, permission: ['connect.courses.view', 'connect.courses.manage'] },
+  { to: '/connect/calendario', label: 'Calendario', icon: Calendar, permission: ['connect.calendar.view', 'connect.calendar.manage'] },
   { to: '/connect/frequencia', label: 'Frequencia', icon: CalendarCheck, permission: ['connect.attendance.view', 'connect.attendance.view_own', 'connect.attendance.manage'] },
   { to: '/connect/gerenciar-frequencia', label: 'Gerenciar Frequencia', icon: ClipboardList, permission: ['connect.attendance.view', 'connect.attendance.manage'] },
   { to: '/connect/relatorio', label: 'Relatorio', icon: FileText, permission: ['connect.reports.view', 'connect.reports.manage'] },
@@ -85,6 +87,7 @@ export const connectRoutePermissions: Record<string, string | string[]> = {
   '/connect/professores': ['connect.teachers.view', 'connect.teachers.manage'],
   '/connect/turmas': ['connect.classes.view', 'connect.classes.manage'],
   '/connect/cursos': ['connect.courses.view', 'connect.courses.manage'],
+  '/connect/calendario': ['connect.calendar.view', 'connect.calendar.manage'],
   '/connect/frequencia': ['connect.attendance.view', 'connect.attendance.view_own', 'connect.attendance.manage'],
   '/connect/gerenciar-frequencia': ['connect.attendance.view', 'connect.attendance.manage'],
   '/connect/relatorio': ['connect.reports.view', 'connect.reports.manage'],

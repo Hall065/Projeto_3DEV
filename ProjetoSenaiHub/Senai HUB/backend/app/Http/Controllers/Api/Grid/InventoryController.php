@@ -156,6 +156,9 @@ class InventoryController extends Controller
         $inventoryItem->refreshStockStatus();
         $inventoryItem->save();
 
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->gridInventoryLow($inventoryItem, $request->user());
+
         return response()->json([
             'data' => new GridInventoryItemResource($inventoryItem),
             'message' => $validated['type'] === 'in' ? 'Entrada registrada.' : 'Saída registrada.',

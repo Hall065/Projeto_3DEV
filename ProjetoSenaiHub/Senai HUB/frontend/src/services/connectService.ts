@@ -4,7 +4,10 @@ import type {
   ConnectClass,
   ConnectContract,
   ConnectCourse,
+  ConnectLessonSchedule,
+  ConnectSchedulePlan,
   ConnectStudent,
+  ConnectWeeklyPattern,
   ConnectStudentLocation,
   ConnectTeacher,
   CourseRoster,
@@ -106,6 +109,55 @@ export const connectService = {
   async updateCourse(id: number, payload: Record<string, unknown>): Promise<ConnectCourse> {
     const { data } = await api.put<{ data: ConnectCourse }>(`/connect/courses/${id}`, payload)
     return data.data
+  },
+
+  async getCalendar(params: Record<string, string | number>): Promise<ConnectLessonSchedule[]> {
+    const { data } = await api.get<{ data: ConnectLessonSchedule[] }>('/connect/calendar', { params })
+    return data.data
+  },
+
+  async createCalendarLesson(payload: Record<string, unknown>): Promise<ConnectLessonSchedule> {
+    const { data } = await api.post<{ data: ConnectLessonSchedule }>('/connect/calendar/lessons', payload)
+    return data.data
+  },
+
+  async updateCalendarLesson(id: number, payload: Record<string, unknown>): Promise<ConnectLessonSchedule> {
+    const { data } = await api.put<{ data: ConnectLessonSchedule }>(`/connect/calendar/lessons/${id}`, payload)
+    return data.data
+  },
+
+  async deleteCalendarLesson(id: number): Promise<void> {
+    await api.delete(`/connect/calendar/lessons/${id}`)
+  },
+
+  async getWeeklyPatterns(classId: number): Promise<{ patterns: ConnectWeeklyPattern[]; plan: ConnectSchedulePlan }> {
+    const { data } = await api.get<{ data: ConnectWeeklyPattern[]; plan: ConnectSchedulePlan }>(
+      `/connect/classes/${classId}/weekly-patterns`,
+    )
+    return { patterns: data.data, plan: data.plan }
+  },
+
+  async syncWeeklyPatterns(
+    classId: number,
+    payload: { patterns: ConnectWeeklyPattern[]; generate?: boolean; replace_future?: boolean },
+  ): Promise<{ patterns: ConnectWeeklyPattern[]; plan: ConnectSchedulePlan; generation?: { created: number; skipped: number; errors: string[] } }> {
+    const { data } = await api.put<{
+      data: ConnectWeeklyPattern[]
+      plan: ConnectSchedulePlan
+      generation?: { created: number; skipped: number; errors: string[] }
+    }>(`/connect/classes/${classId}/weekly-patterns`, payload)
+    return { patterns: data.data, plan: data.plan, generation: data.generation }
+  },
+
+  async generateClassSchedule(
+    classId: number,
+    replaceFuture = false,
+  ): Promise<{ plan: ConnectSchedulePlan; generation: { created: number; skipped: number; errors: string[] } }> {
+    const { data } = await api.post<{
+      plan: ConnectSchedulePlan
+      generation: { created: number; skipped: number; errors: string[] }
+    }>(`/connect/classes/${classId}/generate-schedule`, { replace_future: replaceFuture })
+    return { plan: data.plan, generation: data.generation }
   },
 
   async getAttendanceSession(params: Record<string, string | number>): Promise<ConnectAttendanceSession> {

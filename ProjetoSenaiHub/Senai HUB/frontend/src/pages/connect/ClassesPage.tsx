@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -22,21 +23,45 @@ import {
   StatusBadge,
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
-import type { ConnectClass, ConnectCourse, ConnectTeacher, PaginatedMeta } from '../../types/connect'
+import type {
+  ConnectClass,
+  ConnectCourse,
+  ConnectSchedulePlan,
+  ConnectTeacher,
+  ConnectWeeklyPattern,
+  PaginatedMeta,
+} from '../../types/connect'
 import { confirmDelete } from '../../utils/confirmAction'
 import { optionalForeignIdOrNull, slugClassCode } from '../../utils/connectForm'
 
-const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
+const DAY_OPTIONS = [
+  { value: 1, label: 'Segunda' },
+  { value: 2, label: 'Terca' },
+  { value: 3, label: 'Quarta' },
+  { value: 4, label: 'Quinta' },
+  { value: 5, label: 'Sexta' },
+  { value: 6, label: 'Sabado' },
+  { value: 0, label: 'Domingo' },
+]
+
+const defaultPattern = (): ConnectWeeklyPattern => ({
+  day_of_week: 1,
+  start_time: '19:00',
+  end_time: '22:00',
+  lessons_count: 4,
+  subject: 'Aula regular',
+})
+
 const emptyForm = {
   name: '',
   connect_course_id: '',
   connect_teacher_id: '',
   shift: 'noite',
+  semester: '',
   start_date: '',
   end_date: '',
   capacity: '30',
   status: 'active',
-  schedule: '',
   description: '',
 }
 
@@ -53,6 +78,9 @@ export function ClassesPage() {
   const [viewId, setViewId] = useState<number | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [weeklyPatterns, setWeeklyPatterns] = useState<ConnectWeeklyPattern[]>([])
+  const [schedulePlan, setSchedulePlan] = useState<ConnectSchedulePlan | null>(null)
+  const [generateSchedule, setGenerateSchedule] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -77,6 +105,9 @@ export function ClassesPage() {
   const openCreate = () => {
     setEditingId(null)
     setForm(emptyForm)
+    setWeeklyPatterns([])
+    setSchedulePlan(null)
+    setGenerateSchedule(false)
     setDrawerOpen(true)
   }
 
@@ -87,12 +118,17 @@ export function ClassesPage() {
       connect_course_id: String(turma.connect_course_id ?? turma.course?.id ?? ''),
       connect_teacher_id: String(turma.connect_teacher_id ?? turma.teacher?.id ?? ''),
       shift: turma.shift ?? 'noite',
+      semester: turma.semester ?? '',
       start_date: turma.start_date?.slice(0, 10) ?? '',
       end_date: turma.end_date?.slice(0, 10) ?? '',
       capacity: String(turma.capacity ?? 30),
       status: turma.status ?? 'active',
-      schedule: '',
       description: '',
+    })
+    setGenerateSchedule(false)
+    connectService.getWeeklyPatterns(turma.id).then(({ patterns, plan }) => {
+      setWeeklyPatterns(patterns)
+      setSchedulePlan(plan)
     })
     setDrawerOpen(true)
   }
@@ -108,16 +144,27 @@ export function ClassesPage() {
       connect_course_id: optionalForeignIdOrNull(form.connect_course_id),
       connect_teacher_id: optionalForeignIdOrNull(form.connect_teacher_id),
       shift: form.shift,
+      semester: form.semester.trim() || null,
       start_date: form.start_date || null,
       end_date: form.end_date || null,
       capacity: Number(form.capacity) || 30,
       status: form.status,
       code: slugClassCode(form.name),
+      weekly_patterns: weeklyPatterns,
+      generate_schedule: generateSchedule,
     }
-    if (editingId) {
-      await connectService.updateClass(editingId, payload)
-    } else {
-      await connectService.createClass(payload)
+    try {
+      if (editingId) {
+        await connectService.updateClass(editingId, payload)
+      } else {
+        await connectService.createClass(payload)
+      }
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? (error.response?.data?.message as string | undefined) ?? 'Nao foi possivel salvar a turma.'
+        : 'Nao foi possivel salvar a turma.'
+      window.alert(message)
+      return
     }
     setDrawerOpen(false)
     setEditingId(null)
@@ -167,6 +214,7 @@ export function ClassesPage() {
                 <th className="px-4 py-3 text-left">Nome da turma</th>
                 <th className="px-4 py-3 text-left">Curso</th>
                 <th className="px-4 py-3 text-left">Periodo</th>
+                <th className="px-4 py-3 text-left">Semestre</th>
                 <th className="px-4 py-3 text-left">Inicio</th>
                 <th className="px-4 py-3 text-left">Termino</th>
                 <th className="px-4 py-3 text-left">Alunos</th>
@@ -180,6 +228,7 @@ export function ClassesPage() {
                   <td className="px-4 py-3 font-medium">{turma.name}</td>
                   <td className="px-4 py-3">{turma.course?.name ?? EMPTY}</td>
                   <td className="px-4 py-3">{formatShift(turma.shift)}</td>
+                  <td className="px-4 py-3">{turma.semester ?? EMPTY}</td>
                   <td className="px-4 py-3">{formatDate(turma.start_date)}</td>
                   <td className="px-4 py-3">{formatDate(turma.end_date)}</td>
                   <td className="px-4 py-3">{turma.students_count ?? 0}</td>
@@ -254,7 +303,15 @@ export function ClassesPage() {
               <option value="noite">Noite</option>
             </select>
           </FormField>
-          <FormField label="Data de início" hint="Opcional">
+          <FormField label="Semestre" hint="Ex: 2025-1">
+            <input
+              className={inputClass}
+              value={form.semester}
+              onChange={(e) => setForm({ ...form, semester: e.target.value })}
+              placeholder="2025-1"
+            />
+          </FormField>
+          <FormField label="Data de início" hint="Obrigatorio para gerar calendario">
             <input type="date" className={inputClass} value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
           </FormField>
           <FormField label="Data de término" hint="Opcional">
@@ -276,10 +333,7 @@ export function ClassesPage() {
               min={1}
             />
           </FormField>
-          <FormField label="Complemento do período (horário)">
-            <input className={inputClass} value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} placeholder="Ex: 19h00 - 22h30" />
-          </FormField>
-          <FormField label="Professor responsável" hint="Opcional — vincule depois">
+          <FormField label="Professor responsável" hint="Evita conflito de horario no calendario">
             <select className={selectClass} value={form.connect_teacher_id} onChange={(e) => setForm({ ...form, connect_teacher_id: e.target.value })}>
               <option value="">Sem professor (definir depois)</option>
               {teachers.map((t) => (
@@ -303,19 +357,83 @@ export function ClassesPage() {
             <textarea className={`${inputClass} min-h-[80px] py-2 sm:col-span-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Descreva a turma, objetivos e observações..." />
           </FormField>
         </div>
-        <FormField label="Dias da semana">
-          <div className="mt-2 flex gap-2">
-            {weekDays.map((day, index) => (
-              <button
-                key={`${day}-${index}`}
-                type="button"
-                className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm ${index === 2 || index === 3 ? 'border-hub-red bg-hub-red text-white' : 'border-hub-border'}`}
-              >
-                {day}
-              </button>
+        <FormField label="Grade semanal (gera o calendario)">
+          <div className="space-y-3">
+            {weeklyPatterns.map((pattern, index) => (
+              <div key={index} className="grid gap-2 rounded-lg border border-hub-border/60 p-3 sm:grid-cols-5">
+                <select
+                  className={selectClass}
+                  value={pattern.day_of_week}
+                  onChange={(e) => {
+                    const next = [...weeklyPatterns]
+                    next[index] = { ...pattern, day_of_week: Number(e.target.value) }
+                    setWeeklyPatterns(next)
+                  }}
+                >
+                  {DAY_OPTIONS.map((day) => (
+                    <option key={day.value} value={day.value}>
+                      {day.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="time"
+                  className={inputClass}
+                  value={pattern.start_time}
+                  onChange={(e) => {
+                    const next = [...weeklyPatterns]
+                    next[index] = { ...pattern, start_time: e.target.value }
+                    setWeeklyPatterns(next)
+                  }}
+                />
+                <input
+                  type="time"
+                  className={inputClass}
+                  value={pattern.end_time}
+                  onChange={(e) => {
+                    const next = [...weeklyPatterns]
+                    next[index] = { ...pattern, end_time: e.target.value }
+                    setWeeklyPatterns(next)
+                  }}
+                />
+                <select
+                  className={selectClass}
+                  value={pattern.lessons_count}
+                  onChange={(e) => {
+                    const next = [...weeklyPatterns]
+                    next[index] = { ...pattern, lessons_count: Number(e.target.value) }
+                    setWeeklyPatterns(next)
+                  }}
+                >
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <option key={n} value={n}>
+                      {n} aula(s)
+                    </option>
+                  ))}
+                </select>
+                <OutlineButton type="button" onClick={() => setWeeklyPatterns(weeklyPatterns.filter((_, i) => i !== index))}>
+                  Remover
+                </OutlineButton>
+              </div>
             ))}
+            <OutlineButton type="button" onClick={() => setWeeklyPatterns([...weeklyPatterns, defaultPattern()])}>
+              Adicionar horario
+            </OutlineButton>
           </div>
         </FormField>
+        {schedulePlan && (
+          <p className="text-sm text-hub-text-muted">
+            Carga: {schedulePlan.scheduled_lessons}/{schedulePlan.workload_hours || '—'} aulas · Semanal: {schedulePlan.weekly_lessons} · Restante: {schedulePlan.remaining_lessons ?? '—'}
+          </p>
+        )}
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={generateSchedule}
+            onChange={(e) => setGenerateSchedule(e.target.checked)}
+          />
+          Gerar calendario automaticamente ao salvar
+        </label>
       </ConnectDrawer>
 
       <ConnectEntityViewDrawer

@@ -8,9 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'name', 'description', 'workload_hours', 'area', 'status'])]
+#[Fillable(['code', 'name', 'description', 'workload_hours', 'start_date', 'end_date', 'area', 'status'])]
 class ConnectCourse extends Model
 {
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
+
     /** @return HasMany<ConnectClass, $this> */
     public function classes(): HasMany
     {

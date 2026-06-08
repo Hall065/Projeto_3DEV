@@ -30,6 +30,7 @@ import { TeachersPage } from '../pages/connect/TeachersPage'
 import { ClassesPage } from '../pages/connect/ClassesPage'
 import { CoursesPage } from '../pages/connect/CoursesPage'
 import { AttendancePage } from '../pages/connect/AttendancePage'
+import { CalendarPage } from '../pages/connect/CalendarPage'
 import { AttendanceManagePage } from '../pages/connect/AttendanceManagePage'
 import { ConnectReportsPage } from '../pages/connect/ConnectReportsPage'
 import { LocationPage } from '../pages/connect/LocationPage'
@@ -84,6 +85,7 @@ export function AppRoutes() {
           <Route path="/connect/professores" element={<TeachersPage />} />
           <Route path="/connect/turmas" element={<ClassesPage />} />
           <Route path="/connect/cursos" element={<CoursesPage />} />
+          <Route path="/connect/calendario" element={<CalendarPage />} />
           <Route path="/connect/frequencia" element={<AttendancePage />} />
           <Route path="/connect/gerenciar-frequencia" element={<AttendanceManagePage />} />
           <Route path="/connect/relatorio" element={<ConnectReportsPage />} />

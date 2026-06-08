@@ -88,11 +88,14 @@ class AuthController extends Controller
 
     public function changePassword(ChangePasswordRequest $request): JsonResponse
     {
+        $user = $request->user();
         $this->authService->changePassword(
-            $request->user(),
+            $user,
             $request->validated('current_password'),
             $request->validated('password'),
         );
+
+        app(\App\Services\Notification\SystemNotificationTriggers::class)->passwordChanged($user);
 
         return response()->json([
             'message' => 'Senha alterada com sucesso.',

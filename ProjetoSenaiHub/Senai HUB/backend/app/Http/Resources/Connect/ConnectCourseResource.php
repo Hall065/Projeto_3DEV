@@ -19,6 +19,8 @@ class ConnectCourseResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'workload_hours' => $this->workload_hours,
+            'start_date' => $this->start_date?->format('Y-m-d'),
+            'end_date' => $this->end_date?->format('Y-m-d'),
             'area' => $this->area,
             'status' => $this->status,
             'classes_count' => $this->whenCounted('classes'),

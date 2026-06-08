@@ -1,3 +1,5 @@
+import type { NotificationPreferences } from './notification'
+
 export interface User {
   id: number
   name: string
@@ -9,6 +11,7 @@ export interface User {
   permissions?: string[]
   application_slugs?: string[]
   avatar_url?: string | null
+  notification_preferences?: NotificationPreferences
   created_at?: string | null
 }
 

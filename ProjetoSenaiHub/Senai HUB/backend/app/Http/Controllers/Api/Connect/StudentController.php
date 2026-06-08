@@ -107,6 +107,9 @@ class StudentController extends Controller
 
         $student->load(['connectClass.course', 'location', 'hubPerson']);
 
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->connectStudentEnrolled($student, $request->user());
+
         return response()->json([
             'data' => new ConnectStudentResource($student),
             'message' => 'Aluno cadastrado com sucesso.',

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Services\Auth\PermissionService;
 use App\Support\HubRole;
+use App\Support\NotificationPreferences;
 use App\Support\RoleLabels;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -29,6 +30,7 @@ class UserResource extends JsonResource
             'permissions' => $permissions->permissionsFor($this->resource),
             'application_slugs' => $permissions->applicationSlugsFor($this->resource),
             'avatar_url' => $this->avatar_url,
+            'notification_preferences' => NotificationPreferences::forUser($this->resource),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

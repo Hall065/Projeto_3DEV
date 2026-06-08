@@ -105,7 +105,7 @@ class SpreadsheetService
         $rows = $this->parseImportFile($module, $key, $file);
         $result = $this->handler($module)->import($key, $rows);
 
-        SpreadsheetImportLog::query()->create([
+        $log = SpreadsheetImportLog::query()->create([
             'user_id' => $user->id,
             'module' => $module,
             'spreadsheet_key' => $key,
@@ -116,6 +116,9 @@ class SpreadsheetService
             'errors_count' => count($result['errors']),
             'status' => $result['errors'] === [] ? 'success' : ( ($result['created'] + $result['updated']) > 0 ? 'partial' : 'failed'),
         ]);
+
+        app(\App\Services\Notification\SystemNotificationTriggers::class)
+            ->spreadsheetImportFinished($log, $user);
 
         return $result;
     }

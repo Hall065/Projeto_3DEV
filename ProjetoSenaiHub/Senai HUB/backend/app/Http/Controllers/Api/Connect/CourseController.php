@@ -43,6 +43,8 @@ class CourseController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'workload_hours' => ['nullable', 'integer', 'min:0'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'area' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', Rule::in(['active', 'inactive'])],
         ]);
@@ -76,6 +78,8 @@ class CourseController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'workload_hours' => ['nullable', 'integer', 'min:0'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'area' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', Rule::in(['active', 'inactive'])],
         ]);

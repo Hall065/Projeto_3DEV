@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, LogOut, Paintbrush, Settings, User as UserIcon } from 'lucide-react'
+import { LogOut, Paintbrush, Settings, User as UserIcon } from 'lucide-react'
+import { NotificationBell } from '../notifications/NotificationBell'
 import { GlobalSearchTrigger } from '../search/GlobalSearchTrigger'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
@@ -33,13 +34,7 @@ export function HubHeader() {
         <GlobalSearchTrigger />
       </div>
 
-      <button
-        type="button"
-        className="rounded-lg p-2 text-hub-text-muted transition hover:bg-hub-bg hover:text-hub-text"
-        aria-label="Notificacoes"
-      >
-        <Bell className="h-5 w-5" />
-      </button>
+      <NotificationBell variant="hub" />
 
       <div className="relative z-50" ref={menuRef}>
         <button
