@@ -26,6 +26,14 @@ class ApplicationSeeder extends Seeder
                 'icon' => 'building',
                 'sort_order' => 2,
             ],
+            [
+                'slug' => 'safe',
+                'name' => 'SENAI SAFE',
+                'description' => 'Controle de entradas e saidas de alunos com fluxo AQV, professor e portaria.',
+                'route_path' => '/safe',
+                'icon' => 'shield',
+                'sort_order' => 3,
+            ],
         ];
 
         foreach ($applications as $application) {

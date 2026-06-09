@@ -1,9 +1,9 @@
-import { Download, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Download, Eye, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -20,12 +20,13 @@ import {
 import { UserAvatar } from '../../components/ui/UserAvatar'
 import { connectService } from '../../services/connectService'
 import type { ConnectTeacher, PaginatedMeta } from '../../types/connect'
-import { confirmDelete } from '../../utils/confirmAction'
 import { downloadCsv } from '../../utils/csvExport'
+import { parseApiError } from '../../utils/parseApiError'
 
 const emptyTeacherForm = { full_name: '', email: '', specialty: '', cpf: '', phone: '', status: 'active' }
 
 export function TeachersPage() {
+  const { t } = useTranslation()
   const [teachers, setTeachers] = useState<ConnectTeacher[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
@@ -41,7 +42,7 @@ export function TeachersPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
 
   const specialties = useMemo(
-    () => [...new Set(teachers.map((t) => t.specialty).filter(Boolean) as string[])].sort(),
+    () => [...new Set(teachers.map((teacher) => teacher.specialty).filter(Boolean) as string[])].sort(),
     [teachers],
   )
 
@@ -85,38 +86,48 @@ export function TeachersPage() {
 
   const handleSave = async () => {
     if (!form.full_name.trim()) {
-      window.alert('Informe o nome completo do professor.')
+      window.alert(t('connect.teachers.alert.nameRequired'))
       return
     }
 
-    if (editingId) {
-      await connectService.updateTeacher(editingId, {
-        ...form,
-        full_name: form.full_name.trim(),
-        email: form.email.trim() || undefined,
-        specialty: form.specialty.trim() || undefined,
-        cpf: form.cpf.trim() || undefined,
-        phone: form.phone.trim() || undefined,
-      })
-    } else {
-      await connectService.createTeacher({
-        ...form,
-        full_name: form.full_name.trim(),
-        email: form.email.trim() || undefined,
-        specialty: form.specialty.trim() || undefined,
-        cpf: form.cpf.trim() || undefined,
-        phone: form.phone.trim() || undefined,
-      })
+    try {
+      if (editingId) {
+        await connectService.updateTeacher(editingId, {
+          ...form,
+          full_name: form.full_name.trim(),
+          email: form.email.trim() || undefined,
+          specialty: form.specialty.trim() || undefined,
+          cpf: form.cpf.trim() || undefined,
+          phone: form.phone.trim() || undefined,
+        })
+      } else {
+        await connectService.createTeacher({
+          ...form,
+          full_name: form.full_name.trim(),
+          email: form.email.trim() || undefined,
+          specialty: form.specialty.trim() || undefined,
+          cpf: form.cpf.trim() || undefined,
+          phone: form.phone.trim() || undefined,
+        })
+      }
+      setDrawerOpen(false)
+      setEditingId(null)
+      load()
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, 'Nao foi possivel salvar o professor.'))
     }
-    setDrawerOpen(false)
-    setEditingId(null)
-    load()
   }
 
   const handleExport = () => {
     downloadCsv(
       'professores',
-      ['Nome', 'E-mail', 'Especialidade', 'Turmas', 'Status'],
+      [
+        t('connect.table.name'),
+        t('connect.table.email'),
+        t('connect.teachers.table.specialty'),
+        t('connect.teachers.table.classes'),
+        t('connect.table.status'),
+      ],
       teachers.map((teacher) => [
         teacher.full_name,
         teacher.email,
@@ -128,18 +139,22 @@ export function TeachersPage() {
   }
 
   const handleDelete = async (teacher: ConnectTeacher) => {
-    if (!confirmDelete(`o professor "${teacher.full_name}"`)) return
-    await connectService.deleteTeacher(teacher.id)
-    load()
+    if (!window.confirm(t('connect.confirm.delete', { entity: `o professor "${teacher.full_name}"` }))) return
+    try {
+      await connectService.deleteTeacher(teacher.id)
+      load()
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, 'Nao foi possivel excluir o professor.'))
+    }
   }
 
-  const allSelected = teachers.length > 0 && teachers.every((t) => selectedIds.has(t.id))
+  const allSelected = teachers.length > 0 && teachers.every((teacher) => selectedIds.has(teacher.id))
 
   const toggleAll = () => {
     if (allSelected) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(teachers.map((t) => t.id)))
+      setSelectedIds(new Set(teachers.map((teacher) => teacher.id)))
     }
   }
 
@@ -155,14 +170,14 @@ export function TeachersPage() {
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Gerenciamento de professores"
-        subtitle="Cadastre, edite e acompanhe as informacoes dos professores."
+        title={t('connect.teachers.title')}
+        subtitle={t('connect.teachers.subtitle')}
         actions={
           <>
             <OutlineButton onClick={handleExport}>
-              <Download className="h-4 w-4" /> Exportar
+              <Download className="h-4 w-4" /> {t('connect.common.export')}
             </OutlineButton>
-            <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
+            <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> {t('connect.common.new')}</PrimaryButton>
           </>
         }
       />
@@ -171,7 +186,7 @@ export function TeachersPage() {
         <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end [&_button]:w-full sm:[&_button]:w-auto">
           <input
             className={`${inputClass} min-w-0 flex-1 sm:min-w-[200px]`}
-            placeholder="Buscar por nome, e-mail ou CPF..."
+            placeholder={t('connect.teachers.searchPlaceholder')}
             value={search}
             onChange={(e) => {
               setPage(1)
@@ -179,12 +194,12 @@ export function TeachersPage() {
             }}
           />
           <OutlineButton onClick={() => setShowFilters((v) => !v)}>
-            <Filter className="h-4 w-4" /> Filtros
+            <Filter className="h-4 w-4" /> {t('connect.common.filters')}
           </OutlineButton>
         </div>
         {showFilters && (
           <div className="mt-4 grid gap-4 border-t border-hub-border/60 pt-4 sm:grid-cols-2">
-            <FormField label="Status">
+            <FormField label={t('connect.table.status')}>
               <select
                 className={selectClass}
                 value={statusFilter}
@@ -193,12 +208,12 @@ export function TeachersPage() {
                   setStatusFilter(e.target.value)
                 }}
               >
-                <option value="">Todos</option>
-                <option value="active">Ativos</option>
-                <option value="inactive">Inativos</option>
+                <option value="">{t('connect.common.all')}</option>
+                <option value="active">{t('connect.status.activePlural')}</option>
+                <option value="inactive">{t('connect.status.inactivePlural')}</option>
               </select>
             </FormField>
-            <FormField label="Especialidade">
+            <FormField label={t('connect.teachers.filters.specialty')}>
               <select
                 className={selectClass}
                 value={specialtyFilter}
@@ -207,7 +222,7 @@ export function TeachersPage() {
                   setSpecialtyFilter(e.target.value)
                 }}
               >
-                <option value="">Todas as especialidades</option>
+                <option value="">{t('connect.teachers.filters.allSpecialties')}</option>
                 {specialties.map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
@@ -219,7 +234,7 @@ export function TeachersPage() {
 
       <ConnectCard>
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando professores..." className="min-h-[280px]" />
+          <ConnectLoadingSpinner label={t('connect.teachers.loading')} className="min-h-[280px]" />
         ) : (
         <>
         <ConnectTableScroll>
@@ -227,13 +242,13 @@ export function TeachersPage() {
             <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3">
-                  <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Selecionar todos" />
+                  <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label={t('connect.common.selectAll')} />
                 </th>
-                <th className="px-4 py-3 text-left">Nome</th>
-                <th className="px-4 py-3 text-left">E-mail institucional</th>
-                <th className="px-4 py-3 text-left">Especialidade</th>
-                <th className="px-4 py-3 text-left">Turmas</th>
-                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.name')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.teachers.table.institutionalEmail')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.teachers.table.specialty')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.teachers.table.classes')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -245,7 +260,7 @@ export function TeachersPage() {
                       type="checkbox"
                       checked={selectedIds.has(teacher.id)}
                       onChange={() => toggleOne(teacher.id)}
-                      aria-label={`Selecionar ${teacher.full_name}`}
+                      aria-label={t('connect.common.selectItem', { name: teacher.full_name })}
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -260,13 +275,13 @@ export function TeachersPage() {
                   <td className="px-4 py-3"><StatusBadge status={teacher.status} /></td>
                   <td className="px-4 py-3 text-right">
                     <ConnectRowActionsMenu
-                      ariaLabel={`Ações de ${teacher.full_name}`}
+                      ariaLabel={t('connect.common.actionsOf', { name: teacher.full_name })}
                       actions={[
-                        viewRowAction(() => setViewId(teacher.id)),
-                        { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(teacher) },
+                        { key: 'view', label: t('connect.common.view'), icon: Eye, onClick: () => setViewId(teacher.id) },
+                        { key: 'edit', label: t('connect.common.edit'), icon: Pencil, onClick: () => openEdit(teacher) },
                         {
                           key: 'delete',
-                          label: 'Excluir',
+                          label: t('connect.common.delete'),
                           icon: Trash2,
                           variant: 'danger',
                           onClick: () => void handleDelete(teacher),
@@ -290,17 +305,17 @@ export function TeachersPage() {
           setDrawerOpen(false)
           setEditingId(null)
         }}
-        title={editingId ? 'Editar professor' : 'Novo professor'}
-        subtitle={editingId ? 'Atualize os dados do professor.' : 'Preencha os dados para cadastrar o novo professor.'}
+        title={editingId ? t('connect.teachers.drawer.edit') : t('connect.teachers.drawer.new')}
+        subtitle={editingId ? t('connect.teachers.drawer.editSubtitle') : t('connect.teachers.drawer.newSubtitle')}
         footer={
           <div className="flex justify-end gap-2">
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
-            <PrimaryButton onClick={() => void handleSave()}>Salvar</PrimaryButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
+            <PrimaryButton onClick={() => void handleSave()}>{t('common.save')}</PrimaryButton>
           </div>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Nome completo" required>
+          <FormField label={t('connect.teachers.form.fullName')} required>
             <input
               className={inputClass}
               value={form.full_name}
@@ -308,7 +323,7 @@ export function TeachersPage() {
               placeholder="Ex: João Santos"
             />
           </FormField>
-          <FormField label="E-mail institucional" hint="Opcional">
+          <FormField label={t('connect.teachers.form.institutionalEmail')} hint={t('connect.students.form.optional')}>
             <input
               type="email"
               className={inputClass}
@@ -317,7 +332,7 @@ export function TeachersPage() {
               placeholder="professor@senai.edu.br"
             />
           </FormField>
-          <FormField label="Especialidade">
+          <FormField label={t('connect.teachers.form.specialty')}>
             <input
               className={inputClass}
               value={form.specialty}
@@ -325,7 +340,7 @@ export function TeachersPage() {
               placeholder="Ex: Automação Industrial"
             />
           </FormField>
-          <FormField label="CPF">
+          <FormField label={t('connect.teachers.form.cpf')}>
             <input
               className={inputClass}
               value={form.cpf}
@@ -333,7 +348,7 @@ export function TeachersPage() {
               placeholder="000.000.000-00"
             />
           </FormField>
-          <FormField label="Celular">
+          <FormField label={t('connect.teachers.form.phone')}>
             <input
               className={inputClass}
               value={form.phone}
@@ -341,10 +356,10 @@ export function TeachersPage() {
               placeholder="(11) 99999-9999"
             />
           </FormField>
-          <FormField label="Status">
+          <FormField label={t('connect.table.status')}>
             <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="active">Ativo</option>
-              <option value="inactive">Inativo</option>
+              <option value="active">{t('connect.status.active')}</option>
+              <option value="inactive">{t('connect.status.inactive')}</option>
             </select>
           </FormField>
         </div>

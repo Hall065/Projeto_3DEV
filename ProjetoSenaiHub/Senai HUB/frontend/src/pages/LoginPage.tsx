@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { Lock, Mail } from 'lucide-react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AuthButton } from '../components/auth/AuthButton'
 import { AuthField } from '../components/auth/AuthField'
 import { AuthFormCard } from '../components/auth/AuthFormCard'
@@ -8,12 +9,16 @@ import { PasswordToggle } from '../components/auth/PasswordToggle'
 import { useAuth } from '../contexts/AuthContext'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { login, isAuthenticated, isSubmitting, isInitializing } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const sessionExpired = searchParams.get('expired') === '1'
 
   if (isAuthenticated) {
     return <Navigate to="/hub" replace />
@@ -31,26 +36,32 @@ export function LoginPage() {
       await login({ email, password })
       navigate('/hub')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'E-mail ou senha invalidos.')
+      setError(err instanceof Error ? err.message : t('auth.invalidCredentials'))
     }
   }
 
   return (
     <AuthFormCard
-      title="Acesse sua conta"
-      subtitle="Informe seu e-mail e senha para continuar"
+      title={t('auth.loginTitle')}
+      subtitle={t('auth.loginSubtitle')}
       footer={
-        <p className="text-hub-text-muted">
-          Nao possui conta?{' '}
-          <Link to="/cadastro" className="font-medium text-hub-red-link hover:underline">
-            Cadastre-se
+        <p className="text-hub-text-muted text-sm">
+          {t('auth.adminOnlySignup')}{' '}
+          <Link to="/solicitar-acesso" className="font-medium text-hub-red hover:underline">
+            {t('auth.requestAccess')}
           </Link>
         </p>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
+        {sessionExpired && (
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            {t('auth.sessionExpired')}
+          </p>
+        )}
+
         <AuthField
-          label="E-mail"
+          label={t('auth.email')}
           type="email"
           icon={Mail}
           placeholder="seu@email.com"
@@ -61,7 +72,7 @@ export function LoginPage() {
         />
 
         <AuthField
-          label="Senha"
+          label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
           icon={Lock}
           placeholder="........"
@@ -73,21 +84,21 @@ export function LoginPage() {
             <PasswordToggle
               visible={showPassword}
               onToggle={() => setShowPassword((visible) => !visible)}
-              labelShow="Mostrar senha"
-              labelHide="Ocultar senha"
+              labelShow={t('auth.showPassword')}
+              labelHide={t('auth.hidePassword')}
             />
           }
         />
 
         <div className="flex justify-end">
-          <button type="button" className="text-sm font-medium text-hub-red-link hover:underline">
-            Recuperar senha
-          </button>
+          <Link to="/recuperar-senha" className="text-sm font-medium text-hub-red-link hover:underline">
+            {t('auth.forgotPassword')}
+          </Link>
         </div>
 
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
-        <AuthButton isLoading={isSubmitting}>Entrar</AuthButton>
+        <AuthButton isLoading={isSubmitting}>{t('auth.login')}</AuthButton>
       </form>
     </AuthFormCard>
   )

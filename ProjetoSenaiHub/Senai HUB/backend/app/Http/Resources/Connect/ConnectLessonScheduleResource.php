@@ -29,6 +29,7 @@ class ConnectLessonScheduleResource extends JsonResource
             'teacher' => new ConnectTeacherResource($this->whenLoaded('teacher')),
             'attendance_session_id' => $this->whenLoaded('attendanceSession', fn () => $this->attendanceSession?->id),
             'has_attendance' => $this->whenLoaded('attendanceSession', fn () => $this->attendanceSession !== null),
+            'attendance_status' => $this->whenLoaded('attendanceSession', fn () => $this->attendanceSession?->status),
         ];
     }
 }

@@ -7,22 +7,29 @@ use App\Http\Resources\Grid\GridTicketResource;
 use App\Models\Grid\GridInventoryItem;
 use App\Models\Grid\GridTask;
 use App\Models\Grid\GridTicket;
+use App\Models\User;
+use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $totalTickets = GridTicket::query()->count();
-        $openTickets = GridTicket::query()->where('status', 'aberto')->count();
-        $pendingTickets = GridTicket::query()->where('status', 'pendente')->count();
-        $inProgress = GridTicket::query()->where('status', 'em_atendimento')->count();
-        $awaitingApproval = GridTicket::query()->where('status', 'aguardando_aprovacao')->count();
-        $awaitingEvaluation = GridTicket::query()->where('status', 'avaliacao_pendente')->count();
-        $finished = GridTicket::query()->where('status', 'concluido')->count();
-        $completedMonth = GridTicket::query()
+        $user = $request->user();
+        $tickets = fn () => UserAccessScope::gridTicketQuery($user);
+        $tasks = fn () => UserAccessScope::gridTaskQuery($user);
+
+        $totalTickets = $tickets()->count();
+        $openTickets = $tickets()->where('status', 'aberto')->count();
+        $pendingTickets = $tickets()->where('status', 'pendente')->count();
+        $inProgress = $tickets()->where('status', 'em_atendimento')->count();
+        $awaitingApproval = $tickets()->where('status', 'aguardando_aprovacao')->count();
+        $awaitingEvaluation = $tickets()->where('status', 'avaliacao_pendente')->count();
+        $finished = $tickets()->where('status', 'concluido')->count();
+        $completedMonth = $tickets()
             ->where('status', 'concluido')
             ->where(function ($q) {
                 $q->where('evaluated_at', '>=', Carbon::now()->startOfMonth())
@@ -34,7 +41,7 @@ class DashboardController extends Controller
             ->count();
         $lowStock = GridInventoryItem::query()->where('status', 'baixo')->count();
         $reservedInventory = GridInventoryItem::query()->where('qty_reserved', '>', 0)->count();
-        $urgentTickets = GridTicket::query()
+        $urgentTickets = $tickets()
             ->where('priority', 'alta')
             ->whereIn('status', ['aberto', 'pendente', 'em_atendimento', 'aguardando_aprovacao', 'avaliacao_pendente'])
             ->count();
@@ -42,7 +49,7 @@ class DashboardController extends Controller
         $reportKpis = [
             'created' => $totalTickets,
             'pending' => $pendingTickets,
-            'without_technician' => GridTicket::query()
+            'without_technician' => $tickets()
                 ->where('status', 'aberto')
                 ->where(function ($q) {
                     $q->whereNull('assignee')->orWhere('assignee', '');
@@ -55,7 +62,7 @@ class DashboardController extends Controller
             'urgent' => $urgentTickets,
         ];
 
-        $recentTickets = GridTicket::query()
+        $recentTickets = $tickets()
             ->orderByDesc('opened_at')
             ->limit(5)
             ->get();
@@ -63,7 +70,7 @@ class DashboardController extends Controller
         $statusColors = config('chart_palette.grid_status');
         $priorityColors = config('chart_palette.grid_priority');
 
-        $maintenanceBreakdown = $this->breakdownByField('status', [
+        $maintenanceBreakdown = $this->breakdownByField($user, 'status', [
             'aberto' => ['label' => 'Abertos', 'color' => $statusColors['aberto']],
             'pendente' => ['label' => 'Pendentes', 'color' => $statusColors['pendente']],
             'em_atendimento' => ['label' => 'Em atendimento', 'color' => $statusColors['em_atendimento']],
@@ -73,7 +80,7 @@ class DashboardController extends Controller
             'concluido' => ['label' => 'Finalizados', 'color' => $statusColors['concluido']],
         ]);
 
-        $priorityBreakdown = $this->breakdownByField('priority', [
+        $priorityBreakdown = $this->breakdownByField($user, 'priority', [
             'alta' => ['label' => 'Alta', 'color' => $priorityColors['alta']],
             'media' => ['label' => 'Média', 'color' => $priorityColors['media']],
             'baixa' => ['label' => 'Baixa', 'color' => $priorityColors['baixa']],
@@ -92,7 +99,7 @@ class DashboardController extends Controller
                 'unit' => 'un',
             ]);
 
-        $urgentItems = GridTicket::query()
+        $urgentItems = $tickets()
             ->where('priority', 'alta')
             ->whereIn('status', ['aberto', 'pendente', 'em_atendimento', 'aguardando_aprovacao', 'avaliacao_pendente'])
             ->orderByDesc('opened_at')
@@ -105,7 +112,7 @@ class DashboardController extends Controller
                 'when' => $ticket->opened_at?->isToday() ? 'Hoje' : $ticket->opened_at?->diffForHumans(),
             ]);
 
-        $activities = GridTask::query()
+        $activities = $tasks()
             ->where('column', 'em_andamento')
             ->orderByDesc('updated_at')
             ->limit(8)
@@ -136,13 +143,13 @@ class DashboardController extends Controller
                     'urgent_tickets' => $urgentTickets,
                 ],
                 'report_kpis' => $reportKpis,
-                'kpi_trends' => $this->computeKpiTrends($openTickets, $inProgress, $completedMonth, $lowStock),
+                'kpi_trends' => $this->computeKpiTrends($user, $openTickets, $inProgress, $completedMonth, $lowStock),
                 'kpi_sparklines' => [
-                    'open_tickets' => $this->weeklyOpenTicketsSnapshotSeries(),
-                    'in_progress' => $this->weeklyInProgressSnapshotSeries(),
-                    'completed_month' => $this->weeklyCompletedSeries(),
+                    'open_tickets' => $this->weeklyOpenTicketsSnapshotSeries($user),
+                    'in_progress' => $this->weeklyInProgressSnapshotSeries($user),
+                    'completed_month' => $this->weeklyCompletedSeries($user),
                     'low_stock' => $this->weeklyLowStockSnapshotSeries(),
-                    'urgent' => $this->weeklyUrgentTicketsSnapshotSeries(),
+                    'urgent' => $this->weeklyUrgentTicketsSnapshotSeries($user),
                 ],
                 'recent_tickets' => $recentTickets
                     ->map(fn ($ticket) => (new GridTicketResource($ticket))->resolve())
@@ -150,12 +157,12 @@ class DashboardController extends Controller
                     ->all(),
                 'maintenance_breakdown' => $maintenanceBreakdown,
                 'priority_breakdown' => $priorityBreakdown,
-                'tasks_by_column' => $this->tasksByColumn(),
+                'tasks_by_column' => $this->tasksByColumn($user),
                 'low_stock_items' => $lowStockItems,
                 'urgent_items' => $urgentItems,
                 'activities' => $activities,
-                'tickets_by_month' => $this->ticketsByMonth(6),
-                'tickets_by_technician' => $this->ticketsByTechnician(),
+                'tickets_by_month' => $this->ticketsByMonth($user, 6),
+                'tickets_by_technician' => $this->ticketsByTechnician($user),
                 'top_inventory' => $this->topLowStockItems(),
             ],
         ]);
@@ -165,9 +172,9 @@ class DashboardController extends Controller
      * @param  array<string, array{label: string, color: string}>  $map
      * @return list<array{label: string, value: int, count: int, color: string}>
      */
-    private function breakdownByField(string $field, array $map): array
+    private function breakdownByField(User $user, string $field, array $map): array
     {
-        $counts = GridTicket::query()
+        $counts = UserAccessScope::gridTicketQuery($user)
             ->select($field, DB::raw('count(*) as total'))
             ->groupBy($field)
             ->pluck('total', $field);
@@ -195,7 +202,7 @@ class DashboardController extends Controller
     /**
      * @return list<array{label: string, count: int}>
      */
-    private function tasksByColumn(): array
+    private function tasksByColumn(User $user): array
     {
         $labels = [
             'a_fazer' => 'A fazer',
@@ -203,7 +210,7 @@ class DashboardController extends Controller
             'concluidas' => 'Concluídas',
         ];
 
-        $counts = GridTask::query()
+        $counts = UserAccessScope::gridTaskQuery($user)
             ->select('column', DB::raw('count(*) as total'))
             ->groupBy('column')
             ->pluck('total', 'column');
@@ -222,7 +229,7 @@ class DashboardController extends Controller
     /**
      * @return list<array{label: string, count: int}>
      */
-    private function ticketsByMonth(int $months): array
+    private function ticketsByMonth(User $user, int $months): array
     {
         $result = [];
         $monthsPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -230,7 +237,7 @@ class DashboardController extends Controller
         for ($m = $months - 1; $m >= 0; $m--) {
             $start = Carbon::now()->subMonths($m)->startOfMonth();
             $end = Carbon::now()->subMonths($m)->endOfMonth();
-            $count = GridTicket::query()
+            $count = UserAccessScope::gridTicketQuery($user)
                 ->whereBetween('created_at', [$start, $end])
                 ->count();
             $result[] = [
@@ -245,9 +252,9 @@ class DashboardController extends Controller
     /**
      * @return list<array{name: string, count: int}>
      */
-    private function ticketsByTechnician(): array
+    private function ticketsByTechnician(User $user): array
     {
-        return GridTicket::query()
+        return UserAccessScope::gridTicketQuery($user)
             ->select('assignee', DB::raw('count(*) as count'))
             ->whereNotNull('assignee')
             ->where('assignee', '!=', '')
@@ -284,14 +291,14 @@ class DashboardController extends Controller
     /**
      * @return array<string, array{direction: string, value: string, label: string}>
      */
-    private function computeKpiTrends(int $open, int $inProgress, int $completed, int $lowStock): array
+    private function computeKpiTrends(User $user, int $open, int $inProgress, int $completed, int $lowStock): array
     {
         $now = Carbon::now();
         $thisMonthStart = $now->copy()->startOfMonth();
         $lastMonthStart = $now->copy()->subMonth()->startOfMonth();
         $lastMonthEnd = $now->copy()->subMonth()->endOfMonth();
 
-        $completedThis = GridTicket::query()
+        $completedThis = UserAccessScope::gridTicketQuery($user)
             ->where('status', 'concluido')
             ->where(function ($q) use ($thisMonthStart) {
                 $q->where('evaluated_at', '>=', $thisMonthStart)
@@ -300,7 +307,7 @@ class DashboardController extends Controller
                     });
             })
             ->count();
-        $completedLast = GridTicket::query()
+        $completedLast = UserAccessScope::gridTicketQuery($user)
             ->where('status', 'concluido')
             ->where(function ($q) use ($lastMonthStart, $lastMonthEnd) {
                 $q->whereBetween('evaluated_at', [$lastMonthStart, $lastMonthEnd])
@@ -345,13 +352,13 @@ class DashboardController extends Controller
      *
      * @return list<int>
      */
-    private function weeklyOpenTicketsSnapshotSeries(int $weeks = 8): array
+    private function weeklyOpenTicketsSnapshotSeries(User $user, int $weeks = 8): array
     {
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
-            $points[] = (int) GridTicket::query()
+            $points[] = (int) UserAccessScope::gridTicketQuery($user)
                 ->where('status', 'aberto')
                 ->where('opened_at', '<=', $end)
                 ->count();
@@ -365,13 +372,13 @@ class DashboardController extends Controller
      *
      * @return list<int>
      */
-    private function weeklyInProgressSnapshotSeries(int $weeks = 8): array
+    private function weeklyInProgressSnapshotSeries(User $user, int $weeks = 8): array
     {
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
-            $points[] = (int) GridTicket::query()
+            $points[] = (int) UserAccessScope::gridTicketQuery($user)
                 ->where('status', 'em_atendimento')
                 ->whereNotNull('started_at')
                 ->where('started_at', '<=', $end)
@@ -386,14 +393,14 @@ class DashboardController extends Controller
      *
      * @return list<int>
      */
-    private function weeklyUrgentTicketsSnapshotSeries(int $weeks = 8): array
+    private function weeklyUrgentTicketsSnapshotSeries(User $user, int $weeks = 8): array
     {
         $activeStatuses = ['aberto', 'pendente', 'em_atendimento', 'aguardando_aprovacao', 'avaliacao_pendente'];
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
-            $points[] = (int) GridTicket::query()
+            $points[] = (int) UserAccessScope::gridTicketQuery($user)
                 ->where('priority', 'alta')
                 ->whereIn('status', $activeStatuses)
                 ->where('opened_at', '<=', $end)
@@ -406,7 +413,7 @@ class DashboardController extends Controller
     /**
      * @return list<int>
      */
-    private function weeklyCompletedSeries(): array
+    private function weeklyCompletedSeries(User $user): array
     {
         $weeks = 8;
         $points = [];
@@ -414,7 +421,7 @@ class DashboardController extends Controller
         for ($w = $weeks - 1; $w >= 0; $w--) {
             $start = Carbon::now()->subWeeks($w)->startOfWeek();
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
-            $points[] = (int) GridTicket::query()
+            $points[] = (int) UserAccessScope::gridTicketQuery($user)
                 ->where('status', 'concluido')
                 ->where(function ($q) use ($start, $end) {
                     $q->whereBetween('evaluated_at', [$start, $end])

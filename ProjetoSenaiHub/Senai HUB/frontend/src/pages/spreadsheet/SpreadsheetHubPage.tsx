@@ -8,7 +8,7 @@ import {
   PrimaryButton,
 } from '../../components/connect/ConnectShared'
 import { spreadsheetService } from '../../services/spreadsheetService'
-import { getApiErrorMessage } from '../../utils/apiError'
+import { parseApiError } from '../../utils/parseApiError'
 import type {
   SpreadsheetImportLog,
   SpreadsheetImportPreview,
@@ -58,7 +58,7 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
         setSelectedKey((prev) => prev || list[0]?.key || '')
         loadLogs()
       })
-      .catch(() => setError('Nao foi possivel carregar os modelos de planilha.'))
+      .catch((err) => setError(parseApiError(err, 'Nao foi possivel carregar os modelos de planilha.')))
       .finally(() => setLoading(false))
   }, [module])
 
@@ -85,7 +85,7 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
         setResult(null)
       }
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Operação falhou.'))
+      setError(parseApiError(err, 'Operacao falhou.'))
     } finally {
       setBusy(null)
       if (fileRef.current) fileRef.current.value = ''
@@ -103,7 +103,7 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
       setPendingFile(null)
       loadLogs()
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Importação falhou.'))
+      setError(parseApiError(err, 'Importacao falhou.'))
     } finally {
       setBusy(null)
     }

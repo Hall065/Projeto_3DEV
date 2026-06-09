@@ -1,31 +1,22 @@
 import type { LucideIcon } from 'lucide-react'
+import type { HubPermissionKey } from '../generated/permissionKeys'
 import {
-  BookOpen,
-  Calendar,
-  CalendarCheck,
-  ClipboardList,
-  Contact,
-  FileSpreadsheet,
-  FileText,
-  GraduationCap,
-  MapPin,
-  School,
-  Users,
-  Wallet,
-  BarChart3,
-  LayoutDashboard,
-  ListTodo,
-  MapPin as GridMapPin,
-  Package,
-  Signpost,
-} from 'lucide-react'
+  CONNECT_NAV_MANIFEST,
+  GRID_NAV_MANIFEST,
+  SAFE_NAV_MANIFEST,
+  connectRoutePermissions,
+  gridRoutePermissions,
+  safeRoutePermissions,
+  type NavManifestItem,
+} from '../generated/navManifest'
+import { NAV_ICON_MAP } from './navIcons'
 
 export type NavItem = {
   to: string
   label: string
   icon: LucideIcon
   end?: boolean
-  permission?: string | string[]
+  permission?: HubPermissionKey | readonly HubPermissionKey[]
 }
 
 export function filterNavItems(items: NavItem[], can: (permission: string) => boolean): NavItem[] {
@@ -38,74 +29,62 @@ export function filterNavItems(items: NavItem[], can: (permission: string) => bo
   })
 }
 
-export const connectNavItems: NavItem[] = [
-  { to: '/connect', label: 'Visao Geral', icon: LayoutDashboard, end: true, permission: 'connect.dashboard' },
-  { to: '/connect/pessoas', label: 'Pessoas', icon: Contact, permission: 'connect.people.manage' },
-  { to: '/connect/alunos', label: 'Alunos', icon: GraduationCap, permission: ['connect.students.view', 'connect.students.manage'] },
-  { to: '/connect/professores', label: 'Professores', icon: Users, permission: ['connect.teachers.view', 'connect.teachers.manage'] },
-  { to: '/connect/turmas', label: 'Turmas', icon: School, permission: ['connect.classes.view', 'connect.classes.manage'] },
-  { to: '/connect/cursos', label: 'Cursos', icon: BookOpen, permission: ['connect.courses.view', 'connect.courses.manage'] },
-  { to: '/connect/calendario', label: 'Calendario', icon: Calendar, permission: ['connect.calendar.view', 'connect.calendar.manage'] },
-  { to: '/connect/frequencia', label: 'Frequencia', icon: CalendarCheck, permission: ['connect.attendance.view', 'connect.attendance.view_own', 'connect.attendance.manage'] },
-  { to: '/connect/gerenciar-frequencia', label: 'Gerenciar Frequencia', icon: ClipboardList, permission: ['connect.attendance.view', 'connect.attendance.manage'] },
-  { to: '/connect/relatorio', label: 'Relatorio', icon: FileText, permission: ['connect.reports.view', 'connect.reports.manage'] },
-  { to: '/connect/localizacao', label: 'Localizacao', icon: MapPin, permission: 'connect.location.view' },
-  { to: '/connect/planilhas', label: 'Planilhas', icon: FileSpreadsheet, permission: 'connect.spreadsheets' },
-]
-
-export const connectContractNav: NavItem = {
-  to: '/connect/contratos/alunos',
-  label: 'Contrato Alunos',
-  icon: FileText,
-  permission: ['connect.contracts.view', 'connect.contracts.view_own', 'connect.contracts.manage'],
+function manifestToNavItems(manifest: readonly NavManifestItem[], labels: Record<string, string>): NavItem[] {
+  return manifest.map((item) => ({
+    to: item.to,
+    label: labels[item.key] ?? item.key,
+    icon: NAV_ICON_MAP[item.icon] ?? NAV_ICON_MAP.LayoutDashboard,
+    end: item.end,
+    permission: item.permission,
+  }))
 }
 
-export const connectSalaryNav: NavItem = {
-  to: '/connect/salario',
-  label: 'Salario',
-  icon: Wallet,
-  permission: ['connect.salary.view', 'connect.salary.view_own'],
+/** Labels fallback — sidebars usam useNavLabel quando o catalogo esta disponivel. */
+const connectLabels: Record<string, string> = {
+  'connect.dashboard': 'Visao Geral',
+  'connect.people.manage': 'Pessoas',
+  'connect.students.view': 'Alunos',
+  'connect.teachers.view': 'Professores',
+  'connect.classes.view': 'Turmas',
+  'connect.courses.view': 'Cursos',
+  'connect.calendar.view': 'Calendario',
+  'connect.attendance.view': 'Frequencia',
+  'connect.attendance.manage': 'Gerenciar Frequencia',
+  'connect.reports.view': 'Relatorio',
+  'connect.location.view': 'Localizacao',
+  'connect.spreadsheets': 'Planilhas',
+  'connect.contracts.view': 'Contrato Alunos',
+  'connect.salary.view': 'Salario',
 }
 
-export const gridNavItems: NavItem[] = [
-  { to: '/grid', label: 'Dashboard', icon: LayoutDashboard, end: true, permission: 'grid.dashboard' },
-  { to: '/grid/controle', label: 'Controle', icon: Signpost, permission: 'grid.controle' },
-  { to: '/grid/chamados', label: 'Chamados', icon: ClipboardList, permission: ['grid.tickets.view', 'grid.tickets.manage'] },
-  { to: '/grid/tarefas', label: 'Tarefas', icon: ListTodo, permission: 'grid.tasks.manage' },
-  { to: '/grid/relatorios', label: 'Relatorios', icon: BarChart3, permission: 'grid.reports.view' },
-  { to: '/grid/estoque', label: 'Estoque', icon: Package, permission: ['grid.inventory.view', 'grid.inventory.manage'] },
-  { to: '/grid/mapa', label: 'Mapa de tarefas', icon: GridMapPin, permission: 'grid.tasks.map' },
-  { to: '/grid/usuarios', label: 'Usuarios Grid', icon: Users, permission: 'grid.users.manage' },
-  { to: '/grid/planilhas', label: 'Planilhas', icon: FileSpreadsheet, permission: 'grid.spreadsheets' },
-]
-
-/** Mapa de rotas Connect -> permissao necessaria */
-export const connectRoutePermissions: Record<string, string | string[]> = {
-  '/connect': 'connect.dashboard',
-  '/connect/pessoas': 'connect.people.manage',
-  '/connect/alunos': ['connect.students.view', 'connect.students.manage'],
-  '/connect/professores': ['connect.teachers.view', 'connect.teachers.manage'],
-  '/connect/turmas': ['connect.classes.view', 'connect.classes.manage'],
-  '/connect/cursos': ['connect.courses.view', 'connect.courses.manage'],
-  '/connect/calendario': ['connect.calendar.view', 'connect.calendar.manage'],
-  '/connect/frequencia': ['connect.attendance.view', 'connect.attendance.view_own', 'connect.attendance.manage'],
-  '/connect/gerenciar-frequencia': ['connect.attendance.view', 'connect.attendance.manage'],
-  '/connect/relatorio': ['connect.reports.view', 'connect.reports.manage'],
-  '/connect/localizacao': 'connect.location.view',
-  '/connect/planilhas': 'connect.spreadsheets',
-  '/connect/contratos/alunos': ['connect.contracts.view', 'connect.contracts.view_own', 'connect.contracts.manage'],
-  '/connect/salario': ['connect.salary.view', 'connect.salary.view_own'],
+const gridLabels: Record<string, string> = {
+  'grid.dashboard': 'Dashboard',
+  'grid.controle': 'Controle',
+  'grid.tickets.view': 'Chamados',
+  'grid.tasks.manage': 'Tarefas',
+  'grid.reports.view': 'Relatorios',
+  'grid.inventory.view': 'Estoque',
+  'grid.tasks.map': 'Mapa de tarefas',
+  'grid.users.manage': 'Usuarios Grid',
+  'grid.spreadsheets': 'Planilhas',
 }
 
-/** Mapa de rotas Grid -> permissao necessaria */
-export const gridRoutePermissions: Record<string, string | string[]> = {
-  '/grid': 'grid.dashboard',
-  '/grid/controle': 'grid.controle',
-  '/grid/chamados': ['grid.tickets.view', 'grid.tickets.manage'],
-  '/grid/tarefas': 'grid.tasks.manage',
-  '/grid/relatorios': 'grid.reports.view',
-  '/grid/estoque': ['grid.inventory.view', 'grid.inventory.manage'],
-  '/grid/mapa': 'grid.tasks.map',
-  '/grid/usuarios': 'grid.users.manage',
-  '/grid/planilhas': 'grid.spreadsheets',
+const safeLabels: Record<string, string> = {
+  'safe.dashboard': 'Visao Geral',
+  'safe.students.manage': 'Alunos',
+  'safe.authorizations.manage': 'Autorizacoes',
+  'safe.approve': 'Aprovacoes',
+  'safe.portaria': 'Portaria',
 }
+
+export const connectNavItems: NavItem[] = manifestToNavItems(CONNECT_NAV_MANIFEST, connectLabels)
+
+export const connectContractNav: NavItem = connectNavItems.find((item) => item.to === '/connect/contratos/alunos')!
+
+export const connectSalaryNav: NavItem = connectNavItems.find((item) => item.to === '/connect/salario')!
+
+export const gridNavItems: NavItem[] = manifestToNavItems(GRID_NAV_MANIFEST, gridLabels)
+
+export const safeNavItems: NavItem[] = manifestToNavItems(SAFE_NAV_MANIFEST, safeLabels)
+
+export { connectRoutePermissions, gridRoutePermissions, safeRoutePermissions }

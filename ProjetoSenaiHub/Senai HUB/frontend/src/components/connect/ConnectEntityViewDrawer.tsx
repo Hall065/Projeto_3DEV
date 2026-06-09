@@ -12,6 +12,7 @@ import { UserAvatar } from '../ui/UserAvatar'
 import { connectService } from '../../services/connectService'
 import type { ConnectAttendanceSession, ConnectSalaryRecord, ConnectStudentLocation } from '../../types/connect'
 import type { ConnectViewKind, StudentProfileData, TeacherProfileData, ClassProfileData, CourseProfileData, PersonProfileData, ContractProfileData } from '../../types/connectView'
+import { GridTicketAttachmentsPanel } from '../grid/GridTicketAttachmentsPanel'
 import type { GridInventoryItem, GridTicket, GridUser } from '../../types/grid'
 import { hubPersonKindLabel, personDisplayName } from '../../utils/connectPerson'
 import { courseStatusLabel } from '../../utils/courseThemes'
@@ -447,19 +448,25 @@ function LocationSnapshotView({ loc }: { loc: ConnectStudentLocation }) {
 
 function GridTicketView({ ticket }: { ticket: GridTicket }) {
   return (
-    <DetailSection title="Chamado">
-      <DetailGrid>
-        <DetailRow label="Código" value={ticket.code} />
-        <DetailRow label="Título" value={ticket.title} />
-        <DetailRow label="Solicitante" value={ticket.requester} />
-        <DetailRow label="Local" value={`${ticket.room} / ${ticket.block}`} />
-        <DetailRow label="Prioridade" value={ticket.priority} />
-        <DetailRow label="Responsável" value={ticket.assignee} />
-        <DetailRow label="Abertura" value={formatDateTime(ticket.opened_at)} />
-        <DetailRow label="Status" value={ticket.status} />
-      </DetailGrid>
-      <p className="mt-3 text-sm text-hub-text-muted">{ticket.summary}</p>
-    </DetailSection>
+    <div className="space-y-4">
+      <DetailSection title="Chamado">
+        <DetailGrid>
+          <DetailRow label="Código" value={ticket.code} />
+          <DetailRow label="Título" value={ticket.title} />
+          <DetailRow label="Solicitante" value={ticket.requester} />
+          <DetailRow label="Local" value={`${ticket.room} / ${ticket.block}`} />
+          <DetailRow label="Prioridade" value={ticket.priority} />
+          <DetailRow label="Responsável" value={ticket.assignee} />
+          <DetailRow label="Abertura" value={formatDateTime(ticket.opened_at)} />
+          <DetailRow label="Status" value={ticket.status} />
+        </DetailGrid>
+        <p className="mt-3 text-sm text-hub-text-muted">{ticket.summary}</p>
+      </DetailSection>
+
+      {(ticket.attachments?.length ?? 0) > 0 && (
+        <GridTicketAttachmentsPanel ticketId={ticket.id} attachments={ticket.attachments ?? []} readOnly />
+      )}
+    </div>
   )
 }
 

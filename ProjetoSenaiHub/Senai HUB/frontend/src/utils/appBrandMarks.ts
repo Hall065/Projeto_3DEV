@@ -1,22 +1,8 @@
-import {
-  connectLogoMarkDark,
-  connectLogoMarkLight,
-  gridLogoMarkDark,
-  gridLogoMarkLight,
-} from '../assets/brand'
+import { getAppBrandMarkSrc } from './appBrandAssets'
 import type { WallpaperTone } from './wallpaperTone'
 
-const marksBySlug: Record<string, Record<WallpaperTone, string>> = {
-  connect: {
-    light: connectLogoMarkLight,
-    dark: connectLogoMarkDark,
-  },
-  grid: {
-    light: gridLogoMarkLight,
-    dark: gridLogoMarkDark,
-  },
-}
+export { APP_BRAND_ASSETS, MODULE_BRAND_SLUGS, getAppBrandAssets, getAppBrandMarkSrc } from './appBrandAssets'
 
 export function getAppBrandMark(slug: string, tone: WallpaperTone): string | undefined {
-  return marksBySlug[slug]?.[tone]
+  return getAppBrandMarkSrc(slug, tone)
 }

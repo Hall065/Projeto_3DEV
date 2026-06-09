@@ -22,6 +22,7 @@ import {
   type NavPermissionsByModule,
 } from '../../services/adminService'
 import type { User } from '../../types/auth'
+import { parseApiError } from '../../utils/parseApiError'
 
 type ModuleChoice = '' | 'connect' | 'grid'
 
@@ -97,7 +98,7 @@ export function HubUsersPage() {
     adminService
       .getUsers({ search, per_page: 50 })
       .then((res) => setUsers(res.data))
-      .catch(() => setError('Nao foi possivel carregar usuarios.'))
+      .catch((err) => setError(parseApiError(err, 'Nao foi possivel carregar usuarios.')))
       .finally(() => setLoading(false))
   }
 
@@ -108,7 +109,7 @@ export function HubUsersPage() {
         setNavPermissions(navData)
         load()
       })
-      .catch(() => setError('Falha ao carregar perfis.'))
+      .catch((err) => setError(parseApiError(err, 'Falha ao carregar perfis.')))
   }, [])
 
   useEffect(() => {
@@ -157,8 +158,8 @@ export function HubUsersPage() {
         permissions: effective,
       })
       setDrawerOpen(true)
-    } catch {
-      setError('Nao foi possivel carregar os dados do usuario.')
+    } catch (err: unknown) {
+      setError(parseApiError(err, 'Nao foi possivel carregar os dados do usuario.'))
     }
   }
 
@@ -213,8 +214,8 @@ export function HubUsersPage() {
       }
       setDrawerOpen(false)
       load()
-    } catch {
-      setError('Nao foi possivel salvar o usuario.')
+    } catch (err: unknown) {
+      setError(parseApiError(err, 'Nao foi possivel salvar o usuario.'))
     } finally {
       setSaving(false)
     }
@@ -225,8 +226,8 @@ export function HubUsersPage() {
     try {
       await adminService.deleteUser(user.id)
       load()
-    } catch {
-      setError('Nao foi possivel excluir o usuario.')
+    } catch (err: unknown) {
+      setError(parseApiError(err, 'Nao foi possivel excluir o usuario.'))
     }
   }
 

@@ -4,6 +4,7 @@ import { ConnectDrawer } from '../connect/ConnectDrawer'
 import { FormField, inputClass, OutlineButton, PrimaryButton } from '../connect/ConnectShared'
 import { gridService } from '../../services/gridService'
 import type { GridTicket } from '../../types/grid'
+import { parseApiError } from '../../utils/parseApiError'
 
 export function GridEvaluateTicketDrawer({
   ticket,
@@ -33,8 +34,8 @@ export function GridEvaluateTicketDrawer({
       onClose()
       setNotes('')
       setRating(5)
-    } catch {
-      window.alert('Não foi possível registrar a avaliação.')
+    } catch (err: unknown) {
+      window.alert(parseApiError(err, 'Nao foi possivel registrar a avaliacao.'))
     } finally {
       setSaving(false)
     }

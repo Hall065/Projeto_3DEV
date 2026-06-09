@@ -28,8 +28,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const path = window.location.pathname
+      const isAuthPage = ['/login', '/recuperar-senha', '/redefinir-senha'].some((p) => path.startsWith(p))
+
       localStorage.removeItem('senai_hub_token')
       localStorage.removeItem('senai_hub_user')
+
+      if (!isAuthPage) {
+        const expired = path !== '/login' ? '?expired=1' : ''
+        window.location.href = `/login${expired}`
+      }
     }
 
     return Promise.reject(error)

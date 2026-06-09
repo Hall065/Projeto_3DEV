@@ -37,7 +37,7 @@ export function LandingPlatform() {
               ))}
             </ul>
             <Link
-              to="/cadastro"
+              to="/login"
               className="mt-8 inline-flex items-center justify-center rounded-lg bg-hub-red px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-hub-red-hover"
             >
               Explorar o Hub

@@ -16,6 +16,7 @@ use App\Models\Connect\ConnectTeacher;
 use App\Models\HubPerson;
 use App\Models\User;
 use App\Services\Connect\ConnectEnrollmentService;
+use App\Services\Connect\ConnectScheduleService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -66,7 +67,12 @@ class ConnectSeeder extends Seeder
             ],
         ])->map(fn (array $course) => ConnectCourse::query()->updateOrCreate(
             ['code' => $course['code']],
-            [...$course, 'status' => 'active'],
+            [
+                ...$course,
+                'status' => 'active',
+                'start_date' => '2025-01-01',
+                'end_date' => '2025-12-31',
+            ],
         ));
 
         $teachers = collect([
@@ -120,6 +126,7 @@ class ConnectSeeder extends Seeder
                 'code' => 'TURMA AUT25-02',
                 'name' => 'Turma Automação 2025 - 2º Semestre',
                 'shift' => 'noite',
+                'semester' => '2025.2',
                 'start_date' => '2025-02-01',
                 'end_date' => '2025-12-15',
                 'capacity' => 35,
@@ -130,6 +137,7 @@ class ConnectSeeder extends Seeder
                 'code' => 'TURMA ELE25-01',
                 'name' => 'Turma Eletrotécnica 2025 - 1º Semestre',
                 'shift' => 'tarde',
+                'semester' => '2025.1',
                 'start_date' => '2025-01-15',
                 'end_date' => '2025-11-30',
                 'capacity' => 30,
@@ -140,6 +148,7 @@ class ConnectSeeder extends Seeder
                 'code' => 'TURMA MEC25-03',
                 'name' => 'Turma Mecânica 2025 - Turno Manhã',
                 'shift' => 'manha',
+                'semester' => '2025.1',
                 'start_date' => '2025-03-01',
                 'end_date' => '2025-12-20',
                 'capacity' => 28,
@@ -150,6 +159,7 @@ class ConnectSeeder extends Seeder
                 'code' => 'TURMA INF25-01',
                 'name' => 'Turma Informática Industrial 2025',
                 'shift' => 'noite',
+                'semester' => '2025.2',
                 'start_date' => '2025-02-10',
                 'end_date' => '2025-12-10',
                 'capacity' => 32,
@@ -160,6 +170,7 @@ class ConnectSeeder extends Seeder
                 'code' => 'TURMA LOG25-01',
                 'name' => 'Turma Logística 2025 - Integrado',
                 'shift' => 'tarde',
+                'semester' => '2025.2',
                 'start_date' => '2025-02-15',
                 'end_date' => '2025-12-01',
                 'capacity' => 30,
@@ -234,7 +245,7 @@ class ConnectSeeder extends Seeder
             );
         });
 
-        $this->seedAttendanceSessions($classes, $students);
+        $this->seedClassSchedulesAndAttendance($classes);
 
         $locations = [
             ['city' => 'São Paulo', 'state' => 'SP', 'lat' => -23.5505, 'lng' => -46.6333, 'status' => 'online'],
@@ -438,62 +449,75 @@ class ConnectSeeder extends Seeder
 
     /**
      * @param  \Illuminate\Support\Collection<int, ConnectClass>  $classes
-     * @param  \Illuminate\Support\Collection<int, ConnectStudent>  $students
      */
-    private function seedAttendanceSessions(\Illuminate\Support\Collection $classes, \Illuminate\Support\Collection $students): void
+    private function seedClassSchedulesAndAttendance(\Illuminate\Support\Collection $classes): void
     {
-        $subjects = [
-            'Automação de Processos',
-            'Instalações Elétricas',
-            'Usinagem CNC',
-            'Redes Industriais',
-            'Gestão de Estoques',
-            'Segurança do Trabalho',
-        ];
+        $schedule = app(ConnectScheduleService::class);
 
+        foreach ($classes as $class) {
+            ConnectAttendanceSession::query()
+                ->where('connect_class_id', $class->id)
+                ->whereNull('connect_lesson_schedule_id')
+                ->delete();
+
+            $schedule->syncWeeklyPatterns($class, $this->weeklyPatternsForShift((string) $class->shift));
+            $schedule->generateFromPatterns($class);
+        }
+
+        $this->seedRecentClosedAttendance($classes);
+    }
+
+    /**
+     * @return list<array{day_of_week: int, start_time: string, end_time: string, lessons_count: int, subject: string}>
+     */
+    private function weeklyPatternsForShift(string $shift): array
+    {
+        return match ($shift) {
+            'manha' => [
+                ['day_of_week' => 1, 'start_time' => '08:00', 'end_time' => '11:30', 'lessons_count' => 4, 'subject' => 'Aula regular'],
+                ['day_of_week' => 3, 'start_time' => '08:00', 'end_time' => '11:30', 'lessons_count' => 4, 'subject' => 'Aula regular'],
+            ],
+            'tarde' => [
+                ['day_of_week' => 2, 'start_time' => '14:00', 'end_time' => '17:30', 'lessons_count' => 4, 'subject' => 'Aula regular'],
+                ['day_of_week' => 4, 'start_time' => '14:00', 'end_time' => '17:30', 'lessons_count' => 4, 'subject' => 'Aula regular'],
+            ],
+            default => [
+                ['day_of_week' => 2, 'start_time' => '19:00', 'end_time' => '22:30', 'lessons_count' => 4, 'subject' => 'Aula regular'],
+                ['day_of_week' => 4, 'start_time' => '19:00', 'end_time' => '22:30', 'lessons_count' => 4, 'subject' => 'Aula regular'],
+            ],
+        };
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, ConnectClass>  $classes
+     */
+    private function seedRecentClosedAttendance(\Illuminate\Support\Collection $classes): void
+    {
         $statuses = ['present', 'present', 'present', 'late', 'absent', 'justified'];
 
         foreach ($classes as $classIndex => $class) {
-            for ($day = 0; $day < 7; $day++) {
-                $sessionDate = now()->subDays($day)->toDateString();
-                $subject = $subjects[$classIndex % count($subjects)].' · '.$class->code;
+            $sessions = ConnectAttendanceSession::query()
+                ->where('connect_class_id', $class->id)
+                ->whereNotNull('connect_lesson_schedule_id')
+                ->whereDate('session_date', '>=', now()->subDays(14)->toDateString())
+                ->whereDate('session_date', '<=', now()->toDateString())
+                ->orderByDesc('session_date')
+                ->limit(7)
+                ->with('marks')
+                ->get();
 
-                $session = ConnectAttendanceSession::query()
-                    ->where('connect_class_id', $class->id)
-                    ->whereDate('session_date', $sessionDate)
-                    ->where('subject', $subject)
-                    ->first();
+            foreach ($sessions as $dayIndex => $session) {
+                $isToday = $session->session_date->isSameDay(now());
+                $session->update(['status' => $isToday ? 'open' : 'closed']);
 
-                if ($session === null) {
-                    $session = ConnectAttendanceSession::query()->create([
-                        'connect_class_id' => $class->id,
-                        'session_date' => $sessionDate,
-                        'subject' => $subject,
-                        'connect_teacher_id' => $class->connect_teacher_id,
-                        'status' => $day === 0 ? 'open' : 'closed',
-                    ]);
-                } else {
-                    $session->update([
-                        'connect_teacher_id' => $class->connect_teacher_id,
-                        'status' => $day === 0 ? 'open' : 'closed',
-                    ]);
+                if ($isToday) {
+                    continue;
                 }
 
-                $classStudents = $students->filter(
-                    fn (ConnectStudent $student) => $student->connect_class_id === $class->id,
-                );
-
-                foreach ($classStudents as $studentIndex => $student) {
-                    ConnectAttendanceMark::query()->updateOrCreate(
-                        [
-                            'connect_attendance_session_id' => $session->id,
-                            'connect_student_id' => $student->id,
-                        ],
-                        [
-                            'status' => $statuses[($studentIndex + $day + $classIndex) % count($statuses)],
-                            'notes' => null,
-                        ],
-                    );
+                foreach ($session->marks as $markIndex => $mark) {
+                    $mark->update([
+                        'status' => $statuses[($markIndex + $dayIndex + $classIndex) % count($statuses)],
+                    ]);
                 }
             }
         }

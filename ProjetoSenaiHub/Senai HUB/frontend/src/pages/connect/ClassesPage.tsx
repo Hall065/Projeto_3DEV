@@ -1,11 +1,10 @@
-import axios from 'axios'
-import { Pencil, Plus, Trash2, Users } from 'lucide-react'
+import { Eye, Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -31,26 +30,10 @@ import type {
   ConnectWeeklyPattern,
   PaginatedMeta,
 } from '../../types/connect'
-import { confirmDelete } from '../../utils/confirmAction'
 import { optionalForeignIdOrNull, slugClassCode } from '../../utils/connectForm'
+import { parseApiError } from '../../utils/parseApiError'
 
-const DAY_OPTIONS = [
-  { value: 1, label: 'Segunda' },
-  { value: 2, label: 'Terca' },
-  { value: 3, label: 'Quarta' },
-  { value: 4, label: 'Quinta' },
-  { value: 5, label: 'Sexta' },
-  { value: 6, label: 'Sabado' },
-  { value: 0, label: 'Domingo' },
-]
-
-const defaultPattern = (): ConnectWeeklyPattern => ({
-  day_of_week: 1,
-  start_time: '19:00',
-  end_time: '22:00',
-  lessons_count: 4,
-  subject: 'Aula regular',
-})
+const DAY_VALUES = [1, 2, 3, 4, 5, 6, 0]
 
 const emptyForm = {
   name: '',
@@ -66,6 +49,7 @@ const emptyForm = {
 }
 
 export function ClassesPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [classes, setClasses] = useState<ConnectClass[]>([])
   const [courses, setCourses] = useState<ConnectCourse[]>([])
@@ -81,6 +65,14 @@ export function ClassesPage() {
   const [weeklyPatterns, setWeeklyPatterns] = useState<ConnectWeeklyPattern[]>([])
   const [schedulePlan, setSchedulePlan] = useState<ConnectSchedulePlan | null>(null)
   const [generateSchedule, setGenerateSchedule] = useState(false)
+
+  const defaultPattern = (): ConnectWeeklyPattern => ({
+    day_of_week: 1,
+    start_time: '19:00',
+    end_time: '22:00',
+    lessons_count: 4,
+    subject: t('connect.classes.defaultSubject'),
+  })
 
   const load = () => {
     setLoading(true)
@@ -135,7 +127,12 @@ export function ClassesPage() {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      window.alert('Informe o nome da turma.')
+      window.alert(t('connect.classes.alert.nameRequired'))
+      return
+    }
+
+    if (generateSchedule && (!form.semester.trim() || !form.start_date || !form.end_date)) {
+      window.alert(t('connect.classes.alert.scheduleFieldsRequired'))
       return
     }
 
@@ -159,11 +156,8 @@ export function ClassesPage() {
       } else {
         await connectService.createClass(payload)
       }
-    } catch (error) {
-      const message = axios.isAxiosError(error)
-        ? (error.response?.data?.message as string | undefined) ?? 'Nao foi possivel salvar a turma.'
-        : 'Nao foi possivel salvar a turma.'
-      window.alert(message)
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, t('connect.classes.alert.saveError')))
       return
     }
     setDrawerOpen(false)
@@ -172,24 +166,24 @@ export function ClassesPage() {
   }
 
   const handleDelete = async (turma: ConnectClass) => {
-    if (!confirmDelete(`a turma "${turma.name}"`)) return
+    if (!window.confirm(t('connect.confirm.delete', { entity: `a turma "${turma.name}"` }))) return
     try {
       await connectService.deleteClass(turma.id)
       load()
-    } catch {
-      window.alert('Não foi possível excluir a turma. Verifique se há alunos matriculados.')
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, t('connect.classes.alert.deleteError')))
     }
   }
 
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Turmas"
-        subtitle="Gerenciamento de Turmas."
+        title={t('connect.classes.title')}
+        subtitle={t('connect.classes.subtitle')}
         actions={
           <PrimaryButton onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            Criar turma
+            {t('connect.classes.create')}
           </PrimaryButton>
         }
       />
@@ -198,27 +192,27 @@ export function ClassesPage() {
         <div className="flex flex-wrap items-center gap-3 border-b border-hub-border/60 p-4">
           <input
             className={`${inputClass} max-w-xs`}
-            placeholder="Filtrar turma..."
+            placeholder={t('connect.classes.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando turmas..." className="min-h-[280px]" />
+          <ConnectLoadingSpinner label={t('connect.classes.loading')} className="min-h-[280px]" />
         ) : (
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[720px] text-sm">
             <thead className="glass-thead text-hub-text-muted">
               <tr>
-                <th className="px-4 py-3 text-left">Nome da turma</th>
-                <th className="px-4 py-3 text-left">Curso</th>
-                <th className="px-4 py-3 text-left">Periodo</th>
-                <th className="px-4 py-3 text-left">Semestre</th>
-                <th className="px-4 py-3 text-left">Inicio</th>
-                <th className="px-4 py-3 text-left">Termino</th>
-                <th className="px-4 py-3 text-left">Alunos</th>
-                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">{t('connect.classes.table.className')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.course')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.classes.table.period')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.classes.table.semester')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.classes.table.start')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.classes.table.end')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.classes.table.students')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -237,19 +231,19 @@ export function ClassesPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <ConnectRowActionsMenu
-                      ariaLabel={`Ações da turma ${turma.name}`}
+                      ariaLabel={t('connect.common.actionsOf', { name: turma.name })}
                       actions={[
-                        viewRowAction(() => setViewId(turma.id)),
+                        { key: 'view', label: t('connect.common.view'), icon: Eye, onClick: () => setViewId(turma.id) },
                         {
                           key: 'students',
-                          label: 'Ver alunos',
+                          label: t('connect.classes.actions.viewStudents'),
                           icon: Users,
                           onClick: () => navigate(`/connect/alunos?class=${turma.id}`),
                         },
-                        { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(turma) },
+                        { key: 'edit', label: t('connect.common.edit'), icon: Pencil, onClick: () => openEdit(turma) },
                         {
                           key: 'delete',
-                          label: 'Excluir',
+                          label: t('connect.common.delete'),
                           icon: Trash2,
                           variant: 'danger',
                           onClick: () => void handleDelete(turma),
@@ -273,22 +267,22 @@ export function ClassesPage() {
           setDrawerOpen(false)
           setEditingId(null)
         }}
-        title={editingId ? 'Editar turma' : 'Cadastrar nova turma'}
+        title={editingId ? t('connect.classes.drawer.edit') : t('connect.classes.drawer.new')}
         subtitle={
           editingId
-            ? 'Curso, professor e datas são opcionais — vincule quando quiser.'
-            : 'Apenas o nome é obrigatório. Curso, professor e alunos podem ser definidos depois.'
+            ? t('connect.classes.drawer.editSubtitle')
+            : t('connect.classes.drawer.newSubtitle')
         }
         footer={
           <div className="flex justify-end gap-2">
-            <OutlineButton onClick={() => setForm(emptyForm)}>Limpar Campos</OutlineButton>
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
-            <PrimaryButton onClick={() => void handleSave()}>{editingId ? 'Salvar' : 'Criar'}</PrimaryButton>
+            <OutlineButton onClick={() => setForm(emptyForm)}>{t('connect.courses.drawer.clearFields')}</OutlineButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
+            <PrimaryButton onClick={() => void handleSave()}>{editingId ? t('common.save') : t('connect.classes.create')}</PrimaryButton>
           </div>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Nome da turma" required>
+          <FormField label={t('connect.classes.form.name')} required>
             <input
               className={inputClass}
               value={form.name}
@@ -296,14 +290,14 @@ export function ClassesPage() {
               placeholder="Ex: TURMA AUT25-02"
             />
           </FormField>
-          <FormField label="Período">
+          <FormField label={t('connect.classes.form.period')}>
             <select className={selectClass} value={form.shift} onChange={(e) => setForm({ ...form, shift: e.target.value })}>
-              <option value="manha">Manhã</option>
-              <option value="tarde">Tarde</option>
-              <option value="noite">Noite</option>
+              <option value="manha">{t('connect.shift.manha')}</option>
+              <option value="tarde">{t('connect.shift.tarde')}</option>
+              <option value="noite">{t('connect.shift.noite')}</option>
             </select>
           </FormField>
-          <FormField label="Semestre" hint="Ex: 2025-1">
+          <FormField label={t('connect.classes.form.semester')} hint="Ex: 2025-1">
             <input
               className={inputClass}
               value={form.semester}
@@ -311,19 +305,19 @@ export function ClassesPage() {
               placeholder="2025-1"
             />
           </FormField>
-          <FormField label="Data de início" hint="Obrigatorio para gerar calendario">
+          <FormField label={t('connect.classes.form.startDate')} hint="Obrigatorio para gerar calendario">
             <input type="date" className={inputClass} value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
           </FormField>
-          <FormField label="Data de término" hint="Opcional">
+          <FormField label={t('connect.classes.form.endDate')} hint={t('connect.students.form.optional')}>
             <input type="date" className={inputClass} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
           </FormField>
-          <FormField label="Status">
+          <FormField label={t('connect.table.status')}>
             <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="active">Ativa</option>
-              <option value="inactive">Inativa</option>
+              <option value="active">{t('connect.classes.form.active')}</option>
+              <option value="inactive">{t('connect.classes.form.inactive')}</option>
             </select>
           </FormField>
-          <FormField label="Capacidade máxima" hint="Opcional">
+          <FormField label={t('connect.classes.form.capacity')} hint={t('connect.students.form.optional')}>
             <input
               type="number"
               className={inputClass}
@@ -333,17 +327,17 @@ export function ClassesPage() {
               min={1}
             />
           </FormField>
-          <FormField label="Professor responsável" hint="Evita conflito de horario no calendario">
+          <FormField label={t('connect.classes.form.teacher')} hint="Evita conflito de horario no calendario">
             <select className={selectClass} value={form.connect_teacher_id} onChange={(e) => setForm({ ...form, connect_teacher_id: e.target.value })}>
               <option value="">Sem professor (definir depois)</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.full_name}
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.full_name}
                 </option>
               ))}
             </select>
           </FormField>
-          <FormField label="Curso" hint="Opcional — vincule depois">
+          <FormField label={t('connect.table.course')} hint="Opcional — vincule depois">
             <select className={selectClass} value={form.connect_course_id} onChange={(e) => setForm({ ...form, connect_course_id: e.target.value })}>
               <option value="">Sem curso (definir depois)</option>
               {courses.map((c) => (
@@ -353,11 +347,11 @@ export function ClassesPage() {
               ))}
             </select>
           </FormField>
-          <FormField label="Descrição">
+          <FormField label={t('connect.classes.form.description')}>
             <textarea className={`${inputClass} min-h-[80px] py-2 sm:col-span-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Descreva a turma, objetivos e observações..." />
           </FormField>
         </div>
-        <FormField label="Grade semanal (gera o calendario)">
+        <FormField label={t('connect.classes.weekly.title')}>
           <div className="space-y-3">
             {weeklyPatterns.map((pattern, index) => (
               <div key={index} className="grid gap-2 rounded-lg border border-hub-border/60 p-3 sm:grid-cols-5">
@@ -370,9 +364,9 @@ export function ClassesPage() {
                     setWeeklyPatterns(next)
                   }}
                 >
-                  {DAY_OPTIONS.map((day) => (
-                    <option key={day.value} value={day.value}>
-                      {day.label}
+                  {DAY_VALUES.map((value) => (
+                    <option key={value} value={value}>
+                      {t(`connect.days.${value}`)}
                     </option>
                   ))}
                 </select>
@@ -407,23 +401,27 @@ export function ClassesPage() {
                 >
                   {[1, 2, 3, 4, 5].map((n) => (
                     <option key={n} value={n}>
-                      {n} aula(s)
+                      {t('connect.classes.weekly.lessons', { count: n })}
                     </option>
                   ))}
                 </select>
                 <OutlineButton type="button" onClick={() => setWeeklyPatterns(weeklyPatterns.filter((_, i) => i !== index))}>
-                  Remover
+                  {t('connect.classes.weekly.remove')}
                 </OutlineButton>
               </div>
             ))}
             <OutlineButton type="button" onClick={() => setWeeklyPatterns([...weeklyPatterns, defaultPattern()])}>
-              Adicionar horario
+              {t('connect.classes.weekly.addSlot')}
             </OutlineButton>
           </div>
         </FormField>
         {schedulePlan && (
           <p className="text-sm text-hub-text-muted">
-            Carga: {schedulePlan.scheduled_lessons}/{schedulePlan.workload_hours || '—'} aulas · Semanal: {schedulePlan.weekly_lessons} · Restante: {schedulePlan.remaining_lessons ?? '—'}
+            {t('connect.classes.scheduleSummary', {
+              total: `${schedulePlan.scheduled_lessons}/${schedulePlan.workload_hours || '—'}`,
+              weekly: schedulePlan.weekly_lessons,
+              remaining: schedulePlan.remaining_lessons ?? '—',
+            })}
           </p>
         )}
         <label className="flex items-center gap-2 text-sm">
@@ -432,7 +430,7 @@ export function ClassesPage() {
             checked={generateSchedule}
             onChange={(e) => setGenerateSchedule(e.target.checked)}
           />
-          Gerar calendario automaticamente ao salvar
+          {t('connect.classes.generateSchedule')}
         </label>
       </ConnectDrawer>
 

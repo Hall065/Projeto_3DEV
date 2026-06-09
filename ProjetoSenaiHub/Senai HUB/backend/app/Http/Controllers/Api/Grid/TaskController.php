@@ -9,6 +9,7 @@ use App\Models\Grid\GridTask;
 use App\Services\Grid\GridWorkflowService;
 use App\Support\GridCode;
 use App\Support\GridForm;
+use App\Support\GridParticipantSync;
 use App\Support\HubRole;
 use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
@@ -96,7 +97,10 @@ class TaskController extends Controller
         $user = $request->user();
         if (in_array($user?->role, [HubRole::GRID_PROFESSOR, HubRole::GRID_SECRETARIA], true)) {
             $validated['opened_by'] = $user->name;
+            $validated['opened_by_user_id'] = $user->id;
         }
+
+        GridParticipantSync::syncTask($validated);
 
         $task = GridTask::query()->create([
             ...$validated,
@@ -151,6 +155,8 @@ class TaskController extends Controller
         $previousColumn = $task->column;
         $previousAssignee = $task->assignee;
 
+        GridParticipantSync::syncTask($validated);
+
         if (array_key_exists('inventory_items', $validated)) {
             $normalized = $this->normalizeInventoryItems($validated['inventory_items']);
             $this->workflow->assertInventoryLinesAvailable($normalized);
@@ -167,7 +173,9 @@ class TaskController extends Controller
             }
             $task->update($validated);
             if ($task->ticket && isset($validated['assignee'])) {
-                $task->ticket->update(['assignee' => $validated['assignee']]);
+                $ticketPayload = ['assignee' => $validated['assignee']];
+                GridParticipantSync::syncTicket($ticketPayload);
+                $task->ticket->update($ticketPayload);
             }
         }
 

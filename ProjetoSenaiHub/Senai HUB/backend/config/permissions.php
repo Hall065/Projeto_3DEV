@@ -69,6 +69,21 @@ return [
             'module' => 'grid',
             'description' => 'Abertura e acompanhamento dos proprios chamados.',
         ],
+        'safe_aqv' => [
+            'label' => 'AQV (SAFE)',
+            'module' => 'safe',
+            'description' => 'Cadastro de alunos e solicitacoes de entrada e saida.',
+        ],
+        'safe_professor' => [
+            'label' => 'Professor (SAFE)',
+            'module' => 'safe',
+            'description' => 'Aprovacao ou negacao de solicitacoes dos alunos.',
+        ],
+        'safe_portaria' => [
+            'label' => 'Portaria (SAFE)',
+            'module' => 'safe',
+            'description' => 'Confirmacao de saidas liberadas pelos professores.',
+        ],
     ],
 
     /**
@@ -86,9 +101,11 @@ return [
             ['key' => 'connect.attendance.view', 'label' => 'Frequencia', 'group' => 'Operacao'],
             ['key' => 'connect.attendance.manage', 'label' => 'Gerenciar Frequencia', 'group' => 'Operacao'],
             ['key' => 'connect.reports.view', 'label' => 'Relatorio', 'group' => 'Operacao'],
+            ['key' => 'connect.reports.manage', 'label' => 'Gerenciar Relatorios', 'group' => 'Operacao'],
             ['key' => 'connect.location.view', 'label' => 'Localizacao', 'group' => 'Operacao'],
             ['key' => 'connect.spreadsheets', 'label' => 'Planilhas', 'group' => 'Operacao'],
             ['key' => 'connect.contracts.view', 'label' => 'Contratos', 'group' => 'Contratos'],
+            ['key' => 'connect.contracts.manage', 'label' => 'Gerenciar Contratos', 'group' => 'Contratos'],
             ['key' => 'connect.salary.view', 'label' => 'Salario', 'group' => 'Contratos'],
         ],
         'grid' => [
@@ -102,6 +119,13 @@ return [
             ['key' => 'grid.tasks.map', 'label' => 'Mapa', 'group' => 'Recursos'],
             ['key' => 'grid.spreadsheets', 'label' => 'Planilhas', 'group' => 'Recursos'],
             ['key' => 'grid.users.manage', 'label' => 'Usuarios Grid', 'group' => 'Equipe'],
+        ],
+        'safe' => [
+            ['key' => 'safe.dashboard', 'label' => 'Visao Geral', 'group' => 'Visao'],
+            ['key' => 'safe.students.manage', 'label' => 'Alunos', 'group' => 'Cadastros'],
+            ['key' => 'safe.authorizations.manage', 'label' => 'Autorizacoes', 'group' => 'Operacao'],
+            ['key' => 'safe.approve', 'label' => 'Aprovar Solicitacoes', 'group' => 'Operacao'],
+            ['key' => 'safe.portaria', 'label' => 'Portaria', 'group' => 'Operacao'],
         ],
     ],
 
@@ -229,10 +253,70 @@ return [
             'grid.tickets.manage',
             'grid.tasks.manage',
         ],
+
+        'safe_aqv' => [
+            'safe.access',
+            'safe.dashboard',
+            'safe.students.manage',
+            'safe.authorizations.manage',
+        ],
+
+        'safe_professor' => [
+            'safe.access',
+            'safe.dashboard',
+            'safe.approve',
+        ],
+
+        'safe_portaria' => [
+            'safe.access',
+            'safe.dashboard',
+            'safe.portaria',
+        ],
+    ],
+
+    /**
+     * Rotas e icones da navegacao (fonte para sync frontend).
+     * Labels exibidos vêm do catalogo + i18n (nav.*).
+     */
+    'nav_items' => [
+        'connect' => [
+            ['key' => 'connect.dashboard', 'to' => '/connect', 'icon' => 'LayoutDashboard', 'end' => true],
+            ['key' => 'connect.people.manage', 'to' => '/connect/pessoas', 'icon' => 'Contact'],
+            ['key' => 'connect.students.view', 'to' => '/connect/alunos', 'icon' => 'GraduationCap', 'permission' => ['connect.students.view', 'connect.students.manage']],
+            ['key' => 'connect.teachers.view', 'to' => '/connect/professores', 'icon' => 'Users', 'permission' => ['connect.teachers.view', 'connect.teachers.manage']],
+            ['key' => 'connect.classes.view', 'to' => '/connect/turmas', 'icon' => 'School', 'permission' => ['connect.classes.view', 'connect.classes.manage']],
+            ['key' => 'connect.courses.view', 'to' => '/connect/cursos', 'icon' => 'BookOpen', 'permission' => ['connect.courses.view', 'connect.courses.manage']],
+            ['key' => 'connect.calendar.view', 'to' => '/connect/calendario', 'icon' => 'Calendar', 'permission' => ['connect.calendar.view', 'connect.calendar.manage']],
+            ['key' => 'connect.attendance.view', 'to' => '/connect/frequencia', 'icon' => 'CalendarCheck', 'permission' => ['connect.attendance.view', 'connect.attendance.view_own', 'connect.attendance.manage']],
+            ['key' => 'connect.attendance.manage', 'to' => '/connect/gerenciar-frequencia', 'icon' => 'ClipboardList', 'permission' => ['connect.attendance.view', 'connect.attendance.manage']],
+            ['key' => 'connect.reports.view', 'to' => '/connect/relatorio', 'icon' => 'FileText', 'permission' => ['connect.reports.view', 'connect.reports.manage']],
+            ['key' => 'connect.location.view', 'to' => '/connect/localizacao', 'icon' => 'MapPin'],
+            ['key' => 'connect.spreadsheets', 'to' => '/connect/planilhas', 'icon' => 'FileSpreadsheet'],
+            ['key' => 'connect.contracts.view', 'to' => '/connect/contratos/alunos', 'icon' => 'FileText', 'permission' => ['connect.contracts.view', 'connect.contracts.view_own', 'connect.contracts.manage']],
+            ['key' => 'connect.salary.view', 'to' => '/connect/salario', 'icon' => 'Wallet', 'permission' => ['connect.salary.view', 'connect.salary.view_own']],
+        ],
+        'grid' => [
+            ['key' => 'grid.dashboard', 'to' => '/grid', 'icon' => 'LayoutDashboard', 'end' => true],
+            ['key' => 'grid.controle', 'to' => '/grid/controle', 'icon' => 'Signpost'],
+            ['key' => 'grid.tickets.view', 'to' => '/grid/chamados', 'icon' => 'ClipboardList', 'permission' => ['grid.tickets.view', 'grid.tickets.manage']],
+            ['key' => 'grid.tasks.manage', 'to' => '/grid/tarefas', 'icon' => 'ListTodo'],
+            ['key' => 'grid.reports.view', 'to' => '/grid/relatorios', 'icon' => 'BarChart3'],
+            ['key' => 'grid.inventory.view', 'to' => '/grid/estoque', 'icon' => 'Package', 'permission' => ['grid.inventory.view', 'grid.inventory.manage']],
+            ['key' => 'grid.tasks.map', 'to' => '/grid/mapa', 'icon' => 'MapPin'],
+            ['key' => 'grid.users.manage', 'to' => '/grid/usuarios', 'icon' => 'Users'],
+            ['key' => 'grid.spreadsheets', 'to' => '/grid/planilhas', 'icon' => 'FileSpreadsheet'],
+        ],
+        'safe' => [
+            ['key' => 'safe.dashboard', 'to' => '/safe', 'icon' => 'LayoutDashboard', 'end' => true],
+            ['key' => 'safe.students.manage', 'to' => '/safe/alunos', 'icon' => 'GraduationCap'],
+            ['key' => 'safe.authorizations.manage', 'to' => '/safe/autorizacoes', 'icon' => 'ClipboardList'],
+            ['key' => 'safe.approve', 'to' => '/safe/aprovacoes', 'icon' => 'UserCheck'],
+            ['key' => 'safe.portaria', 'to' => '/safe/portaria', 'icon' => 'DoorOpen'],
+        ],
     ],
 
     'application_slugs_by_role' => [
-        'admin' => ['connect', 'grid'],
+        'admin' => ['connect', 'grid', 'safe'],
         'unassigned' => [],
         'connect_professor' => ['connect'],
         'connect_secretaria' => ['connect'],
@@ -244,5 +328,8 @@ return [
         'grid_funcionario' => ['grid'],
         'grid_professor' => ['grid'],
         'grid_secretaria' => ['grid'],
+        'safe_aqv' => ['safe'],
+        'safe_professor' => ['safe'],
+        'safe_portaria' => ['safe'],
     ],
 ];

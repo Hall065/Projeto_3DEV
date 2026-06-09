@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\AccessRequestController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\Connect\AttendanceController;
+use App\Http\Controllers\Api\Connect\CampusMapController;
 use App\Http\Controllers\Api\Connect\CalendarController;
 use App\Http\Controllers\Api\Connect\AttendanceManageController;
 use App\Http\Controllers\Api\Connect\ClassController;
@@ -23,11 +25,16 @@ use App\Http\Controllers\Api\Grid\InventoryController as GridInventoryController
 use App\Http\Controllers\Api\Grid\TaskController as GridTaskController;
 use App\Http\Controllers\Api\Grid\TicketController as GridTicketController;
 use App\Http\Controllers\Api\Grid\UserController as GridUserController;
+use App\Http\Controllers\Api\Safe\AuthorizationController as SafeAuthorizationController;
+use App\Http\Controllers\Api\Safe\DashboardController as SafeDashboardController;
+use App\Http\Controllers\Api\Safe\PortariaController as SafePortariaController;
+use App\Http\Controllers\Api\Safe\StudentController as SafeStudentController;
+use App\Http\Controllers\Api\Safe\TeacherController as SafeTeacherController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\Admin\UserManagementController;
 use App\Http\Controllers\Api\CustomReportController;
 use App\Http\Controllers\Api\GlobalSearchController;
-use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PublicConfigController;
 use App\Http\Controllers\Api\ReportPresetController;
 use App\Http\Controllers\Api\SpreadsheetController;
 use Illuminate\Support\Facades\Route;
@@ -43,13 +50,18 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/health', [HealthController::class, 'index']);
+Route::get('/public-config', [PublicConfigController::class, 'index']);
+
+Route::post('/access-requests', [AccessRequestController::class, 'store'])->middleware('throttle:5,1');
 
 Route::prefix('auth')->group(function (): void {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/permissions-catalog', [AuthController::class, 'permissionsCatalog']);
         Route::put('/me', [AuthController::class, 'update']);
         Route::post('/avatar', [AuthController::class, 'updateAvatar']);
         Route::delete('/avatar', [AuthController::class, 'deleteAvatar']);
@@ -172,6 +184,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         });
 
         Route::get('/calendar', [CalendarController::class, 'index'])->middleware('permission:connect.calendar.view,connect.calendar.manage');
+        Route::get('/calendar/semesters', [CalendarController::class, 'semesters'])->middleware('permission:connect.calendar.view,connect.calendar.manage');
         Route::get('/classes/{connectClass}/weekly-patterns', [CalendarController::class, 'weeklyPatterns'])->middleware('permission:connect.calendar.view,connect.calendar.manage,connect.classes.view,connect.classes.manage');
         Route::get('/classes/{connectClass}/schedule-plan', [CalendarController::class, 'schedulePlan'])->middleware('permission:connect.calendar.view,connect.calendar.manage,connect.classes.view,connect.classes.manage');
         Route::middleware('permission:connect.calendar.manage,connect.classes.manage')->group(function (): void {
@@ -180,15 +193,20 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::delete('/calendar/lessons/{connectLessonSchedule}', [CalendarController::class, 'destroyLesson']);
             Route::put('/classes/{connectClass}/weekly-patterns', [CalendarController::class, 'syncWeeklyPatterns']);
             Route::post('/classes/{connectClass}/generate-schedule', [CalendarController::class, 'generateSchedule']);
+            Route::post('/classes/{connectClass}/provision-attendance', [CalendarController::class, 'provisionAttendance']);
         });
 
         Route::get('/attendance/session', [AttendanceController::class, 'show'])->middleware('permission:connect.attendance.view,connect.attendance.view_own,connect.attendance.manage');
         Route::post('/attendance/sessions/{session}/marks', [AttendanceController::class, 'saveMarks'])->middleware('permission:connect.attendance.manage');
         Route::get('/attendance/records', [AttendanceManageController::class, 'index'])->middleware('permission:connect.attendance.view,connect.attendance.manage');
+        Route::get('/attendance/class-summary', [AttendanceManageController::class, 'classSummary'])->middleware('permission:connect.attendance.view,connect.attendance.manage');
+        Route::get('/attendance/student-summary', [AttendanceManageController::class, 'studentSummary'])->middleware('permission:connect.attendance.view,connect.attendance.manage');
 
         Route::get('/reports/summary', [ReportController::class, 'summary'])->middleware('permission:connect.reports.view,connect.reports.manage');
+        Route::get('/reports/summary/xlsx', [ReportController::class, 'summaryXlsx'])->middleware('permission:connect.reports.view,connect.reports.manage');
 
         Route::get('/locations', [LocationController::class, 'index'])->middleware('permission:connect.location.view');
+        Route::get('/campus-people', [CampusMapController::class, 'people'])->middleware('permission:connect.location.view');
 
         Route::get('/contracts/{contract}/profile', [ProfileController::class, 'contract'])->middleware('permission:connect.contracts.view,connect.contracts.view_own,connect.contracts.manage');
         Route::get('/contracts', [ContractController::class, 'index'])->middleware('permission:connect.contracts.view,connect.contracts.view_own,connect.contracts.manage');
@@ -215,6 +233,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/tickets/{ticket}/approve-service', [GridTicketController::class, 'approveService'])->middleware('permission:grid.tickets.manage');
         Route::post('/tickets/{ticket}/evaluate', [GridTicketController::class, 'evaluate'])->middleware('permission:grid.tickets.manage');
         Route::put('/tickets/{ticket}', [GridTicketController::class, 'update'])->middleware('permission:grid.tickets.view,grid.tickets.manage');
+        Route::post('/tickets/{ticket}/attachments', [GridTicketController::class, 'storeAttachment'])->middleware('permission:grid.tickets.view,grid.tickets.manage');
+        Route::delete('/tickets/{ticket}/attachments/{gridTicketAttachment}', [GridTicketController::class, 'destroyAttachment'])->middleware('permission:grid.tickets.view,grid.tickets.manage');
         Route::delete('/tickets/{ticket}', [GridTicketController::class, 'destroy'])->middleware('permission:grid.tickets.manage');
 
         Route::get('/tasks', [GridTaskController::class, 'index'])->middleware('permission:grid.tasks.manage');
@@ -239,6 +259,38 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::post('/users', [GridUserController::class, 'store']);
             Route::put('/users/{gridUser}', [GridUserController::class, 'update']);
             Route::delete('/users/{gridUser}', [GridUserController::class, 'destroy']);
+        });
+    });
+
+    Route::prefix('safe')->middleware('permission:safe.access')->group(function (): void {
+        Route::get('/dashboard', [SafeDashboardController::class, 'index'])->middleware('permission:safe.dashboard');
+
+        Route::middleware('permission:safe.students.manage')->group(function (): void {
+            Route::get('/students', [SafeStudentController::class, 'index']);
+            Route::post('/students', [SafeStudentController::class, 'store']);
+            Route::get('/students/{safeStudent}', [SafeStudentController::class, 'show']);
+            Route::put('/students/{safeStudent}', [SafeStudentController::class, 'update']);
+            Route::delete('/students/{safeStudent}', [SafeStudentController::class, 'destroy']);
+        });
+
+        Route::middleware('permission:safe.authorizations.manage')->group(function (): void {
+            Route::get('/authorizations', [SafeAuthorizationController::class, 'index']);
+            Route::post('/authorizations', [SafeAuthorizationController::class, 'store']);
+            Route::get('/authorizations/{safeAuthorization}', [SafeAuthorizationController::class, 'show']);
+            Route::put('/authorizations/{safeAuthorization}', [SafeAuthorizationController::class, 'update']);
+            Route::get('/authorizations/{safeAuthorization}/history', [SafeAuthorizationController::class, 'history']);
+        });
+
+        Route::prefix('teacher')->middleware('permission:safe.approve')->group(function (): void {
+            Route::get('/authorizations', [SafeTeacherController::class, 'index']);
+            Route::post('/authorizations/{safeAuthorization}/approve', [SafeTeacherController::class, 'approve']);
+            Route::post('/authorizations/{safeAuthorization}/deny', [SafeTeacherController::class, 'deny']);
+        });
+
+        Route::prefix('portaria')->middleware('permission:safe.portaria')->group(function (): void {
+            Route::get('/authorizations', [SafePortariaController::class, 'index']);
+            Route::post('/authorizations/{safeAuthorization}/confirm', [SafePortariaController::class, 'confirm']);
+            Route::post('/authorizations/{safeAuthorization}/deny', [SafePortariaController::class, 'deny']);
         });
     });
 });

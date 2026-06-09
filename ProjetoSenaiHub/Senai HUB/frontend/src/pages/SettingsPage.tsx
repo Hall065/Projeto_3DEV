@@ -9,6 +9,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { AppearanceSettings } from '../components/settings/AppearanceSettings'
 import {
@@ -16,6 +17,7 @@ import {
   ConnectPageHeader,
   OutlineButton,
 } from '../components/connect/ConnectShared'
+import { LanguageSwitcher } from '../components/settings/LanguageSwitcher'
 import { useAppearance } from '../contexts/AppearanceContext'
 import { useAuth } from '../contexts/AuthContext'
 import { notificationService } from '../services/notificationService'
@@ -68,10 +70,11 @@ function ToggleRow({
 const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
   in_app: true,
   email: false,
-  modules: { hub: true, connect: true, grid: true },
+  modules: { hub: true, connect: true, grid: true, safe: true },
 }
 
 export function SettingsPage() {
+  const { t } = useTranslation()
   const { user, refreshUser } = useAuth()
   const { isAdmin, can } = usePermissions()
   const { setWallpaperId, removeCustomWallpaper } = useAppearance()
@@ -105,10 +108,10 @@ export function SettingsPage() {
     try {
       await notificationService.updatePreferences(next)
       await refreshUser()
-      showFeedback('Preferencias de notificacao salvas.')
+      showFeedback(t('settings.notificationsSaved'))
     } catch {
       setNotificationPrefs(notificationPrefs)
-      showFeedback('Nao foi possivel salvar as notificacoes.')
+      showFeedback(t('settings.notificationsSaveError'))
     } finally {
       setSavingNotifications(false)
     }
@@ -117,14 +120,14 @@ export function SettingsPage() {
   const quickLinks: QuickLink[] = [
     {
       to: '/perfil',
-      label: 'Meu perfil',
-      description: 'Nome, e-mail, senha, aplicativos e permissões.',
+      label: t('settings.profileShortcut'),
+      description: t('settings.profileShortcutDesc'),
       icon: UserIcon,
     },
     {
       to: '/temas',
-      label: 'Temas (tela dedicada)',
-      description: 'Mesmas opções de plano de fundo em página ampla.',
+      label: t('settings.themesShortcut'),
+      description: t('settings.themesShortcutDesc'),
       icon: Paintbrush,
     },
   ]
@@ -132,8 +135,8 @@ export function SettingsPage() {
   if (isAdmin || can('hub.users.manage')) {
     quickLinks.push({
       to: '/hub/usuarios',
-      label: 'Usuários e perfis',
-      description: 'Gestão de contas e cargos no Hub.',
+      label: t('settings.usersShortcut'),
+      description: t('settings.usersShortcutDesc'),
       icon: Users,
     })
   }
@@ -147,30 +150,30 @@ export function SettingsPage() {
     try {
       localStorage.removeItem('senai_report_config_connect')
       localStorage.removeItem('senai_report_config_grid')
-      showFeedback('Rascunhos de relatórios removidos deste navegador.')
+      showFeedback(t('settings.draftsCleared'))
     } catch {
-      showFeedback('Não foi possível limpar os rascunhos.')
+      showFeedback(t('settings.draftsClearError'))
     }
   }
 
   function resetWallpaper() {
     removeCustomWallpaper()
     setWallpaperId(DEFAULT_WALLPAPER_ID)
-    showFeedback('Tema restaurado para o padrão SENAI.')
+    showFeedback(t('settings.wallpaperReset'))
   }
 
   return (
     <section className="w-full min-w-0">
       <ConnectPageHeader
-        title="Configurações"
-        subtitle="Preferências de aparência e interface. Dados da conta, senha e permissões ficam em Meu perfil."
+        title={t('settings.title')}
+        subtitle={t('settings.subtitle')}
         actions={
           <Link
             to="/perfil"
             className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-hub-border px-4 text-sm font-medium text-hub-navy transition hover:bg-hub-bg"
           >
             <UserIcon className="h-4 w-4" />
-            Meu perfil
+            {t('settings.myProfile')}
           </Link>
         }
       />
@@ -184,7 +187,7 @@ export function SettingsPage() {
       <div className="grid gap-6 lg:grid-cols-12">
         <aside className="space-y-4 lg:col-span-4">
           <ConnectCard className="p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-hub-text-muted">Atalhos</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-hub-text-muted">{t('settings.shortcuts')}</h2>
             <ul className="mt-4 space-y-2">
               {quickLinks.map((item) => {
                 const Icon = item.icon
@@ -213,14 +216,14 @@ export function SettingsPage() {
 
           {user && (
             <ConnectCard className="p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-hub-text-muted">Conta</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-hub-text-muted">{t('settings.account')}</p>
               <p className="mt-2 text-sm font-medium text-hub-navy">{user.name}</p>
               <p className="text-xs text-hub-text-muted">{user.email}</p>
               <p className="mt-2 text-xs text-hub-text-muted">
-                Perfil: <span className="font-medium text-hub-navy">{user.role_label ?? user.role}</span>
+                {t('settings.roleLabel')}: <span className="font-medium text-hub-navy">{user.role_label ?? user.role}</span>
               </p>
               <Link to="/perfil" className="mt-4 inline-flex text-sm font-medium text-hub-red hover:underline">
-                Editar dados da conta
+                {t('settings.editAccount')}
               </Link>
             </ConnectCard>
           )}
@@ -235,14 +238,14 @@ export function SettingsPage() {
                 <Sparkles className="h-5 w-5" />
               </span>
               <div>
-                <h2 className="text-lg font-semibold text-hub-navy">Interface</h2>
-                <p className="mt-0.5 text-sm text-hub-text-muted">Ajustes locais salvos neste navegador.</p>
+                <h2 className="text-lg font-semibold text-hub-navy">{t('settings.interface')}</h2>
+                <p className="mt-0.5 text-sm text-hub-text-muted">{t('settings.interfaceHint')}</p>
               </div>
             </header>
             <div className="space-y-2">
               <ToggleRow
-                label="Reduzir animações"
-                description="Desativa transições e animações decorativas para uma navegação mais estável."
+                label={t('settings.reduceMotion')}
+                description={t('settings.reduceMotionDesc')}
                 checked={reduceMotion}
                 onChange={setReduceMotion}
               />
@@ -255,30 +258,30 @@ export function SettingsPage() {
                 <Bell className="h-5 w-5" />
               </span>
               <div>
-                <h2 className="text-lg font-semibold text-hub-navy">Notificações</h2>
+                <h2 className="text-lg font-semibold text-hub-navy">{t('settings.notificationsTitle')}</h2>
                 <p className="mt-0.5 text-sm text-hub-text-muted">
-                  Alertas no sino do sistema e preferências por módulo.
+                  {t('settings.notificationsHint')}
                 </p>
               </div>
             </header>
             <div className="space-y-2">
               <ToggleRow
-                label="Notificações no sistema"
-                description="Exibe alertas no sino (Hub, Connect e Grid) quando você estiver logado."
+                label={t('settings.notificationsInApp')}
+                description={t('settings.notificationsInAppDesc')}
                 checked={notificationPrefs.in_app}
                 disabled={savingNotifications}
                 onChange={(value) => void updateNotificationPrefs({ in_app: value })}
               />
               <ToggleRow
-                label="Resumo por e-mail"
-                description="Envio por e-mail será habilitado em versão futura."
+                label={t('settings.notificationsEmail')}
+                description={t('settings.notificationsEmailDesc')}
                 checked={notificationPrefs.email}
-                disabled
-                onChange={() => undefined}
+                disabled={savingNotifications}
+                onChange={(value) => void updateNotificationPrefs({ email: value })}
               />
               <ToggleRow
-                label="Módulo Hub"
-                description="Usuários, senha e eventos administrativos."
+                label={t('settings.moduleHub')}
+                description={t('settings.moduleHubDesc')}
                 checked={notificationPrefs.modules.hub}
                 disabled={savingNotifications || !notificationPrefs.in_app}
                 onChange={(value) =>
@@ -286,8 +289,8 @@ export function SettingsPage() {
                 }
               />
               <ToggleRow
-                label="Módulo Connect"
-                description="Turmas, calendário, frequência, contratos e matrículas."
+                label={t('settings.moduleConnect')}
+                description={t('settings.moduleConnectDesc')}
                 checked={notificationPrefs.modules.connect}
                 disabled={savingNotifications || !notificationPrefs.in_app}
                 onChange={(value) =>
@@ -295,15 +298,28 @@ export function SettingsPage() {
                 }
               />
               <ToggleRow
-                label="Módulo Grid"
-                description="Chamados, tarefas e alertas de estoque."
+                label={t('settings.moduleGrid')}
+                description={t('settings.moduleGridDesc')}
                 checked={notificationPrefs.modules.grid}
                 disabled={savingNotifications || !notificationPrefs.in_app}
                 onChange={(value) =>
                   void updateNotificationPrefs({ modules: { ...notificationPrefs.modules, grid: value } })
                 }
               />
+              <ToggleRow
+                label={t('settings.moduleSafe')}
+                description={t('settings.moduleSafeDesc')}
+                checked={notificationPrefs.modules.safe ?? true}
+                disabled={savingNotifications || !notificationPrefs.in_app}
+                onChange={(value) =>
+                  void updateNotificationPrefs({ modules: { ...notificationPrefs.modules, safe: value } })
+                }
+              />
             </div>
+          </ConnectCard>
+
+          <ConnectCard className="p-6">
+            <LanguageSwitcher />
           </ConnectCard>
 
           <ConnectCard className="p-6">
@@ -312,20 +328,20 @@ export function SettingsPage() {
                 <Database className="h-5 w-5" />
               </span>
               <div>
-                <h2 className="text-lg font-semibold text-hub-navy">Dados locais</h2>
+                <h2 className="text-lg font-semibold text-hub-navy">{t('settings.localData')}</h2>
                 <p className="mt-0.5 text-sm text-hub-text-muted">
-                  Limpe preferências armazenadas só neste dispositivo, sem alterar sua conta no servidor.
+                  {t('settings.localDataHint')}
                 </p>
               </div>
             </header>
             <div className="flex flex-wrap gap-2">
               <OutlineButton type="button" onClick={clearLocalDrafts}>
                 <Zap className="h-4 w-4" />
-                Limpar rascunhos de relatórios
+                {t('settings.clearDrafts')}
               </OutlineButton>
               <OutlineButton type="button" onClick={resetWallpaper}>
                 <Paintbrush className="h-4 w-4" />
-                Restaurar tema padrão
+                {t('settings.resetWallpaper')}
               </OutlineButton>
             </div>
           </ConnectCard>

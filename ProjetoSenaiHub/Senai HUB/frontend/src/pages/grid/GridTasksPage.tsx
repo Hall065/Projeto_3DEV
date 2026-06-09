@@ -1,5 +1,6 @@
 import { CheckCircle2, Filter, Link2, ListTodo, Plus, UserX, Wrench } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
@@ -20,13 +21,7 @@ import { applyTaskColumn, GridTaskKanbanCard } from '../../components/grid/GridT
 import type { GridInventoryLine } from '../../types/grid'
 import { gridService } from '../../services/gridService'
 import type { GridPriority, GridTaskCard, GridTaskColumn } from '../../types/grid'
-import { confirmDelete } from '../../utils/confirmAction'
-
-const columnMeta: KanbanColumnDef<GridTaskColumn>[] = [
-  { id: 'a_fazer', label: 'A fazer', dot: 'bg-hub-navy', headerBg: 'bg-hub-navy/10' },
-  { id: 'em_andamento', label: 'Em andamento', dot: 'bg-amber-500', headerBg: 'bg-amber-50' },
-  { id: 'concluidas', label: 'Concluídas', dot: 'bg-emerald-500', headerBg: 'bg-emerald-50' },
-]
+import { parseApiError } from '../../utils/parseApiError'
 
 const emptyForm = {
   opened_by: '',
@@ -41,6 +36,7 @@ const emptyForm = {
 }
 
 export function GridTasksPage() {
+  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const openedFromQuery = useRef(false)
   const [tasks, setTasks] = useState<GridTaskCard[]>([])
@@ -54,6 +50,15 @@ export function GridTasksPage() {
   const [movingId, setMovingId] = useState<number | null>(null)
   const [fromTicketOpen, setFromTicketOpen] = useState(false)
   const [inventoryItems, setInventoryItems] = useState<GridInventoryLine[]>([])
+
+  const columnMeta = useMemo<KanbanColumnDef<GridTaskColumn>[]>(
+    () => [
+      { id: 'a_fazer', label: t('grid.tasks.columns.todo'), dot: 'bg-hub-navy', headerBg: 'bg-hub-navy/10' },
+      { id: 'em_andamento', label: t('grid.tasks.columns.inProgress'), dot: 'bg-amber-500', headerBg: 'bg-amber-50' },
+      { id: 'concluidas', label: t('grid.tasks.columns.done'), dot: 'bg-emerald-500', headerBg: 'bg-emerald-50' },
+    ],
+    [t],
+  )
 
   const load = () => {
     setLoading(true)
@@ -111,7 +116,7 @@ export function GridTasksPage() {
     if (Number.isNaN(id)) return
     if (editingId === id && drawerOpen) return
 
-    const task = tasks.find((t) => t.id === id)
+    const task = tasks.find((item) => item.id === id)
     if (!task) return
 
     openEdit(task)
@@ -120,7 +125,7 @@ export function GridTasksPage() {
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.opened_by.trim()) {
-      window.alert('Informe título e quem abriu a tarefa.')
+      window.alert(t('grid.tasks.alert.required'))
       return
     }
 
@@ -153,10 +158,7 @@ export function GridTasksPage() {
       closeDrawer()
       load()
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } })?.response
-        ?.data
-      const inv = msg?.errors?.inventory_items?.[0]
-      window.alert(inv ?? msg?.message ?? 'Não foi possível salvar a tarefa.')
+      window.alert(parseApiError(e, t('grid.tasks.alert.saveError')))
     } finally {
       setSaving(false)
     }
@@ -165,42 +167,39 @@ export function GridTasksPage() {
   const handleTaskMove = useCallback(async (taskId: number, column: GridTaskColumn) => {
     const snapshot = tasks
     setMovingId(taskId)
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? applyTaskColumn(t, column) : t)))
+    setTasks((prev) => prev.map((item) => (item.id === taskId ? applyTaskColumn(item, column) : item)))
 
     try {
       const updated = await gridService.updateTask(taskId, { column })
-      setTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)))
+      setTasks((prev) => prev.map((item) => (item.id === taskId ? updated : item)))
     } catch (e: unknown) {
       setTasks(snapshot)
-      const msg = (e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } })?.response
-        ?.data
-      const inv = msg?.errors?.inventory_items?.[0]
-      window.alert(inv ?? msg?.message ?? 'Não foi possível mover a tarefa. Verifique o estoque dos materiais.')
+      window.alert(parseApiError(e, t('grid.tasks.alert.moveError')))
     } finally {
       setMovingId(null)
     }
-  }, [tasks])
+  }, [tasks, t])
 
   const handleDelete = async (task: GridTaskCard) => {
-    if (!confirmDelete(`a tarefa "${task.title}"`)) return
+    if (!window.confirm(t('connect.confirm.delete', { entity: `a tarefa "${task.title}"` }))) return
     await gridService.deleteTask(task.id)
     load()
   }
 
-  const countByColumn = (col: GridTaskColumn) => tasks.filter((t) => t.column === col).length
+  const countByColumn = (col: GridTaskColumn) => tasks.filter((item) => item.column === col).length
 
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Tarefas"
-        subtitle="Arraste os cards entre as colunas. Ao concluir a tarefa, o chamado vinculado vai para aprovação do chefe."
+        title={t('grid.tasks.title')}
+        subtitle={t('grid.tasks.subtitle')}
         actions={
           <div className="flex flex-wrap gap-2">
             <OutlineButton onClick={() => setFromTicketOpen(true)}>
-              <Link2 className="h-4 w-4" /> A partir de chamado
+              <Link2 className="h-4 w-4" /> {t('grid.tasks.actions.fromTicket')}
             </OutlineButton>
             <PrimaryButton onClick={() => openCreate('a_fazer')}>
-              <Plus className="h-4 w-4" /> Nova tarefa
+              <Plus className="h-4 w-4" /> {t('grid.tasks.actions.newTask')}
             </PrimaryButton>
           </div>
         }
@@ -211,10 +210,10 @@ export function GridTasksPage() {
           Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
         ) : (
           <>
-            <KpiCard icon={ListTodo} label="A fazer" value={countByColumn('a_fazer')} variant="blue" />
-            <KpiCard icon={Wrench} label="Em andamento" value={countByColumn('em_andamento')} variant="coral" />
-            <KpiCard icon={CheckCircle2} label="Concluídas" value={countByColumn('concluidas')} variant="green" />
-            <KpiCard icon={UserX} label="Sem responsável" value={tasks.filter((t) => !t.assignee).length} variant="senai" />
+            <KpiCard icon={ListTodo} label={t('grid.tasks.kpis.todo')} value={countByColumn('a_fazer')} variant="blue" />
+            <KpiCard icon={Wrench} label={t('grid.tasks.kpis.inProgress')} value={countByColumn('em_andamento')} variant="coral" />
+            <KpiCard icon={CheckCircle2} label={t('grid.tasks.kpis.done')} value={countByColumn('concluidas')} variant="green" />
+            <KpiCard icon={UserX} label={t('grid.tasks.kpis.unassigned')} value={tasks.filter((item) => !item.assignee).length} variant="senai" />
           </>
         )}
       </div>
@@ -223,23 +222,23 @@ export function GridTasksPage() {
         <div className="grid gap-4 lg:grid-cols-6">
           <input
             className={`${inputClass} lg:col-span-2`}
-            placeholder="Buscar tarefa..."
+            placeholder={t('grid.tasks.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           <OutlineButton onClick={() => setSearch('')}>
-            <Filter className="h-4 w-4" /> Limpar
+            <Filter className="h-4 w-4" /> {t('grid.common.clear')}
           </OutlineButton>
         </div>
       </ConnectCard>
 
       {loading ? (
-        <ConnectLoadingSpinner label="Carregando tarefas..." className="min-h-[400px]" />
+        <ConnectLoadingSpinner label={t('grid.tasks.loading')} className="min-h-[400px]" />
       ) : (
         <GridKanbanBoard
           columns={columnMeta}
           items={tasks}
-          getColumnId={(t) => t.column}
+          getColumnId={(item) => item.column}
           applyColumn={applyTaskColumn}
           onItemsChange={setTasks}
           onItemMove={handleTaskMove}
@@ -257,7 +256,7 @@ export function GridTasksPage() {
               className="flex items-center justify-center gap-1 rounded-lg py-2 text-sm font-medium text-hub-red hover:bg-white/40"
               onClick={() => openCreate(columnId)}
             >
-              <Plus className="h-4 w-4" /> Adicionar tarefa
+              <Plus className="h-4 w-4" /> {t('grid.tasks.actions.addTask')}
             </button>
           )}
         />
@@ -266,59 +265,59 @@ export function GridTasksPage() {
       <ConnectDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title={editingId ? 'Editar tarefa' : 'Nova tarefa'}
-        subtitle="Dados da ordem de serviço / tarefa de manutenção."
+        title={editingId ? t('grid.tasks.drawer.edit') : t('grid.tasks.drawer.new')}
+        subtitle={t('grid.tasks.drawer.subtitle')}
         footer={
           <div className="flex justify-end gap-2">
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
             <PrimaryButton onClick={() => void handleSave()} disabled={saving}>
-              {saving ? 'Salvando...' : 'Salvar'}
+              {saving ? t('connect.common.saving') : t('common.save')}
             </PrimaryButton>
           </div>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Aberto por" required>
-            <input className={inputClass} value={form.opened_by} onChange={(e) => setForm({ ...form, opened_by: e.target.value })} placeholder="Ex: Secretaria pedagógica" />
+          <FormField label={t('grid.tasks.form.openedBy')} required>
+            <input className={inputClass} value={form.opened_by} onChange={(e) => setForm({ ...form, opened_by: e.target.value })} />
           </FormField>
-          <FormField label="Título" required>
-            <input className={inputClass} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Reparo na tomada da sala 12" />
+          <FormField label={t('grid.tasks.form.title')} required>
+            <input className={inputClass} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </FormField>
           <div className="sm:col-span-2">
-            <FormField label="Descrição">
-              <textarea className={`${inputClass} min-h-[80px] py-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalhes da tarefa e materiais necessários..." />
+            <FormField label={t('grid.tasks.form.description')}>
+              <textarea className={`${inputClass} min-h-[80px] py-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </FormField>
           </div>
-          <FormField label="Sala">
-            <input className={inputClass} value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="Ex: 12" />
+          <FormField label={t('grid.tasks.form.room')}>
+            <input className={inputClass} value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} />
           </FormField>
-          <FormField label="Bloco">
-            <input className={inputClass} value={form.block} onChange={(e) => setForm({ ...form, block: e.target.value })} placeholder="Ex: B" />
+          <FormField label={t('grid.tasks.form.block')}>
+            <input className={inputClass} value={form.block} onChange={(e) => setForm({ ...form, block: e.target.value })} />
           </FormField>
-          <FormField label="Responsável">
-            <input className={inputClass} value={form.assignee} onChange={(e) => setForm({ ...form, assignee: e.target.value })} placeholder="Ex: João Silva" />
+          <FormField label={t('grid.tasks.form.assignee')}>
+            <input className={inputClass} value={form.assignee} onChange={(e) => setForm({ ...form, assignee: e.target.value })} />
           </FormField>
-          <FormField label="Prioridade">
+          <FormField label={t('grid.tasks.form.priority')}>
             <select className={selectClass} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as typeof form.priority })}>
-              <option value="alta">Alta</option>
-              <option value="media">Média</option>
-              <option value="baixa">Baixa</option>
+              <option value="alta">{t('grid.tasks.form.priorityHigh')}</option>
+              <option value="media">{t('grid.tasks.form.priorityMedium')}</option>
+              <option value="baixa">{t('grid.tasks.form.priorityLow')}</option>
             </select>
           </FormField>
-          <FormField label="Coluna">
+          <FormField label={t('grid.tasks.form.column')}>
             <select className={selectClass} value={form.column} onChange={(e) => setForm({ ...form, column: e.target.value as GridTaskColumn })}>
-              <option value="a_fazer">A fazer</option>
-              <option value="em_andamento">Em andamento</option>
-              <option value="concluidas">Concluídas</option>
+              <option value="a_fazer">{t('grid.tasks.columns.todo')}</option>
+              <option value="em_andamento">{t('grid.tasks.columns.inProgress')}</option>
+              <option value="concluidas">{t('grid.tasks.columns.done')}</option>
             </select>
           </FormField>
           <div className="sm:col-span-2">
-            <FormField label="Itens avulsos (texto, separados por vírgula)">
-              <input className={inputClass} value={form.items} onChange={(e) => setForm({ ...form, items: e.target.value })} placeholder="Lâmpada LED, Selante..." />
+            <FormField label={t('grid.tasks.form.looseItems')}>
+              <input className={inputClass} value={form.items} onChange={(e) => setForm({ ...form, items: e.target.value })} />
             </FormField>
           </div>
           <div className="sm:col-span-2">
-            <FormField label="Materiais do estoque">
+            <FormField label={t('grid.tasks.form.inventoryMaterials')}>
               <GridInventoryPicker value={inventoryItems} onChange={setInventoryItems} />
             </FormField>
           </div>

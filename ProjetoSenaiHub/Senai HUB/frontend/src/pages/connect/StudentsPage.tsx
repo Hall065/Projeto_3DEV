@@ -1,9 +1,9 @@
-import { Download, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Download, Eye, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -21,9 +21,9 @@ import {
 import { UserAvatar } from '../../components/ui/UserAvatar'
 import { connectService } from '../../services/connectService'
 import type { ConnectClass, ConnectStudent, PaginatedMeta } from '../../types/connect'
-import { confirmDelete } from '../../utils/confirmAction'
 import { optionalForeignIdOrNull } from '../../utils/connectForm'
 import { downloadCsv } from '../../utils/csvExport'
+import { parseApiError } from '../../utils/parseApiError'
 
 const emptyStudentForm = {
   full_name: '',
@@ -40,6 +40,7 @@ const emptyStudentForm = {
 }
 
 export function StudentsPage() {
+  const { t } = useTranslation()
   const [students, setStudents] = useState<ConnectStudent[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [classes, setClasses] = useState<ConnectClass[]>([])
@@ -119,7 +120,7 @@ export function StudentsPage() {
 
   const handleSave = async (keepOpen = false) => {
     if (!form.full_name.trim()) {
-      window.alert('Informe o nome completo do aluno.')
+      window.alert(t('connect.students.alert.nameRequired'))
       return
     }
 
@@ -140,6 +141,8 @@ export function StudentsPage() {
         setForm(emptyStudentForm)
       }
       load()
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, 'Nao foi possivel salvar o aluno.'))
     } finally {
       setSaving(false)
     }
@@ -148,7 +151,14 @@ export function StudentsPage() {
   const handleExport = () => {
     downloadCsv(
       'alunos',
-      ['Nome', 'RM', 'Turma', 'Curso', 'Data de nascimento', 'Status'],
+      [
+        t('connect.table.name'),
+        t('connect.students.table.registration'),
+        t('connect.table.class'),
+        t('connect.table.course'),
+        t('connect.students.table.birthDate'),
+        t('connect.table.status'),
+      ],
       students.map((student) => [
         student.full_name,
         student.registration_number ?? '-',
@@ -161,9 +171,13 @@ export function StudentsPage() {
   }
 
   const handleDelete = async (student: ConnectStudent) => {
-    if (!confirmDelete(`o aluno "${student.full_name}"`)) return
-    await connectService.deleteStudent(student.id)
-    load()
+    if (!window.confirm(t('connect.confirm.delete', { entity: `o aluno "${student.full_name}"` }))) return
+    try {
+      await connectService.deleteStudent(student.id)
+      load()
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, 'Nao foi possivel excluir o aluno.'))
+    }
   }
 
   const allSelected = students.length > 0 && students.every((s) => selectedIds.has(s.id))
@@ -195,22 +209,22 @@ export function StudentsPage() {
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Gerenciamento de Alunos"
-        subtitle="Consulte, filtre e gerencie os alunos cadastrados."
+        title={t('connect.students.title')}
+        subtitle={t('connect.students.subtitle')}
         actions={
           <>
             <OutlineButton onClick={handleExport}>
-              <Download className="h-4 w-4" /> Exportar
+              <Download className="h-4 w-4" /> {t('connect.common.export')}
             </OutlineButton>
-            <OutlineButton><Filter className="h-4 w-4" /> Filtros</OutlineButton>
-            <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
+            <OutlineButton><Filter className="h-4 w-4" /> {t('connect.common.filters')}</OutlineButton>
+            <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> {t('connect.common.new')}</PrimaryButton>
           </>
         }
       />
 
       <ConnectCard className="mb-4 p-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FormField label="Turma">
+          <FormField label={t('connect.table.class')}>
             <select
               className={selectClass}
               value={classFilter}
@@ -219,14 +233,14 @@ export function StudentsPage() {
                 setClassFilter(e.target.value)
               }}
             >
-              <option value="">Todas as turmas</option>
+              <option value="">{t('connect.students.filters.allClasses')}</option>
               {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </FormField>
-          <FormField label="Nome">
+          <FormField label={t('connect.table.name')}>
             <input
               className={inputClass}
-              placeholder="Buscar por nome..."
+              placeholder={t('connect.students.filters.searchPlaceholder')}
               value={search}
               onChange={(e) => {
                 setPage(1)
@@ -234,7 +248,7 @@ export function StudentsPage() {
               }}
             />
           </FormField>
-          <FormField label="Status">
+          <FormField label={t('connect.table.status')}>
             <select
               className={selectClass}
               value={statusFilter}
@@ -243,24 +257,26 @@ export function StudentsPage() {
                 setStatusFilter(e.target.value)
               }}
             >
-              <option value="">Todos os status</option>
-              <option value="active">Ativo</option>
-              <option value="inactive">Inativo</option>
-              <option value="graduated">Formado</option>
+              <option value="">{t('connect.students.filters.allStatuses')}</option>
+              <option value="active">{t('connect.status.active')}</option>
+              <option value="inactive">{t('connect.status.inactive')}</option>
+              <option value="graduated">{t('connect.status.graduated')}</option>
             </select>
           </FormField>
         </div>
         <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end [&_button]:w-full sm:[&_button]:w-auto">
-          <OutlineButton onClick={clearFilters}>Limpar Filtros</OutlineButton>
+          <OutlineButton onClick={clearFilters}>{t('connect.common.clearFilters')}</OutlineButton>
         </div>
       </ConnectCard>
 
       <ConnectCard>
         <p className="border-b border-hub-border/60 px-4 py-3 text-sm text-hub-text-muted sm:px-6">
-          {loading ? 'Carregando alunos...' : `${meta?.total?.toLocaleString('pt-BR') ?? 0} alunos encontrados`}
+          {loading
+            ? t('connect.students.loading')
+            : t('connect.students.count', { count: meta?.total?.toLocaleString('pt-BR') ?? 0 })}
         </p>
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando alunos..." className="min-h-[280px]" />
+          <ConnectLoadingSpinner label={t('connect.students.loading')} className="min-h-[280px]" />
         ) : (
         <>
         <ConnectTableScroll>
@@ -268,14 +284,14 @@ export function StudentsPage() {
             <thead className="glass-thead text-hub-text-muted">
               <tr>
                 <th className="px-4 py-3">
-                  <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Selecionar todos" />
+                  <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label={t('connect.common.selectAll')} />
                 </th>
-                <th className="px-4 py-3 text-left">Nome</th>
-                <th className="px-4 py-3 text-left">RM</th>
-                <th className="px-4 py-3 text-left">Turma</th>
-                <th className="px-4 py-3 text-left">Curso</th>
-                <th className="px-4 py-3 text-left">Data de nascimento</th>
-                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.name')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.students.table.registration')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.class')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.course')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.students.table.birthDate')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -287,7 +303,7 @@ export function StudentsPage() {
                       type="checkbox"
                       checked={selectedIds.has(student.id)}
                       onChange={() => toggleOne(student.id)}
-                      aria-label={`Selecionar ${student.full_name}`}
+                      aria-label={t('connect.common.selectItem', { name: student.full_name })}
                     />
                   </td>
                   <td className="px-4 py-3">
@@ -303,13 +319,13 @@ export function StudentsPage() {
                   <td className="px-4 py-3"><StatusBadge status={student.status} /></td>
                   <td className="px-4 py-3 text-right">
                     <ConnectRowActionsMenu
-                      ariaLabel={`Ações de ${student.full_name}`}
+                      ariaLabel={t('connect.common.actionsOf', { name: student.full_name })}
                       actions={[
-                        viewRowAction(() => setViewId(student.id)),
-                        { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(student) },
+                        { key: 'view', label: t('connect.common.view'), icon: Eye, onClick: () => setViewId(student.id) },
+                        { key: 'edit', label: t('connect.common.edit'), icon: Pencil, onClick: () => openEdit(student) },
                         {
                           key: 'delete',
-                          label: 'Excluir',
+                          label: t('connect.common.delete'),
                           icon: Trash2,
                           variant: 'danger',
                           onClick: () => void handleDelete(student),
@@ -333,59 +349,59 @@ export function StudentsPage() {
           setDrawerOpen(false)
           setEditingId(null)
         }}
-        title={editingId ? 'Editar aluno' : 'Novo aluno'}
-        subtitle={editingId ? 'Atualize os dados do aluno.' : 'Preencha os dados para cadastrar o novo aluno.'}
+        title={editingId ? t('connect.students.drawer.edit') : t('connect.students.drawer.new')}
+        subtitle={editingId ? t('connect.students.drawer.editSubtitle') : t('connect.students.drawer.newSubtitle')}
         footer={
           <div className="flex justify-end gap-2">
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
-            <OutlineButton onClick={() => void handleSave(true)} disabled={saving}>Salvar e Novo</OutlineButton>
-            <PrimaryButton onClick={() => void handleSave()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</PrimaryButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
+            <OutlineButton onClick={() => void handleSave(true)} disabled={saving}>{t('connect.common.saveAndNew')}</OutlineButton>
+            <PrimaryButton onClick={() => void handleSave()} disabled={saving}>{saving ? t('connect.common.saving') : t('common.save')}</PrimaryButton>
           </div>
         }
       >
         <div className="space-y-6">
           <section>
-            <h3 className="mb-3 font-semibold text-hub-navy">Dados pessoais</h3>
+            <h3 className="mb-3 font-semibold text-hub-navy">{t('connect.students.sections.personal')}</h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <FormField label="Nome completo" required>
+              <FormField label={t('connect.students.form.fullName')} required>
                 <input className={inputClass} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="Ex: Maria Silva" />
               </FormField>
-              <FormField label="RM" hint="Opcional">
+              <FormField label={t('connect.students.form.registration')} hint={t('connect.students.form.optional')}>
                 <input className={inputClass} value={form.registration_number} onChange={(e) => setForm({ ...form, registration_number: e.target.value })} placeholder="Ex: RM20250130" />
               </FormField>
-              <FormField label="CPF">
+              <FormField label={t('connect.students.form.cpf')}>
                 <input className={inputClass} value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" />
               </FormField>
-              <FormField label="Data de nascimento" hint="Clique para abrir o calendário">
+              <FormField label={t('connect.students.form.birthDate')} hint={t('connect.students.form.calendarHint')}>
                 <input type="date" className={inputClass} value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
               </FormField>
-              <FormField label="E-mail pessoal">
+              <FormField label={t('connect.students.form.personalEmail')}>
                 <input type="email" className={inputClass} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="aluno@email.com" />
               </FormField>
-              <FormField label="Celular">
+              <FormField label={t('connect.students.form.phone')}>
                 <input className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(11) 99999-9999" />
               </FormField>
             </div>
           </section>
           <section>
-            <h3 className="mb-3 font-semibold text-hub-navy">Informações acadêmicas</h3>
-            <FormField label="Turma" hint="Opcional — matricule depois">
+            <h3 className="mb-3 font-semibold text-hub-navy">{t('connect.students.sections.academic')}</h3>
+            <FormField label={t('connect.students.form.class')} hint={t('connect.students.form.classHint')}>
               <select className={selectClass} value={form.connect_class_id} onChange={(e) => setForm({ ...form, connect_class_id: e.target.value })}>
-                <option value="">Sem turma (definir depois)</option>
+                <option value="">{t('connect.students.form.noClass')}</option>
                 {classes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </FormField>
-            <FormField label="Status">
+            <FormField label={t('connect.table.status')}>
               <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                <option value="active">Ativo</option>
-                <option value="inactive">Inativo</option>
-                <option value="graduated">Formado</option>
+                <option value="active">{t('connect.status.active')}</option>
+                <option value="inactive">{t('connect.status.inactive')}</option>
+                <option value="graduated">{t('connect.status.graduated')}</option>
               </select>
             </FormField>
           </section>
           <section>
-            <h3 className="mb-3 font-semibold text-hub-navy">Informações adicionais</h3>
-            <FormField label="Endereço">
+            <h3 className="mb-3 font-semibold text-hub-navy">{t('connect.students.sections.additional')}</h3>
+            <FormField label={t('connect.students.form.address')}>
               <input
                 className={inputClass}
                 value={form.address}
@@ -393,7 +409,7 @@ export function StudentsPage() {
                 placeholder="Rua, número, bairro, cidade"
               />
             </FormField>
-            <FormField label="Nome do responsável">
+            <FormField label={t('connect.students.form.guardian')}>
               <input
                 className={inputClass}
                 value={form.guardian_name}
@@ -401,7 +417,7 @@ export function StudentsPage() {
                 placeholder="Nome do responsável legal"
               />
             </FormField>
-            <FormField label="Observações">
+            <FormField label={t('connect.students.form.notes')}>
               <textarea
                 className={`${inputClass} min-h-[80px] py-2`}
                 value={form.notes}

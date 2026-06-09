@@ -1,10 +1,12 @@
 import { GraduationCap, Loader2, Search, Wrench, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useGlobalSearch } from '../../contexts/GlobalSearchContext'
 import { searchService, type SearchResultGroup } from '../../services/searchService'
 
 export function GlobalSearchPalette() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { open, closeSearch } = useGlobalSearch()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -54,13 +56,18 @@ export function GlobalSearchPalette() {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar aluno, turma, chamado #CH-..., estoque..."
+            placeholder={t('search.placeholder')}
             className="min-w-0 flex-1 cursor-text bg-transparent text-sm outline-none"
           />
           <kbd className="hidden rounded border border-hub-border px-1.5 py-0.5 text-[10px] text-hub-text-muted sm:inline">
             Esc
           </kbd>
-          <button type="button" onClick={closeSearch} className="rounded-lg p-1 hover:bg-hub-bg" aria-label="Fechar">
+          <button
+            type="button"
+            onClick={closeSearch}
+            className="rounded-lg p-1 hover:bg-hub-bg"
+            aria-label={t('search.close')}
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -68,18 +75,18 @@ export function GlobalSearchPalette() {
         <div className="max-h-[50vh] overflow-y-auto p-2">
           {query.trim().length < 2 && (
             <p className="px-3 py-6 text-center text-sm text-hub-text-muted">
-              Digite ao menos 2 caracteres. Atalho: <strong>Ctrl+K</strong>
+              {t('search.minChars')}
             </p>
           )}
 
           {loading && (
             <div className="flex items-center justify-center gap-2 py-8 text-sm text-hub-text-muted">
-              <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
+              <Loader2 className="h-4 w-4 animate-spin" /> {t('search.searching')}
             </div>
           )}
 
           {!loading && query.trim().length >= 2 && groups.length === 0 && (
-            <p className="px-3 py-6 text-center text-sm text-hub-text-muted">Nenhum resultado encontrado.</p>
+            <p className="px-3 py-6 text-center text-sm text-hub-text-muted">{t('search.noResults')}</p>
           )}
 
           {groups.map((group) => (

@@ -28,7 +28,7 @@ export function usePermissions() {
 
   const canAny = (...required: string[]) => required.some((p) => can(p))
 
-  const canAccessModule = (slug: 'connect' | 'grid') =>
+  const canAccessModule = (slug: 'connect' | 'grid' | 'safe') =>
     user?.is_admin === true || (user?.application_slugs?.includes(slug) ?? false)
 
   return {

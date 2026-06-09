@@ -26,6 +26,12 @@ class HubRole
 
     public const GRID_SECRETARIA = 'grid_secretaria';
 
+    public const SAFE_AQV = 'safe_aqv';
+
+    public const SAFE_PROFESSOR = 'safe_professor';
+
+    public const SAFE_PORTARIA = 'safe_portaria';
+
     public const UNASSIGNED = 'unassigned';
 
     /** @return list<string> */

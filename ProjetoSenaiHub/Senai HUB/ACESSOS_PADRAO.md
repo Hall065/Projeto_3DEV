@@ -103,6 +103,30 @@ Credenciais criadas pelo `UserSeeder` ao rodar `php artisan db:seed`.
 
 > Escopo: vê apenas chamados/tarefas que **ela abriu** (ex.: `#CH-2026-ROLE-S1`).
 
+## SAFE — Controle de entradas/saídas
+
+| Nome | E-mail | Perfil | Abas |
+|------|--------|--------|------|
+| Ana AQV | `ana.aqv@safe.senai.local` | AQV (SAFE) | Dashboard, Alunos, Autorizações |
+| Marcos Professor SAFE | `marcos.professor@safe.senai.local` | Professor (SAFE) | Dashboard, Aprovações |
+| Helena Portaria | `helena.portaria@safe.senai.local` | Portaria (SAFE) | Dashboard, Portaria |
+
+> Senha padrão: `password123`.
+
+## Busca global
+
+Atalho **Ctrl+K** (Windows/Linux) ou botão de busca na barra superior dos módulos Hub, Connect, Grid e SAFE.
+
+| Aspecto | Comportamento |
+|---------|----------------|
+| Endpoint | `GET /api/search?q=...` (mínimo 2 caracteres) |
+| Escopo | Resultados filtrados pelas permissões do usuário logado |
+| Connect | Alunos, turmas, cursos, professores (conforme perfil) |
+| Grid | Chamados (`#CH-...`), tarefas, itens de estoque |
+| SAFE | Não incluído na busca global nesta versão |
+
+A busca usa debounce de 250 ms no frontend (`GlobalSearchPalette`).
+
 ## Sugestões rápidas de teste
 
 | Cenário | E-mail sugerido |
@@ -118,6 +142,9 @@ Credenciais criadas pelo `UserSeeder` ao rodar `php artisan db:seed`.
 | Chamados delegados (técnico Grid) | `pedro.tecnico@grid.senai.local` |
 | Chamados próprios (professor Grid) | `marcos.professor@grid.senai.local` |
 | Chamados próprios (secretaria Grid) | `sandra.secretaria@grid.senai.local` |
+| Fluxo SAFE (AQV) | `ana.aqv@safe.senai.local` |
+| Aprovação professor (SAFE) | `marcos.professor@safe.senai.local` |
+| Portaria (SAFE) | `helena.portaria@safe.senai.local` |
 
 ## Recriar os dados de teste
 

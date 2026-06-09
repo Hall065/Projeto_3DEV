@@ -6,6 +6,7 @@ import { GridPriorityBadge, GridTicketStatusBadge } from './GridBadges'
 import { GridInventoryPicker, guardInventoryBeforeSubmit } from './GridInventoryPicker'
 import { gridService } from '../../services/gridService'
 import type { GridInventoryLine, GridTicket, GridUser } from '../../types/grid'
+import { parseApiError } from '../../utils/parseApiError'
 
 export function GridCreateTaskFromTicketDrawer({
   open,
@@ -42,6 +43,7 @@ export function GridCreateTaskFromTicketDrawer({
           if (!userRes.data.length) setTechnicians(all.data)
         })
       })
+      .catch((err) => window.alert(parseApiError(err, 'Nao foi possivel carregar os chamados.')))
       .finally(() => setLoading(false))
   }, [open, search])
 
@@ -81,10 +83,7 @@ export function GridCreateTaskFromTicketDrawer({
       setSelectedId(null)
       setInventoryItems([])
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } })?.response
-        ?.data
-      const inv = msg?.errors?.inventory_items?.[0]
-      window.alert(inv ?? msg?.message ?? 'Não foi possível criar a tarefa.')
+      window.alert(parseApiError(e, 'Nao foi possivel criar a tarefa.'))
     } finally {
       setSaving(false)
     }

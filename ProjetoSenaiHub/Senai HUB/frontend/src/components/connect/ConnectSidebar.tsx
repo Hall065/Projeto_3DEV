@@ -9,6 +9,7 @@ import {
   filterNavItems,
 } from '../../config/navPermissions'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useNavLabel } from '../../hooks/useNavLabel'
 
 interface ConnectSidebarProps {
   collapsed: boolean
@@ -20,6 +21,7 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
   const isCollapsed = collapsed && !mobileOpen
   const location = useLocation()
   const { can, canAny } = usePermissions()
+  const navLabel = useNavLabel('connect')
   const mainNav = filterNavItems(connectNavItems, can)
   const showContracts = canAny('connect.contracts.view', 'connect.contracts.view_own', 'connect.contracts.manage')
   const showSalary = canAny('connect.salary.view', 'connect.salary.view_own')
@@ -78,11 +80,11 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
             to={item.to}
             end={item.end}
             className={linkClass}
-            title={item.label}
+            title={navLabel(item)}
             onClick={onMobileClose}
           >
             <item.icon className="h-5 w-5 shrink-0" />
-            {!isCollapsed && <span>{item.label}</span>}
+            {!isCollapsed && <span>{navLabel(item)}</span>}
           </NavLink>
         ))}
 
@@ -118,7 +120,7 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
                   }
                   onClick={onMobileClose}
                 >
-                  {connectContractNav.label}
+                  {navLabel(connectContractNav)}
                 </NavLink>
               </div>
             )}
@@ -128,7 +130,7 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
         {showSalary && (
           <NavLink to={connectSalaryNav.to} className={linkClass} title="Salario" onClick={onMobileClose}>
             <connectSalaryNav.icon className="h-5 w-5 shrink-0" />
-            {!isCollapsed && <span>{connectSalaryNav.label}</span>}
+            {!isCollapsed && <span>{navLabel(connectSalaryNav)}</span>}
           </NavLink>
         )}
       </nav>

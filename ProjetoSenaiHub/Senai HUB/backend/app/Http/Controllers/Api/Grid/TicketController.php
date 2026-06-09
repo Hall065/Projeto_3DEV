@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\Api\Grid;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Grid\UploadGridTicketAttachmentRequest;
+use App\Http\Resources\Grid\GridTicketAttachmentResource;
 use App\Http\Resources\Grid\GridTicketResource;
 use App\Http\Resources\Grid\GridTaskResource;
 use App\Models\Grid\GridInventoryItem;
 use App\Models\Grid\GridTask;
 use App\Models\Grid\GridTicket;
+use App\Models\Grid\GridTicketAttachment;
+use App\Services\Grid\GridTicketAttachmentService;
 use App\Services\Grid\GridWorkflowService;
 use App\Support\GridCode;
+use App\Support\GridParticipantSync;
 use App\Support\HubRole;
 use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
@@ -18,12 +23,16 @@ use Illuminate\Validation\Rule;
 
 class TicketController extends Controller
 {
-    public function __construct(private GridWorkflowService $workflow) {}
+    public function __construct(
+        private GridWorkflowService $workflow,
+        private GridTicketAttachmentService $attachments,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
         $query = UserAccessScope::gridTicketQuery($request->user())
-            ->withCount('tasks')
+            ->withCount(['tasks', 'attachments'])
+            ->with(['attachments' => fn ($builder) => $builder->orderBy('created_at')])
             ->orderByDesc('opened_at');
 
         $query->search($request->string('search')->trim()->toString() ?: null);
@@ -58,7 +67,7 @@ class TicketController extends Controller
     {
         abort_unless(UserAccessScope::canAccessGridTicket($request->user(), $ticket), 403);
 
-        $ticket->load(['tasks']);
+        $ticket->load(['tasks', 'attachments']);
 
         return response()->json([
             'data' => new GridTicketResource($ticket),
@@ -116,7 +125,10 @@ class TicketController extends Controller
         $user = $request->user();
         if (in_array($user?->role, [HubRole::GRID_PROFESSOR, HubRole::GRID_SECRETARIA], true)) {
             $validated['requester'] = $user->name;
+            $validated['requester_user_id'] = $user->id;
         }
+
+        GridParticipantSync::syncTicket($validated);
 
         $ticket = GridTicket::query()->create([
             ...$validated,
@@ -164,6 +176,7 @@ class TicketController extends Controller
 
         $previousStatus = $ticket->status;
         $previousAssignee = $ticket->assignee;
+        GridParticipantSync::syncTicket($validated);
         $ticket = $this->workflow->updateTicket($ticket, $validated);
 
         app(\App\Services\Notification\SystemNotificationTriggers::class)
@@ -259,6 +272,29 @@ class TicketController extends Controller
         ], 201);
     }
 
+    public function storeAttachment(UploadGridTicketAttachmentRequest $request, GridTicket $ticket): JsonResponse
+    {
+        abort_unless(UserAccessScope::canAccessGridTicket($request->user(), $ticket), 403);
+
+        $attachment = $this->attachments->store($ticket, $request->file('file'), $request->user());
+
+        return response()->json([
+            'data' => new GridTicketAttachmentResource($attachment),
+            'message' => 'Anexo adicionado ao chamado.',
+        ], 201);
+    }
+
+    public function destroyAttachment(Request $request, GridTicket $ticket, GridTicketAttachment $gridTicketAttachment): JsonResponse
+    {
+        abort_unless(UserAccessScope::canAccessGridTicket($request->user(), $ticket), 403);
+        abort_unless($gridTicketAttachment->grid_ticket_id === $ticket->id, 404);
+        abort_unless($this->attachments->canDelete($request->user(), $gridTicketAttachment), 403);
+
+        $this->attachments->delete($gridTicketAttachment);
+
+        return response()->json(['message' => 'Anexo removido.']);
+    }
+
     public function destroy(Request $request, GridTicket $ticket): JsonResponse
     {
         abort_unless(UserAccessScope::canAccessGridTicket($request->user(), $ticket), 403);
@@ -267,6 +303,7 @@ class TicketController extends Controller
             $this->workflow->releaseReservations($task);
         });
 
+        $this->attachments->deleteAllForTicket($ticket);
         $ticket->delete();
 
         return response()->json(['message' => 'Chamado excluído com sucesso.']);

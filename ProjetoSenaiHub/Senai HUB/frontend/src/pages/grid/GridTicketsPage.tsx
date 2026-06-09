@@ -1,10 +1,11 @@
-import { AlertTriangle, CheckCircle2, ClipboardList, Filter, LayoutGrid, List, Pencil, Plus, Trash2, UserCheck, Wrench } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { AlertTriangle, CheckCircle2, ClipboardList, Eye, Filter, LayoutGrid, List, Pencil, Plus, Trash2, UserCheck, Wrench } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
 import {
   ConnectCard,
@@ -25,20 +26,30 @@ import { GridEvaluateTicketDrawer } from '../../components/grid/GridEvaluateTick
 import { canDragTicket, canMoveTicketTo, ticketMoveBlockedMessage } from '../../utils/gridTicketWorkflow'
 import { applyTicketStatus, GridTicketKanbanCard } from '../../components/grid/GridTicketKanbanCard'
 import { useAuth } from '../../contexts/AuthContext'
+import { GridTicketAttachmentsPanel, uploadPendingTicketAttachments } from '../../components/grid/GridTicketAttachmentsPanel'
 import { GridTicketCard } from '../../components/grid/GridTicketCard'
 import { gridService } from '../../services/gridService'
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus'
-import type { GridDashboardData, GridPriority, GridTicket, GridTicketStatus, PaginatedMeta } from '../../types/grid'
-import { confirmDelete } from '../../utils/confirmAction'
+import { parseApiError } from '../../utils/parseApiError'
+import type {
+  GridDashboardData,
+  GridPriority,
+  GridTicket,
+  GridTicketAttachment,
+  GridTicketStatus,
+  PaginatedMeta,
+} from '../../types/grid'
 
-const ticketColumns: KanbanColumnDef<GridTicketStatus>[] = [
-  { id: 'aberto', label: 'Abertos', dot: 'bg-blue-500', headerBg: 'bg-blue-50' },
-  { id: 'pendente', label: 'Pendentes', dot: 'bg-slate-400', headerBg: 'bg-slate-50' },
-  { id: 'em_atendimento', label: 'Em atendimento', dot: 'bg-amber-500', headerBg: 'bg-amber-50' },
-  { id: 'aguardando_aprovacao', label: 'Aprovação chefe', dot: 'bg-yellow-500', headerBg: 'bg-yellow-50' },
-  { id: 'avaliacao_pendente', label: 'Avaliação solicitante', dot: 'bg-violet-500', headerBg: 'bg-violet-50' },
-  { id: 'concluido', label: 'Finalizados', dot: 'bg-emerald-500', headerBg: 'bg-emerald-50' },
-]
+function getTicketColumns(t: TFunction): KanbanColumnDef<GridTicketStatus>[] {
+  return [
+    { id: 'aberto', label: t('grid.tickets.columns.open'), dot: 'bg-blue-500', headerBg: 'bg-blue-50' },
+    { id: 'pendente', label: t('grid.tickets.columns.pending'), dot: 'bg-slate-400', headerBg: 'bg-slate-50' },
+    { id: 'em_atendimento', label: t('grid.tickets.columns.inService'), dot: 'bg-amber-500', headerBg: 'bg-amber-50' },
+    { id: 'aguardando_aprovacao', label: t('grid.tickets.columns.awaitingApproval'), dot: 'bg-yellow-500', headerBg: 'bg-yellow-50' },
+    { id: 'avaliacao_pendente', label: t('grid.tickets.columns.awaitingEvaluation'), dot: 'bg-violet-500', headerBg: 'bg-violet-50' },
+    { id: 'concluido', label: t('grid.tickets.columns.finished'), dot: 'bg-emerald-500', headerBg: 'bg-emerald-50' },
+  ]
+}
 
 const emptyForm = {
   requester: '',
@@ -64,6 +75,7 @@ function formatDateTime(iso: string) {
 }
 
 export function GridTicketsPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [tickets, setTickets] = useState<GridTicket[]>([])
@@ -88,6 +100,10 @@ export function GridTicketsPage() {
   const [movingId, setMovingId] = useState<number | null>(null)
   const [evaluateTarget, setEvaluateTarget] = useState<GridTicket | null>(null)
   const [approveTarget, setApproveTarget] = useState<GridTicket | null>(null)
+  const [ticketAttachments, setTicketAttachments] = useState<GridTicketAttachment[]>([])
+  const [pendingAttachments, setPendingAttachments] = useState<File[]>([])
+
+  const ticketColumns = useMemo(() => getTicketColumns(t), [t])
 
   const loadDashboard = useCallback(() => gridService.getDashboard().then(setDashboard), [])
 
@@ -146,7 +162,7 @@ export function GridTicketsPage() {
     if (Number.isNaN(id)) return
     if (viewSnapshot?.id === id) return
 
-    const fromList = tickets.find((t) => t.id === id)
+    const fromList = tickets.find((item) => item.id === id)
     if (fromList) {
       setViewSnapshot(fromList)
       return
@@ -158,23 +174,30 @@ export function GridTicketsPage() {
       .then((ticket) => {
         if (!cancelled) setViewSnapshot(ticket)
       })
-      .catch(() => {
-        if (!cancelled) closeView()
+      .catch((err) => {
+        if (!cancelled) {
+          window.alert(parseApiError(err, t('common.error')))
+          closeView()
+        }
       })
 
     return () => {
       cancelled = true
     }
-  }, [searchParams, tickets, viewSnapshot?.id, closeView])
+  }, [searchParams, tickets, viewSnapshot?.id, closeView, t])
 
   const openCreate = () => {
     setEditingId(null)
     setForm(emptyForm)
+    setTicketAttachments([])
+    setPendingAttachments([])
     setDrawerOpen(true)
   }
 
   const openEdit = (ticket: GridTicket) => {
     setEditingId(ticket.id)
+    setTicketAttachments(ticket.attachments ?? [])
+    setPendingAttachments([])
     setForm({
       requester: ticket.requester,
       title: ticket.title,
@@ -198,7 +221,7 @@ export function GridTicketsPage() {
 
   const handleSave = async () => {
     if (!form.requester.trim() || !form.title.trim()) {
-      window.alert('Informe solicitante e título.')
+      window.alert(t('grid.tickets.alert.required'))
       return
     }
 
@@ -216,14 +239,24 @@ export function GridTicketsPage() {
         fixed_description: form.fixed_description?.trim(),
         considerations: form.considerations?.trim(),
       }
+      let savedId = editingId
       if (editingId) {
         await gridService.updateTicket(editingId, payload)
       } else {
-        await gridService.createTicket(payload)
+        const created = await gridService.createTicket(payload)
+        savedId = created.id
       }
+
+      if (savedId && pendingAttachments.length > 0) {
+        await uploadPendingTicketAttachments(savedId, pendingAttachments)
+      }
+
       setDrawerOpen(false)
+      setPendingAttachments([])
       load()
       loadDashboard()
+    } catch (e: unknown) {
+      window.alert(parseApiError(e, t('common.error')))
     } finally {
       setSaving(false)
     }
@@ -236,21 +269,27 @@ export function GridTicketsPage() {
       await gridService.updateTicket(assignTarget.id, { assignee: assignee.trim() })
       setAssignOpen(false)
       load()
+    } catch (e: unknown) {
+      window.alert(parseApiError(e, t('common.error')))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (ticket: GridTicket) => {
-    if (!confirmDelete(`o chamado "${ticket.code}"`)) return
-    await gridService.deleteTicket(ticket.id)
-    load()
-    loadDashboard()
+    if (!window.confirm(t('connect.confirm.delete', { entity: `o chamado "${ticket.code}"` }))) return
+    try {
+      await gridService.deleteTicket(ticket.id)
+      load()
+      loadDashboard()
+    } catch (e: unknown) {
+      window.alert(parseApiError(e, t('common.error')))
+    }
   }
 
   const handleTicketMove = useCallback(
     async (ticketId: number, newStatus: GridTicketStatus) => {
-      const current = tickets.find((t) => t.id === ticketId)
+      const current = tickets.find((item) => item.id === ticketId)
       if (!current) return
 
       const blocked = ticketMoveBlockedMessage(current, newStatus)
@@ -260,13 +299,13 @@ export function GridTicketsPage() {
       }
 
       if (!canMoveTicketTo(current, newStatus)) {
-        window.alert(blocked ?? 'Movimento não permitido para este chamado.')
+        window.alert(blocked ?? t('grid.tickets.alert.moveBlocked'))
         return
       }
 
       const snapshot = tickets
       setMovingId(ticketId)
-      setTickets((prev) => prev.map((t) => (t.id === ticketId ? applyTicketStatus(t, newStatus) : t)))
+      setTickets((prev) => prev.map((item) => (item.id === ticketId ? applyTicketStatus(item, newStatus) : item)))
 
       try {
         const payload: Partial<GridTicket> = { status: newStatus }
@@ -274,21 +313,16 @@ export function GridTicketsPage() {
           payload.assignee = ''
         }
         const updated = await gridService.updateTicket(ticketId, payload)
-        setTickets((prev) => prev.map((t) => (t.id === ticketId ? updated : t)))
+        setTickets((prev) => prev.map((item) => (item.id === ticketId ? updated : item)))
         loadDashboard()
       } catch (e: unknown) {
         setTickets(snapshot)
-        const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
-        const msg =
-          err?.response?.data?.errors?.status?.[0] ??
-          err?.response?.data?.message ??
-          'Não foi possível mover o chamado.'
-        window.alert(msg)
+        window.alert(parseApiError(e, t('grid.tickets.alert.moveError')))
       } finally {
         setMovingId(null)
       }
     },
-    [tickets],
+    [tickets, t],
   )
 
   const kpis = dashboard?.kpis
@@ -298,12 +332,8 @@ export function GridTicketsPage() {
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Chamados"
-        subtitle={
-          viewMode === 'board'
-            ? 'Arraste os cards entre as colunas para alterar o status do chamado.'
-            : 'Gerencie e acompanhe todos os chamados de manutenção.'
-        }
+        title={t('grid.tickets.title')}
+        subtitle={viewMode === 'board' ? t('grid.tickets.subtitle.board') : t('grid.tickets.subtitle.list')}
         actions={
           <>
             <div className="flex rounded-xl border border-hub-border/60 p-0.5">
@@ -314,7 +344,7 @@ export function GridTicketsPage() {
                 }`}
                 onClick={() => setViewMode('board')}
               >
-                <LayoutGrid className="h-4 w-4" /> Quadro
+                <LayoutGrid className="h-4 w-4" /> {t('grid.tickets.view.board')}
               </button>
               <button
                 type="button"
@@ -323,11 +353,11 @@ export function GridTicketsPage() {
                 }`}
                 onClick={() => setViewMode('list')}
               >
-                <List className="h-4 w-4" /> Lista
+                <List className="h-4 w-4" /> {t('grid.tickets.view.list')}
               </button>
             </div>
             <PrimaryButton onClick={openCreate}>
-              <Plus className="h-4 w-4" /> Novo chamado
+              <Plus className="h-4 w-4" /> {t('grid.tickets.new')}
             </PrimaryButton>
           </>
         }
@@ -340,28 +370,28 @@ export function GridTicketsPage() {
           <>
             <KpiCard
               icon={ClipboardList}
-              label="Chamados abertos"
+              label={t('grid.tickets.kpis.open')}
               value={kpis.open_tickets}
               variant="blue"
               sparkline={spark?.open_tickets ?? []}
             />
             <KpiCard
               icon={AlertTriangle}
-              label="Urgentes (alta)"
+              label={t('grid.tickets.kpis.urgent')}
               value={urgentCount}
               variant="senai"
               sparkline={spark?.urgent ?? []}
             />
             <KpiCard
               icon={Wrench}
-              label="Em andamento"
+              label={t('grid.tickets.kpis.inProgress')}
               value={kpis.in_progress}
               variant="coral"
               sparkline={spark?.in_progress ?? []}
             />
             <KpiCard
               icon={CheckCircle2}
-              label="Concluídos no mês"
+              label={t('grid.tickets.kpis.completedMonth')}
               value={kpis.completed_month}
               variant="green"
               sparkline={spark?.completed_month ?? []}
@@ -372,10 +402,10 @@ export function GridTicketsPage() {
 
       <ConnectCard className="mb-4 p-4">
         <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <FormField label="Busca">
+          <FormField label={t('grid.tickets.filters.search')}>
             <input
               className={inputClass}
-              placeholder="ID, título, solicitante..."
+              placeholder={t('grid.tickets.filters.search')}
               value={search}
               onChange={(e) => {
                 setPage(1)
@@ -383,31 +413,31 @@ export function GridTicketsPage() {
               }}
             />
           </FormField>
-          <FormField label="Bloco">
+          <FormField label={t('grid.tickets.filters.block')}>
             <select className={selectClass} value={block} onChange={(e) => { setPage(1); setBlock(e.target.value) }}>
-              <option value="">Todos os blocos</option>
-              <option value="A">Bloco A</option>
-              <option value="B">Bloco B</option>
-              <option value="C">Bloco C</option>
+              <option value="">{t('grid.tickets.filters.all')}</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
             </select>
           </FormField>
-          <FormField label="Prioridade">
+          <FormField label={t('grid.tickets.filters.priority')}>
             <select className={selectClass} value={priority} onChange={(e) => { setPage(1); setPriority(e.target.value) }}>
-              <option value="">Todas</option>
-              <option value="alta">Alta</option>
-              <option value="media">Média</option>
-              <option value="baixa">Baixa</option>
+              <option value="">{t('grid.tickets.filters.all')}</option>
+              <option value="alta">{t('grid.tasks.form.priorityHigh')}</option>
+              <option value="media">{t('grid.tasks.form.priorityMedium')}</option>
+              <option value="baixa">{t('grid.tasks.form.priorityLow')}</option>
             </select>
           </FormField>
-          <FormField label="Status">
+          <FormField label={t('grid.tickets.filters.status')}>
             <select className={selectClass} value={status} onChange={(e) => { setPage(1); setStatus(e.target.value) }}>
-              <option value="">Todos</option>
-              <option value="aberto">Aberto</option>
-              <option value="pendente">Pendente</option>
-              <option value="em_atendimento">Em atendimento</option>
-              <option value="aguardando_aprovacao">Aguardando aprovação</option>
-              <option value="avaliacao_pendente">Avaliação pendente</option>
-              <option value="concluido">Finalizado</option>
+              <option value="">{t('grid.tickets.filters.all')}</option>
+              <option value="aberto">{t('grid.tickets.columns.open')}</option>
+              <option value="pendente">{t('grid.tickets.columns.pending')}</option>
+              <option value="em_atendimento">{t('grid.tickets.columns.inService')}</option>
+              <option value="aguardando_aprovacao">{t('grid.tickets.columns.awaitingApproval')}</option>
+              <option value="avaliacao_pendente">{t('grid.tickets.columns.awaitingEvaluation')}</option>
+              <option value="concluido">{t('grid.tickets.columns.finished')}</option>
             </select>
           </FormField>
           <div className="flex items-end justify-end sm:col-span-2 lg:col-span-4">
@@ -420,7 +450,7 @@ export function GridTicketsPage() {
                 setPage(1)
               }}
             >
-              <Filter className="h-4 w-4" /> Limpar filtros
+              <Filter className="h-4 w-4" /> {t('connect.common.clearFilters')}
             </OutlineButton>
           </div>
         </div>
@@ -428,16 +458,18 @@ export function GridTicketsPage() {
 
       {viewMode === 'board' ? (
         loading ? (
-          <ConnectLoadingSpinner label="Carregando chamados..." className="min-h-[400px]" />
+          <ConnectLoadingSpinner label={t('grid.dashboard.recentTickets.loading')} className="min-h-[400px]" />
         ) : (
           <>
-            <p className="mb-3 text-sm text-hub-text-muted">{meta?.total ?? tickets.length} chamados no quadro</p>
+            <p className="mb-3 text-sm text-hub-text-muted">
+              {t('grid.tickets.count.board', { count: meta?.total ?? tickets.length })}
+            </p>
             <div className="scrollbar-minimal-x -mx-1 overflow-x-auto pb-2 xl:mx-0 xl:overflow-visible">
             <GridKanbanBoard
               columns={ticketColumns}
               columnsGridClass="min-w-[min(100%,88rem)] lg:grid-cols-2 xl:min-w-0 xl:grid-cols-3 2xl:grid-cols-6"
               items={tickets}
-              getColumnId={(t) => t.status}
+              getColumnId={(item) => item.status}
               applyColumn={applyTicketStatus}
               onItemsChange={setTickets}
               onItemMove={handleTicketMove}
@@ -461,21 +493,21 @@ export function GridTicketsPage() {
       ) : (
         <ConnectCard>
           <p className="border-b border-hub-border/60 px-4 py-3 text-sm text-hub-text-muted sm:px-6">
-            {loading ? 'Carregando...' : `${meta?.total ?? 0} chamados encontrados`}
+            {loading ? t('common.loading') : t('grid.tickets.count.list', { count: meta?.total ?? 0 })}
           </p>
           {loading ? (
-            <ConnectLoadingSpinner label="Carregando chamados..." className="min-h-[280px]" />
+            <ConnectLoadingSpinner label={t('grid.dashboard.recentTickets.loading')} className="min-h-[280px]" />
           ) : (
             <>
               <div className="grid gap-4 p-4 lg:hidden">
-                {tickets.map((t) => (
+                {tickets.map((item) => (
                   <GridTicketCard
-                    key={t.id}
-                    ticket={t}
-                    onView={() => openView(t)}
-                    onEdit={() => openEdit(t)}
-                    onAssign={() => openAssign(t)}
-                    onDelete={() => void handleDelete(t)}
+                    key={item.id}
+                    ticket={item}
+                    onView={() => openView(item)}
+                    onEdit={() => openEdit(item)}
+                    onAssign={() => openAssign(item)}
+                    onDelete={() => void handleDelete(item)}
                   />
                 ))}
               </div>
@@ -485,44 +517,44 @@ export function GridTicketsPage() {
                   <table className="w-full min-w-[900px] text-sm">
                     <thead className="glass-thead text-hub-text-muted">
                       <tr>
-                        <th className="px-4 py-3 text-left">ID</th>
-                        <th className="px-4 py-3 text-left">Solicitante</th>
-                        <th className="px-4 py-3 text-left">Título</th>
-                        <th className="px-4 py-3 text-left">Descrição resumida</th>
-                        <th className="px-4 py-3 text-left">Sala / Bloco</th>
-                        <th className="px-4 py-3 text-left">Prioridade</th>
-                        <th className="px-4 py-3 text-left">Data de abertura</th>
-                        <th className="px-4 py-3 text-left">Status</th>
-                        <th className="px-4 py-3 text-left">Responsável</th>
-                        <th className="px-4 py-3">Ações</th>
+                        <th className="px-4 py-3 text-left">{t('grid.tickets.table.id')}</th>
+                        <th className="px-4 py-3 text-left">{t('grid.tickets.table.requester')}</th>
+                        <th className="px-4 py-3 text-left">{t('grid.tickets.table.title')}</th>
+                        <th className="px-4 py-3 text-left">{t('grid.tickets.table.summary')}</th>
+                        <th className="px-4 py-3 text-left">{t('grid.tickets.table.roomBlock')}</th>
+                        <th className="px-4 py-3 text-left">{t('grid.tickets.table.priority')}</th>
+                        <th className="px-4 py-3 text-left">{t('grid.tickets.table.openedAt')}</th>
+                        <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
+                        <th className="px-4 py-3 text-left">{t('grid.tickets.table.assignee')}</th>
+                        <th className="px-4 py-3">{t('connect.common.actions')}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {tickets.map((t) => (
-                        <tr key={t.id} className="border-t border-hub-border/40">
-                          <td className="whitespace-nowrap px-4 py-3 font-medium">{t.code}</td>
-                          <td className="px-4 py-3">{t.requester}</td>
-                          <td className="px-4 py-3 font-medium">{t.title}</td>
-                          <td className="max-w-[200px] truncate px-4 py-3 text-hub-text-muted">{t.summary}</td>
+                      {tickets.map((item) => (
+                        <tr key={item.id} className="border-t border-hub-border/40">
+                          <td className="whitespace-nowrap px-4 py-3 font-medium">{item.code}</td>
+                          <td className="px-4 py-3">{item.requester}</td>
+                          <td className="px-4 py-3 font-medium">{item.title}</td>
+                          <td className="max-w-[200px] truncate px-4 py-3 text-hub-text-muted">{item.summary}</td>
                           <td className="px-4 py-3">
-                            {t.room} / {t.block}
+                            {item.room} / {item.block}
                           </td>
                           <td className="px-4 py-3">
-                            <GridPriorityBadge priority={t.priority} />
+                            <GridPriorityBadge priority={item.priority} />
                           </td>
-                          <td className="whitespace-nowrap px-4 py-3">{formatDateTime(t.opened_at)}</td>
+                          <td className="whitespace-nowrap px-4 py-3">{formatDateTime(item.opened_at)}</td>
                           <td className="px-4 py-3">
-                            <GridTicketStatusBadge status={t.status} />
+                            <GridTicketStatusBadge status={item.status} />
                           </td>
-                          <td className="px-4 py-3">{t.assignee || '—'}</td>
+                          <td className="px-4 py-3">{item.assignee || '—'}</td>
                           <td className="px-4 py-3 text-right">
                             <ConnectRowActionsMenu
-                              ariaLabel={`Ações do chamado ${t.code}`}
+                              ariaLabel={t('connect.common.actionsOf', { name: item.code })}
                               actions={[
-                                viewRowAction(() => openView(t)),
-                                { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(t) },
-                                { key: 'assign', label: 'Atribuir técnico', icon: UserCheck, onClick: () => openAssign(t) },
-                                { key: 'delete', label: 'Excluir', icon: Trash2, variant: 'danger', onClick: () => void handleDelete(t) },
+                                { key: 'view', label: t('connect.common.view'), icon: Eye, onClick: () => openView(item) },
+                                { key: 'edit', label: t('connect.common.edit'), icon: Pencil, onClick: () => openEdit(item) },
+                                { key: 'assign', label: t('grid.tickets.actions.assign'), icon: UserCheck, onClick: () => openAssign(item) },
+                                { key: 'delete', label: t('connect.common.delete'), icon: Trash2, variant: 'danger', onClick: () => void handleDelete(item) },
                               ]}
                             />
                           </td>
@@ -541,84 +573,89 @@ export function GridTicketsPage() {
       <ConnectDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title={editingId ? 'Editar chamado' : 'Novo chamado'}
-        subtitle="Preencha os dados do chamado de manutenção."
+        title={editingId ? t('grid.tickets.drawer.edit') : t('grid.tickets.drawer.new')}
         footer={
           <div className="flex justify-end gap-2">
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
             <PrimaryButton onClick={() => void handleSave()} disabled={saving}>
-              {saving ? 'Salvando...' : 'Salvar'}
+              {saving ? t('connect.common.saving') : t('common.save')}
             </PrimaryButton>
           </div>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Solicitante" required>
-            <input className={inputClass} value={form.requester} onChange={(e) => setForm({ ...form, requester: e.target.value })} placeholder="Ex: Prof. Carlos Lima" />
+          <FormField label={t('grid.control.form.requester')} required>
+            <input className={inputClass} value={form.requester} onChange={(e) => setForm({ ...form, requester: e.target.value })} />
           </FormField>
-          <FormField label="Título" required>
-            <input className={inputClass} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Ar-condicionado sem refrigeração" />
+          <FormField label={t('grid.control.form.title')} required>
+            <input className={inputClass} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </FormField>
           <div className="sm:col-span-2">
-            <FormField label="Resumo">
-              <textarea className={`${inputClass} min-h-[80px] py-2`} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} placeholder="Descreva o problema, localização e urgência..." />
+            <FormField label={t('grid.control.form.summary')}>
+              <textarea className={`${inputClass} min-h-[80px] py-2`} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
             </FormField>
           </div>
-          <FormField label="Sala">
-            <input className={inputClass} value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="Ex: 204" />
+          <FormField label={t('grid.control.form.room')}>
+            <input className={inputClass} value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} />
           </FormField>
-          <FormField label="Bloco">
+          <FormField label={t('grid.control.form.block')}>
             <select className={selectClass} value={form.block} onChange={(e) => setForm({ ...form, block: e.target.value })}>
-              <option value="">Selecione</option>
+              <option value="">—</option>
               <option value="A">A</option>
               <option value="B">B</option>
               <option value="C">C</option>
             </select>
           </FormField>
-          <FormField label="Prioridade">
+          <FormField label={t('grid.control.form.priority')}>
             <select className={selectClass} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value as typeof form.priority })}>
-              <option value="alta">Alta</option>
-              <option value="media">Média</option>
-              <option value="baixa">Baixa</option>
+              <option value="alta">{t('grid.tasks.form.priorityHigh')}</option>
+              <option value="media">{t('grid.tasks.form.priorityMedium')}</option>
+              <option value="baixa">{t('grid.tasks.form.priorityLow')}</option>
             </select>
           </FormField>
-          <FormField label="Status">
+          <FormField label={t('grid.tickets.filters.status')}>
             <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as GridTicketStatus })}>
-              <option value="aberto">Aberto</option>
-              <option value="em_atendimento">Em atendimento</option>
-              <option value="aguardando_aprovacao">Aguardando aprovação</option>
-              <option value="avaliacao_pendente">Avaliação pendente</option>
-              <option value="concluido">Finalizado</option>
-              <option value="pendente">Pendente</option>
+              <option value="aberto">{t('grid.tickets.columns.open')}</option>
+              <option value="em_atendimento">{t('grid.tickets.columns.inService')}</option>
+              <option value="aguardando_aprovacao">{t('grid.tickets.columns.awaitingApproval')}</option>
+              <option value="avaliacao_pendente">{t('grid.tickets.columns.awaitingEvaluation')}</option>
+              <option value="concluido">{t('grid.tickets.columns.finished')}</option>
+              <option value="pendente">{t('grid.tickets.columns.pending')}</option>
             </select>
           </FormField>
-          <FormField label="Responsável">
+          <FormField label={t('grid.tickets.table.assignee')}>
             <select className={selectClass} value={form.assignee} onChange={(e) => setForm({ ...form, assignee: e.target.value })}>
-              <option value="">Sem responsável</option>
+              <option value="">{t('grid.common.noResponsible')}</option>
               {technicians.map((name) => (
                 <option key={name} value={name}>{name}</option>
               ))}
             </select>
           </FormField>
+          <GridTicketAttachmentsPanel
+            ticketId={editingId}
+            attachments={ticketAttachments}
+            pendingFiles={pendingAttachments}
+            onPendingFilesChange={setPendingAttachments}
+            onAttachmentsChange={setTicketAttachments}
+          />
+
           {editingId && (
             <>
               <div className="sm:col-span-2">
-                <FormField label="O que foi consertado">
+                <FormField label={t('grid.control.form.fixedDescription')}>
                   <textarea
                     className={`${inputClass} min-h-[72px] py-2`}
                     value={form.fixed_description ?? ''}
                     onChange={(e) => setForm({ ...form, fixed_description: e.target.value })}
-                    placeholder="Descreva o reparo realizado..."
                   />
                 </FormField>
               </div>
               <div className="sm:col-span-2">
-                <FormField label="Considerações / resolução">
+                <FormField label={t('grid.control.form.considerations')}>
                   <textarea
                     className={`${inputClass} min-h-[72px] py-2`}
                     value={form.considerations ?? ''}
                     onChange={(e) => setForm({ ...form, considerations: e.target.value })}
-                    placeholder="Observações finais do atendimento..."
                   />
                 </FormField>
               </div>
@@ -630,18 +667,18 @@ export function GridTicketsPage() {
       <ConnectDrawer
         open={assignOpen}
         onClose={() => setAssignOpen(false)}
-        title="Atribuir técnico"
-        subtitle={assignTarget ? `Chamado ${assignTarget.code}` : ''}
+        title={t('grid.tickets.assign.title')}
+        subtitle={assignTarget ? assignTarget.code : ''}
         footer={
           <div className="flex justify-end gap-2">
-            <OutlineButton onClick={() => setAssignOpen(false)}>Cancelar</OutlineButton>
-            <PrimaryButton onClick={() => void handleAssign()} disabled={saving}>Salvar</PrimaryButton>
+            <OutlineButton onClick={() => setAssignOpen(false)}>{t('common.cancel')}</OutlineButton>
+            <PrimaryButton onClick={() => void handleAssign()} disabled={saving}>{t('common.save')}</PrimaryButton>
           </div>
         }
       >
-        <FormField label="Técnico responsável">
+        <FormField label={t('grid.tickets.assign.technician')}>
           <select className={selectClass} value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-            <option value="">Sem responsável</option>
+            <option value="">{t('grid.common.noResponsible')}</option>
             {technicians.map((name) => (
               <option key={name} value={name}>{name}</option>
             ))}
@@ -657,7 +694,7 @@ export function GridTicketsPage() {
           load()
           loadDashboard()
         }}
-        approverName={user?.name ?? 'Chefe de Manutenção'}
+        approverName={user?.name ?? t('grid.tickets.defaultApprover')}
       />
 
       <GridEvaluateTicketDrawer

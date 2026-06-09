@@ -7,6 +7,7 @@ import { GridInventoryStatusBadge } from './GridBadges'
 import { GridInventoryThumb } from './GridInventoryThumb'
 import { gridService } from '../../services/gridService'
 import type { GridInventoryItemDetail } from '../../types/grid'
+import { parseApiError } from '../../utils/parseApiError'
 
 function formatDate(value?: string | null) {
   if (!value) return '—'
@@ -84,7 +85,7 @@ export function GridInventoryDetailDrawer({
     gridService
       .getInventoryItem(itemId)
       .then(setDetail)
-      .catch(() => setError('Não foi possível carregar os detalhes do item.'))
+      .catch((err) => setError(parseApiError(err, 'Nao foi possivel carregar os detalhes do item.')))
       .finally(() => setLoading(false))
   }, [open, itemId])
 

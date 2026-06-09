@@ -1,9 +1,9 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -20,8 +20,8 @@ import {
 import { UserAvatar } from '../../components/ui/UserAvatar'
 import { connectService } from '../../services/connectService'
 import type { HubPerson, HubPersonKind, PaginatedMeta } from '../../types/connect'
-import { hubPersonKindLabel, personDisplayName } from '../../utils/connectPerson'
-import { confirmDelete } from '../../utils/confirmAction'
+import { personDisplayName } from '../../utils/connectPerson'
+import { parseApiError } from '../../utils/parseApiError'
 
 const emptyForm = {
   kind: 'staff' as HubPersonKind,
@@ -35,6 +35,7 @@ const emptyForm = {
 }
 
 export function PeoplePage() {
+  const { t } = useTranslation()
   const [people, setPeople] = useState<HubPerson[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
@@ -97,73 +98,75 @@ export function PeoplePage() {
       setEditingId(null)
       setForm(emptyForm)
       load()
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, 'Nao foi possivel salvar a pessoa.'))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (person: HubPerson) => {
-    if (!confirmDelete(`"${personDisplayName(person)}"`)) return
+    if (!window.confirm(t('connect.confirm.delete', { entity: `"${personDisplayName(person)}"` }))) return
     try {
       await connectService.deletePerson(person.id)
       load()
-    } catch {
-      window.alert('Não foi possível excluir. Esta pessoa pode ter perfil Connect vinculado.')
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, t('connect.people.alert.deleteLinked')))
     }
   }
 
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Cadastro global de pessoas"
-        subtitle="Alunos, professores, funcionários e demais perfis usados em todo o SENAI Hub."
+        title={t('connect.people.title')}
+        subtitle={t('connect.people.subtitle')}
         actions={
           <PrimaryButton onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            Nova pessoa
+            {t('connect.people.newPerson')}
           </PrimaryButton>
         }
       />
 
       <ConnectCard className="mb-4 p-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FormField label="Buscar">
+          <FormField label={t('common.search')}>
             <input
               className={inputClass}
-              placeholder="Nome, e-mail, CPF ou matrícula..."
+              placeholder={t('connect.people.filters.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </FormField>
-          <FormField label="Tipo">
+          <FormField label={t('connect.table.type')}>
             <select className={selectClass} value={kindFilter} onChange={(e) => setKindFilter(e.target.value)}>
-              <option value="">Todos</option>
-              <option value="student">Aluno</option>
-              <option value="teacher">Professor</option>
-              <option value="staff">Funcionário</option>
-              <option value="other">Outro</option>
+              <option value="">{t('connect.common.all')}</option>
+              <option value="student">{t('connect.personKind.student')}</option>
+              <option value="teacher">{t('connect.personKind.teacher')}</option>
+              <option value="staff">{t('connect.personKind.staff')}</option>
+              <option value="other">{t('connect.personKind.other')}</option>
             </select>
           </FormField>
         </div>
         <div className="mt-4 flex justify-end">
-          <OutlineButton onClick={() => { setSearch(''); setKindFilter('') }}>Limpar filtros</OutlineButton>
+          <OutlineButton onClick={() => { setSearch(''); setKindFilter('') }}>{t('connect.common.clearFilters')}</OutlineButton>
         </div>
       </ConnectCard>
 
       <ConnectCard>
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando pessoas..." className="min-h-[280px]" />
+          <ConnectLoadingSpinner label={t('connect.people.loading')} className="min-h-[280px]" />
         ) : (
           <>
             <ConnectTableScroll>
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="glass-thead text-hub-text-muted">
                   <tr>
-                    <th className="px-4 py-3 text-left">Nome</th>
-                    <th className="px-4 py-3 text-left">Tipo</th>
-                    <th className="px-4 py-3 text-left">E-mail</th>
-                    <th className="px-4 py-3 text-left">Matrícula / CPF</th>
-                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-left">{t('connect.table.name')}</th>
+                    <th className="px-4 py-3 text-left">{t('connect.table.type')}</th>
+                    <th className="px-4 py-3 text-left">{t('connect.table.email')}</th>
+                    <th className="px-4 py-3 text-left">{t('connect.people.table.registrationCpf')}</th>
+                    <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -176,7 +179,7 @@ export function PeoplePage() {
                           <span className="font-medium">{personDisplayName(person)}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3">{hubPersonKindLabel(person.kind)}</td>
+                      <td className="px-4 py-3">{t(`connect.personKind.${person.kind}`)}</td>
                       <td className="px-4 py-3">{person.email ?? '—'}</td>
                       <td className="px-4 py-3">
                         {person.registration_number ?? person.cpf ?? '—'}
@@ -186,13 +189,13 @@ export function PeoplePage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <ConnectRowActionsMenu
-                          ariaLabel={`Ações de ${personDisplayName(person)}`}
+                          ariaLabel={t('connect.common.actionsOf', { name: personDisplayName(person) })}
                           actions={[
-                            viewRowAction(() => setViewId(person.id)),
-                            { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(person) },
+                            { key: 'view', label: t('connect.common.view'), icon: Eye, onClick: () => setViewId(person.id) },
+                            { key: 'edit', label: t('connect.common.edit'), icon: Pencil, onClick: () => openEdit(person) },
                             {
                               key: 'delete',
-                              label: 'Excluir',
+                              label: t('connect.common.delete'),
                               icon: Trash2,
                               variant: 'danger',
                               onClick: () => void handleDelete(person),
@@ -216,45 +219,45 @@ export function PeoplePage() {
           setDrawerOpen(false)
           setEditingId(null)
         }}
-        title={editingId ? 'Editar pessoa' : 'Nova pessoa'}
+        title={editingId ? t('connect.people.drawer.edit') : t('connect.people.drawer.new')}
         subtitle={
           editingId
-            ? 'Atualize os dados no cadastro global.'
-            : 'Cadastro no registro global (sem perfil Connect específico de aluno/professor).'
+            ? t('connect.people.drawer.editSubtitle')
+            : t('connect.people.drawer.newSubtitle')
         }
         footer={
           <div className="flex justify-end gap-2">
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
             <PrimaryButton onClick={() => void handleSave()} disabled={saving}>
-              {saving ? 'Salvando...' : 'Salvar'}
+              {saving ? t('connect.common.saving') : t('common.save')}
             </PrimaryButton>
           </div>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Tipo" required>
+          <FormField label={t('connect.table.type')} required>
             <select
               className={selectClass}
               value={form.kind}
               onChange={(e) => setForm({ ...form, kind: e.target.value as HubPersonKind })}
             >
-              <option value="staff">Funcionário</option>
-              <option value="other">Outro</option>
-              <option value="teacher">Professor</option>
-              <option value="student">Aluno</option>
+              <option value="staff">{t('connect.personKind.staff')}</option>
+              <option value="other">{t('connect.personKind.other')}</option>
+              <option value="teacher">{t('connect.personKind.teacher')}</option>
+              <option value="student">{t('connect.personKind.student')}</option>
             </select>
           </FormField>
-          <FormField label="Status">
+          <FormField label={t('connect.table.status')}>
             <select
               className={selectClass}
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
             >
-              <option value="active">Ativo</option>
-              <option value="inactive">Inativo</option>
+              <option value="active">{t('connect.status.active')}</option>
+              <option value="inactive">{t('connect.status.inactive')}</option>
             </select>
           </FormField>
-          <FormField label="Nome completo" required>
+          <FormField label={t('connect.students.form.fullName')} required>
             <input
               className={inputClass}
               value={form.full_name}
@@ -262,7 +265,7 @@ export function PeoplePage() {
               placeholder="Ex: Maria Silva"
             />
           </FormField>
-          <FormField label="E-mail">
+          <FormField label={t('connect.table.email')}>
             <input
               type="email"
               className={inputClass}
@@ -271,7 +274,7 @@ export function PeoplePage() {
               placeholder="pessoa@senai.edu.br"
             />
           </FormField>
-          <FormField label="Celular">
+          <FormField label={t('connect.students.form.phone')}>
             <input
               className={inputClass}
               value={form.phone}
@@ -279,10 +282,10 @@ export function PeoplePage() {
               placeholder="(11) 99999-9999"
             />
           </FormField>
-          <FormField label="CPF">
+          <FormField label={t('connect.students.form.cpf')}>
             <input className={inputClass} value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" />
           </FormField>
-          <FormField label="Matrícula / registro">
+          <FormField label={t('connect.people.form.registration')}>
             <input
               className={inputClass}
               value={form.registration_number}
@@ -290,7 +293,7 @@ export function PeoplePage() {
               placeholder="Ex: RM20250130"
             />
           </FormField>
-          <FormField label="Especialidade / função">
+          <FormField label={t('connect.people.form.specialty')}>
             <input
               className={inputClass}
               value={form.specialty}

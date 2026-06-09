@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { ConnectHeader } from '../components/connect/ConnectHeader'
 import { ConnectSidebar } from '../components/connect/ConnectSidebar'
 import { GlassShell } from '../components/layout/GlassShell'
+import { SkipToMainLink } from '../components/layout/SkipToMainLink'
 import { SidebarRailToggle } from '../components/layout/SidebarRailToggle'
 
 export function ConnectLayout() {
@@ -26,6 +27,7 @@ export function ConnectLayout() {
 
   return (
     <GlassShell className="flex h-screen max-h-[100dvh] min-w-0 overflow-hidden">
+      <SkipToMainLink />
       {mobileNavOpen && (
         <button
           type="button"
@@ -57,7 +59,7 @@ export function ConnectLayout() {
           }}
           isMobileNavOpen={mobileNavOpen}
         />
-        <main className="scrollbar-app-main relative z-0 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+        <main id="main-content" className="scrollbar-app-main relative z-0 min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1600px] min-w-0">
             <Outlet />
           </div>

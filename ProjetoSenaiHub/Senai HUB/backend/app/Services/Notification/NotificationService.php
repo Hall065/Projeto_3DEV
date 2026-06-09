@@ -13,6 +13,7 @@ class NotificationService
 {
     public function __construct(
         private readonly PermissionService $permissions,
+        private readonly HubMailDispatcher $mail,
     ) {}
 
     /**
@@ -26,7 +27,18 @@ class NotificationService
         }
 
         $module = (string) ($payload['module'] ?? 'hub');
-        if (! NotificationPreferences::allowsInApp($user, $module)) {
+        $inApp = NotificationPreferences::allowsInApp($user, $module);
+        $email = NotificationPreferences::allowsEmail($user, $module);
+
+        if (! $inApp && ! $email) {
+            return null;
+        }
+
+        if ($email) {
+            $this->mail->sendForUser($user, $payload);
+        }
+
+        if (! $inApp) {
             return null;
         }
 

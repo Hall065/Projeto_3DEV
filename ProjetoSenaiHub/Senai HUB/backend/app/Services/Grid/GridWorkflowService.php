@@ -7,6 +7,7 @@ use App\Models\Grid\GridInventoryReservation;
 use App\Models\Grid\GridTask;
 use App\Models\Grid\GridTicket;
 use App\Support\GridCode;
+use App\Support\GridParticipantSync;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -101,6 +102,7 @@ class GridWorkflowService
             }
 
             if ($attributes !== []) {
+                GridParticipantSync::syncTicket($attributes);
                 $ticket->update($attributes);
             }
 

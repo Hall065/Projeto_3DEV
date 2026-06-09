@@ -1,9 +1,9 @@
-import { Download, Filter, Pencil } from 'lucide-react'
+import { Download, Eye, Filter, Pencil } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -20,18 +20,6 @@ import {
 import { connectService } from '../../services/connectService'
 import type { ConnectAttendanceSession, ConnectClass, PaginatedMeta } from '../../types/connect'
 import { downloadCsv } from '../../utils/csvExport'
-
-const attendanceCsvHeaders = [
-  'Data',
-  'Turma',
-  'Disciplina',
-  'Professor',
-  'Aulas',
-  'Presentes',
-  'Faltas Just.',
-  'Faltas Injust.',
-  '% Presenca',
-]
 
 function recordToCsvRow(record: ConnectAttendanceSession): (string | number)[] {
   const stats = record.stats
@@ -55,6 +43,7 @@ function recordToCsvRow(record: ConnectAttendanceSession): (string | number)[] {
 }
 
 export function AttendanceManagePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [records, setRecords] = useState<ConnectAttendanceSession[]>([])
   const [classes, setClasses] = useState<ConnectClass[]>([])
@@ -66,6 +55,18 @@ export function AttendanceManagePage() {
   const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(true)
   const [viewSnapshot, setViewSnapshot] = useState<ConnectAttendanceSession | null>(null)
+
+  const attendanceCsvHeaders = [
+    t('connect.attendanceManage.table.date'),
+    t('connect.table.class'),
+    t('connect.attendanceManage.table.subject'),
+    t('connect.attendanceManage.table.teacher'),
+    t('connect.attendanceManage.table.lessons'),
+    t('connect.attendanceManage.table.present'),
+    t('connect.attendanceManage.table.justified'),
+    t('connect.attendanceManage.table.unjustified'),
+    t('connect.attendanceManage.table.presenceRate'),
+  ]
 
   const load = () => {
     setLoading(true)
@@ -104,12 +105,12 @@ export function AttendanceManagePage() {
 
   return (
     <div className="w-full min-w-0">
-      <ConnectPageHeader title="Gerenciar frequencia" subtitle="Registros de frequencia recentes" />
+      <ConnectPageHeader title={t('connect.attendanceManage.title')} subtitle={t('connect.attendanceManage.subtitle')} />
 
       <ConnectCard>
         <div className="flex w-full min-w-0 flex-col gap-3 border-b border-hub-border/60 p-4 sm:flex-row sm:flex-wrap sm:items-center [&_button]:w-full sm:[&_button]:w-auto">
           <select className={`${selectClass} w-full sm:w-48`} value={classId} onChange={(e) => setClassId(e.target.value)}>
-            <option value="">Todas as turmas</option>
+            <option value="">{t('connect.attendanceManage.filters.allClasses')}</option>
             {classes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -118,16 +119,16 @@ export function AttendanceManagePage() {
           </select>
           <OutlineButton onClick={handleExportAll}>
             <Download className="h-4 w-4" />
-            Exportar
+            {t('connect.common.export')}
           </OutlineButton>
           <OutlineButton onClick={() => setShowFilters((v) => !v)}>
             <Filter className="h-4 w-4" />
-            Filtros
+            {t('connect.common.filters')}
           </OutlineButton>
         </div>
         {showFilters && (
           <div className="grid gap-4 border-b border-hub-border/60 p-4 sm:grid-cols-2">
-            <FormField label="Data inicial">
+            <FormField label={t('connect.attendanceManage.filters.startDate')}>
               <input
                 type="date"
                 className={inputClass}
@@ -138,7 +139,7 @@ export function AttendanceManagePage() {
                 }}
               />
             </FormField>
-            <FormField label="Data final">
+            <FormField label={t('connect.attendanceManage.filters.endDate')}>
               <input
                 type="date"
                 className={inputClass}
@@ -152,22 +153,22 @@ export function AttendanceManagePage() {
           </div>
         )}
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando registros de frequencia..." className="min-h-[280px]" />
+          <ConnectLoadingSpinner label={t('connect.attendanceManage.loading')} className="min-h-[280px]" />
         ) : (
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[640px] text-sm">
             <thead className="glass-thead text-hub-text-muted">
               <tr>
-                <th className="px-4 py-3 text-left">Data</th>
-                <th className="px-4 py-3 text-left">Turma</th>
-                <th className="px-4 py-3 text-left">Disciplina</th>
-                <th className="px-4 py-3 text-left">Professor</th>
-                <th className="px-4 py-3 text-left">Aulas</th>
-                <th className="px-4 py-3 text-left">Presentes</th>
-                <th className="px-4 py-3 text-left">Faltas Just.</th>
-                <th className="px-4 py-3 text-left">Faltas Injust.</th>
-                <th className="px-4 py-3 text-left">% Presenca</th>
+                <th className="px-4 py-3 text-left">{t('connect.attendanceManage.table.date')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.class')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.attendanceManage.table.subject')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.attendanceManage.table.teacher')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.attendanceManage.table.lessons')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.attendanceManage.table.present')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.attendanceManage.table.justified')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.attendanceManage.table.unjustified')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.attendanceManage.table.presenceRate')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -199,34 +200,45 @@ export function AttendanceManagePage() {
                     <td className="px-4 py-3 font-medium text-emerald-600">{pct}%</td>
                     <td className="px-4 py-3 text-right">
                       <ConnectRowActionsMenu
-                        ariaLabel={`Ações da frequência de ${record.class?.name ?? 'turma'}`}
+                        ariaLabel={t('connect.common.actionsOf', { name: record.class?.name ?? t('connect.table.class') })}
                         actions={[
-                          viewRowAction(() => setViewSnapshot(record)),
+                          {
+                            key: 'view',
+                            label: t('connect.common.view'),
+                            icon: Eye,
+                            onClick: () => setViewSnapshot(record),
+                          },
                           {
                             key: 'open',
-                            label: 'Abrir em frequência',
+                            label: t('connect.attendanceManage.actions.openAttendance'),
                             icon: Pencil,
                             onClick: () => {
                               const params = new URLSearchParams()
                               if (record.connect_class_id) params.set('class', String(record.connect_class_id))
                               if (record.session_date) params.set('date', record.session_date.slice(0, 10))
+                              if (record.connect_lesson_schedule_id) {
+                                params.set('lesson', String(record.connect_lesson_schedule_id))
+                              }
                               navigate(`/connect/frequencia?${params.toString()}`)
                             },
                           },
                           {
                             key: 'edit',
-                            label: 'Editar registro',
+                            label: t('connect.attendanceManage.actions.editRecord'),
                             icon: Pencil,
                             onClick: () => {
                               const params = new URLSearchParams()
                               if (record.connect_class_id) params.set('class', String(record.connect_class_id))
                               if (record.session_date) params.set('date', record.session_date.slice(0, 10))
+                              if (record.connect_lesson_schedule_id) {
+                                params.set('lesson', String(record.connect_lesson_schedule_id))
+                              }
                               navigate(`/connect/frequencia?${params.toString()}`)
                             },
                           },
                           {
                             key: 'export',
-                            label: 'Exportar',
+                            label: t('connect.common.export'),
                             icon: Download,
                             onClick: () => handleExportRow(record),
                           },

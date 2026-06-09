@@ -1,0 +1,1172 @@
+{
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "loading": "Carregando...",
+    "error": "Ocorreu um erro. Tente novamente.",
+    "search": "Buscar",
+    "logout": "Sair",
+    "profile": "Perfil",
+    "skipToMain": "Ir para o conteúdo principal",
+    "settings": "Configurações",
+    "themes": "Temas",
+    "notifications": "Notificações",
+    "accessDenied": "Acesso negado",
+    "notFound": "Página não encontrada",
+    "language": "Idioma"
+  },
+  "auth": {
+    "loginTitle": "Acesse sua conta",
+    "loginSubtitle": "Informe seu e-mail e senha para continuar",
+    "email": "E-mail",
+    "password": "Senha",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
+    "login": "Entrar",
+    "forgotPassword": "Recuperar senha",
+    "forgotTitle": "Recuperar senha",
+    "forgotSubtitle": "Informe seu e-mail para receber o link de redefinição",
+    "sendLink": "Enviar link",
+    "forgotSuccess": "Se existir uma conta com este e-mail, enviaremos instruções em breve.",
+    "resetTitle": "Redefinir senha",
+    "resetSubtitle": "Escolha uma nova senha para sua conta",
+    "newPassword": "Nova senha",
+    "confirmPassword": "Confirmar senha",
+    "resetSubmit": "Redefinir senha",
+    "resetSuccess": "Senha redefinida. Faça login com a nova senha.",
+    "invalidCredentials": "E-mail ou senha inválidos.",
+    "sessionExpired": "Sua sessão expirou. Faça login novamente.",
+    "adminOnlySignup": "O cadastro é feito pelo administrador do sistema.",
+    "requestAccess": "Solicitar acesso",
+    "backToLogin": "Voltar ao login"
+  },
+  "accessRequest": {
+    "title": "Solicitar acesso",
+    "subtitle": "Preencha seus dados. Um administrador analisara seu pedido.",
+    "name": "Nome completo",
+    "email": "E-mail",
+    "organization": "Organizacao / setor (opcional)",
+    "message": "Mensagem (opcional)",
+    "messagePlaceholder": "Descreva brevemente por que precisa de acesso...",
+    "submit": "Enviar solicitacao"
+  },
+  "nav": {
+    "connect": {
+      "overview": "Visao Geral",
+      "people": "Pessoas",
+      "students": "Alunos",
+      "teachers": "Professores",
+      "classes": "Turmas",
+      "courses": "Cursos",
+      "calendar": "Calendario",
+      "attendance": "Frequencia",
+      "manageAttendance": "Gerenciar Frequencia",
+      "reports": "Relatorio",
+      "location": "Localizacao",
+      "spreadsheets": "Planilhas",
+      "contracts": "Contrato Alunos",
+      "salary": "Salario"
+    },
+    "grid": {
+      "overview": "Dashboard",
+      "control": "Controle",
+      "tickets": "Chamados",
+      "tasks": "Tarefas",
+      "reports": "Relatorios",
+      "inventory": "Estoque",
+      "map": "Mapa de tarefas",
+      "users": "Usuarios Grid",
+      "spreadsheets": "Planilhas"
+    },
+    "safe": {
+      "overview": "Visao Geral",
+      "students": "Alunos",
+      "authorizations": "Autorizacoes",
+      "approvals": "Aprovacoes",
+      "portaria": "Portaria"
+    }
+  },
+  "hub": {
+    "title": "SENAI HUB",
+    "subtitle": "Escolha um módulo para continuar",
+    "users": "Usuários",
+    "manageUsers": "Gerenciar usuários",
+    "appsTitle": "Hub de Aplicacoes",
+    "appsSubtitle": "Acesse os sistemas disponiveis para o seu perfil.",
+    "loadAppsError": "Nao foi possivel carregar os aplicativos.",
+    "noAppsForProfile": "Nenhum aplicativo disponivel para o seu perfil.",
+    "appsTip": "Dica: os aplicativos que aparecem aqui sao definidos de acordo com o seu perfil de usuario. Se voce acredita que deveria ter acesso a outro sistema, entre em contato com o administrador.",
+    "pendingAccessTitle": "Aguardando liberacao de acesso",
+    "pendingAccessBody": "Sua conta ainda nao foi vinculada a nenhum modulo do SENAI HUB. Um administrador precisa definir seu perfil e permissoes.",
+    "pendingAccessWait": "Assim que o administrador concluir o cadastro, os modulos aparecerao aqui automaticamente.",
+    "pendingAccessContact": "Se voce acredita que isso e um engano, entre em contato com o administrador do sistema ou com a secretaria."
+  },
+  "modules": {
+    "connect": "SENAI Connect",
+    "grid": "SENAI Grid",
+    "safe": "SENAI SAFE"
+  },
+  "settings": {
+    "title": "Configurações",
+    "appearance": "Aparência",
+    "notificationsInApp": "Notificações no sistema",
+    "notificationsEmail": "Notificações por e-mail",
+    "moduleHub": "Hub central",
+    "moduleConnect": "Connect",
+    "moduleGrid": "Grid",
+    "moduleSafe": "SAFE"
+  },
+  "landing": {
+    "login": "Entrar",
+    "heroTitle": "Plataforma integrada SENAI",
+    "heroSubtitle": "Connect, Grid e SAFE em um único hub.",
+    "ctaLogin": "Acessar plataforma",
+    "themesTitle": "Personalize a aparencia",
+    "themesSubtitle": "Escolha entre temas SENAI ao entrar na plataforma — planos de fundo, cores e visual integrados.",
+    "themesHint": "Faca login para aplicar temas e papéis de parede personalizados em",
+    "themesCta": "Configuracoes > Temas"
+  },
+  "safe": {
+    "dashboard": {
+      "title": "Visao Geral",
+      "subtitle": "Indicadores e filas do modulo SAFE — autorizacao de visitantes e saidas.",
+      "loadError": "Nao foi possivel carregar o dashboard.",
+      "recentAuthorizations": "Autorizacoes recentes",
+      "viewAll": "Ver todas",
+      "loadingAuthorizations": "Carregando autorizacoes...",
+      "noAuthorizations": "Nenhuma autorizacao registrada.",
+      "approvalQueue": "Fila de aprovacao",
+      "noPending": "Nenhuma solicitacao pendente.",
+      "portariaQueue": "Fila da portaria",
+      "noPortaria": "Nenhuma autorizacao liberada.",
+      "kpis": {
+        "requestsToday": "Solicitacoes hoje",
+        "pendingTeacher": "Aguardando professor",
+        "approvedToday": "Aprovadas hoje",
+        "awaitingPortaria": "Aguardando portaria",
+        "finalizedToday": "Finalizadas hoje",
+        "denied": "Negadas",
+        "pendingApproval": "Pendentes de aprovacao",
+        "approvedByMe": "Aprovadas por mim",
+        "awaitingConfirmation": "Aguardando confirmacao"
+      }
+    },
+    "students": {
+      "title": "Alunos",
+      "subtitle": "Cadastro de alunos vinculados ao modulo SAFE.",
+      "newStudent": "Novo aluno",
+      "editStudent": "Editar aluno"
+    },
+    "authorizations": {
+      "title": "Autorizacoes",
+      "subtitle": "Solicitacoes de entrada e saida (AQV).",
+      "newRequest": "Nova solicitacao",
+      "searchPlaceholder": "Buscar protocolo ou aluno...",
+      "empty": "Nenhuma autorizacao encontrada."
+    },
+    "approvals": {
+      "title": "Aprovacoes",
+      "subtitle": "Fila do professor — aprovar ou negar solicitacoes pendentes.",
+      "empty": "Nenhuma solicitacao pendente."
+    },
+    "portaria": {
+      "title": "Portaria",
+      "subtitle": "Confirmar ou recusar autorizacoes liberadas pelo professor.",
+      "empty": "Nenhuma autorizacao aguardando confirmacao."
+    },
+    "table": {
+      "protocol": "Protocolo",
+      "student": "Aluno",
+      "type": "Tipo",
+      "status": "Status",
+      "scheduled": "Agendado",
+      "reason": "Motivo",
+      "teacher": "Professor"
+    },
+    "sidebar": {
+      "profileHint": "Menus exibidos conforme perfil de acesso.",
+      "support": "Suporte"
+    },
+    "detail": {
+      "loading": "Carregando autorização...",
+      "notFound": "Autorização não encontrada.",
+      "backToList": "Voltar à lista",
+      "details": "Detalhes",
+      "history": "Histórico",
+      "noHistory": "Sem registros de histórico.",
+      "system": "Sistema",
+      "fields": {
+        "status": "Status",
+        "type": "Tipo",
+        "scheduled": "Agendado",
+        "requester": "Solicitante",
+        "teacher": "Professor",
+        "portaria": "Portaria",
+        "reason": "Motivo",
+        "notes": "Observações"
+      }
+    }
+  },
+  "connect": {
+    "common": {
+      "export": "Exportar",
+      "filters": "Filtros",
+      "clearFilters": "Limpar filtros",
+      "new": "Novo",
+      "saving": "Salvando...",
+      "saveAndNew": "Salvar e Novo",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "view": "Ver",
+      "selectAll": "Selecionar todos",
+      "selectItem": "Selecionar {{name}}",
+      "actionsOf": "Ações de {{name}}",
+      "yes": "Sim",
+      "no": "Não",
+      "system": "Sistema",
+      "all": "Todos",
+      "actions": "Ações",
+      "updatedAt": "Atualizado em {{date}}"
+    },
+    "confirm": {
+      "delete": "Tem certeza que deseja excluir {{entity}}? Esta ação não pode ser desfeita."
+    },
+    "status": {
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "graduated": "Formado",
+      "activePlural": "Ativos",
+      "inactivePlural": "Inativos"
+    },
+    "personKind": {
+      "student": "Aluno",
+      "teacher": "Professor",
+      "staff": "Funcionário",
+      "other": "Outro"
+    },
+    "shift": {
+      "manha": "Manhã",
+      "tarde": "Tarde",
+      "noite": "Noite"
+    },
+    "days": {
+      "0": "Domingo",
+      "1": "Segunda",
+      "2": "Terça",
+      "3": "Quarta",
+      "4": "Quinta",
+      "5": "Sexta",
+      "6": "Sábado"
+    },
+    "table": {
+      "name": "Nome",
+      "email": "E-mail",
+      "status": "Status",
+      "type": "Tipo",
+      "details": "Detalhes",
+      "dateTime": "Data & Hora",
+      "user": "Usuário",
+      "course": "Curso",
+      "class": "Turma"
+    },
+    "overview": {
+      "title": "Visão Geral",
+      "subtitle": "Acompanhe indicadores e atividades recentes do SENAI Connect.",
+      "recentActivity": "Atividade Recente",
+      "registrationsAlerts": "Cadastros Recentes / Alertas",
+      "tabs": {
+        "registrations": "Cadastros recentes",
+        "alerts": "Alertas"
+      },
+      "loading": "Carregando cadastros e alertas...",
+      "rowType": {
+        "student": "Aluno"
+      },
+      "kpis": {
+        "totalStudents": "Total de alunos cadastrados",
+        "totalTeachers": "Professores cadastrados",
+        "activeClasses": "Turmas ativas",
+        "activeCourses": "Cursos ativos",
+        "attendanceRate": "Frequência média do mês",
+        "activeContracts": "Contratos ativos"
+      }
+    },
+    "students": {
+      "title": "Gerenciamento de Alunos",
+      "subtitle": "Consulte, filtre e gerencie os alunos cadastrados.",
+      "loading": "Carregando alunos...",
+      "count": "{{count}} alunos encontrados",
+      "filters": {
+        "allClasses": "Todas as turmas",
+        "searchPlaceholder": "Buscar por nome...",
+        "allStatuses": "Todos os status"
+      },
+      "table": {
+        "registration": "RM",
+        "birthDate": "Data de nascimento"
+      },
+      "drawer": {
+        "edit": "Editar aluno",
+        "new": "Novo aluno",
+        "editSubtitle": "Atualize os dados do aluno.",
+        "newSubtitle": "Preencha os dados para cadastrar o novo aluno."
+      },
+      "sections": {
+        "personal": "Dados pessoais",
+        "academic": "Informações acadêmicas",
+        "additional": "Informações adicionais"
+      },
+      "form": {
+        "fullName": "Nome completo",
+        "registration": "RM",
+        "cpf": "CPF",
+        "birthDate": "Data de nascimento",
+        "personalEmail": "E-mail pessoal",
+        "phone": "Celular",
+        "class": "Turma",
+        "address": "Endereço",
+        "guardian": "Nome do responsável",
+        "notes": "Observações",
+        "optional": "Opcional",
+        "calendarHint": "Clique para abrir o calendário",
+        "noClass": "Sem turma (definir depois)",
+        "classHint": "Opcional — matricule depois"
+      },
+      "alert": {
+        "nameRequired": "Informe o nome completo do aluno."
+      }
+    },
+    "teachers": {
+      "title": "Gerenciamento de professores",
+      "subtitle": "Cadastre, edite e acompanhe as informações dos professores.",
+      "searchPlaceholder": "Buscar por nome, e-mail ou CPF...",
+      "loading": "Carregando professores...",
+      "filters": {
+        "allSpecialties": "Todas as especialidades",
+        "specialty": "Especialidade"
+      },
+      "table": {
+        "institutionalEmail": "E-mail institucional",
+        "specialty": "Especialidade",
+        "classes": "Turmas"
+      },
+      "drawer": {
+        "edit": "Editar professor",
+        "new": "Novo professor",
+        "editSubtitle": "Atualize os dados do professor.",
+        "newSubtitle": "Preencha os dados para cadastrar o novo professor."
+      },
+      "form": {
+        "fullName": "Nome completo",
+        "institutionalEmail": "E-mail institucional",
+        "specialty": "Especialidade",
+        "cpf": "CPF",
+        "phone": "Celular"
+      },
+      "alert": {
+        "nameRequired": "Informe o nome completo do professor."
+      }
+    },
+    "people": {
+      "title": "Cadastro global de pessoas",
+      "subtitle": "Alunos, professores, funcionários e demais perfis usados em todo o SENAI Hub.",
+      "newPerson": "Nova pessoa",
+      "loading": "Carregando pessoas...",
+      "filters": {
+        "searchPlaceholder": "Nome, e-mail, CPF ou matrícula..."
+      },
+      "table": {
+        "registrationCpf": "Matrícula / CPF"
+      },
+      "drawer": {
+        "edit": "Editar pessoa",
+        "new": "Nova pessoa",
+        "editSubtitle": "Atualize os dados no cadastro global.",
+        "newSubtitle": "Cadastro no registro global (sem perfil Connect específico de aluno/professor)."
+      },
+      "form": {
+        "registration": "Matrícula / registro",
+        "specialty": "Especialidade / função"
+      },
+      "alert": {
+        "deleteLinked": "Não foi possível excluir. Esta pessoa pode ter perfil Connect vinculado."
+      }
+    },
+    "courses": {
+      "title": "Cursos",
+      "subtitle": "Gerenciamento de Cursos.",
+      "create": "Criar curso",
+      "searchPlaceholder": "Buscar curso...",
+      "empty": "Nenhum curso encontrado.",
+      "drawer": {
+        "edit": "Editar curso",
+        "new": "Cadastrar curso",
+        "editSubtitle": "Atualize os dados do curso.",
+        "newSubtitle": "Preencha os dados para cadastrar o novo curso.",
+        "clearFields": "Limpar Campos"
+      },
+      "form": {
+        "name": "Nome do curso",
+        "area": "Área",
+        "workload": "Carga horária total",
+        "startDate": "Início do curso",
+        "endDate": "Fim do curso",
+        "description": "Descrição"
+      },
+      "alert": {
+        "nameRequired": "Informe o nome do curso."
+      }
+    },
+    "classes": {
+      "title": "Turmas",
+      "subtitle": "Gerenciamento de Turmas.",
+      "create": "Criar turma",
+      "searchPlaceholder": "Filtrar turma...",
+      "loading": "Carregando turmas...",
+      "defaultSubject": "Aula regular",
+      "table": {
+        "className": "Nome da turma",
+        "period": "Período",
+        "semester": "Semestre",
+        "start": "Início",
+        "end": "Término",
+        "students": "Alunos"
+      },
+      "actions": {
+        "viewStudents": "Ver alunos"
+      },
+      "drawer": {
+        "edit": "Editar turma",
+        "new": "Cadastrar nova turma",
+        "editSubtitle": "Atualize os dados da turma e a grade semanal.",
+        "newSubtitle": "Preencha os dados para cadastrar a nova turma."
+      },
+      "form": {
+        "name": "Nome da turma",
+        "period": "Período",
+        "semester": "Semestre",
+        "startDate": "Data de início",
+        "endDate": "Data de término",
+        "capacity": "Capacidade",
+        "teacher": "Professor",
+        "description": "Descrição",
+        "active": "Ativa",
+        "inactive": "Inativa"
+      },
+      "weekly": {
+        "title": "Grade semanal",
+        "lessons": "{{count}} aula(s)",
+        "remove": "Remover",
+        "addSlot": "Adicionar horário"
+      },
+      "scheduleSummary": "Carga: {{total}} aulas · Semanal: {{weekly}} · Restante: {{remaining}}",
+      "generateSchedule": "Gerar calendário automaticamente ao salvar",
+      "alert": {
+        "nameRequired": "Informe o nome da turma.",
+        "scheduleFieldsRequired": "Para gerar o calendário, informe semestre, data de início e término.",
+        "saveError": "Não foi possível salvar a turma.",
+        "deleteError": "Não foi possível excluir a turma."
+      }
+    },
+    "schedule": {
+      "panelTitle": "Grade semanal e geração do calendário",
+      "period": "Período da turma",
+      "replaceFuture": "Substituir aulas futuras sem frequência ao regenerar",
+      "savePatterns": "Salvar grade",
+      "saveAndGenerate": "Salvar e gerar calendário",
+      "regenerate": "Regenerar calendário",
+      "provisionAttendance": "Preparar chamadas (frequência)",
+      "generationResult": "Calendário: {{created}} aula(s) criada(s), {{skipped}} ignorada(s).",
+      "provisionResult": "{{count}} sessão(ões) de frequência preparada(s)."
+    },
+    "contracts": {
+      "title": "Contratos",
+      "subtitle": "Gerencie os contratos de aprendizagem e estágio dos alunos.",
+      "loading": "Carregando contratos...",
+      "totalRecords": "Total de registros:",
+      "filters": {
+        "contractType": "Tipo de contrato",
+        "apprenticeship": "Aprendizagem",
+        "internship": "Estágio",
+        "clt": "CLT",
+        "temporary": "Temporário",
+        "terminated": "Encerrado"
+      },
+      "table": {
+        "workload": "Carga horária",
+        "studentName": "Nome do aluno",
+        "company": "Empresa",
+        "start": "Início",
+        "monthlyValue": "Valor mensal"
+      },
+      "drawer": {
+        "edit": "Editar contrato",
+        "new": "Novo contrato de aluno",
+        "section": "Dados do contrato"
+      },
+      "form": {
+        "student": "Aluno",
+        "company": "Empresa",
+        "type": "Tipo",
+        "workload": "Carga horária",
+        "startDate": "Data início",
+        "monthlyValue": "Valor mensal",
+        "emails": "E-mails"
+      },
+      "attachmentsFuture": "Anexos de documentos serão disponibilizados em versão futura."
+    },
+    "attendance": {
+      "title": "Frequência",
+      "subtitle": "Vincule a chamada ao calendário ou registre manualmente.",
+      "registerSection": "Registrar frequência",
+      "viewCalendar": "Ver calendário completo",
+      "actions": {
+        "export": "Exportar",
+        "exporting": "Exportando...",
+        "spreadsheets": "Planilhas",
+        "save": "Salvar",
+        "saving": "Salvando...",
+        "allPresent": "Todos presentes"
+      },
+      "form": {
+        "class": "Turma",
+        "date": "Data",
+        "calendarLesson": "Aula no calendário",
+        "lessonsPerDay": "Aulas no dia"
+      },
+      "hints": {
+        "selectTime": "Selecione o horário agendado",
+        "pickLessonSlot": "Selecione a aula do dia para registrar a frequência.",
+        "manualMode": "Sem aulas agendadas — modo manual"
+      },
+      "summary": {
+        "scheduledLessons": "Aulas no calendário",
+        "sessionsOpen": "Chamadas abertas",
+        "sessionsClosed": "Chamadas fechadas",
+        "classPresence": "Taxa de presença da turma"
+      },
+      "sessionStats": "Presentes: {{present}} · Faltas: {{absent}} · Justificadas: {{justified}} · Taxa: {{rate}}%",
+      "absenceSummary": "{{total}} faltas · Restante: {{remaining}}",
+      "options": {
+        "selectClass": "Selecione a turma",
+        "manual": "Chamada manual (sem horário)"
+      },
+      "legend": {
+        "present": "P Presente",
+        "justified": "FJ Falta justificada",
+        "unjustified": "FI Falta injustificada"
+      },
+      "table": {
+        "number": "Nº",
+        "student": "Aluno",
+        "missedLessons": "Aulas faltadas no dia",
+        "situation": "Situação",
+        "absences": "Faltas acumuladas"
+      },
+      "states": {
+        "loading": "Carregando lista...",
+        "selectClass": "Selecione uma turma para registrar a frequência.",
+        "noStudents": "Esta turma não possui alunos cadastrados."
+      },
+      "alert": {
+        "exportError": "Não foi possível exportar.",
+        "loadError": "Não foi possível carregar a frequência."
+      }
+    },
+    "attendanceManage": {
+      "title": "Gerenciar frequência",
+      "subtitle": "Registros de frequência recentes",
+      "loading": "Carregando registros de frequência...",
+      "filters": {
+        "allClasses": "Todas as turmas",
+        "startDate": "Data inicial",
+        "endDate": "Data final"
+      },
+      "table": {
+        "date": "Data",
+        "subject": "Disciplina",
+        "teacher": "Professor",
+        "lessons": "Aulas",
+        "present": "Presentes",
+        "justified": "Faltas Just.",
+        "unjustified": "Faltas Injust.",
+        "presenceRate": "% Presença"
+      },
+      "actions": {
+        "openAttendance": "Abrir em frequência",
+        "editRecord": "Editar registro"
+      }
+    },
+    "calendar": {
+      "title": "Calendário",
+      "subtitle": "Aulas por turma e agendamento semanal.",
+      "scope": {
+        "admin": "Visualize e gerencie todas as aulas cadastradas.",
+        "professor": "Exibindo apenas as aulas das suas turmas.",
+        "student": "Exibindo apenas as aulas das turmas em que você está matriculado."
+      },
+      "views": {
+        "week": "Semana",
+        "month": "Mês"
+      },
+      "modal": {
+        "lesson": "Aula"
+      },
+      "newLesson": "Nova aula",
+      "allClasses": "Todas as turmas",
+      "allSemesters": "Todos os semestres",
+      "attendance": {
+        "pending": "Chamada pendente",
+        "open": "Chamada aberta",
+        "closed": "Frequência registrada"
+      },
+      "loading": "Carregando calendário...",
+      "loadError": "Não foi possível carregar o calendário.",
+      "moreLessons": "+{{count}} aulas",
+      "nav": {
+        "prevMonth": "Mês anterior",
+        "nextMonth": "Próximo mês",
+        "prevWeek": "Semana anterior",
+        "nextWeek": "Próxima semana",
+        "today": "Hoje"
+      },
+      "dayPanel": {
+        "title": "Aulas em {{date}}",
+        "empty": "Nenhuma aula agendada neste dia.",
+        "teacher": "Prof."
+      },
+      "actions": {
+        "attendance": "Frequência",
+        "edit": "Editar",
+        "remove": "Remover",
+        "scheduleOnDay": "Agendar aula neste dia"
+      },
+      "drawer": {
+        "edit": "Editar aula",
+        "new": "Agendar aula",
+        "editSubtitle": "Atualize os dados da aula.",
+        "newSubtitle": "Preencha os dados para agendar a nova aula."
+      },
+      "form": {
+        "class": "Turma",
+        "teacher": "Professor",
+        "date": "Data",
+        "subject": "Disciplina/assunto",
+        "start": "Início",
+        "end": "Fim",
+        "lessons": "Aulas",
+        "notes": "Observações"
+      },
+      "alert": {
+        "classDateRequired": "Informe turma e data.",
+        "saveError": "Erro ao salvar aula.",
+        "removeConfirm": "Remover esta aula do calendário?"
+      }
+    },
+    "salary": {
+      "title": "Salário",
+      "subtitle": {
+        "student": "Consulte seus registros de salário e simulações.",
+        "company": "Acompanhe a folha dos aprendizes vinculados à sua empresa.",
+        "admin": "Calcule, simule e gerencie a folha de salários dos alunos."
+      },
+      "simulator": {
+        "title": "Simulador de salário",
+        "apprentice": "Aluno aprendiz"
+      },
+      "form": {
+        "bonuses": "Bonificações",
+        "deductions": "Descontos",
+        "absenceDeduction": "Descontar faltas injustificadas (22 dias úteis)"
+      },
+      "kpis": {
+        "records": "Registros no mês",
+        "basePayroll": "Folha base",
+        "netTotal": "Total líquido",
+        "deductions": "Descontos"
+      },
+      "filters": {
+        "searchStudent": "Buscar aluno",
+        "filterStudent": "Filtrar aluno",
+        "calculated": "Calculado",
+        "pending": "Pendente",
+        "paid": "Pago"
+      },
+      "table": {
+        "student": "Aluno",
+        "reference": "Referência",
+        "base": "Base",
+        "bonus": "Bônus",
+        "deductions": "Descontos",
+        "net": "Líquido"
+      },
+      "preview": {
+        "empty": "Selecione um aluno e clique em Simular para ver o cálculo.",
+        "noContract": "Sem contrato ativo (valor padrão)",
+        "dailyRate": "Valor/dia",
+        "contractBase": "Base contrato",
+        "absenceDeduction": "Desconto faltas"
+      },
+      "attendance": {
+        "present": "{{count}} presença(s)",
+        "rate": "{{rate}}% no mês"
+      },
+      "actions": {
+        "simulate": "Simular",
+        "simulating": "Simulando...",
+        "confirm": "Confirmar cálculo",
+        "batchCalculate": "Calcular todos",
+        "batchCalculating": "Calculando...",
+        "recalculate": "Recalcular"
+      },
+      "empty": {
+        "noRecords": "Nenhum registro de salário para este período.",
+        "useSimulator": "Use o simulador para calcular o primeiro registro."
+      },
+      "alert": {
+        "selectStudent": "Selecione um aluno para simular.",
+        "calculateError": "Não foi possível calcular o salário.",
+        "batchConfirm": "Calcular salário de todos os alunos elegíveis neste mês?"
+      },
+      "success": {
+        "calculated": "Salário calculado e salvo com sucesso."
+      }
+    },
+    "location": {
+      "title": "Localização",
+      "subtitle": "Visualize o campus em 3D e acompanhe a localização dos alunos.",
+      "map": {
+        "title": "Mapa do campus",
+        "simulated": "Localização simulada para demonstração."
+      },
+      "loading": {
+        "map": "Carregando localizações no mapa...",
+        "list": "Carregando localizações..."
+      },
+      "tabs": {
+        "courses": "Cursos",
+        "students": "Alunos",
+        "teachers": "Professores",
+        "classes": "Turmas"
+      },
+      "filters": {
+        "searchStudent": "Buscar aluno...",
+        "inside": "Dentro do perímetro",
+        "outside": "Fora do perímetro",
+        "unknown": "Desconhecido"
+      },
+      "table": {
+        "institutionalEmail": "E-mail institucional",
+        "inClass": "Em aula?",
+        "inPerimeter": "Dentro do perímetro?",
+        "code": "Código",
+        "area": "Área"
+      },
+      "actions": {
+        "viewLocation": "Ver localização",
+        "viewStudent": "Ver aluno",
+        "editRecord": "Editar cadastro"
+      },
+      "infoBanner": "O botão Ver localização abre o painel com endereço e status do aluno.",
+      "drawer": {
+        "title": "Localização do aluno",
+        "address": "Endereço",
+        "city": "Cidade",
+        "lastUpdate": "Última atualização"
+      }
+    },
+    "reports": {
+      "title": "Relatórios",
+      "subtitle": "Resumo consolidado ou construtor personalizado com seções, colunas e filtros.",
+      "tabs": {
+        "summary": "Resumo",
+        "builder": "Construtor"
+      },
+      "summary": {
+        "loading": "Carregando resumo...",
+        "loadError": "Não foi possível carregar o resumo.",
+        "unavailable": "Dados indisponíveis.",
+        "exportCsv": "Exportar CSV",
+        "exportXlsx": "Exportar Excel",
+        "exportXlsxError": "Não foi possível exportar o resumo em Excel.",
+        "exportPdf": "Exportar PDF",
+        "studentsByStatus": "Alunos por status",
+        "attendanceMarks": "Frequência (marcações)",
+        "activeContracts": "Contratos ativos",
+        "activeClasses": "Turmas ativas",
+        "attendanceRate": "Taxa de presença (marcações)"
+      },
+      "export": {
+        "field": "Campo",
+        "value": "Valor",
+        "summary": "Resumo",
+        "indicator": "Indicador",
+        "generatedAt": "Gerado em {{date}}"
+      },
+      "pdf": {
+        "title": "Resumo Connect — SENAI HUB"
+      }
+    }
+  },
+  "grid": {
+    "common": {
+      "viewAll": "Ver todos",
+      "viewTasks": "Ver tarefas",
+      "viewTickets": "Ver chamados",
+      "clear": "Limpar",
+      "noTechnician": "Sem técnico",
+      "noResponsible": "Sem responsável",
+      "room": "Sala",
+      "block": "Bloco"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Visão geral da gestão de manutenção e infraestrutura.",
+      "kpis": {
+        "openTickets": "Chamados abertos",
+        "inProgress": "Em andamento",
+        "completedMonth": "Concluídos no mês",
+        "lowStock": "Itens com estoque baixo"
+      },
+      "recentTickets": {
+        "title": "Chamados recentes",
+        "viewAll": "Ver todos",
+        "empty": "Nenhum chamado recente.",
+        "loading": "Carregando chamados..."
+      },
+      "lowStock": {
+        "title": "Itens com estoque baixo",
+        "item": "Item",
+        "current": "Atual",
+        "minimum": "Mínimo",
+        "viewInventory": "Ver estoque completo",
+        "loading": "Carregando estoque..."
+      },
+      "urgent": {
+        "title": "Itens urgentes",
+        "viewTickets": "Ver chamados",
+        "empty": "Nenhum chamado urgente."
+      },
+      "activities": {
+        "title": "Atividades em andamento",
+        "viewTasks": "Ver tarefas"
+      },
+      "charts": {
+        "quickReports": "Relatórios rápidos",
+        "priority": "Prioridade dos chamados",
+        "tickets": "Chamados"
+      }
+    },
+    "tasks": {
+      "title": "Tarefas",
+      "subtitle": "Arraste os cards entre colunas para atualizar o status.",
+      "loading": "Carregando tarefas...",
+      "searchPlaceholder": "Buscar tarefa...",
+      "actions": {
+        "fromTicket": "A partir de chamado",
+        "newTask": "Nova tarefa",
+        "addTask": "Adicionar tarefa"
+      },
+      "kpis": {
+        "todo": "A fazer",
+        "inProgress": "Em andamento",
+        "done": "Concluídas",
+        "unassigned": "Sem responsável"
+      },
+      "columns": {
+        "todo": "A fazer",
+        "inProgress": "Em andamento",
+        "done": "Concluídas"
+      },
+      "drawer": {
+        "edit": "Editar tarefa",
+        "new": "Nova tarefa",
+        "subtitle": "Ordem de serviço vinculada ao chamado."
+      },
+      "form": {
+        "openedBy": "Aberto por",
+        "title": "Título",
+        "description": "Descrição",
+        "room": "Sala",
+        "block": "Bloco",
+        "assignee": "Responsável",
+        "priority": "Prioridade",
+        "column": "Coluna",
+        "looseItems": "Itens avulsos",
+        "inventoryMaterials": "Materiais do estoque",
+        "priorityHigh": "Alta",
+        "priorityMedium": "Média",
+        "priorityLow": "Baixa"
+      },
+      "alert": {
+        "required": "Informe título e quem abriu a tarefa.",
+        "saveError": "Não foi possível salvar a tarefa.",
+        "moveError": "Não foi possível mover a tarefa. Verifique o estoque dos materiais."
+      }
+    },
+    "tickets": {
+      "title": "Chamados",
+      "subtitle": {
+        "board": "Quadro Kanban de chamados de manutenção.",
+        "list": "Lista detalhada de chamados de manutenção."
+      },
+      "new": "Novo chamado",
+      "view": {
+        "board": "Quadro",
+        "list": "Lista"
+      },
+      "kpis": {
+        "open": "Chamados abertos",
+        "urgent": "Urgentes (alta)",
+        "inProgress": "Em andamento",
+        "completedMonth": "Concluídos no mês"
+      },
+      "count": {
+        "board": "{{count}} chamados no quadro",
+        "list": "{{count}} chamados encontrados"
+      },
+      "columns": {
+        "open": "Abertos",
+        "pending": "Pendentes",
+        "inService": "Em atendimento",
+        "awaitingApproval": "Aprovação chefe",
+        "awaitingEvaluation": "Avaliação solicitante",
+        "finished": "Finalizados"
+      },
+      "filters": {
+        "search": "Busca",
+        "block": "Bloco",
+        "priority": "Prioridade",
+        "status": "Status",
+        "all": "Todos"
+      },
+      "table": {
+        "id": "ID",
+        "requester": "Solicitante",
+        "title": "Título",
+        "summary": "Descrição resumida",
+        "roomBlock": "Sala/Bloco",
+        "priority": "Prioridade",
+        "openedAt": "Data de abertura",
+        "assignee": "Responsável"
+      },
+      "actions": {
+        "assign": "Atribuir técnico"
+      },
+      "drawer": {
+        "edit": "Editar chamado",
+        "new": "Novo chamado"
+      },
+      "assign": {
+        "title": "Atribuir técnico",
+        "technician": "Técnico responsável"
+      },
+      "alert": {
+        "required": "Informe solicitante e título.",
+        "moveBlocked": "Movimento não permitido para este chamado.",
+        "moveError": "Não foi possível mover o chamado."
+      },
+      "attachments": {
+        "title": "Anexos",
+        "hint": "Fotos ou PDF (máx. 5 MB por arquivo).",
+        "add": "Adicionar anexo",
+        "empty": "Nenhum anexo neste chamado.",
+        "pending": "será enviado ao salvar",
+        "remove": "Remover anexo",
+        "count": "{{count}} de {{max}}",
+        "uploadError": "Não foi possível enviar o anexo.",
+        "removeError": "Não foi possível remover o anexo.",
+        "removeConfirm": "Remover este anexo do chamado?"
+      },
+      "defaultApprover": "Chefe de Manutenção"
+    },
+    "map": {
+      "title": "Mapa de tarefas",
+      "subtitle": "Visualize chamados e tarefas por local no campus.",
+      "loading": {
+        "map": "Carregando mapa...",
+        "list": "Carregando lista..."
+      },
+      "list": {
+        "title": "Atendimentos por local (lista)",
+        "records": "{{count}} registros"
+      },
+      "links": {
+        "tasks": "Ver tarefas →",
+        "tickets": "Ver chamados →"
+      },
+      "kpis": {
+        "total": "Total de tarefas",
+        "todo": "A fazer",
+        "inProgress": "Em andamento",
+        "done": "Concluídas",
+        "overdue": "Atrasadas"
+      }
+    },
+    "inventory": {
+      "title": "Estoque",
+      "subtitle": "Gerencie e acompanhe materiais e insumos.",
+      "add": "Adicionar item ao estoque",
+      "kpis": {
+        "totalItems": "Total de itens",
+        "pageValue": "Valor (página)",
+        "lowStock": "Estoque baixo",
+        "reserved": "Com reserva"
+      },
+      "filters": {
+        "itemName": "Nome do item",
+        "category": "Categoria",
+        "status": "Status",
+        "available": "Disponível",
+        "lowStock": "Estoque baixo",
+        "reserved": "Reservado"
+      },
+      "table": {
+        "photo": "Foto",
+        "title": "Título",
+        "description": "Descrição",
+        "category": "Categoria",
+        "qtyAvailable": "Qtd. disponível",
+        "qtyMinimum": "Qtd. mínima",
+        "location": "Localização",
+        "distributor": "Distribuidora",
+        "cost": "Custo"
+      },
+      "actions": {
+        "addQty": "Adicionar quantidade",
+        "removeQty": "Remover quantidade",
+        "searchImage": "Buscar imagem pública",
+        "editItem": "Editar item"
+      },
+      "drawer": {
+        "edit": "Editar item",
+        "add": "Adicionar item"
+      },
+      "formExtra": {
+        "sku": "SKU",
+        "purchaseDate": "Data da compra",
+        "upload": "Enviar foto",
+        "url": "URL",
+        "urlPlaceholder": "https://"
+      },
+      "adjust": {
+        "title": "Entrada/Saída de estoque",
+        "confirm": "Confirmar"
+      },
+      "alert": {
+        "nameRequired": "Informe o nome do item.",
+        "photoRequired": "Selecione uma foto para o item.",
+        "qtyInvalid": "Informe uma quantidade válida."
+      }
+    },
+    "users": {
+      "title": "Usuários",
+      "subtitle": "Gerencie os usuários do módulo Grid.",
+      "new": "Novo usuário",
+      "create": "Criar usuário",
+      "loading": "Carregando usuários...",
+      "kpis": {
+        "total": "Total",
+        "activePage": "Ativos (página)",
+        "technicians": "Técnicos",
+        "managers": "Gerentes"
+      },
+      "filters": {
+        "searchPlaceholder": "Buscar por nome ou e-mail...",
+        "userType": "Tipo de usuário"
+      },
+      "roles": {
+        "technician": "Técnico de manutenção",
+        "manager": "Gerente de manutenção",
+        "teacher": "Professor",
+        "secretary": "Secretaria"
+      },
+      "table": {
+        "id": "ID",
+        "institutionalEmail": "E-mail institucional",
+        "phone": "Telefone",
+        "userType": "Tipo",
+        "created": "Criação",
+        "updated": "Atualização",
+        "cpf": "CPF"
+      },
+      "drawer": {
+        "edit": "Editar usuário",
+        "new": "Novo usuário"
+      },
+      "alert": {
+        "required": "Informe nome, e-mail e tipo de usuário."
+      }
+    },
+    "reports": {
+      "title": "Relatórios",
+      "subtitle": "Painel operacional ou construtor personalizado.",
+      "tabs": {
+        "dashboard": "Painel",
+        "builder": "Construtor"
+      },
+      "loading": "Carregando...",
+      "kpis": {
+        "created": "Chamados criados",
+        "pending": "Pendentes",
+        "withoutTechnician": "Sem técnico",
+        "inProgress": "Em andamento",
+        "awaitingEvaluation": "Avaliação pendente",
+        "finished": "Finalizados",
+        "urgentOpen": "Urgentes abertos"
+      },
+      "charts": {
+        "byMonth": "Chamados por mês",
+        "byStatus": "Status dos chamados",
+        "finished": "Finalizados",
+        "byTechnician": "Por técnico",
+        "tickets": "chamados"
+      },
+      "recent": {
+        "title": "Título",
+        "id": "ID",
+        "technician": "Técnico",
+        "status": "Status"
+      }
+    },
+    "control": {
+      "title": "Controle de chamados",
+      "subtitle": "Selecione um chamado para ver detalhes e avançar no fluxo.",
+      "actions": {
+        "viewKanban": "Ver Kanban",
+        "newTicket": "Novo chamado"
+      },
+      "list": {
+        "title": "Chamados",
+        "searchPlaceholder": "Buscar código, título...",
+        "includeFinished": "Incluir finalizados"
+      },
+      "states": {
+        "empty": "Nenhum chamado encontrado.",
+        "selectTitle": "Selecione um chamado",
+        "selectHint": "Escolha um item na lista para ver os detalhes."
+      },
+      "create": {
+        "title": "Novo chamado",
+        "hint": "O chamado será criado em Aberto.",
+        "submit": "Criar chamado"
+      },
+      "form": {
+        "requester": "Solicitante",
+        "title": "Título",
+        "summary": "Resumo",
+        "room": "Sala",
+        "block": "Bloco",
+        "priority": "Prioridade",
+        "fixedDescription": "O que foi consertado",
+        "considerations": "Considerações / resolução"
+      },
+      "defaultActor": "Operador Grid",
+      "alert": {
+        "required": "Informe solicitante e título."
+      }
+    }
+  }
+}

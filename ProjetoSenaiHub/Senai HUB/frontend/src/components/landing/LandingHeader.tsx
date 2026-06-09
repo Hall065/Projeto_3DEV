@@ -1,30 +1,28 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Menu, X } from 'lucide-react'
 import { logoSenaiHub } from '../../assets/brand'
 import { useAuth } from '../../contexts/AuthContext'
 
-const navLinks = [
-  { label: 'Recursos', href: '#recursos' },
-  { label: 'Soluções', href: '#solucoes' },
-  { label: 'Benefícios', href: '#beneficios' },
-  { label: 'Para quem é', href: '#para-quem' },
-  { label: 'Suporte', href: '#suporte' },
-]
-
 export function LandingHeader() {
+  const { t } = useTranslation()
   const { isAuthenticated } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const navLinks = [
+    { label: t('landing.navFeatures'), href: '#recursos' },
+    { label: t('landing.navSolutions'), href: '#solucoes' },
+    { label: t('landing.navBenefits'), href: '#beneficios' },
+    { label: t('landing.navAudience'), href: '#para-quem' },
+    { label: t('landing.navSupport'), href: '#suporte' },
+  ]
 
   return (
     <header className="hub-chrome sticky top-0 z-50 border-b">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <Link to="/" className="shrink-0">
-          <img
-            src={logoSenaiHub}
-            alt="SENAI HUB"
-            className="h-10 w-auto sm:h-12 lg:h-14"
-          />
+          <img src={logoSenaiHub} alt="SENAI HUB" className="h-10 w-auto sm:h-12 lg:h-14" />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Principal">
@@ -45,23 +43,15 @@ export function LandingHeader() {
               to="/hub"
               className="rounded-lg bg-hub-red px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-hub-red-hover"
             >
-              Acessar o Hub
+              {t('landing.accessHub')}
             </Link>
           ) : (
-            <>
-              <Link
-                to="/login"
-                className="rounded-lg border border-white/40 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-              >
-                Entrar
-              </Link>
-              <Link
-                to="/cadastro"
-                className="rounded-lg bg-hub-red px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-hub-red-hover"
-              >
-                Criar conta
-              </Link>
-            </>
+            <Link
+              to="/login"
+              className="rounded-lg bg-hub-red px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-hub-red-hover"
+            >
+              {t('landing.login')}
+            </Link>
           )}
         </div>
 
@@ -70,7 +60,7 @@ export function LandingHeader() {
           className="inline-flex items-center justify-center rounded-lg p-2 text-white lg:hidden"
           onClick={() => setMenuOpen((open) => !open)}
           aria-expanded={menuOpen}
-          aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+          aria-label={menuOpen ? t('header.closeMenu') : t('header.openMenu')}
         >
           {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -97,25 +87,16 @@ export function LandingHeader() {
                 className="rounded-lg bg-hub-red px-4 py-2.5 text-center text-sm font-semibold text-white"
                 onClick={() => setMenuOpen(false)}
               >
-                Acessar o Hub
+                {t('landing.accessHub')}
               </Link>
             ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="rounded-lg border border-white/40 px-4 py-2.5 text-center text-sm font-semibold text-white"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Entrar
-                </Link>
-                <Link
-                  to="/cadastro"
-                  className="rounded-lg bg-hub-red px-4 py-2.5 text-center text-sm font-semibold text-white"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Criar conta
-                </Link>
-              </>
+              <Link
+                to="/login"
+                className="rounded-lg bg-hub-red px-4 py-2.5 text-center text-sm font-semibold text-white"
+                onClick={() => setMenuOpen(false)}
+              >
+                {t('landing.login')}
+              </Link>
             )}
           </div>
         </div>

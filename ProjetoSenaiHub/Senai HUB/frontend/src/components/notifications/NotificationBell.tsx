@@ -1,16 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { Bell, CheckCheck, ExternalLink, Trash2, X } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useAppearance } from '../../contexts/AppearanceContext'
 import { useNotifications } from '../../contexts/NotificationContext'
+import { intlLocale, normalizeLocale } from '../../i18n'
 import type { HubNotification, NotificationModule } from '../../types/notification'
+import type { WallpaperTone } from '../../utils/wallpaperTone'
 
-type NotificationBellVariant = 'hub' | 'connect' | 'grid' | 'chrome'
-
-const MODULE_LABELS: Record<NotificationModule, string> = {
-  hub: 'Hub',
-  connect: 'Connect',
-  grid: 'Grid',
-}
+type NotificationBellVariant = 'hub' | 'connect' | 'grid' | 'safe' | 'chrome'
 
 const SEVERITY_DOT: Record<string, string> = {
   info: 'bg-sky-500',
@@ -18,23 +16,37 @@ const SEVERITY_DOT: Record<string, string> = {
   urgent: 'bg-red-500',
 }
 
-function formatWhen(iso: string): string {
+function formatWhen(
+  iso: string,
+  language: string,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
   const date = new Date(iso)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffMin = Math.floor(diffMs / 60_000)
-  if (diffMin < 1) return 'agora'
-  if (diffMin < 60) return `${diffMin} min`
+  if (diffMin < 1) return t('notifications.now')
+  if (diffMin < 60) return t('notifications.minutes', { count: diffMin })
   const diffHours = Math.floor(diffMin / 60)
-  if (diffHours < 24) return `${diffHours} h`
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+  if (diffHours < 24) return t('notifications.hours', { count: diffHours })
+  return date.toLocaleDateString(intlLocale(normalizeLocale(language)), { day: '2-digit', month: 'short' })
+}
+
+function moduleLabel(module: NotificationModule, t: (key: string) => string): string {
+  if (module === 'hub') return t('hub.title')
+  return t(`modules.${module}`)
+}
+
+function resolveBellVariant(variant: NotificationBellVariant, wallpaperTone: WallpaperTone): NotificationBellVariant {
+  if (variant === 'chrome') return 'chrome'
+  return wallpaperTone === 'dark' ? 'chrome' : variant
 }
 
 function variantClasses(variant: NotificationBellVariant) {
   if (variant === 'chrome') {
     return {
-      button: 'rounded-lg p-2 text-white/75 transition hover:bg-white/10 hover:text-white',
-      panel: 'border border-white/15 bg-slate-900/95 text-white shadow-2xl backdrop-blur-md',
+      button: 'rounded-full p-2.5 text-white/80 transition hover:bg-white/10 hover:text-white',
+      panel: 'rounded-2xl border border-white/15 bg-slate-900/95 text-white shadow-2xl backdrop-blur-md',
       muted: 'text-white/60',
       title: 'text-white',
       itemHover: 'hover:bg-white/10',
@@ -43,8 +55,8 @@ function variantClasses(variant: NotificationBellVariant) {
   }
 
   return {
-    button: 'rounded-lg p-2 text-hub-text-muted transition hover:bg-hub-bg hover:text-hub-text',
-    panel: 'glass-panel-menu border border-hub-border bg-white/95 shadow-xl backdrop-blur-md',
+    button: 'rounded-full p-2.5 text-hub-text-muted transition hover:bg-hub-bg hover:text-hub-text',
+    panel: 'glass-panel-menu rounded-2xl border border-hub-border bg-white/95 shadow-xl backdrop-blur-md',
     muted: 'text-hub-text-muted',
     title: 'text-hub-navy',
     itemHover: 'hover:bg-hub-bg/70',
@@ -58,13 +70,16 @@ function NotificationItem({
   onOpen,
   onMarkRead,
   onRemove,
+  language,
 }: {
   item: HubNotification
   variant: NotificationBellVariant
   onOpen: (item: HubNotification) => void
   onMarkRead: (id: number) => void
   onRemove: (id: number) => void
+  language: string
 }) {
+  const { t } = useTranslation()
   const styles = variantClasses(variant)
 
   return (
@@ -85,9 +100,9 @@ function NotificationItem({
         <p className={`text-sm font-semibold ${styles.title}`}>{item.title}</p>
         <p className={`mt-0.5 line-clamp-2 text-xs ${styles.muted}`}>{item.message}</p>
         <div className={`mt-1.5 flex flex-wrap items-center gap-2 text-[11px] ${styles.muted}`}>
-          <span>{MODULE_LABELS[item.module]}</span>
+          <span>{moduleLabel(item.module, t)}</span>
           <span>·</span>
-          <span>{formatWhen(item.created_at)}</span>
+          <span>{formatWhen(item.created_at, language, t)}</span>
           {item.actor_name && (
             <>
               <span>·</span>
@@ -101,7 +116,7 @@ function NotificationItem({
           <button
             type="button"
             className={`rounded p-1 ${styles.muted} hover:text-emerald-600`}
-            aria-label="Marcar como lida"
+            aria-label={t('notifications.markRead')}
             onClick={() => onMarkRead(item.id)}
           >
             <CheckCheck className="h-3.5 w-3.5" />
@@ -110,7 +125,7 @@ function NotificationItem({
         <button
           type="button"
           className={`rounded p-1 ${styles.muted} hover:text-red-600`}
-          aria-label="Remover notificacao"
+          aria-label={t('notifications.remove')}
           onClick={() => onRemove(item.id)}
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -121,8 +136,11 @@ function NotificationItem({
 }
 
 export function NotificationBell({ variant = 'hub' }: { variant?: NotificationBellVariant }) {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const panelRef = useRef<HTMLDivElement>(null)
+  const { wallpaperTone } = useAppearance()
+  const resolvedVariant = resolveBellVariant(variant, wallpaperTone)
   const {
     unreadCount,
     notifications,
@@ -133,7 +151,7 @@ export function NotificationBell({ variant = 'hub' }: { variant?: NotificationBe
     markAllRead,
     remove,
   } = useNotifications()
-  const styles = variantClasses(variant)
+  const styles = variantClasses(resolvedVariant)
 
   useEffect(() => {
     if (!isOpen) return
@@ -161,7 +179,7 @@ export function NotificationBell({ variant = 'hub' }: { variant?: NotificationBe
       <button
         type="button"
         className={`relative ${styles.button}`}
-        aria-label="Notificacoes"
+        aria-label={t('notifications.ariaLabel')}
         aria-expanded={isOpen}
         onClick={() => setOpen(!isOpen)}
       >
@@ -175,13 +193,13 @@ export function NotificationBell({ variant = 'hub' }: { variant?: NotificationBe
 
       {isOpen && (
         <div
-          className={`absolute right-0 top-full z-[70] mt-2 w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl ${styles.panel}`}
+          className={`absolute right-0 top-full z-[70] mt-2 w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden ${styles.panel}`}
         >
           <div className={`flex items-center justify-between border-b px-4 py-3 ${styles.border}`}>
             <div>
-              <p className={`text-sm font-semibold ${styles.title}`}>Notificacoes</p>
+              <p className={`text-sm font-semibold ${styles.title}`}>{t('notifications.title')}</p>
               <p className={`text-xs ${styles.muted}`}>
-                {unreadCount > 0 ? `${unreadCount} nao lida(s)` : 'Tudo em dia'}
+                {unreadCount > 0 ? t('notifications.unreadCount', { count: unreadCount }) : t('notifications.allCaughtUp')}
               </p>
             </div>
             <div className="flex items-center gap-1">
@@ -191,13 +209,13 @@ export function NotificationBell({ variant = 'hub' }: { variant?: NotificationBe
                   className={`rounded-lg px-2 py-1 text-xs font-medium ${styles.muted} hover:bg-hub-bg`}
                   onClick={() => void markAllRead()}
                 >
-                  Marcar todas
+                  {t('notifications.markAll')}
                 </button>
               )}
               <button
                 type="button"
                 className={`rounded-lg p-1 ${styles.muted} hover:bg-hub-bg`}
-                aria-label="Fechar"
+                aria-label={t('common.close')}
                 onClick={() => setOpen(false)}
               >
                 <X className="h-4 w-4" />
@@ -207,11 +225,11 @@ export function NotificationBell({ variant = 'hub' }: { variant?: NotificationBe
 
           <div className="max-h-[min(24rem,60vh)] overflow-y-auto">
             {isLoading && (
-              <p className={`px-4 py-8 text-center text-sm ${styles.muted}`}>Carregando...</p>
+              <p className={`px-4 py-8 text-center text-sm ${styles.muted}`}>{t('notifications.loading')}</p>
             )}
             {!isLoading && notifications.length === 0 && (
               <p className={`px-4 py-8 text-center text-sm ${styles.muted}`}>
-                Nenhuma notificacao por enquanto.
+                {t('notifications.empty')}
               </p>
             )}
             {!isLoading &&
@@ -219,10 +237,11 @@ export function NotificationBell({ variant = 'hub' }: { variant?: NotificationBe
                 <NotificationItem
                   key={item.id}
                   item={item}
-                  variant={variant}
+                  variant={resolvedVariant}
                   onOpen={(n) => void handleOpen(n)}
                   onMarkRead={(id) => void markRead(id)}
                   onRemove={(id) => void remove(id)}
+                  language={i18n.language}
                 />
               ))}
           </div>
@@ -233,7 +252,7 @@ export function NotificationBell({ variant = 'hub' }: { variant?: NotificationBe
               className={`inline-flex items-center gap-1.5 text-xs font-medium ${styles.muted} hover:underline`}
               onClick={() => setOpen(false)}
             >
-              Preferencias de notificacao
+              {t('notifications.preferencesLink')}
               <ExternalLink className="h-3 w-3" />
             </Link>
           </div>

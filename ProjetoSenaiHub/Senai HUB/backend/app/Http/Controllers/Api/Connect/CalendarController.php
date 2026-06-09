@@ -7,6 +7,7 @@ use App\Http\Resources\Connect\ConnectClassWeeklyPatternResource;
 use App\Http\Resources\Connect\ConnectLessonScheduleResource;
 use App\Models\Connect\ConnectClass;
 use App\Models\Connect\ConnectLessonSchedule;
+use App\Services\Connect\ConnectAttendanceService;
 use App\Services\Connect\ConnectScheduleService;
 use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ class CalendarController extends Controller
 {
     public function __construct(
         private readonly ConnectScheduleService $schedule,
+        private readonly ConnectAttendanceService $attendance,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -177,6 +179,8 @@ class CalendarController extends Controller
                 $connectClass->fresh(['course', 'weeklyPatterns']),
                 $request->boolean('replace_future'),
             );
+            $provision = $this->attendance->provisionSessionsForClass($connectClass->fresh(['students']));
+            $generation['attendance_provisioned'] = $provision['created'] ?? 0;
             if (($generation['created'] ?? 0) > 0) {
                 app(\App\Services\Notification\SystemNotificationTriggers::class)
                     ->connectScheduleGenerated($connectClass->fresh(), (int) $generation['created'], $request->user());
@@ -204,6 +208,9 @@ class CalendarController extends Controller
             $request->boolean('replace_future'),
         );
 
+        $provision = $this->attendance->provisionSessionsForClass($connectClass->fresh(['students']));
+        $result['attendance_provisioned'] = $provision['created'] ?? 0;
+
         if (($result['created'] ?? 0) > 0) {
             app(\App\Services\Notification\SystemNotificationTriggers::class)
                 ->connectScheduleGenerated($connectClass->fresh(), (int) $result['created'], $request->user());
@@ -213,6 +220,36 @@ class CalendarController extends Controller
             'generation' => $result,
             'plan' => $this->schedule->schedulePlan($connectClass->fresh(['course', 'weeklyPatterns', 'lessonSchedules'])),
             'message' => "Calendario gerado: {$result['created']} aula(s) criada(s).",
+        ]);
+    }
+
+    public function semesters(Request $request): JsonResponse
+    {
+        $allowedClassIds = UserAccessScope::connectClassQuery($request->user())->select('id');
+
+        $semesters = ConnectClass::query()
+            ->whereIn('id', $allowedClassIds)
+            ->whereNotNull('semester')
+            ->where('semester', '!=', '')
+            ->distinct()
+            ->orderByDesc('semester')
+            ->pluck('semester')
+            ->values();
+
+        return response()->json(['data' => $semesters]);
+    }
+
+    public function provisionAttendance(Request $request, ConnectClass $connectClass): JsonResponse
+    {
+        UserAccessScope::connectClassQuery($request->user())
+            ->where('id', $connectClass->id)
+            ->firstOrFail();
+
+        $result = $this->attendance->provisionSessionsForClass($connectClass->load(['students']));
+
+        return response()->json([
+            'data' => $result,
+            'message' => "Chamadas preparadas: {$result['created']} sessao(oes) criada(s).",
         ]);
     }
 

@@ -11,8 +11,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Mail\HubResetPasswordMail;
 
 class AuthService
 {
@@ -171,9 +175,60 @@ class AuthService
     public function logout(?Authenticatable $user): void
     {
         if ($user instanceof User) {
-            $user->tokens()->delete();
+            $token = $user->currentAccessToken();
+            if ($token !== null) {
+                $token->delete();
+            }
         }
 
         Auth::guard('web')->logout();
+    }
+
+    public function sendPasswordResetLink(string $email): void
+    {
+        $user = User::query()->where('email', $email)->first();
+
+        if (! $user) {
+            return;
+        }
+
+        $token = Password::broker()->createToken($user);
+        $frontend = rtrim((string) config('hub.frontend_url', 'http://127.0.0.1:5173'), '/');
+        $resetUrl = $frontend.'/redefinir-senha?token='.$token.'&email='.urlencode($email);
+
+        $target = config('hub.mail.redirect_all', false)
+            ? (string) config('hub.mail.notification_email', $email)
+            : $email;
+
+        Mail::to($target)->send(new HubResetPasswordMail($resetUrl, $user->name));
+    }
+
+    /**
+     * @param  array{email: string, password: string, password_confirmation: string, token: string}  $data
+     */
+    public function resetPassword(array $data): void
+    {
+        $status = Password::broker()->reset(
+            [
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'password_confirmation' => $data['password_confirmation'],
+                'token' => $data['token'],
+            ],
+            function (User $user, string $password): void {
+                $user->forceFill([
+                    'password' => $password,
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                $user->tokens()->delete();
+            },
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            throw ValidationException::withMessages([
+                'email' => [__($status)],
+            ]);
+        }
     }
 }

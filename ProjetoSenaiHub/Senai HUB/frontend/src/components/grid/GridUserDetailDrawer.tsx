@@ -6,6 +6,7 @@ import { ConnectLoadingSpinner, StatusBadge } from '../connect/ConnectShared'
 import { UserAvatar } from '../ui/UserAvatar'
 import { gridService } from '../../services/gridService'
 import type { GridUserDetail } from '../../types/grid'
+import { parseApiError } from '../../utils/parseApiError'
 
 function formatDateTime(value?: string | null) {
   if (!value) return '—'
@@ -69,7 +70,7 @@ export function GridUserDetailDrawer({
     gridService
       .getUser(userId)
       .then(setDetail)
-      .catch(() => setError('Não foi possível carregar os detalhes do usuário.'))
+      .catch((err) => setError(parseApiError(err, 'Nao foi possivel carregar os detalhes do usuario.')))
       .finally(() => setLoading(false))
   }, [open, userId])
 

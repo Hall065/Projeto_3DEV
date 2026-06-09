@@ -5,16 +5,15 @@ import {
   loginRequest,
   logoutRequest,
   parseAuthError,
-  registerRequest,
   removeAvatarRequest,
   updateProfileRequest,
   uploadAvatarRequest,
 } from '../services/authService'
-import type { AuthState, LoginCredentials, RegisterCredentials, User } from '../types/auth'
+import { fetchPermissionsCatalog } from '../services/permissionsCatalogService'
+import type { AuthState, LoginCredentials, User } from '../types/auth'
 
 interface AuthContextValue extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>
-  register: (credentials: RegisterCredentials) => Promise<void>
   logout: () => Promise<void>
   updateProfile: (payload: { name: string; email: string }) => Promise<User>
   uploadAvatar: (file: File) => Promise<User>
@@ -77,6 +76,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsInitializing(false))
   }, [])
 
+  useEffect(() => {
+    const syncSession = () => {
+      if (!localStorage.getItem(TOKEN_KEY)) {
+        return
+      }
+
+      fetchCurrentUser()
+        .then((currentUser) => {
+          setUser(currentUser)
+          localStorage.setItem(USER_KEY, JSON.stringify(currentUser))
+        })
+        .catch(() => undefined)
+    }
+
+    window.addEventListener('focus', syncSession)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        syncSession()
+      }
+    })
+
+    return () => {
+      window.removeEventListener('focus', syncSession)
+    }
+  }, [])
+
   const login = useCallback(async (credentials: LoginCredentials) => {
     setIsSubmitting(true)
 
@@ -84,20 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await loginRequest(credentials.email, credentials.password)
       persistSession(result.user, result.token)
       setUser(result.user)
-    } catch (error) {
-      throw new Error(parseAuthError(error))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [])
-
-  const register = useCallback(async (credentials: RegisterCredentials) => {
-    setIsSubmitting(true)
-
-    try {
-      const result = await registerRequest(credentials)
-      persistSession(result.user, result.token)
-      setUser(result.user)
+      fetchPermissionsCatalog().catch(() => undefined)
     } catch (error) {
       throw new Error(parseAuthError(error))
     } finally {
@@ -187,7 +199,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isInitializing,
       isSubmitting,
       login,
-      register,
       logout,
       updateProfile,
       uploadAvatar,
@@ -195,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       changePassword,
       refreshUser,
     }),
-    [user, isInitializing, isSubmitting, login, register, logout, updateProfile, uploadAvatar, removeAvatar, changePassword, refreshUser],
+    [user, isInitializing, isSubmitting, login, logout, updateProfile, uploadAvatar, removeAvatar, changePassword, refreshUser],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

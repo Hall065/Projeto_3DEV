@@ -155,7 +155,7 @@ class ClassController extends Controller
 
         $connectClass->update($validated);
         $connectClass->load(['course', 'teacher']);
-        $this->schedule->validateClassAssignment($connectClass);
+        $this->schedule->validateClassAssignment($connectClass, $connectClass->id);
         $this->enrollment->syncTeacherCourseFromClass($connectClass);
 
         if (is_array($weeklyPatterns)) {

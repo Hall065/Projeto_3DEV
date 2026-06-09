@@ -1,9 +1,9 @@
-import { Download, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Download, Eye, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -20,8 +20,8 @@ import {
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import type { ConnectContract, ConnectStudent, PaginatedMeta } from '../../types/connect'
-import { confirmDelete } from '../../utils/confirmAction'
 import { downloadCsv } from '../../utils/csvExport'
+import { parseApiError } from '../../utils/parseApiError'
 
 const emptyContractForm = {
   connect_student_id: '',
@@ -35,6 +35,7 @@ const emptyContractForm = {
 }
 
 export function ContractsPage() {
+  const { t } = useTranslation()
   const [contracts, setContracts] = useState<ConnectContract[]>([])
   const [students, setStudents] = useState<ConnectStudent[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
@@ -106,27 +107,39 @@ export function ContractsPage() {
 
   const handleSave = async (keepOpen = false) => {
     const payload = buildPayload()
-    if (editingId) {
-      await connectService.updateContract(editingId, payload)
-    } else {
-      await connectService.createContract(payload)
+    try {
+      if (editingId) {
+        await connectService.updateContract(editingId, payload)
+      } else {
+        await connectService.createContract(payload)
+      }
+      if (keepOpen) {
+        setEditingId(null)
+        setForm(emptyContractForm)
+      } else {
+        setDrawerOpen(false)
+        setEditingId(null)
+      }
+      load()
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, t('connect.classes.alert.saveError')))
     }
-    if (keepOpen) {
-      setEditingId(null)
-      setForm(emptyContractForm)
-    } else {
-      setDrawerOpen(false)
-      setEditingId(null)
-    }
-    load()
   }
 
   const handleExport = () => {
     downloadCsv(
       'contratos',
-      ['Carga horaria', 'Curso', 'Aluno', 'Empresa', 'Inicio', 'Valor mensal', 'Status'],
+      [
+        t('connect.contracts.table.workload'),
+        t('connect.table.course'),
+        t('connect.contracts.table.studentName'),
+        t('connect.contracts.table.company'),
+        t('connect.contracts.table.start'),
+        t('connect.contracts.table.monthlyValue'),
+        t('connect.table.status'),
+      ],
       contracts.map((contract) => [
-        contract.weekly_hours != null ? `${contract.weekly_hours} horas` : '-',
+        contract.weekly_hours != null ? `${contract.weekly_hours}h` : '-',
         contract.student?.class?.course?.name ?? '-',
         contract.student?.full_name ?? '-',
         contract.company_name ?? '-',
@@ -138,26 +151,30 @@ export function ContractsPage() {
   }
 
   const handleDelete = async (contract: ConnectContract) => {
-    const label = contract.student?.full_name ?? 'este contrato'
-    if (!confirmDelete(`o contrato de ${label}`)) return
-    await connectService.deleteContract(contract.id)
-    load()
+    const label = contract.student?.full_name ?? t('connect.contracts.drawer.new')
+    if (!window.confirm(t('connect.confirm.delete', { entity: `o contrato de ${label}` }))) return
+    try {
+      await connectService.deleteContract(contract.id)
+      load()
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, t('connect.classes.alert.deleteError')))
+    }
   }
 
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Contratos"
-        subtitle="Gerencie os contratos de alunos e parceiros de forma integrada."
+        title={t('connect.contracts.title')}
+        subtitle={t('connect.contracts.subtitle')}
         actions={
           <>
             <OutlineButton onClick={() => setShowFilters((v) => !v)}>
-              <Filter className="h-4 w-4" /> Filtros
+              <Filter className="h-4 w-4" /> {t('connect.common.filters')}
             </OutlineButton>
             <OutlineButton onClick={handleExport}>
-              <Download className="h-4 w-4" /> Exportar
+              <Download className="h-4 w-4" /> {t('connect.common.export')}
             </OutlineButton>
-            <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> Novo</PrimaryButton>
+            <PrimaryButton onClick={openCreate}><Plus className="h-4 w-4" /> {t('connect.common.new')}</PrimaryButton>
           </>
         }
       />
@@ -165,7 +182,7 @@ export function ContractsPage() {
       {showFilters && (
         <ConnectCard className="mb-4 p-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <FormField label="Status">
+            <FormField label={t('connect.table.status')}>
               <select
                 className={selectClass}
                 value={filterStatus}
@@ -174,13 +191,13 @@ export function ContractsPage() {
                   setFilterStatus(e.target.value)
                 }}
               >
-                <option value="">Todos os status</option>
-                <option value="active">Ativo</option>
-                <option value="inactive">Inativo</option>
-                <option value="finished">Encerrado</option>
+                <option value="">{t('connect.students.filters.allStatuses')}</option>
+                <option value="active">{t('connect.status.active')}</option>
+                <option value="inactive">{t('connect.status.inactive')}</option>
+                <option value="finished">{t('connect.contracts.filters.terminated')}</option>
               </select>
             </FormField>
-            <FormField label="Tipo de contrato">
+            <FormField label={t('connect.contracts.filters.contractType')}>
               <select
                 className={selectClass}
                 value={filterContractType}
@@ -189,11 +206,11 @@ export function ContractsPage() {
                   setFilterContractType(e.target.value)
                 }}
               >
-                <option value="">Todos os tipos</option>
-                <option value="aprendizagem">Aprendizagem</option>
-                <option value="estagio">Estágio</option>
-                <option value="clt">CLT</option>
-                <option value="temporario">Temporário</option>
+                <option value="">{t('connect.common.all')}</option>
+                <option value="aprendizagem">{t('connect.contracts.filters.apprenticeship')}</option>
+                <option value="estagio">{t('connect.contracts.filters.internship')}</option>
+                <option value="clt">{t('connect.contracts.filters.clt')}</option>
+                <option value="temporario">{t('connect.contracts.filters.temporary')}</option>
               </select>
             </FormField>
           </div>
@@ -202,20 +219,20 @@ export function ContractsPage() {
 
       <ConnectCard>
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando contratos..." className="min-h-[280px]" />
+          <ConnectLoadingSpinner label={t('connect.contracts.loading')} className="min-h-[280px]" />
         ) : (
         <>
         <ConnectTableScroll>
           <table className="w-full min-w-[640px] text-sm">
             <thead className="glass-thead text-hub-text-muted">
               <tr>
-                <th className="px-4 py-3 text-left">Carga horaria</th>
-                <th className="px-4 py-3 text-left">Curso</th>
-                <th className="px-4 py-3 text-left">Nome do aluno</th>
-                <th className="px-4 py-3 text-left">Empresa</th>
-                <th className="px-4 py-3 text-left">Inicio</th>
-                <th className="px-4 py-3 text-left">Valor mensal</th>
-                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">{t('connect.contracts.table.workload')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.course')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.contracts.table.studentName')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.contracts.table.company')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.contracts.table.start')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.contracts.table.monthlyValue')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -223,7 +240,7 @@ export function ContractsPage() {
               {contracts.map((contract) => (
                 <tr key={contract.id} className="border-t border-hub-border/40">
                   <td className="px-4 py-3">
-                    {contract.weekly_hours != null ? `${contract.weekly_hours} horas` : '-'}
+                    {contract.weekly_hours != null ? `${contract.weekly_hours}h` : '-'}
                   </td>
                   <td className="px-4 py-3">{contract.student?.class?.course?.name ?? '-'}</td>
                   <td className="px-4 py-3 font-medium">{contract.student?.full_name ?? '-'}</td>
@@ -233,13 +250,18 @@ export function ContractsPage() {
                   <td className="px-4 py-3"><StatusBadge status={contract.status} /></td>
                   <td className="px-4 py-3 text-right">
                     <ConnectRowActionsMenu
-                      ariaLabel={`Ações do contrato de ${contract.student?.full_name ?? 'aluno'}`}
+                      ariaLabel={t('connect.common.actionsOf', { name: contract.student?.full_name ?? t('connect.personKind.student') })}
                       actions={[
-                        viewRowAction(() => setViewId(contract.id)),
-                        { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => openEdit(contract) },
+                        {
+                          key: 'view',
+                          label: t('connect.common.view'),
+                          icon: Eye,
+                          onClick: () => setViewId(contract.id),
+                        },
+                        { key: 'edit', label: t('connect.common.edit'), icon: Pencil, onClick: () => openEdit(contract) },
                         {
                           key: 'delete',
-                          label: 'Excluir',
+                          label: t('connect.common.delete'),
                           icon: Trash2,
                           variant: 'danger',
                           onClick: () => void handleDelete(contract),
@@ -253,7 +275,7 @@ export function ContractsPage() {
           </table>
         </ConnectTableScroll>
         <div className="flex flex-col gap-3 border-t border-hub-border/60 px-4 py-3 text-sm text-hub-text-muted sm:flex-row sm:items-center sm:justify-between">
-          <span>Total de registros: {meta?.total ?? 0}</span>
+          <span>{t('connect.contracts.totalRecords')} {meta?.total ?? 0}</span>
           <ConnectPagination meta={meta} onPageChange={setPage} />
         </div>
         </>
@@ -266,84 +288,83 @@ export function ContractsPage() {
           setDrawerOpen(false)
           setEditingId(null)
         }}
-        title={editingId ? 'Editar contrato' : 'Novo contrato de aluno'}
-        subtitle={editingId ? 'Atualize os dados do contrato.' : 'Preencha os dados do contrato. O painel só aparece ao clicar em Novo.'}
+        title={editingId ? t('connect.contracts.drawer.edit') : t('connect.contracts.drawer.new')}
+        subtitle={editingId ? t('connect.classes.drawer.editSubtitle') : t('connect.classes.drawer.newSubtitle')}
         footer={
           <div className="flex justify-end gap-2">
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
-            <OutlineButton onClick={() => void handleSave(true)}>Salvar e Novo</OutlineButton>
-            <PrimaryButton onClick={() => void handleSave()}>Salvar</PrimaryButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
+            <OutlineButton onClick={() => void handleSave(true)}>{t('connect.common.saveAndNew')}</OutlineButton>
+            <PrimaryButton onClick={() => void handleSave()}>{t('common.save')}</PrimaryButton>
           </div>
         }
       >
         <div className="space-y-4">
-          <h3 className="font-semibold text-hub-navy">Dados do contrato</h3>
-          <FormField label="Nome completo do aluno" required>
+          <h3 className="font-semibold text-hub-navy">{t('connect.contracts.drawer.section')}</h3>
+          <FormField label={t('connect.students.form.fullName')} required>
             <select className={selectClass} value={form.connect_student_id} onChange={(e) => setForm({ ...form, connect_student_id: e.target.value })}>
-              <option value="">Selecione o aluno</option>
+              <option value="">{t('connect.contracts.form.student')}</option>
               {students.map((s) => <option key={s.id} value={s.id}>{s.full_name}</option>)}
             </select>
           </FormField>
-          <FormField label="Nome da empresa" required>
-            <input className={inputClass} value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="Razão social da empresa" />
+          <FormField label={t('connect.contracts.form.company')} required>
+            <input className={inputClass} value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
           </FormField>
-          <FormField label="Tipo de contrato" required>
+          <FormField label={t('connect.contracts.filters.contractType')} required>
             <select className={selectClass} value={form.contract_type} onChange={(e) => setForm({ ...form, contract_type: e.target.value })}>
-              <option value="aprendizagem">Aprendizagem</option>
-              <option value="estagio">Estágio</option>
-              <option value="clt">CLT</option>
-              <option value="temporario">Temporário</option>
+              <option value="aprendizagem">{t('connect.contracts.filters.apprenticeship')}</option>
+              <option value="estagio">{t('connect.contracts.filters.internship')}</option>
+              <option value="clt">{t('connect.contracts.filters.clt')}</option>
+              <option value="temporario">{t('connect.contracts.filters.temporary')}</option>
             </select>
           </FormField>
-          <FormField label="Carga horária semanal">
+          <FormField label={t('connect.contracts.form.workload')}>
             <select className={selectClass} value={form.weekly_hours} onChange={(e) => setForm({ ...form, weekly_hours: e.target.value })}>
-              <option value="4">4 horas</option>
-              <option value="6">6 horas</option>
-              <option value="8">8 horas</option>
+              <option value="4">4h</option>
+              <option value="6">6h</option>
+              <option value="8">8h</option>
             </select>
           </FormField>
-          <FormField label="Data de início do contrato" required hint="Clique para abrir o calendário">
+          <FormField label={t('connect.contracts.form.startDate')} required hint={t('connect.students.form.calendarHint')}>
             <input type="date" className={inputClass} value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
           </FormField>
-          <FormField label="Valor mensal (R$)">
-            <input type="number" className={inputClass} value={form.monthly_value} onChange={(e) => setForm({ ...form, monthly_value: e.target.value })} placeholder="Ex: 1518.00" step="0.01" min={0} />
+          <FormField label={t('connect.contracts.form.monthlyValue')}>
+            <input type="number" className={inputClass} value={form.monthly_value} onChange={(e) => setForm({ ...form, monthly_value: e.target.value })} step="0.01" min={0} />
           </FormField>
-          <FormField label="E-mail pessoal do aluno">
+          <FormField label={t('connect.students.form.personalEmail')}>
             <input
               type="email"
               className={`${inputClass} bg-hub-bg/60`}
               readOnly
               value={selectedStudent?.email ?? ''}
-              placeholder={form.connect_student_id ? '-' : 'Selecione um aluno'}
+              placeholder={form.connect_student_id ? '-' : t('connect.contracts.form.student')}
             />
           </FormField>
-          <FormField label="E-mail institucional do aluno">
+          <FormField label={t('connect.teachers.form.institutionalEmail')}>
             <input
               type="email"
               className={`${inputClass} bg-hub-bg/60`}
               readOnly
               value={selectedStudent?.hub_person?.email ?? selectedStudent?.email ?? ''}
-              placeholder={form.connect_student_id ? '-' : 'Selecione um aluno'}
+              placeholder={form.connect_student_id ? '-' : t('connect.contracts.form.student')}
             />
           </FormField>
-          <FormField label="E-mail da empresa">
+          <FormField label={t('connect.table.email')}>
             <input
               type="email"
               className={inputClass}
               value={form.company_email}
               onChange={(e) => setForm({ ...form, company_email: e.target.value })}
-              placeholder="rh@empresa.com.br"
             />
           </FormField>
-          <FormField label="Status do contrato">
+          <FormField label={t('connect.table.status')}>
             <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="active">Ativo</option>
-              <option value="inactive">Inativo</option>
-              <option value="finished">Encerrado</option>
+              <option value="active">{t('connect.status.active')}</option>
+              <option value="inactive">{t('connect.status.inactive')}</option>
+              <option value="finished">{t('connect.contracts.filters.terminated')}</option>
             </select>
           </FormField>
           <p className="text-sm text-hub-text-muted">
-            Anexos de documentos serão disponibilizados em versão futura.
+            {t('connect.contracts.attachmentsFuture')}
           </p>
         </div>
       </ConnectDrawer>

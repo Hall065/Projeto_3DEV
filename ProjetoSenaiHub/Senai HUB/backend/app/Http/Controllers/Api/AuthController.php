@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Requests\Auth\UploadAvatarRequest;
 use App\Http\Resources\UserResource;
@@ -34,16 +35,22 @@ class AuthController extends Controller
         ]);
     }
 
-    public function register(RegisterRequest $request): JsonResponse
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
-        $result = $this->authService->register($request->validated());
+        $this->authService->sendPasswordResetLink($request->validated('email'));
 
         return response()->json([
-            'data' => [
-                'user' => new UserResource($result['user']),
-                'token' => $result['token'],
-            ],
-        ], 201);
+            'message' => 'Se existir uma conta com este e-mail, enviaremos instruções para redefinir a senha.',
+        ]);
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $this->authService->resetPassword($request->validated());
+
+        return response()->json([
+            'message' => 'Senha redefinida com sucesso. Faça login com a nova senha.',
+        ]);
     }
 
     public function me(Request $request): JsonResponse
@@ -99,6 +106,18 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Senha alterada com sucesso.',
+        ]);
+    }
+
+    public function permissionsCatalog(): JsonResponse
+    {
+        return response()->json([
+            'data' => [
+                'roles' => config('permissions.roles', []),
+                'role_permissions' => config('permissions.role_permissions', []),
+                'nav_permissions' => config('permissions.nav_permissions', []),
+                'application_slugs_by_role' => config('permissions.application_slugs_by_role', []),
+            ],
         ]);
     }
 

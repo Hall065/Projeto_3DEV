@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { Check, ImagePlus, Trash2, Upload } from 'lucide-react'
 import {
@@ -10,6 +11,8 @@ import {
   type PresetWallpaperId,
   type WallpaperId,
 } from '../../constants/wallpapers'
+import { AppBrandMark } from '../brand/AppBrandMark'
+import { APP_BRAND_ASSETS, MODULE_BRAND_SLUGS } from '../../utils/appBrandAssets'
 import { useAppearance } from '../../contexts/AppearanceContext'
 import { compressWallpaperFile } from '../../utils/wallpaperImage'
 import { navigateBack } from '../../utils/navigation'
@@ -69,7 +72,14 @@ function PresetPreview({ presetId, baseColor, mesh, category }: { presetId: Pres
   )
 }
 
+const GROUP_LABEL_KEYS = {
+  light: 'appearance.groupLight',
+  dark: 'appearance.groupDark',
+  vivid: 'appearance.groupVivid',
+} as const
+
 export function AppearanceSettings({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const {
@@ -81,6 +91,7 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
     previewWallpaperId,
     previewCustomImageUrl,
     wallpaper,
+    wallpaperTone,
   } = useAppearance()
 
   const [draftId, setDraftId] = useState<WallpaperId>(wallpaperId)
@@ -140,7 +151,7 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
       setDraftCustomUrl(dataUrl)
       setSavedMessage(null)
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Não foi possível usar esta imagem.')
+      setUploadError(err instanceof Error ? err.message : t('appearance.uploadError'))
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
@@ -154,11 +165,11 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
       } else if (draftId !== CUSTOM_WALLPAPER_ID) {
         setWallpaperId(draftId)
       }
-      setSavedMessage('Tema salvo com sucesso.')
+      setSavedMessage(t('appearance.saved'))
       setUploadError(null)
       window.setTimeout(() => setSavedMessage(null), 3000)
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : 'Não foi possível salvar o tema.')
+      setUploadError(err instanceof Error ? err.message : t('appearance.saveError'))
     }
   }
 
@@ -182,15 +193,27 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
   return (
     <section className="glass-panel rounded-2xl p-6">
       <header className="mb-5">
-        <h2 className="text-lg font-semibold text-hub-navy">Plano de fundo</h2>
-        <p className="mt-1 text-sm text-hub-text-muted">
-          Escolha um tema pronto ou envie sua própria imagem (JPG, PNG ou WebP, até 5 MB). A pré-visualização
-          aparece na tela inteira; clique em <strong className="font-medium text-hub-navy">Salvar</strong> para
-          aplicar no Hub, Connect e Grid.
-        </p>
+        <h2 className="text-lg font-semibold text-hub-navy">{t('appearance.wallpaper')}</h2>
+        <p className="mt-1 text-sm text-hub-text-muted">{t('appearance.wallpaperHint')}</p>
       </header>
 
-      <div className="mb-8 rounded-xl border border-dashed border-hub-border/70 bg-hub-bg/40 p-4 sm:p-5">
+      <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-hub-border/60 bg-hub-bg/50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-hub-navy">
+            {t('appearance.toneTitle', {
+              tone: t(wallpaperTone === 'dark' ? 'appearance.toneDark' : 'appearance.toneLight'),
+            })}
+          </p>
+          <p className="mt-0.5 text-xs text-hub-text-muted">{t('appearance.toneHint')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {MODULE_BRAND_SLUGS.map((slug) => (
+            <AppBrandMark key={slug} slug={slug} name={APP_BRAND_ASSETS[slug].name} size="sm" />
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-8 rounded-2xl border border-dashed border-hub-border/70 bg-hub-bg/40 p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-lg border border-hub-border/50 sm:h-24 sm:w-40">
             {draftCustomUrl ? (
@@ -202,10 +225,8 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-hub-navy">Imagem personalizada</h3>
-            <p className="mt-1 text-xs text-hub-text-muted">
-              A foto fica salva neste navegador. Formatos: JPG, PNG, WebP ou GIF.
-            </p>
+            <h3 className="text-sm font-semibold text-hub-navy">{t('appearance.customImage')}</h3>
+            <p className="mt-1 text-xs text-hub-text-muted">{t('appearance.customImageHint')}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <input
                 ref={fileRef}
@@ -216,12 +237,12 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
               />
               <OutlineButton type="button" disabled={uploading} onClick={() => fileRef.current?.click()}>
                 <Upload className="h-4 w-4" />
-                {uploading ? 'Processando...' : 'Enviar imagem'}
+                {uploading ? t('appearance.processing') : t('appearance.uploadImage')}
               </OutlineButton>
               {hasSavedCustom && (
                 <OutlineButton type="button" onClick={handleRemoveCustom}>
                   <Trash2 className="h-4 w-4" />
-                  Remover imagem
+                  {t('appearance.removeImage')}
                 </OutlineButton>
               )}
             </div>
@@ -237,7 +258,9 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
 
         return (
           <div key={group.category} className="mb-6 last:mb-0">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-hub-text-muted">{group.label}</h3>
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-hub-text-muted">
+              {t(GROUP_LABEL_KEYS[group.category])}
+            </h3>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {presets.map((preset) => (
                 <WallpaperPreviewCard
@@ -266,13 +289,13 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
       <p className="mt-4 text-xs text-hub-text-muted">
         {dirty ? (
           <>
-            Pré-visualizando: <span className="font-medium text-hub-navy">{draftResolved.name}</span>
+            {t('appearance.previewing')}: <span className="font-medium text-hub-navy">{draftResolved.name}</span>
             {' · '}
-            Salvo: <span className="font-medium text-hub-navy">{wallpaper.name}</span>
+            {t('appearance.savedTheme')}: <span className="font-medium text-hub-navy">{wallpaper.name}</span>
           </>
         ) : (
           <>
-            Tema salvo: <span className="font-medium text-hub-navy">{wallpaper.name}</span>
+            {t('appearance.savedTheme')}: <span className="font-medium text-hub-navy">{wallpaper.name}</span>
           </>
         )}
       </p>
@@ -287,7 +310,7 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
         dirty && (
           <div className="mt-6 flex justify-end border-t border-hub-border/40 pt-4">
             <PrimaryButton type="button" onClick={handleSave}>
-              Salvar tema
+              {t('common.save')}
             </PrimaryButton>
           </div>
         )

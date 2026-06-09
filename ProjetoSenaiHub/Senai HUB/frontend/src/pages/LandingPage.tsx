@@ -5,6 +5,7 @@ import { LandingFooter } from '../components/landing/LandingFooter'
 import { LandingHeader } from '../components/landing/LandingHeader'
 import { LandingHero } from '../components/landing/LandingHero'
 import { LandingPlatform } from '../components/landing/LandingPlatform'
+import { LandingThemesPreview } from '../components/landing/LandingThemesPreview'
 import { GlassShell } from '../components/layout/GlassShell'
 
 export function LandingPage() {
@@ -14,6 +15,7 @@ export function LandingPage() {
       <main className="relative z-0">
         <LandingHero />
         <LandingPlatform />
+        <LandingThemesPreview />
         <LandingAudience />
         <LandingFeatures />
         <LandingCta />

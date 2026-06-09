@@ -1,10 +1,10 @@
-import { Filter, Globe, ImageIcon, Minus, Package, Pencil, Plus, Trash2, TrendingDown, TrendingUp, Upload } from 'lucide-react'
+import { Eye, Filter, Globe, ImageIcon, Minus, Package, Pencil, Plus, Trash2, TrendingDown, TrendingUp, Upload } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { GridInventoryDetailDrawer } from '../../components/grid/GridInventoryDetailDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
 import {
   ConnectCard,
@@ -23,8 +23,8 @@ import { GridInventoryThumb } from '../../components/grid/GridInventoryThumb'
 import { gridService } from '../../services/gridService'
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus'
 import type { GridDashboardData, GridInventoryItem, PaginatedMeta } from '../../types/grid'
-import { confirmDelete } from '../../utils/confirmAction'
 import { prepareAvatarFile, readAvatarPreview, validateAvatarFile } from '../../utils/avatarImage'
+import { parseApiError } from '../../utils/parseApiError'
 
 type InventoryImageSource = 'auto' | 'upload' | 'url'
 
@@ -55,6 +55,7 @@ const emptyForm = {
 }
 
 export function GridInventoryPage() {
+  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const [items, setItems] = useState<GridInventoryItem[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
@@ -173,24 +174,24 @@ export function GridInventoryPage() {
       setImageFile(prepared)
       setImagePreview(preview)
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : 'Nao foi possivel processar a imagem.')
+      window.alert(error instanceof Error ? error.message : t('common.error'))
       event.target.value = ''
     }
   }
 
   const handleSave = async () => {
     if (!form.title.trim()) {
-      window.alert('Informe o nome do item.')
+      window.alert(t('grid.inventory.alert.nameRequired'))
       return
     }
 
     if (imageSource === 'upload' && !imageFile && !imagePreview) {
-      window.alert('Selecione uma foto para o item.')
+      window.alert(t('grid.inventory.alert.photoRequired'))
       return
     }
 
     if (imageSource === 'url' && !imageUrl.trim()) {
-      window.alert('Informe o link da imagem ou escolha outra opcao.')
+      window.alert(t('grid.inventory.alert.photoRequired'))
       return
     }
 
@@ -237,6 +238,8 @@ export function GridInventoryPage() {
       setDrawerOpen(false)
       load()
       loadDashboard()
+    } catch (err: unknown) {
+      window.alert(parseApiError(err, t('common.error')))
     } finally {
       setSaving(false)
     }
@@ -246,7 +249,7 @@ export function GridInventoryPage() {
     if (!adjustTarget) return
     const qty = Number(adjustQty)
     if (!qty || qty < 1) {
-      window.alert('Informe uma quantidade válida.')
+      window.alert(t('grid.inventory.alert.qtyInvalid'))
       return
     }
     setSaving(true)
@@ -255,15 +258,21 @@ export function GridInventoryPage() {
       setAdjustOpen(false)
       load()
       loadDashboard()
+    } catch (err: unknown) {
+      window.alert(parseApiError(err, t('common.error')))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (item: GridInventoryItem) => {
-    if (!confirmDelete(`o item "${item.title}"`)) return
-    await gridService.deleteInventory(item.id)
-    load()
+    if (!window.confirm(t('connect.confirm.delete', { entity: `o item "${item.title}"` }))) return
+    try {
+      await gridService.deleteInventory(item.id)
+      load()
+    } catch (err: unknown) {
+      window.alert(parseApiError(err, t('common.error')))
+    }
   }
 
   const handleSyncImage = async (itemId: number) => {
@@ -271,6 +280,8 @@ export function GridInventoryPage() {
     try {
       const updated = await gridService.syncInventoryImage(itemId)
       setItems((prev) => prev.map((i) => (i.id === itemId ? updated : i)))
+    } catch (err: unknown) {
+      window.alert(parseApiError(err, t('common.error')))
     } finally {
       setSyncingImageId(null)
     }
@@ -302,11 +313,11 @@ export function GridInventoryPage() {
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Estoque"
-        subtitle="Gerencie e acompanhe todos os itens do estoque da instituição."
+        title={t('grid.inventory.title')}
+        subtitle={t('grid.inventory.subtitle')}
         actions={
           <PrimaryButton onClick={openCreate}>
-            <Plus className="h-4 w-4" /> Adicionar item ao estoque
+            <Plus className="h-4 w-4" /> {t('grid.inventory.add')}
           </PrimaryButton>
         }
       />
@@ -316,23 +327,23 @@ export function GridInventoryPage() {
           Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
         ) : (
           <>
-            <KpiCard icon={Package} label="Total de itens" value={meta?.total ?? 0} variant="blue" to="/grid/estoque" />
+            <KpiCard icon={Package} label={t('grid.inventory.kpis.totalItems')} value={meta?.total ?? 0} variant="blue" to="/grid/estoque" />
             <KpiCard
               icon={TrendingUp}
-              label="Valor (página)"
+              label={t('grid.inventory.kpis.pageValue')}
               value={`R$ ${totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`}
               variant="green"
             />
             <KpiCard
               icon={TrendingDown}
-              label="Estoque baixo"
+              label={t('grid.inventory.kpis.lowStock')}
               value={dashboard?.kpis.low_stock ?? 0}
               variant="amber"
               sparkline={dashboard?.kpi_sparklines?.low_stock ?? []}
             />
             <KpiCard
               icon={Package}
-              label="Com reserva"
+              label={t('grid.inventory.kpis.reserved')}
               value={dashboard?.kpis.reserved_inventory ?? 0}
               variant="violet"
             />
@@ -342,10 +353,10 @@ export function GridInventoryPage() {
 
       <ConnectCard className="mb-4 p-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <FormField label="Nome do item">
+          <FormField label={t('grid.inventory.filters.itemName')}>
             <input
               className={inputClass}
-              placeholder="Buscar por nome..."
+              placeholder={t('common.search')}
               value={search}
               onChange={(e) => {
                 setPage(1)
@@ -353,21 +364,21 @@ export function GridInventoryPage() {
               }}
             />
           </FormField>
-          <FormField label="Categoria">
+          <FormField label={t('grid.inventory.filters.category')}>
             <select className={selectClass} value={category} onChange={(e) => { setPage(1); setCategory(e.target.value) }}>
-              <option value="">Todas</option>
+              <option value="">{t('connect.common.all')}</option>
               <option value="Informática">Informática</option>
               <option value="Elétrica">Elétrica</option>
               <option value="Climatização">Climatização</option>
               <option value="Hidráulica">Hidráulica</option>
             </select>
           </FormField>
-          <FormField label="Status">
+          <FormField label={t('grid.inventory.filters.status')}>
             <select className={selectClass} value={statusFilter} onChange={(e) => { setPage(1); setStatusFilter(e.target.value) }}>
-              <option value="">Todos</option>
-              <option value="disponivel">Disponível</option>
-              <option value="baixo">Estoque baixo</option>
-              <option value="reservado">Reservado</option>
+              <option value="">{t('connect.common.all')}</option>
+              <option value="disponivel">{t('grid.inventory.filters.available')}</option>
+              <option value="baixo">{t('grid.inventory.filters.lowStock')}</option>
+              <option value="reservado">{t('grid.inventory.filters.reserved')}</option>
             </select>
           </FormField>
           <div className="flex items-end">
@@ -379,7 +390,7 @@ export function GridInventoryPage() {
                 setPage(1)
               }}
             >
-              <Filter className="h-4 w-4" /> Limpar filtros
+              <Filter className="h-4 w-4" /> {t('connect.common.clearFilters')}
             </OutlineButton>
           </div>
         </div>
@@ -387,24 +398,24 @@ export function GridInventoryPage() {
 
       <ConnectCard>
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando estoque..." className="min-h-[320px]" />
+          <ConnectLoadingSpinner label={t('common.loading')} className="min-h-[320px]" />
         ) : (
           <>
             <ConnectTableScroll>
               <table className="w-full min-w-[1000px] text-sm">
                 <thead className="glass-thead text-hub-text-muted">
                   <tr>
-                    <th className="w-16 px-4 py-3 text-left">Foto</th>
-                    <th className="px-4 py-3 text-left">Título</th>
-                    <th className="px-4 py-3 text-left">Descrição</th>
-                    <th className="px-4 py-3 text-left">Categoria</th>
-                    <th className="px-4 py-3 text-left">Qtd. disponível</th>
-                    <th className="px-4 py-3 text-left">Qtd. mínima</th>
-                    <th className="px-4 py-3 text-left">Localização</th>
-                    <th className="px-4 py-3 text-left">Distribuidora</th>
-                    <th className="px-4 py-3 text-left">Custo</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">Ações</th>
+                    <th className="w-16 px-4 py-3 text-left">{t('grid.inventory.table.photo')}</th>
+                    <th className="px-4 py-3 text-left">{t('grid.inventory.table.title')}</th>
+                    <th className="px-4 py-3 text-left">{t('grid.inventory.table.description')}</th>
+                    <th className="px-4 py-3 text-left">{t('grid.inventory.table.category')}</th>
+                    <th className="px-4 py-3 text-left">{t('grid.inventory.table.qtyAvailable')}</th>
+                    <th className="px-4 py-3 text-left">{t('grid.inventory.table.qtyMinimum')}</th>
+                    <th className="px-4 py-3 text-left">{t('grid.inventory.table.location')}</th>
+                    <th className="px-4 py-3 text-left">{t('grid.inventory.table.distributor')}</th>
+                    <th className="px-4 py-3 text-left">{t('grid.inventory.table.cost')}</th>
+                    <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
+                    <th className="px-4 py-3 text-left">{t('connect.common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -432,19 +443,19 @@ export function GridInventoryPage() {
                       </td>
                       <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <ConnectRowActionsMenu
-                          ariaLabel={`Ações de ${item.title}`}
+                          ariaLabel={t('connect.common.actionsOf', { name: item.title })}
                           actions={[
-                            viewRowAction(() => openDetail(item)),
-                            { key: 'add', label: 'Adicionar quantidade', icon: Plus, onClick: () => openAdjust(item, 'in') },
-                            { key: 'remove', label: 'Remover quantidade', icon: Minus, onClick: () => openAdjust(item, 'out') },
+                            { key: 'view', label: t('connect.common.view'), icon: Eye, onClick: () => openDetail(item) },
+                            { key: 'add', label: t('grid.inventory.actions.addQty'), icon: Plus, onClick: () => openAdjust(item, 'in') },
+                            { key: 'remove', label: t('grid.inventory.actions.removeQty'), icon: Minus, onClick: () => openAdjust(item, 'out') },
                             {
                               key: 'image',
-                              label: 'Buscar imagem pública',
+                              label: t('grid.inventory.actions.searchImage'),
                               icon: ImageIcon,
                               onClick: () => void handleSyncImage(item.id),
                             },
-                            { key: 'edit', label: 'Editar item', icon: Pencil, onClick: () => openEdit(item) },
-                            { key: 'delete', label: 'Excluir', icon: Trash2, variant: 'danger', onClick: () => void handleDelete(item) },
+                            { key: 'edit', label: t('grid.inventory.actions.editItem'), icon: Pencil, onClick: () => openEdit(item) },
+                            { key: 'delete', label: t('connect.common.delete'), icon: Trash2, variant: 'danger', onClick: () => void handleDelete(item) },
                           ]}
                         />
                       </td>
@@ -461,38 +472,37 @@ export function GridInventoryPage() {
       <ConnectDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title={editingId ? 'Editar item' : 'Adicionar item ao estoque'}
-        subtitle="Preencha os dados do item."
+        title={editingId ? t('grid.inventory.drawer.edit') : t('grid.inventory.drawer.add')}
         footer={
           <>
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
             <PrimaryButton onClick={() => void handleSave()} disabled={saving}>
-              {saving ? 'Salvando...' : 'Salvar item'}
+              {saving ? t('connect.common.saving') : t('common.save')}
             </PrimaryButton>
           </>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Nome" required>
-            <input className={inputClass} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Lâmpada LED 9W" />
+          <FormField label={t('connect.table.name')} required>
+            <input className={inputClass} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           </FormField>
-          <FormField label="Categoria" required>
-            <input className={inputClass} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="Ex: Elétrica" />
+          <FormField label={t('grid.inventory.table.category')} required>
+            <input className={inputClass} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
           </FormField>
-          <FormField label="SKU">
-            <input className={inputClass} value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder="Ex: ELE-LMP-018" />
+          <FormField label={t('grid.inventory.formExtra.sku')}>
+            <input className={inputClass} value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
           </FormField>
-          <FormField label="Data da compra">
+          <FormField label={t('grid.inventory.formExtra.purchaseDate')}>
             <input type="date" className={inputClass} value={form.purchased_at} onChange={(e) => setForm({ ...form, purchased_at: e.target.value })} />
           </FormField>
           <div className="sm:col-span-2">
-            <FormField label="Descrição">
-              <textarea className={`${inputClass} min-h-[80px] py-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Especificações, modelo e observações..." />
+            <FormField label={t('grid.inventory.table.description')}>
+              <textarea className={`${inputClass} min-h-[80px] py-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </FormField>
           </div>
 
           <div className="sm:col-span-2">
-            <FormField label="Imagem do item">
+            <FormField label={t('grid.inventory.table.photo')}>
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -505,7 +515,7 @@ export function GridInventoryPage() {
                     }`}
                   >
                     <Globe className="h-4 w-4" />
-                    Buscar na internet
+                    {t('grid.inventory.actions.searchImage')}
                   </button>
                   <button
                     type="button"
@@ -517,7 +527,7 @@ export function GridInventoryPage() {
                     }`}
                   >
                     <Upload className="h-4 w-4" />
-                    Enviar foto
+                    {t('grid.inventory.formExtra.upload')}
                   </button>
                   <button
                     type="button"
@@ -529,15 +539,9 @@ export function GridInventoryPage() {
                     }`}
                   >
                     <ImageIcon className="h-4 w-4" />
-                    Link da imagem
+                    {t('grid.inventory.formExtra.url')}
                   </button>
                 </div>
-
-                {imageSource === 'auto' && (
-                  <p className="text-sm text-hub-text-muted">
-                    A foto sera buscada automaticamente na internet com base no nome e na categoria do item (Wikimedia Commons).
-                  </p>
-                )}
 
                 {imageSource === 'upload' && (
                   <div className="flex flex-wrap items-center gap-4">
@@ -550,9 +554,8 @@ export function GridInventoryPage() {
                     />
                     <OutlineButton type="button" onClick={() => imageInputRef.current?.click()}>
                       <Upload className="h-4 w-4" />
-                      {imagePreview ? 'Trocar foto' : 'Selecionar foto'}
+                      {imagePreview ? t('connect.common.edit') : t('connect.common.new')}
                     </OutlineButton>
-                    <span className="text-xs text-hub-text-muted">JPG, PNG, WebP ou GIF — max. 2 MB</span>
                   </div>
                 )}
 
@@ -564,7 +567,7 @@ export function GridInventoryPage() {
                       setImageUrl(e.target.value)
                       setImagePreview(e.target.value.trim() || null)
                     }}
-                    placeholder="https://exemplo.com/imagem.jpg"
+                    placeholder={t('grid.inventory.formExtra.urlPlaceholder')}
                   />
                 )}
 
@@ -572,36 +575,35 @@ export function GridInventoryPage() {
                   <div className="flex items-center gap-3">
                     <img
                       src={imagePreview}
-                      alt="Pre-visualizacao"
+                      alt=""
                       className="h-20 w-20 rounded-lg border border-hub-border/60 object-cover"
                     />
-                    <span className="text-xs text-hub-text-muted">Pre-visualizacao</span>
                   </div>
                 )}
               </div>
             </FormField>
           </div>
 
-          <FormField label="Quantidade disponível" required>
-            <input type="number" className={inputClass} min={0} value={form.qty_available} onChange={(e) => setForm({ ...form, qty_available: e.target.value })} placeholder="Ex: 50" />
+          <FormField label={t('grid.inventory.table.qtyAvailable')} required>
+            <input type="number" className={inputClass} min={0} value={form.qty_available} onChange={(e) => setForm({ ...form, qty_available: e.target.value })} />
           </FormField>
-          <FormField label="Quantidade mínima" required>
-            <input type="number" className={inputClass} min={0} value={form.qty_min} onChange={(e) => setForm({ ...form, qty_min: e.target.value })} placeholder="Ex: 10" />
+          <FormField label={t('grid.inventory.table.qtyMinimum')} required>
+            <input type="number" className={inputClass} min={0} value={form.qty_min} onChange={(e) => setForm({ ...form, qty_min: e.target.value })} />
           </FormField>
-          <FormField label="Localização" required>
-            <input className={inputClass} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Ex: Almoxarifado — Prateleira B3" />
+          <FormField label={t('grid.inventory.table.location')} required>
+            <input className={inputClass} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
           </FormField>
-          <FormField label="Fornecedor">
-            <input className={inputClass} value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} placeholder="Ex: Fornecedor ABC Ltda." />
+          <FormField label={t('grid.inventory.table.distributor')}>
+            <input className={inputClass} value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} />
           </FormField>
-          <FormField label="Custo (R$)">
-            <input type="number" className={inputClass} step="0.01" min={0} value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} placeholder="Ex: 12.90" />
+          <FormField label={t('grid.inventory.table.cost')}>
+            <input type="number" className={inputClass} step="0.01" min={0} value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} />
           </FormField>
-          <FormField label="Status">
+          <FormField label={t('connect.table.status')}>
             <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="disponivel">Disponível</option>
-              <option value="baixo">Estoque baixo</option>
-              <option value="reservado">Reservado</option>
+              <option value="disponivel">{t('grid.inventory.filters.available')}</option>
+              <option value="baixo">{t('grid.inventory.filters.lowStock')}</option>
+              <option value="reservado">{t('grid.inventory.filters.reserved')}</option>
             </select>
           </FormField>
         </div>
@@ -610,17 +612,17 @@ export function GridInventoryPage() {
       <ConnectDrawer
         open={adjustOpen}
         onClose={() => setAdjustOpen(false)}
-        title={adjustType === 'in' ? 'Entrada de estoque' : 'Saída de estoque'}
+        title={t('grid.inventory.adjust.title')}
         subtitle={adjustTarget?.title}
         footer={
           <>
-            <OutlineButton onClick={() => setAdjustOpen(false)}>Cancelar</OutlineButton>
-            <PrimaryButton onClick={() => void handleAdjust()} disabled={saving}>Confirmar</PrimaryButton>
+            <OutlineButton onClick={() => setAdjustOpen(false)}>{t('common.cancel')}</OutlineButton>
+            <PrimaryButton onClick={() => void handleAdjust()} disabled={saving}>{t('grid.inventory.adjust.confirm')}</PrimaryButton>
           </>
         }
       >
-        <FormField label="Quantidade">
-          <input type="number" className={inputClass} min={1} value={adjustQty} onChange={(e) => setAdjustQty(e.target.value)} placeholder="Ex: 5" />
+        <FormField label={t('grid.inventory.table.qtyAvailable')}>
+          <input type="number" className={inputClass} min={1} value={adjustQty} onChange={(e) => setAdjustQty(e.target.value)} />
         </FormField>
       </ConnectDrawer>
 

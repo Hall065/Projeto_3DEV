@@ -1,12 +1,16 @@
-import { ArrowRight, Building2, ChevronDown, Headphones, LayoutGrid, Users } from 'lucide-react'
+import { ArrowRight, ChevronDown, Headphones, LayoutGrid } from 'lucide-react'
 import { logoSenaiHub } from '../../assets/brand'
+import { AppBrandMark } from '../brand/AppBrandMark'
 import coverConnect from '../../assets/hub/cover-connect.png'
 import coverGrid from '../../assets/hub/cover-grid.png'
+import coverSafe from '../../assets/hub/cover-safe.png'
+import { APP_BRAND_ASSETS, MODULE_BRAND_SLUGS } from '../../utils/appBrandAssets'
 
-const apps = [
-  { name: 'SENAI Connect', cover: coverConnect, icon: Users },
-  { name: 'SENAI Grid', cover: coverGrid, icon: Building2 },
-]
+const previewApps = MODULE_BRAND_SLUGS.map((slug) => ({
+  slug,
+  name: APP_BRAND_ASSETS[slug].name,
+  cover: slug === 'connect' ? coverConnect : slug === 'grid' ? coverGrid : coverSafe,
+}))
 
 export function HubPreviewMockup() {
   return (
@@ -51,9 +55,9 @@ export function HubPreviewMockup() {
             </p>
 
             <div className="mt-3 grid grid-cols-2 gap-2.5 sm:mt-4 sm:gap-3">
-              {apps.map(({ name, cover, icon: Icon }) => (
+              {previewApps.map(({ slug, name, cover }) => (
                 <article
-                  key={name}
+                  key={slug}
                   className="glass-panel flex flex-col overflow-hidden rounded-lg shadow-sm"
                 >
                   <div className="h-[72px] overflow-hidden sm:h-[80px]">
@@ -61,9 +65,7 @@ export function HubPreviewMockup() {
                   </div>
                   <div className="flex flex-1 flex-col p-2 sm:p-2.5">
                     <div className="mb-1.5 flex items-center gap-1.5">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-hub-red text-white">
-                        <Icon className="h-2.5 w-2.5" />
-                      </span>
+                      <AppBrandMark slug={slug} name={name} size="sm" className="!h-5 !w-5 [&_img]:!h-3 [&_img]:!w-3" />
                       <span className="text-[9px] font-bold uppercase tracking-wide text-hub-navy sm:text-[10px]">
                         {name}
                       </span>

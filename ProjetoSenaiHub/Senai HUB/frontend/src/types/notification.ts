@@ -1,4 +1,4 @@
-export type NotificationModule = 'hub' | 'connect' | 'grid'
+export type NotificationModule = 'hub' | 'connect' | 'grid' | 'safe'
 
 export type NotificationSeverity = 'info' | 'warning' | 'urgent'
 
@@ -25,6 +25,7 @@ export interface NotificationPreferences {
     hub: boolean
     connect: boolean
     grid: boolean
+    safe: boolean
   }
 }
 

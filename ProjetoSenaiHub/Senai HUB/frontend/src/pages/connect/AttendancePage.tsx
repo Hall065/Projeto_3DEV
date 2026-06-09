@@ -1,6 +1,6 @@
-import axios from 'axios'
 import { Download, Save } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   ConnectCard,
@@ -15,10 +15,12 @@ import {
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import { spreadsheetService } from '../../services/spreadsheetService'
+import { parseApiError } from '../../utils/parseApiError'
 import type {
   ConnectAttendanceMark,
   ConnectAttendanceSession,
   ConnectClass,
+  ConnectClassAttendanceSummary,
   ConnectLessonSchedule,
 } from '../../types/connect'
 
@@ -43,24 +45,8 @@ function emptyMarkState(): StudentMarkState {
   return { status: 'present', missed_lessons: 0 }
 }
 
-function attendanceLoadErrorMessage(error: unknown): string {
-  if (!axios.isAxiosError(error)) {
-    return 'Nao foi possivel carregar os alunos.'
-  }
-  if (!error.response) {
-    return 'Nao foi possivel conectar ao servidor. Confira se o backend esta rodando (php artisan serve --host=127.0.0.1 --port=8000).'
-  }
-  if (error.response.status === 401) {
-    return 'Sessao expirada ou nao autenticado. Faca login novamente.'
-  }
-  if (error.response.status >= 500) {
-    return 'Erro no servidor ao carregar a frequencia. Execute php artisan migrate no backend.'
-  }
-  const message = error.response.data?.message
-  return typeof message === 'string' ? message : 'Nao foi possivel carregar os alunos.'
-}
-
 export function AttendancePage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const [classes, setClasses] = useState<ConnectClass[]>([])
   const [classId, setClassId] = useState(searchParams.get('class') ?? '')
@@ -74,10 +60,22 @@ export function AttendancePage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [classSummary, setClassSummary] = useState<ConnectClassAttendanceSummary | null>(null)
 
   useEffect(() => {
     connectService.getClasses({ per_page: 50 }).then((r) => setClasses(r.data))
   }, [])
+
+  useEffect(() => {
+    if (!classId) {
+      setClassSummary(null)
+      return
+    }
+    connectService
+      .getClassAttendanceSummary({ connect_class_id: Number(classId) })
+      .then(setClassSummary)
+      .catch(() => setClassSummary(null))
+  }, [classId])
 
   useEffect(() => {
     if (!classId || !date) {
@@ -86,7 +84,12 @@ export function AttendancePage() {
     }
     connectService
       .getCalendar({ from: date, to: date, connect_class_id: classId })
-      .then(setScheduledLessons)
+      .then((lessons) => {
+        setScheduledLessons(lessons)
+        if (!lessonId && lessons.length === 1) {
+          setLessonId(String(lessons[0].id))
+        }
+      })
       .catch(() => setScheduledLessons([]))
   }, [classId, date])
 
@@ -131,10 +134,10 @@ export function AttendancePage() {
       .catch((error) => {
         setSession(null)
         setMarks({})
-        setLoadError(attendanceLoadErrorMessage(error))
+        setLoadError(parseApiError(error, t('connect.attendance.alert.loadError')))
       })
       .finally(() => setLoading(false))
-  }, [classId, date, lessonId])
+  }, [classId, date, lessonId, t])
 
   useEffect(() => {
     setMarks((prev) => {
@@ -189,8 +192,8 @@ export function AttendancePage() {
         params.to_date = date
       }
       await spreadsheetService.exportData('connect', 'attendance', params)
-    } catch {
-      window.alert('Nao foi possivel exportar a frequencia.')
+    } catch (err: unknown) {
+      window.alert(parseApiError(err, t('connect.attendance.alert.exportError')))
     } finally {
       setExporting(false)
     }
@@ -212,6 +215,8 @@ export function AttendancePage() {
         default_lessons_per_day: lessons,
       })
       setSession(updated)
+    } catch (err: unknown) {
+      window.alert(parseApiError(err, t('connect.attendance.alert.loadError')))
     } finally {
       setSaving(false)
     }
@@ -231,7 +236,7 @@ export function AttendancePage() {
             <button
               key={n}
               type="button"
-              title={`Aula ${n}`}
+              title={`${t('connect.calendar.form.lessons')} ${n}`}
               onClick={() => {
                 const current = mark.missed_lessons
                 updateMark(studentId, { missed_lessons: current >= n ? n - 1 : n })
@@ -276,32 +281,53 @@ export function AttendancePage() {
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Frequencia"
-        subtitle="Vincule a chamada as aulas do calendario ou registre manualmente por data."
+        title={t('connect.attendance.title')}
+        subtitle={t('connect.attendance.subtitle')}
         actions={
           <>
             <OutlineButton type="button" onClick={handleExport} disabled={exporting || !classId}>
-              <Download className="h-4 w-4" /> {exporting ? 'Exportando...' : 'Exportar'}
+              <Download className="h-4 w-4" /> {exporting ? t('connect.attendance.actions.exporting') : t('connect.attendance.actions.export')}
             </OutlineButton>
             <Link
               to="/connect/planilhas"
               className="inline-flex items-center gap-2 rounded-lg border border-hub-border px-4 py-2 text-sm font-medium text-hub-navy transition hover:bg-hub-bg"
             >
-              <Download className="h-4 w-4" /> Planilhas
+              <Download className="h-4 w-4" /> {t('connect.attendance.actions.spreadsheets')}
             </Link>
             <PrimaryButton onClick={handleSave} disabled={saving || !session}>
-              <Save className="h-4 w-4" /> {saving ? 'Salvando...' : 'Salvar'}
+              <Save className="h-4 w-4" /> {saving ? t('connect.attendance.actions.saving') : t('connect.attendance.actions.save')}
             </PrimaryButton>
           </>
         }
       />
 
+      {classSummary && (
+        <ConnectCard className="mb-4 grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="text-xs text-hub-text-muted">{t('connect.attendance.summary.scheduledLessons')}</p>
+            <p className="text-lg font-semibold text-hub-navy">{classSummary.total_scheduled_lessons}</p>
+          </div>
+          <div>
+            <p className="text-xs text-hub-text-muted">{t('connect.attendance.summary.sessionsClosed')}</p>
+            <p className="text-lg font-semibold text-emerald-600">{classSummary.attendance_sessions_closed}</p>
+          </div>
+          <div>
+            <p className="text-xs text-hub-text-muted">{t('connect.attendance.summary.sessionsOpen')}</p>
+            <p className="text-lg font-semibold text-amber-600">{classSummary.attendance_sessions_open}</p>
+          </div>
+          <div>
+            <p className="text-xs text-hub-text-muted">{t('connect.attendance.summary.classPresence')}</p>
+            <p className="text-lg font-semibold text-hub-navy">{classSummary.presence_rate}%</p>
+          </div>
+        </ConnectCard>
+      )}
+
       <ConnectCard className="mb-4 p-4">
-        <h3 className="mb-4 font-semibold text-hub-navy">Registrar frequencia</h3>
+        <h3 className="mb-4 font-semibold text-hub-navy">{t('connect.attendance.registerSection')}</h3>
         <div className="grid w-full gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FormField label="Turma">
+          <FormField label={t('connect.attendance.form.class')}>
             <select className={selectClass} value={classId} onChange={(e) => setClassId(e.target.value)}>
-              <option value="">Selecione a turma</option>
+              <option value="">{t('connect.attendance.options.selectClass')}</option>
               {classes.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -309,7 +335,7 @@ export function AttendancePage() {
               ))}
             </select>
           </FormField>
-          <FormField label="Data">
+          <FormField label={t('connect.attendance.form.date')}>
             <input
               type="date"
               className={inputClass}
@@ -320,21 +346,24 @@ export function AttendancePage() {
               }}
             />
           </FormField>
-          <FormField label="Aula no calendario" hint={scheduledLessons.length ? 'Selecione o horario agendado' : 'Sem aulas agendadas — modo manual'}>
+          <FormField
+            label={t('connect.attendance.form.calendarLesson')}
+            hint={scheduledLessons.length ? t('connect.attendance.hints.selectTime') : t('connect.attendance.hints.manualMode')}
+          >
             <select
               className={selectClass}
               value={lessonId}
               onChange={(e) => setLessonId(e.target.value)}
             >
-              <option value="">Chamada manual (sem horario)</option>
+              <option value="">{t('connect.attendance.options.manual')}</option>
               {scheduledLessons.map((lesson) => (
                 <option key={lesson.id} value={lesson.id}>
-                  {lesson.start_time}–{lesson.end_time} · {lesson.subject} ({lesson.lessons_count} aula(s))
+                  {lesson.start_time}–{lesson.end_time} · {lesson.subject} ({t('connect.classes.weekly.lessons', { count: lesson.lessons_count })})
                 </option>
               ))}
             </select>
           </FormField>
-          <FormField label="Aulas no dia">
+          <FormField label={t('connect.attendance.form.lessonsPerDay')}>
             <div className="flex flex-wrap gap-2">
               {LESSON_OPTIONS.map((n) => (
                 <button
@@ -354,55 +383,69 @@ export function AttendancePage() {
         </div>
         <p className="mt-2 text-xs text-hub-text-muted">
           <Link to="/connect/calendario" className="text-hub-red hover:underline">
-            Ver calendario completo
+            {t('connect.attendance.viewCalendar')}
           </Link>
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-3 text-xs text-hub-text-muted sm:gap-4">
             <span>
-              <span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500" /> P Presente
+              <span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500" /> {t('connect.attendance.legend.present')}
             </span>
             <span>
-              <span className="mr-1 inline-block h-2 w-2 rounded-full bg-amber-500" /> FJ Falta justificada
+              <span className="mr-1 inline-block h-2 w-2 rounded-full bg-amber-500" /> {t('connect.attendance.legend.justified')}
             </span>
             <span>
-              <span className="mr-1 inline-block h-2 w-2 rounded-full bg-red-500" /> FI Falta injustificada
+              <span className="mr-1 inline-block h-2 w-2 rounded-full bg-red-500" /> {t('connect.attendance.legend.unjustified')}
             </span>
           </div>
-          <PrimaryButton onClick={setAllPresent}>Todos presentes</PrimaryButton>
+          <PrimaryButton onClick={setAllPresent}>{t('connect.attendance.actions.allPresent')}</PrimaryButton>
         </div>
-        {session?.session_date && (
+        {scheduledLessons.length > 1 && !lessonId && (
+          <p className="mt-2 text-sm text-amber-700">{t('connect.attendance.hints.pickLessonSlot')}</p>
+        )}
+        {session?.stats && (
           <p className="mt-3 text-xs text-hub-text-muted">
-            Registro do dia {session.session_date}
+            {t('connect.attendance.sessionStats', {
+              present: session.stats.present,
+              justified: session.stats.justified,
+              absent: session.stats.absent,
+              rate: session.stats.presence_rate,
+            })}
+          </p>
+        )}
+        {session?.session_date && (
+          <p className="mt-1 text-xs text-hub-text-muted">
+            {session.session_date}
             {session.lesson_schedule ? ` · ${session.lesson_schedule.start_time}–${session.lesson_schedule.end_time}` : ''}
-            {' '}· {lessons} aula(s)
-            {session.connect_lesson_schedule_id ? ' · vinculado ao calendario' : ' · chamada manual'}.
+            {' '}· {t('connect.classes.weekly.lessons', { count: lessons })}
+            {session.connect_lesson_schedule_id ? ` · ${t('connect.attendance.hints.selectTime')}` : ` · ${t('connect.attendance.options.manual')}`}.
           </p>
         )}
       </ConnectCard>
 
       <ConnectCard>
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando lista de frequencia..." className="min-h-[280px]" />
+          <ConnectLoadingSpinner label={t('connect.attendance.states.loading')} className="min-h-[280px]" />
         ) : !classId ? (
           <p className="px-4 py-12 text-center text-sm text-hub-text-muted sm:px-6">
-            Selecione uma turma e a data para carregar os alunos.
+            {t('connect.attendance.states.selectClass')}
           </p>
         ) : loadError ? (
           <p className="px-4 py-12 text-center text-sm text-red-600 sm:px-6">{loadError}</p>
         ) : !session?.marks?.length ? (
           <p className="px-4 py-12 text-center text-sm text-hub-text-muted sm:px-6">
-            Esta turma nao possui alunos cadastrados no Connect.
+            {t('connect.attendance.states.noStudents')}
           </p>
         ) : (
           <ConnectTableScroll>
             <table className="w-full min-w-[560px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left">No</th>
-                  <th className="px-4 py-3 text-left">Aluno</th>
-                  <th className="px-4 py-3 text-left">Aulas faltadas no dia</th>
-                  <th className="px-4 py-3 text-left">Situacao</th>
+                  <th className="px-4 py-3 text-left">{t('connect.attendance.table.number')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.attendance.table.student')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.attendance.table.missedLessons')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.attendance.table.situation')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.attendance.table.absences')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -412,6 +455,14 @@ export function AttendancePage() {
                       <td className="px-4 py-3 font-medium">{mark.student?.full_name ?? '-'}</td>
                       <td className="px-4 py-3">{renderLessonToggles(mark.connect_student_id)}</td>
                       <td className="px-4 py-3">{renderMarkButtons(mark.connect_student_id)}</td>
+                      <td className="px-4 py-3 text-xs text-hub-text-muted">
+                        {mark.absence_summary
+                          ? t('connect.attendance.absenceSummary', {
+                              total: mark.absence_summary.unjustified_lessons_total,
+                              remaining: mark.absence_summary.remaining_absences ?? '—',
+                            })
+                          : '—'}
+                      </td>
                     </tr>
                 ))}
               </tbody>

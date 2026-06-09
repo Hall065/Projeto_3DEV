@@ -11,6 +11,10 @@ use Illuminate\Validation\ValidationException;
 
 class ConnectScheduleService
 {
+    public function __construct(
+        private readonly ConnectAttendanceService $attendance,
+    ) {}
+
     /**
      * @param  array<int, array<string, mixed>>  $patterns
      */
@@ -162,6 +166,10 @@ class ConnectScheduleService
             }
         }
 
+        if ($created > 0) {
+            $this->attendance->provisionSessionsForClass($class->fresh(['students']));
+        }
+
         return compact('created', 'skipped', 'errors');
     }
 
@@ -179,7 +187,7 @@ class ConnectScheduleService
             (string) $payload['end_time'],
         );
 
-        return ConnectLessonSchedule::query()->create([
+        $lesson = ConnectLessonSchedule::query()->create([
             'connect_class_id' => $class->id,
             'connect_teacher_id' => $payload['connect_teacher_id'] ?? $class->connect_teacher_id,
             'scheduled_date' => $payload['scheduled_date'],
@@ -190,6 +198,10 @@ class ConnectScheduleService
             'status' => $payload['status'] ?? 'scheduled',
             'notes' => $payload['notes'] ?? null,
         ]);
+
+        $this->attendance->provisionSessionForLesson($lesson->fresh(['connectClass.students']));
+
+        return $lesson;
     }
 
     /**
@@ -236,9 +248,55 @@ class ConnectScheduleService
         return $lesson->fresh();
     }
 
-    public function validateClassAssignment(ConnectClass $class): void
+    public function assertNoDuplicateSemesterEnrollment(ConnectClass $class, ?int $excludeClassId = null): void
+    {
+        $semester = trim((string) ($class->semester ?? ''));
+        $courseId = $class->connect_course_id;
+
+        if ($semester === '' || ! $courseId) {
+            return;
+        }
+
+        $query = ConnectClass::query()
+            ->where('connect_course_id', $courseId)
+            ->where('semester', $semester)
+            ->where('status', 'active');
+
+        if ($excludeClassId) {
+            $query->where('id', '!=', $excludeClassId);
+        }
+
+        if (! $class->start_date || ! $class->end_date) {
+            if ($query->exists()) {
+                throw ValidationException::withMessages([
+                    'semester' => "Ja existe uma turma ativa deste curso no semestre {$semester}.",
+                ]);
+            }
+
+            return;
+        }
+
+        $conflict = $query
+            ->whereNotNull('start_date')
+            ->whereNotNull('end_date')
+            ->where(function ($builder) use ($class): void {
+                $builder->where('start_date', '<=', $class->end_date)
+                    ->where('end_date', '>=', $class->start_date);
+            })
+            ->exists();
+
+        if ($conflict) {
+            throw ValidationException::withMessages([
+                'semester' => "Ja existe uma turma deste curso no semestre {$semester} com periodo sobreposto.",
+            ]);
+        }
+    }
+
+    public function validateClassAssignment(ConnectClass $class, ?int $excludeClassId = null): void
     {
         $class->loadMissing('course');
+
+        $this->assertNoDuplicateSemesterEnrollment($class, $excludeClassId);
 
         if (! $class->start_date || ! $class->end_date) {
             return;

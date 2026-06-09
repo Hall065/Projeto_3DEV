@@ -218,6 +218,29 @@ body {
     border-color: rgba(255, 255, 255, 0.45);
   }
 
+  /* Marcas dos apps — contraste em fundo claro e escuro */
+  .app-brand-mark {
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow:
+      0 4px 14px rgba(2, 26, 58, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .app-brand-mark-fallback {
+    background: var(--color-hub-bg);
+    border-color: var(--color-hub-border);
+    box-shadow: 0 2px 8px rgba(2, 26, 58, 0.06);
+  }
+
+  .sidebar-app-logo-mark {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  }
+
   /* Botão na borda da sidebar — navy fixo (não segue wallpaper-tone) */
   .sidebar-rail-toggle-face {
     background-color: #021a3a;
@@ -484,6 +507,20 @@ html[data-wallpaper-tone="dark"] .app-wallpaper-surface .bg-gradient-to-r.from-w
 html[data-wallpaper-tone="dark"] .app-wallpaper-surface .surface-inset {
   background: rgba(2, 26, 58, 0.48);
   border-color: rgba(255, 255, 255, 0.12);
+}
+
+html[data-wallpaper-tone="dark"] .app-brand-mark:not(.app-brand-mark-fallback) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+html[data-wallpaper-tone="dark"] .app-brand-mark-fallback {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--color-hub-navy);
 }
 
 html[data-wallpaper-tone="dark"] .chart-panel {

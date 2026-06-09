@@ -1,9 +1,9 @@
-import { Filter, MapPin, Pencil, User } from 'lucide-react'
+import { Eye, Filter, MapPin, Pencil, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
   ConnectCard,
   ConnectPageHeader,
@@ -19,9 +19,12 @@ import {
   StatusBadge,
 } from '../../components/connect/ConnectShared'
 import { UserAvatar } from '../../components/ui/UserAvatar'
+import { MapSimulationBadge } from '../../components/map/MapSimulationBadge'
+import { usePublicConfig } from '../../hooks/usePublicConfig'
 import { CampusMapContainer } from '../../components/map/CampusMap3DViewer'
 import { connectService } from '../../services/connectService'
 import { buildCampusPeopleSimulation } from '../../utils/campusPeopleSimulation'
+import { parseApiError } from '../../utils/parseApiError'
 import type { CampusPersonLocation } from '../../types/campusPeople'
 import type {
   ConnectClass,
@@ -33,14 +36,9 @@ import type {
 
 type LocationTab = 'cursos' | 'alunos' | 'professores' | 'turmas'
 
-const tabLabels: { key: LocationTab; label: string }[] = [
-  { key: 'cursos', label: 'Cursos' },
-  { key: 'alunos', label: 'Alunos' },
-  { key: 'professores', label: 'Professores' },
-  { key: 'turmas', label: 'Turmas' },
-]
-
 export function LocationPage() {
+  const { t } = useTranslation()
+  const mapConfig = usePublicConfig()
   const [activeTab, setActiveTab] = useState<LocationTab>('alunos')
   const [locations, setLocations] = useState<ConnectStudentLocation[]>([])
   const [courses, setCourses] = useState<ConnectCourse[]>([])
@@ -57,9 +55,38 @@ export function LocationPage() {
   const [loading, setLoading] = useState(true)
   const [mapPeople, setMapPeople] = useState<CampusPersonLocation[]>([])
   const [mapPeopleLoading, setMapPeopleLoading] = useState(true)
+  const [mapLoadError, setMapLoadError] = useState<string | null>(null)
+
+  const tabLabels: { key: LocationTab; label: string }[] = [
+    { key: 'cursos', label: t('connect.location.tabs.courses') },
+    { key: 'alunos', label: t('connect.location.tabs.students') },
+    { key: 'professores', label: t('connect.location.tabs.teachers') },
+    { key: 'turmas', label: t('connect.location.tabs.classes') },
+  ]
+
+  const statusLabel = (status: string) => {
+    if (status === 'inside') return t('connect.location.filters.inside')
+    if (status === 'outside') return t('connect.location.filters.outside')
+    return t('connect.location.filters.unknown')
+  }
 
   useEffect(() => {
     setMapPeopleLoading(true)
+    setMapLoadError(null)
+    const simulation = mapConfig?.campus_map_simulation !== false
+
+    if (!simulation) {
+      connectService
+        .getCampusPeople()
+        .then(setMapPeople)
+        .catch((err) => {
+          setMapPeople([])
+          setMapLoadError(parseApiError(err, t('common.error')))
+        })
+        .finally(() => setMapPeopleLoading(false))
+      return
+    }
+
     Promise.all([
       connectService.getLocations({ page: 1, per_page: 100, status: 'inside' }),
       connectService.getTeachers({ page: 1, per_page: 100 }),
@@ -73,7 +100,7 @@ export function LocationPage() {
         )
       })
       .finally(() => setMapPeopleLoading(false))
-  }, [])
+  }, [mapConfig?.campus_map_simulation, t])
 
   useEffect(() => {
     setLoading(true)
@@ -121,22 +148,26 @@ export function LocationPage() {
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Localizacao"
-        subtitle="Visualize o campus em 3D e localize alunos, turmas e salas dentro do perimetro do SENAI."
+        title={t('connect.location.title')}
+        subtitle={t('connect.location.subtitle')}
       />
+
+      {mapConfig?.campus_map_simulation !== false && <MapSimulationBadge className="mb-4" />}
 
       <ConnectCard className="mb-4 overflow-hidden p-4 sm:p-6">
         <div className="mb-4 flex items-center gap-2">
           <MapPin className="h-4 w-4 shrink-0 text-hub-red" />
           <div>
-            <h2 className="font-semibold text-hub-navy">Mapa do campus</h2>
+            <h2 className="font-semibold text-hub-navy">{t('connect.location.map.title')}</h2>
             <p className="text-sm text-hub-text-muted">
-              Localizacao simulada de alunos, professores e funcionarios nos blocos do campus.
+              {t('connect.location.map.simulated')}
             </p>
           </div>
         </div>
         {mapPeopleLoading ? (
-          <ConnectLoadingSpinner label="Carregando localizacoes no mapa..." className="min-h-[400px]" />
+          <ConnectLoadingSpinner label={t('connect.location.loading.map')} className="min-h-[400px]" />
+        ) : mapLoadError ? (
+          <p className="min-h-[400px] px-4 py-12 text-center text-sm text-red-600">{mapLoadError}</p>
         ) : (
           <CampusMapContainer
             people={campusPeople}
@@ -163,7 +194,7 @@ export function LocationPage() {
           {activeTab === 'alunos' && (
             <input
               className={`${inputClass} min-w-0 flex-1`}
-              placeholder="Buscar aluno..."
+              placeholder={t('connect.location.filters.searchStudent')}
               value={search}
               onChange={(e) => {
                 setPage(1)
@@ -172,12 +203,12 @@ export function LocationPage() {
             />
           )}
           <OutlineButton onClick={() => setShowFilters((v) => !v)}>
-            <Filter className="h-4 w-4" /> Filtros
+            <Filter className="h-4 w-4" /> {t('connect.common.filters')}
           </OutlineButton>
         </div>
         {showFilters && activeTab === 'alunos' && (
           <div className="mb-4 border-t border-hub-border/60 pt-4">
-            <FormField label="Status">
+            <FormField label={t('connect.table.status')}>
               <select
                 className={selectClass}
                 value={statusFilter}
@@ -186,16 +217,16 @@ export function LocationPage() {
                   setStatusFilter(e.target.value)
                 }}
               >
-                <option value="">Todos</option>
-                <option value="inside">Dentro do perimetro</option>
-                <option value="outside">Fora do perimetro</option>
-                <option value="unknown">Desconhecido</option>
+                <option value="">{t('connect.common.all')}</option>
+                <option value="inside">{t('connect.location.filters.inside')}</option>
+                <option value="outside">{t('connect.location.filters.outside')}</option>
+                <option value="unknown">{t('connect.location.filters.unknown')}</option>
               </select>
             </FormField>
           </div>
         )}
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando localizacoes..." className="min-h-[280px]" />
+          <ConnectLoadingSpinner label={t('connect.location.loading.list')} className="min-h-[280px]" />
         ) : (
         <>
         <ConnectTableScroll>
@@ -203,11 +234,11 @@ export function LocationPage() {
             <table className="w-full min-w-[560px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left">Nome</th>
-                  <th className="px-4 py-3 text-left">E-mail institucional</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Em aula?</th>
-                  <th className="px-4 py-3 text-left">Dentro do perimetro?</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.name')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.location.table.institutionalEmail')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.location.table.inClass')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.location.table.inPerimeter')}</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -217,23 +248,28 @@ export function LocationPage() {
                     <td className="px-4 py-3">{loc.student?.full_name ?? '-'}</td>
                     <td className="px-4 py-3">{loc.student?.email ?? '-'}</td>
                     <td className="px-4 py-3"><StatusBadge status={loc.status} /></td>
-                    <td className="px-4 py-3">{loc.status === 'inside' ? 'Sim' : 'Nao'}</td>
-                    <td className="px-4 py-3">{loc.status === 'inside' ? 'Sim' : 'Nao'}</td>
+                    <td className="px-4 py-3">{loc.status === 'inside' ? t('connect.common.yes') : t('connect.common.no')}</td>
+                    <td className="px-4 py-3">{loc.status === 'inside' ? t('connect.common.yes') : t('connect.common.no')}</td>
                     <td className="px-4 py-3 text-right">
                       <ConnectRowActionsMenu
-                        ariaLabel={`Ações de ${loc.student?.full_name ?? 'aluno'}`}
+                        ariaLabel={t('connect.common.actionsOf', { name: loc.student?.full_name ?? t('connect.personKind.student') })}
                         actions={[
-                          viewRowAction(() => setViewSnapshot(loc)),
+                          {
+                            key: 'view',
+                            label: t('connect.common.view'),
+                            icon: Eye,
+                            onClick: () => setViewSnapshot(loc),
+                          },
                           {
                             key: 'map',
-                            label: 'Ver localização',
+                            label: t('connect.location.actions.viewLocation'),
                             icon: MapPin,
                             disabled: loc.status !== 'inside',
                             onClick: () => setSelected(loc),
                           },
                           {
                             key: 'student',
-                            label: 'Ver aluno',
+                            label: t('connect.location.actions.viewStudent'),
                             icon: User,
                             onClick: () => {
                               if (loc.connect_student_id) setViewStudentId(loc.connect_student_id)
@@ -241,7 +277,7 @@ export function LocationPage() {
                           },
                           {
                             key: 'edit',
-                            label: 'Editar cadastro',
+                            label: t('connect.location.actions.editRecord'),
                             icon: Pencil,
                             onClick: () => {
                               if (loc.connect_student_id) setViewStudentId(loc.connect_student_id)
@@ -259,11 +295,11 @@ export function LocationPage() {
             <table className="w-full min-w-[480px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left">Codigo</th>
-                  <th className="px-4 py-3 text-left">Nome</th>
-                  <th className="px-4 py-3 text-left">Area</th>
-                  <th className="px-4 py-3 text-left">Turmas</th>
-                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">{t('connect.location.table.code')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.name')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.location.table.area')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.classes.table.students')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -283,11 +319,11 @@ export function LocationPage() {
             <table className="w-full min-w-[480px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left">Nome</th>
-                  <th className="px-4 py-3 text-left">E-mail</th>
-                  <th className="px-4 py-3 text-left">Especialidade</th>
-                  <th className="px-4 py-3 text-left">Turmas</th>
-                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.name')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.email')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.teachers.table.specialty')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.teachers.table.classes')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -307,12 +343,12 @@ export function LocationPage() {
             <table className="w-full min-w-[560px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left">Codigo</th>
-                  <th className="px-4 py-3 text-left">Nome</th>
-                  <th className="px-4 py-3 text-left">Curso</th>
-                  <th className="px-4 py-3 text-left">Professor</th>
-                  <th className="px-4 py-3 text-left">Alunos</th>
-                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">{t('connect.location.table.code')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.name')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.course')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.classes.form.teacher')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.classes.table.students')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -337,14 +373,14 @@ export function LocationPage() {
 
       {activeTab === 'alunos' && (
         <div className="rounded-xl border border-hub-navy/20 bg-hub-navy/10 px-4 py-3 text-sm text-blue-800">
-          O botao Ver localizacao abre os dados do aluno. Os marcadores coloridos no mapa simulam quem esta no campus.
+          {t('connect.location.infoBanner')}
         </div>
       )}
 
       <ConnectDrawer
         open={!!selected}
         onClose={() => setSelected(null)}
-        title="Localizacao do aluno"
+        title={t('connect.location.drawer.title')}
       >
         {selected && (
           <>
@@ -353,18 +389,18 @@ export function LocationPage() {
               <div>
                 <p className="font-semibold text-hub-navy">{selected.student?.full_name}</p>
                 <p className="text-sm text-hub-text-muted">{selected.student?.email ?? '-'}</p>
-                <p className="text-sm text-hub-text-muted">Turma: {selected.student?.class?.name ?? '-'}</p>
+                <p className="text-sm text-hub-text-muted">{t('connect.table.class')}: {selected.student?.class?.name ?? '-'}</p>
               </div>
             </div>
             <ul className="space-y-2 text-sm">
-              <li><strong>Endereco:</strong> {selected.address ?? '-'}</li>
-              <li><strong>Cidade:</strong> {selected.city ?? '-'} - {selected.state ?? '-'}</li>
-              <li><strong>Status:</strong> {selected.status === 'inside' ? 'Dentro do perimetro' : selected.status === 'outside' ? 'Fora do perimetro' : 'Desconhecido'}</li>
+              <li><strong>{t('connect.location.drawer.address')}:</strong> {selected.address ?? '-'}</li>
+              <li><strong>{t('connect.location.drawer.city')}:</strong> {selected.city ?? '-'} - {selected.state ?? '-'}</li>
+              <li><strong>{t('connect.table.status')}:</strong> {statusLabel(selected.status)}</li>
             </ul>
             <p className="mt-4 rounded-lg border border-hub-border/60 bg-hub-bg/60 px-3 py-2 text-xs text-hub-text-muted">
-              Consulte o mapa 3D do campus na area principal da pagina para visualizar a localizacao.
+              {t('connect.location.map.simulated')}
             </p>
-            <p className="mt-4 text-xs text-hub-text-muted">Ultima atualizacao: {formatDateTime(selected.last_seen_at)}</p>
+            <p className="mt-4 text-xs text-hub-text-muted">{t('connect.location.drawer.lastUpdate')}: {formatDateTime(selected.last_seen_at)}</p>
           </>
         )}
       </ConnectDrawer>

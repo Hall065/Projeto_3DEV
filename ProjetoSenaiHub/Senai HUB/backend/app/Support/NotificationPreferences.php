@@ -6,24 +6,31 @@ use App\Models\User;
 
 class NotificationPreferences
 {
+    /** @return list<string> */
+    public static function moduleKeys(): array
+    {
+        return ['hub', 'connect', 'grid', 'safe'];
+    }
+
     /**
-     * @return array{in_app: bool, email: bool, modules: array{hub: bool, connect: bool, grid: bool}}
+     * @return array{in_app: bool, email: bool, modules: array<string, bool>}
      */
     public static function defaults(): array
     {
         return [
             'in_app' => true,
-            'email' => false,
+            'email' => true,
             'modules' => [
                 'hub' => true,
                 'connect' => true,
                 'grid' => true,
+                'safe' => true,
             ],
         ];
     }
 
     /**
-     * @return array{in_app: bool, email: bool, modules: array{hub: bool, connect: bool, grid: bool}}
+     * @return array{in_app: bool, email: bool, modules: array<string, bool>}
      */
     public static function forUser(User $user): array
     {
@@ -52,9 +59,20 @@ class NotificationPreferences
         return (bool) ($prefs['modules'][$module] ?? true);
     }
 
+    public static function allowsEmail(User $user, string $module): bool
+    {
+        $prefs = self::forUser($user);
+
+        if (! $prefs['email']) {
+            return false;
+        }
+
+        return (bool) ($prefs['modules'][$module] ?? true);
+    }
+
     /**
      * @param  array<string, mixed>  $input
-     * @return array{in_app: bool, email: bool, modules: array{hub: bool, connect: bool, grid: bool}}
+     * @return array{in_app: bool, email: bool, modules: array<string, bool>}
      */
     public static function merge(array $input): array
     {
@@ -69,7 +87,7 @@ class NotificationPreferences
         }
 
         if (isset($input['modules']) && is_array($input['modules'])) {
-            foreach (['hub', 'connect', 'grid'] as $module) {
+            foreach (self::moduleKeys() as $module) {
                 if (array_key_exists($module, $input['modules'])) {
                     $current['modules'][$module] = (bool) $input['modules'][$module];
                 }

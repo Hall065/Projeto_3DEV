@@ -1,10 +1,15 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { connectRoutePermissions, gridRoutePermissions } from '../config/navPermissions'
+import {
+  connectRoutePermissions,
+  gridRoutePermissions,
+  safeRoutePermissions,
+} from '../config/navPermissions'
+import type { RoutePermissionMap } from '../generated/navManifest'
 import { usePermissions } from '../hooks/usePermissions'
 
 function canAccessRoute(
   pathname: string,
-  map: Record<string, string | string[]>,
+  map: RoutePermissionMap,
   can: (permission: string) => boolean,
   isAdmin: boolean,
 ): boolean {
@@ -13,17 +18,23 @@ function canAccessRoute(
   const permission = map[pathname]
   if (!permission) return true
 
-  if (Array.isArray(permission)) {
-    return permission.some((p) => can(p))
+  if (typeof permission === 'string') {
+    return can(permission)
   }
 
-  return can(permission)
+  return permission.some((p) => can(p))
 }
 
-export function PermissionRoute({ module }: { module: 'connect' | 'grid' }) {
+const routePermissionMaps = {
+  connect: connectRoutePermissions,
+  grid: gridRoutePermissions,
+  safe: safeRoutePermissions,
+} as const
+
+export function PermissionRoute({ module }: { module: 'connect' | 'grid' | 'safe' }) {
   const { pathname } = useLocation()
   const { can, isAdmin } = usePermissions()
-  const map = module === 'connect' ? connectRoutePermissions : gridRoutePermissions
+  const map = routePermissionMaps[module]
 
   if (!canAccessRoute(pathname, map, can, isAdmin)) {
     return <Navigate to="/acesso-negado" replace state={{ from: pathname }} />

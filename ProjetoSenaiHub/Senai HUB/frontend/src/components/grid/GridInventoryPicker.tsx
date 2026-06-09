@@ -9,6 +9,7 @@ import {
 } from '../../utils/gridInventoryAvailability'
 import { GridInventoryStockAlert } from './GridInventoryStockAlert'
 import { GridInventoryThumb } from './GridInventoryThumb'
+import { parseApiError } from '../../utils/parseApiError'
 
 export function GridInventoryPicker({
   value,
@@ -20,7 +21,10 @@ export function GridInventoryPicker({
   const [catalog, setCatalog] = useState<GridInventoryItem[]>([])
 
   useEffect(() => {
-    gridService.getInventory({ per_page: 100 }).then((res) => setCatalog(res.data))
+    gridService
+      .getInventory({ per_page: 100 })
+      .then((res) => setCatalog(res.data))
+      .catch((err) => window.alert(parseApiError(err, 'Nao foi possivel carregar o catalogo de estoque.')))
   }, [])
 
   const validation = useMemo(() => validateInventoryRequest(value, catalog), [value, catalog])
@@ -162,4 +166,4 @@ export function guardInventoryBeforeSubmit(
   }
   return true
 }
-
+

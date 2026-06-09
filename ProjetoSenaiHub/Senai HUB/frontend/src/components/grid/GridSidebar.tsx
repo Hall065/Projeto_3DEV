@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom'
 import { SidebarAppLogo } from '../layout/SidebarAppLogo'
 import { filterNavItems, gridNavItems } from '../../config/navPermissions'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useNavLabel } from '../../hooks/useNavLabel'
 
 interface GridSidebarProps {
   collapsed: boolean
@@ -14,6 +15,7 @@ interface GridSidebarProps {
 export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: GridSidebarProps) {
   const isCollapsed = collapsed && !mobileOpen
   const { can } = usePermissions()
+  const navLabel = useNavLabel('grid')
   const mainNav = filterNavItems(gridNavItems, can)
   const [supportOpen, setSupportOpen] = useState(false)
   const supportRef = useRef<HTMLDivElement>(null)
@@ -63,11 +65,11 @@ export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: Gr
             to={item.to}
             end={item.end}
             className={linkClass}
-            title={item.label}
+            title={navLabel(item)}
             onClick={onMobileClose}
           >
             <item.icon className="h-5 w-5 shrink-0" />
-            {!isCollapsed && <span>{item.label}</span>}
+            {!isCollapsed && <span>{navLabel(item)}</span>}
           </NavLink>
         ))}
       </nav>

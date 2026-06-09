@@ -100,6 +100,28 @@ export interface ConnectLessonSchedule {
   teacher?: ConnectTeacher
   attendance_session_id?: number | null
   has_attendance?: boolean
+  attendance_status?: 'open' | 'closed' | null
+}
+
+export interface ConnectClassAttendanceSummary {
+  class_id: number
+  class_name: string
+  semester?: string | null
+  students_count: number
+  total_scheduled_lessons: number
+  completed_lessons: number
+  attendance_sessions_total: number
+  attendance_sessions_closed: number
+  attendance_sessions_open: number
+  lessons_without_attendance: number
+  presence_rate: number
+  marks_summary: {
+    total: number
+    present: number
+    justified: number
+    absent: number
+  }
+  period?: { from?: string | null; to?: string | null }
 }
 
 export interface ConnectTeacher {

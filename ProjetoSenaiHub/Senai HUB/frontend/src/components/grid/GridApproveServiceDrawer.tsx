@@ -3,6 +3,7 @@ import { ConnectDrawer } from '../connect/ConnectDrawer'
 import { FormField, inputClass, OutlineButton, PrimaryButton } from '../connect/ConnectShared'
 import { gridService } from '../../services/gridService'
 import type { GridTicket } from '../../types/grid'
+import { parseApiError } from '../../utils/parseApiError'
 
 export function GridApproveServiceDrawer({
   ticket,
@@ -34,8 +35,8 @@ export function GridApproveServiceDrawer({
       onClose()
       setNotes('')
       setResolutionSummary('')
-    } catch {
-      window.alert('Não foi possível registrar a aprovação.')
+    } catch (err: unknown) {
+      window.alert(parseApiError(err, 'Nao foi possivel registrar a aprovacao.'))
     } finally {
       setSaving(false)
     }

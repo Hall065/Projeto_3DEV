@@ -1,4 +1,5 @@
 import api from './api'
+import type { CampusPersonLocation } from '../types/campusPeople'
 import type {
   ConnectAttendanceSession,
   ConnectClass,
@@ -160,6 +161,30 @@ export const connectService = {
     return { plan: data.plan, generation: data.generation }
   },
 
+  async getCalendarSemesters(): Promise<string[]> {
+    const { data } = await api.get<{ data: string[] }>('/connect/calendar/semesters')
+    return data.data
+  },
+
+  async provisionClassAttendance(classId: number): Promise<{ created: number; skipped: number }> {
+    const { data } = await api.post<{ data: { created: number; skipped: number } }>(
+      `/connect/classes/${classId}/provision-attendance`,
+    )
+    return data.data
+  },
+
+  async getClassAttendanceSummary(params: {
+    connect_class_id: number
+    from_date?: string
+    to_date?: string
+  }): Promise<import('../types/connect').ConnectClassAttendanceSummary> {
+    const { data } = await api.get<{ data: import('../types/connect').ConnectClassAttendanceSummary }>(
+      '/connect/attendance/class-summary',
+      { params },
+    )
+    return data.data
+  },
+
   async getAttendanceSession(params: Record<string, string | number>): Promise<ConnectAttendanceSession> {
     const { data } = await api.get<{ data: ConnectAttendanceSession }>('/connect/attendance/session', { params })
     return data.data
@@ -195,6 +220,30 @@ export const connectService = {
   async getLocations(params?: Record<string, string | number>): Promise<PaginatedResponse<ConnectStudentLocation>> {
     const { data } = await api.get<PaginatedResponse<ConnectStudentLocation>>('/connect/locations', { params })
     return unwrapPaginated(data)
+  },
+
+  async getCampusPeople(): Promise<CampusPersonLocation[]> {
+    const { data } = await api.get<{
+      data: Array<{
+        id: string
+        name: string
+        role: string
+        block_id: string
+        room?: string
+        detail?: string
+        position?: { x: number; y: number; z: number }
+      }>
+    }>('/connect/campus-people')
+
+    return data.data.map((person) => ({
+      id: person.id,
+      name: person.name,
+      role: person.role as CampusPersonLocation['role'],
+      blockId: person.block_id as CampusPersonLocation['blockId'],
+      room: person.room,
+      detail: person.detail,
+      position: person.position,
+    }))
   },
 
   async getContracts(params?: Record<string, string | number>): Promise<PaginatedResponse<ConnectContract>> {

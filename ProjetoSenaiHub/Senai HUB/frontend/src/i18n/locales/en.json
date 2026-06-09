@@ -1,0 +1,1172 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
+    "search": "Search",
+    "logout": "Sign out",
+    "profile": "Profile",
+    "skipToMain": "Skip to main content",
+    "settings": "Settings",
+    "themes": "Themes",
+    "notifications": "Notifications",
+    "accessDenied": "Access denied",
+    "notFound": "Page not found",
+    "language": "Language"
+  },
+  "auth": {
+    "loginTitle": "Sign in to your account",
+    "loginSubtitle": "Enter your email and password to continue",
+    "email": "Email",
+    "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "login": "Sign in",
+    "forgotPassword": "Forgot password",
+    "forgotTitle": "Reset password",
+    "forgotSubtitle": "Enter your email to receive a reset link",
+    "sendLink": "Send link",
+    "forgotSuccess": "If an account exists for this email, you will receive instructions shortly.",
+    "resetTitle": "Choose a new password",
+    "resetSubtitle": "Set a new password for your account",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "resetSubmit": "Reset password",
+    "resetSuccess": "Password updated. Sign in with your new password.",
+    "invalidCredentials": "Invalid email or password.",
+    "sessionExpired": "Your session expired. Please sign in again.",
+    "adminOnlySignup": "Accounts are created by a system administrator.",
+    "requestAccess": "Request access",
+    "backToLogin": "Back to sign in"
+  },
+  "hub": {
+    "title": "SENAI HUB",
+    "subtitle": "Choose a module to continue",
+    "users": "Users",
+    "manageUsers": "Manage users",
+    "appsTitle": "Application Hub",
+    "appsSubtitle": "Access the systems available for your profile.",
+    "loadAppsError": "Could not load applications.",
+    "noAppsForProfile": "No applications available for your profile.",
+    "appsTip": "Tip: the apps shown here depend on your user profile. Contact an administrator if you need access to another system.",
+    "pendingAccessTitle": "Waiting for access",
+    "pendingAccessBody": "Your account is not linked to any SENAI HUB module yet. An administrator must assign your profile and permissions.",
+    "pendingAccessWait": "Once setup is complete, your modules will appear here automatically.",
+    "pendingAccessContact": "If you believe this is a mistake, contact your system administrator or the front office."
+  },
+  "accessRequest": {
+    "title": "Request access",
+    "subtitle": "Fill in your details. An administrator will review your request.",
+    "name": "Full name",
+    "email": "Email",
+    "organization": "Organization / department (optional)",
+    "message": "Message (optional)",
+    "messagePlaceholder": "Briefly describe why you need access...",
+    "submit": "Submit request"
+  },
+  "nav": {
+    "connect": {
+      "overview": "Overview",
+      "people": "People",
+      "students": "Students",
+      "teachers": "Teachers",
+      "classes": "Classes",
+      "courses": "Courses",
+      "calendar": "Calendar",
+      "attendance": "Attendance",
+      "manageAttendance": "Manage attendance",
+      "reports": "Reports",
+      "location": "Location",
+      "spreadsheets": "Spreadsheets",
+      "contracts": "Student contracts",
+      "salary": "Salary"
+    },
+    "grid": {
+      "overview": "Dashboard",
+      "control": "Control board",
+      "tickets": "Tickets",
+      "tasks": "Tasks",
+      "reports": "Reports",
+      "inventory": "Inventory",
+      "map": "Task map",
+      "users": "Grid users",
+      "spreadsheets": "Spreadsheets"
+    },
+    "safe": {
+      "overview": "Overview",
+      "students": "Students",
+      "authorizations": "Authorizations",
+      "approvals": "Approvals",
+      "portaria": "Front desk"
+    }
+  },
+  "modules": {
+    "connect": "SENAI Connect",
+    "grid": "SENAI Grid",
+    "safe": "SENAI SAFE"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "notificationsInApp": "In-app notifications",
+    "notificationsEmail": "Email notifications",
+    "moduleHub": "Central hub",
+    "moduleConnect": "Connect",
+    "moduleGrid": "Grid",
+    "moduleSafe": "SAFE"
+  },
+  "landing": {
+    "login": "Sign in",
+    "heroTitle": "Integrated SENAI platform",
+    "heroSubtitle": "Connect, Grid and SAFE in one hub.",
+    "ctaLogin": "Open platform",
+    "themesTitle": "Customize the look",
+    "themesSubtitle": "Choose SENAI themes when you sign in — wallpapers, colors and integrated visual style.",
+    "themesHint": "Sign in to apply themes and custom wallpapers in",
+    "themesCta": "Settings > Themes"
+  },
+  "safe": {
+    "dashboard": {
+      "title": "Overview",
+      "subtitle": "SAFE module indicators and queues — visitor and exit authorization.",
+      "loadError": "Could not load the dashboard.",
+      "recentAuthorizations": "Recent authorizations",
+      "viewAll": "View all",
+      "loadingAuthorizations": "Loading authorizations...",
+      "noAuthorizations": "No authorizations recorded.",
+      "approvalQueue": "Approval queue",
+      "noPending": "No pending requests.",
+      "portariaQueue": "Reception queue",
+      "noPortaria": "No authorizations released.",
+      "kpis": {
+        "requestsToday": "Requests today",
+        "pendingTeacher": "Awaiting teacher",
+        "approvedToday": "Approved today",
+        "awaitingPortaria": "Awaiting reception",
+        "finalizedToday": "Finalized today",
+        "denied": "Denied",
+        "pendingApproval": "Pending approval",
+        "approvedByMe": "Approved by me",
+        "awaitingConfirmation": "Awaiting confirmation"
+      }
+    },
+    "students": {
+      "title": "Students",
+      "subtitle": "Students linked to the SAFE module.",
+      "newStudent": "New student",
+      "editStudent": "Edit student"
+    },
+    "authorizations": {
+      "title": "Authorizations",
+      "subtitle": "Entry and exit requests (AQV).",
+      "newRequest": "New request",
+      "searchPlaceholder": "Search protocol or student...",
+      "empty": "No authorizations found."
+    },
+    "approvals": {
+      "title": "Approvals",
+      "subtitle": "Teacher queue — approve or deny pending requests.",
+      "empty": "No pending requests."
+    },
+    "portaria": {
+      "title": "Reception",
+      "subtitle": "Confirm or reject authorizations released by the teacher.",
+      "empty": "No authorizations awaiting confirmation."
+    },
+    "table": {
+      "protocol": "Protocol",
+      "student": "Student",
+      "type": "Type",
+      "status": "Status",
+      "scheduled": "Scheduled",
+      "reason": "Reason",
+      "teacher": "Teacher"
+    },
+    "sidebar": {
+      "profileHint": "Menus shown according to your access profile.",
+      "support": "Support"
+    },
+    "detail": {
+      "loading": "Loading authorization...",
+      "notFound": "Authorization not found.",
+      "backToList": "Back to list",
+      "details": "Details",
+      "history": "History",
+      "noHistory": "No history records.",
+      "system": "System",
+      "fields": {
+        "status": "Status",
+        "type": "Type",
+        "scheduled": "Scheduled",
+        "requester": "Requester",
+        "teacher": "Teacher",
+        "portaria": "Reception",
+        "reason": "Reason",
+        "notes": "Notes"
+      }
+    }
+  },
+  "connect": {
+    "common": {
+      "export": "Export",
+      "filters": "Filters",
+      "clearFilters": "Clear filters",
+      "new": "New",
+      "saving": "Saving...",
+      "saveAndNew": "Save and new",
+      "edit": "Edit",
+      "delete": "Delete",
+      "view": "View",
+      "selectAll": "Select all",
+      "selectItem": "Select {{name}}",
+      "actionsOf": "Actions for {{name}}",
+      "yes": "Yes",
+      "no": "No",
+      "system": "System",
+      "all": "All",
+      "actions": "Actions",
+      "updatedAt": "Updated on {{date}}"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to delete {{entity}}? This action cannot be undone."
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "graduated": "Graduated",
+      "activePlural": "Active",
+      "inactivePlural": "Inactive"
+    },
+    "personKind": {
+      "student": "Student",
+      "teacher": "Teacher",
+      "staff": "Staff",
+      "other": "Other"
+    },
+    "shift": {
+      "manha": "Morning",
+      "tarde": "Afternoon",
+      "noite": "Evening"
+    },
+    "days": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "status": "Status",
+      "type": "Type",
+      "details": "Details",
+      "dateTime": "Date & time",
+      "user": "User",
+      "course": "Course",
+      "class": "Class"
+    },
+    "overview": {
+      "title": "Overview",
+      "subtitle": "Track indicators and recent activity in SENAI Connect.",
+      "recentActivity": "Recent activity",
+      "registrationsAlerts": "Recent registrations / Alerts",
+      "tabs": {
+        "registrations": "Recent registrations",
+        "alerts": "Alerts"
+      },
+      "loading": "Loading registrations and alerts...",
+      "rowType": {
+        "student": "Student"
+      },
+      "kpis": {
+        "totalStudents": "Total registered students",
+        "totalTeachers": "Registered teachers",
+        "activeClasses": "Active classes",
+        "activeCourses": "Active courses",
+        "attendanceRate": "Average monthly attendance",
+        "activeContracts": "Active contracts"
+      }
+    },
+    "students": {
+      "title": "Student management",
+      "subtitle": "Search, filter and manage registered students.",
+      "loading": "Loading students...",
+      "count": "{{count}} students found",
+      "filters": {
+        "allClasses": "All classes",
+        "searchPlaceholder": "Search by name...",
+        "allStatuses": "All statuses"
+      },
+      "table": {
+        "registration": "ID",
+        "birthDate": "Birth date"
+      },
+      "drawer": {
+        "edit": "Edit student",
+        "new": "New student",
+        "editSubtitle": "Update student details.",
+        "newSubtitle": "Fill in the details to register the new student."
+      },
+      "sections": {
+        "personal": "Personal details",
+        "academic": "Academic information",
+        "additional": "Additional information"
+      },
+      "form": {
+        "fullName": "Full name",
+        "registration": "Student ID",
+        "cpf": "CPF",
+        "birthDate": "Birth date",
+        "personalEmail": "Personal email",
+        "phone": "Mobile",
+        "class": "Class",
+        "address": "Address",
+        "guardian": "Guardian name",
+        "notes": "Notes",
+        "optional": "Optional",
+        "calendarHint": "Click to open calendar",
+        "noClass": "No class (assign later)",
+        "classHint": "Optional — enroll later"
+      },
+      "alert": {
+        "nameRequired": "Enter the student's full name."
+      }
+    },
+    "teachers": {
+      "title": "Teacher management",
+      "subtitle": "Register, edit and track teacher information.",
+      "searchPlaceholder": "Search by name, email or CPF...",
+      "loading": "Loading teachers...",
+      "filters": {
+        "allSpecialties": "All specialties",
+        "specialty": "Specialty"
+      },
+      "table": {
+        "institutionalEmail": "Institutional email",
+        "specialty": "Specialty",
+        "classes": "Classes"
+      },
+      "drawer": {
+        "edit": "Edit teacher",
+        "new": "New teacher",
+        "editSubtitle": "Update teacher details.",
+        "newSubtitle": "Fill in the details to register the new teacher."
+      },
+      "form": {
+        "fullName": "Full name",
+        "institutionalEmail": "Institutional email",
+        "specialty": "Specialty",
+        "cpf": "CPF",
+        "phone": "Mobile"
+      },
+      "alert": {
+        "nameRequired": "Enter the teacher's full name."
+      }
+    },
+    "people": {
+      "title": "Global people registry",
+      "subtitle": "Students, teachers, staff and other profiles used across SENAI Hub.",
+      "newPerson": "New person",
+      "loading": "Loading people...",
+      "filters": {
+        "searchPlaceholder": "Name, email, CPF or student ID..."
+      },
+      "table": {
+        "registrationCpf": "ID / CPF"
+      },
+      "drawer": {
+        "edit": "Edit person",
+        "new": "New person",
+        "editSubtitle": "Update data in the global registry.",
+        "newSubtitle": "Register in the global record (without a specific Connect student/teacher profile)."
+      },
+      "form": {
+        "registration": "ID / registration",
+        "specialty": "Specialty / role"
+      },
+      "alert": {
+        "deleteLinked": "Could not delete. This person may have a linked Connect profile."
+      }
+    },
+    "courses": {
+      "title": "Courses",
+      "subtitle": "Course management.",
+      "create": "Create course",
+      "searchPlaceholder": "Search course...",
+      "empty": "No courses found.",
+      "drawer": {
+        "edit": "Edit course",
+        "new": "Register course",
+        "editSubtitle": "Update course details.",
+        "newSubtitle": "Fill in the details to register the new course.",
+        "clearFields": "Clear fields"
+      },
+      "form": {
+        "name": "Course name",
+        "area": "Area",
+        "workload": "Total workload hours",
+        "startDate": "Course start",
+        "endDate": "Course end",
+        "description": "Description"
+      },
+      "alert": {
+        "nameRequired": "Enter the course name."
+      }
+    },
+    "classes": {
+      "title": "Classes",
+      "subtitle": "Class management.",
+      "create": "Create class",
+      "searchPlaceholder": "Filter class...",
+      "loading": "Loading classes...",
+      "defaultSubject": "Regular class",
+      "table": {
+        "className": "Class name",
+        "period": "Period",
+        "semester": "Semester",
+        "start": "Start",
+        "end": "End",
+        "students": "Students"
+      },
+      "actions": {
+        "viewStudents": "View students"
+      },
+      "drawer": {
+        "edit": "Edit class",
+        "new": "Register new class",
+        "editSubtitle": "Update class details and weekly schedule.",
+        "newSubtitle": "Fill in the details to register the new class."
+      },
+      "form": {
+        "name": "Class name",
+        "period": "Period",
+        "semester": "Semester",
+        "startDate": "Start date",
+        "endDate": "End date",
+        "capacity": "Capacity",
+        "teacher": "Teacher",
+        "description": "Description",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "weekly": {
+        "title": "Weekly schedule",
+        "lessons": "{{count}} lesson(s)",
+        "remove": "Remove",
+        "addSlot": "Add time slot"
+      },
+      "scheduleSummary": "Load: {{total}} lessons · Weekly: {{weekly}} · Remaining: {{remaining}}",
+      "generateSchedule": "Generate calendar automatically on save",
+      "alert": {
+        "nameRequired": "Enter the class name.",
+        "scheduleFieldsRequired": "To generate the calendar, enter semester, start date and end date.",
+        "saveError": "Could not save the class.",
+        "deleteError": "Could not delete the class."
+      }
+    },
+    "schedule": {
+      "panelTitle": "Weekly schedule and calendar generation",
+      "period": "Class period",
+      "replaceFuture": "Replace future lessons without attendance when regenerating",
+      "savePatterns": "Save schedule",
+      "saveAndGenerate": "Save and generate calendar",
+      "regenerate": "Regenerate calendar",
+      "provisionAttendance": "Prepare roll calls (attendance)",
+      "generationResult": "Calendar: {{created}} lesson(s) created, {{skipped}} skipped.",
+      "provisionResult": "{{count}} attendance session(s) prepared."
+    },
+    "contracts": {
+      "title": "Contracts",
+      "subtitle": "Manage apprenticeship and internship contracts for students.",
+      "loading": "Loading contracts...",
+      "totalRecords": "Total records:",
+      "filters": {
+        "contractType": "Contract type",
+        "apprenticeship": "Apprenticeship",
+        "internship": "Internship",
+        "clt": "CLT",
+        "temporary": "Temporary",
+        "terminated": "Terminated"
+      },
+      "table": {
+        "workload": "Workload",
+        "studentName": "Student name",
+        "company": "Company",
+        "start": "Start",
+        "monthlyValue": "Monthly amount"
+      },
+      "drawer": {
+        "edit": "Edit contract",
+        "new": "New student contract",
+        "section": "Contract details"
+      },
+      "form": {
+        "student": "Student",
+        "company": "Company",
+        "type": "Type",
+        "workload": "Workload",
+        "startDate": "Start date",
+        "monthlyValue": "Monthly amount",
+        "emails": "Emails"
+      },
+      "attachmentsFuture": "Document attachments will be available in a future version."
+    },
+    "attendance": {
+      "title": "Attendance",
+      "subtitle": "Link roll call to the calendar or record manually.",
+      "registerSection": "Record attendance",
+      "viewCalendar": "View full calendar",
+      "actions": {
+        "export": "Export",
+        "exporting": "Exporting...",
+        "spreadsheets": "Spreadsheets",
+        "save": "Save",
+        "saving": "Saving...",
+        "allPresent": "All present"
+      },
+      "form": {
+        "class": "Class",
+        "date": "Date",
+        "calendarLesson": "Calendar lesson",
+        "lessonsPerDay": "Lessons per day"
+      },
+      "hints": {
+        "selectTime": "Select the scheduled time",
+        "pickLessonSlot": "Select the lesson for this day to record attendance.",
+        "manualMode": "No scheduled lessons — manual mode"
+      },
+      "summary": {
+        "scheduledLessons": "Scheduled lessons",
+        "sessionsOpen": "Open roll calls",
+        "sessionsClosed": "Closed roll calls",
+        "classPresence": "Class attendance rate"
+      },
+      "sessionStats": "Present: {{present}} · Absent: {{absent}} · Justified: {{justified}} · Rate: {{rate}}%",
+      "absenceSummary": "{{total}} absences · Remaining: {{remaining}}",
+      "options": {
+        "selectClass": "Select class",
+        "manual": "Manual roll call (no time slot)"
+      },
+      "legend": {
+        "present": "P Present",
+        "justified": "FJ Justified absence",
+        "unjustified": "FI Unjustified absence"
+      },
+      "table": {
+        "number": "No.",
+        "student": "Student",
+        "missedLessons": "Missed lessons today",
+        "situation": "Status",
+        "absences": "Cumulative absences"
+      },
+      "states": {
+        "loading": "Loading list...",
+        "selectClass": "Select a class to record attendance.",
+        "noStudents": "This class has no registered students."
+      },
+      "alert": {
+        "exportError": "Could not export.",
+        "loadError": "Could not load attendance."
+      }
+    },
+    "attendanceManage": {
+      "title": "Manage attendance",
+      "subtitle": "Recent attendance records",
+      "loading": "Loading attendance records...",
+      "filters": {
+        "allClasses": "All classes",
+        "startDate": "Start date",
+        "endDate": "End date"
+      },
+      "table": {
+        "date": "Date",
+        "subject": "Subject",
+        "teacher": "Teacher",
+        "lessons": "Lessons",
+        "present": "Present",
+        "justified": "Justified",
+        "unjustified": "Unjustified",
+        "presenceRate": "% Attendance"
+      },
+      "actions": {
+        "openAttendance": "Open in attendance",
+        "editRecord": "Edit record"
+      }
+    },
+    "calendar": {
+      "title": "Calendar",
+      "subtitle": "Lessons by class and weekly scheduling.",
+      "scope": {
+        "admin": "View and manage all scheduled lessons.",
+        "professor": "Showing only lessons from your classes.",
+        "student": "Showing only lessons from classes you are enrolled in."
+      },
+      "views": {
+        "week": "Week",
+        "month": "Month"
+      },
+      "modal": {
+        "lesson": "Lesson"
+      },
+      "newLesson": "New lesson",
+      "allClasses": "All classes",
+      "allSemesters": "All semesters",
+      "attendance": {
+        "pending": "Roll call pending",
+        "open": "Roll call open",
+        "closed": "Attendance recorded"
+      },
+      "loading": "Loading calendar...",
+      "loadError": "Could not load calendar.",
+      "moreLessons": "+{{count}} lessons",
+      "nav": {
+        "prevMonth": "Previous month",
+        "nextMonth": "Next month",
+        "prevWeek": "Previous week",
+        "nextWeek": "Next week",
+        "today": "Today"
+      },
+      "dayPanel": {
+        "title": "Lessons on {{date}}",
+        "empty": "No lessons scheduled on this day.",
+        "teacher": "Teacher"
+      },
+      "actions": {
+        "attendance": "Attendance",
+        "edit": "Edit",
+        "remove": "Remove",
+        "scheduleOnDay": "Schedule lesson on this day"
+      },
+      "drawer": {
+        "edit": "Edit lesson",
+        "new": "Schedule lesson",
+        "editSubtitle": "Update lesson details.",
+        "newSubtitle": "Fill in the details to schedule the new lesson."
+      },
+      "form": {
+        "class": "Class",
+        "teacher": "Teacher",
+        "date": "Date",
+        "subject": "Subject",
+        "start": "Start",
+        "end": "End",
+        "lessons": "Lessons",
+        "notes": "Notes"
+      },
+      "alert": {
+        "classDateRequired": "Enter class and date.",
+        "saveError": "Error saving lesson.",
+        "removeConfirm": "Remove this lesson from the calendar?"
+      }
+    },
+    "salary": {
+      "title": "Salary",
+      "subtitle": {
+        "student": "View your salary records and simulations.",
+        "company": "Track payroll for apprentices linked to your company.",
+        "admin": "Calculate, simulate and manage student payroll."
+      },
+      "simulator": {
+        "title": "Salary simulator",
+        "apprentice": "Apprentice student"
+      },
+      "form": {
+        "bonuses": "Bonuses",
+        "deductions": "Deductions",
+        "absenceDeduction": "Deduct unjustified absences (22 business days)"
+      },
+      "kpis": {
+        "records": "Records this month",
+        "basePayroll": "Base payroll",
+        "netTotal": "Net total",
+        "deductions": "Deductions"
+      },
+      "filters": {
+        "searchStudent": "Search student",
+        "filterStudent": "Filter student",
+        "calculated": "Calculated",
+        "pending": "Pending",
+        "paid": "Paid"
+      },
+      "table": {
+        "student": "Student",
+        "reference": "Reference",
+        "base": "Base",
+        "bonus": "Bonus",
+        "deductions": "Deductions",
+        "net": "Net"
+      },
+      "preview": {
+        "empty": "Select a student and click Simulate to see the calculation.",
+        "noContract": "No active contract (default value)",
+        "dailyRate": "Daily rate",
+        "contractBase": "Contract base",
+        "absenceDeduction": "Absence deduction"
+      },
+      "attendance": {
+        "present": "{{count}} present",
+        "rate": "{{rate}}% this month"
+      },
+      "actions": {
+        "simulate": "Simulate",
+        "simulating": "Simulating...",
+        "confirm": "Confirm calculation",
+        "batchCalculate": "Calculate all",
+        "batchCalculating": "Calculating...",
+        "recalculate": "Recalculate"
+      },
+      "empty": {
+        "noRecords": "No salary records for this period.",
+        "useSimulator": "Use the simulator to calculate the first record."
+      },
+      "alert": {
+        "selectStudent": "Select a student to simulate.",
+        "calculateError": "Could not calculate salary.",
+        "batchConfirm": "Calculate salary for all eligible students this month?"
+      },
+      "success": {
+        "calculated": "Salary calculated and saved successfully."
+      }
+    },
+    "location": {
+      "title": "Location",
+      "subtitle": "View the 3D campus and track student locations.",
+      "map": {
+        "title": "Campus map",
+        "simulated": "Simulated location for demonstration."
+      },
+      "loading": {
+        "map": "Loading locations on map...",
+        "list": "Loading locations..."
+      },
+      "tabs": {
+        "courses": "Courses",
+        "students": "Students",
+        "teachers": "Teachers",
+        "classes": "Classes"
+      },
+      "filters": {
+        "searchStudent": "Search student...",
+        "inside": "Inside perimeter",
+        "outside": "Outside perimeter",
+        "unknown": "Unknown"
+      },
+      "table": {
+        "institutionalEmail": "Institutional email",
+        "inClass": "In class?",
+        "inPerimeter": "Inside perimeter?",
+        "code": "Code",
+        "area": "Area"
+      },
+      "actions": {
+        "viewLocation": "View location",
+        "viewStudent": "View student",
+        "editRecord": "Edit record"
+      },
+      "infoBanner": "The View location button opens the panel with the student's address and status.",
+      "drawer": {
+        "title": "Student location",
+        "address": "Address",
+        "city": "City",
+        "lastUpdate": "Last update"
+      }
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Consolidated summary or custom builder with sections, columns and filters.",
+      "tabs": {
+        "summary": "Summary",
+        "builder": "Builder"
+      },
+      "summary": {
+        "loading": "Loading summary...",
+        "loadError": "Could not load summary.",
+        "unavailable": "Data unavailable.",
+        "exportCsv": "Export CSV",
+        "exportXlsx": "Export Excel",
+        "exportXlsxError": "Could not export summary to Excel.",
+        "exportPdf": "Export PDF",
+        "studentsByStatus": "Students by status",
+        "attendanceMarks": "Attendance (marks)",
+        "activeContracts": "Active contracts",
+        "activeClasses": "Active classes",
+        "attendanceRate": "Attendance rate (marks)"
+      },
+      "export": {
+        "field": "Field",
+        "value": "Value",
+        "summary": "Summary",
+        "indicator": "Indicator",
+        "generatedAt": "Generated on {{date}}"
+      },
+      "pdf": {
+        "title": "Connect summary — SENAI HUB"
+      }
+    }
+  },
+  "grid": {
+    "common": {
+      "viewAll": "View all",
+      "viewTasks": "View tasks",
+      "viewTickets": "View tickets",
+      "clear": "Clear",
+      "noTechnician": "No technician",
+      "noResponsible": "Unassigned",
+      "room": "Room",
+      "block": "Block"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Overview of maintenance and infrastructure management.",
+      "kpis": {
+        "openTickets": "Open tickets",
+        "inProgress": "In progress",
+        "completedMonth": "Completed this month",
+        "lowStock": "Low stock items"
+      },
+      "recentTickets": {
+        "title": "Recent tickets",
+        "viewAll": "View all",
+        "empty": "No recent tickets.",
+        "loading": "Loading tickets..."
+      },
+      "lowStock": {
+        "title": "Low stock items",
+        "item": "Item",
+        "current": "Current",
+        "minimum": "Minimum",
+        "viewInventory": "View full inventory",
+        "loading": "Loading inventory..."
+      },
+      "urgent": {
+        "title": "Urgent items",
+        "viewTickets": "View tickets",
+        "empty": "No urgent tickets."
+      },
+      "activities": {
+        "title": "Activities in progress",
+        "viewTasks": "View tasks"
+      },
+      "charts": {
+        "quickReports": "Quick reports",
+        "priority": "Ticket priority",
+        "tickets": "Tickets"
+      }
+    },
+    "tasks": {
+      "title": "Tasks",
+      "subtitle": "Drag cards between columns to update status.",
+      "loading": "Loading tasks...",
+      "searchPlaceholder": "Search task...",
+      "actions": {
+        "fromTicket": "From ticket",
+        "newTask": "New task",
+        "addTask": "Add task"
+      },
+      "kpis": {
+        "todo": "To do",
+        "inProgress": "In progress",
+        "done": "Done",
+        "unassigned": "Unassigned"
+      },
+      "columns": {
+        "todo": "To do",
+        "inProgress": "In progress",
+        "done": "Done"
+      },
+      "drawer": {
+        "edit": "Edit task",
+        "new": "New task",
+        "subtitle": "Work order linked to the ticket."
+      },
+      "form": {
+        "openedBy": "Opened by",
+        "title": "Title",
+        "description": "Description",
+        "room": "Room",
+        "block": "Block",
+        "assignee": "Assignee",
+        "priority": "Priority",
+        "column": "Column",
+        "looseItems": "Loose items",
+        "inventoryMaterials": "Inventory materials",
+        "priorityHigh": "High",
+        "priorityMedium": "Medium",
+        "priorityLow": "Low"
+      },
+      "alert": {
+        "required": "Enter title and who opened the task.",
+        "saveError": "Could not save the task.",
+        "moveError": "Could not move the task. Check material stock."
+      }
+    },
+    "tickets": {
+      "title": "Tickets",
+      "subtitle": {
+        "board": "Maintenance ticket Kanban board.",
+        "list": "Detailed maintenance ticket list."
+      },
+      "new": "New ticket",
+      "view": {
+        "board": "Board",
+        "list": "List"
+      },
+      "kpis": {
+        "open": "Open tickets",
+        "urgent": "Urgent (high)",
+        "inProgress": "In progress",
+        "completedMonth": "Completed this month"
+      },
+      "count": {
+        "board": "{{count}} tickets on board",
+        "list": "{{count}} tickets found"
+      },
+      "columns": {
+        "open": "Open",
+        "pending": "Pending",
+        "inService": "In service",
+        "awaitingApproval": "Manager approval",
+        "awaitingEvaluation": "Requester evaluation",
+        "finished": "Finished"
+      },
+      "filters": {
+        "search": "Search",
+        "block": "Block",
+        "priority": "Priority",
+        "status": "Status",
+        "all": "All"
+      },
+      "table": {
+        "id": "ID",
+        "requester": "Requester",
+        "title": "Title",
+        "summary": "Summary",
+        "roomBlock": "Room/Block",
+        "priority": "Priority",
+        "openedAt": "Opened at",
+        "assignee": "Assignee"
+      },
+      "actions": {
+        "assign": "Assign technician"
+      },
+      "drawer": {
+        "edit": "Edit ticket",
+        "new": "New ticket"
+      },
+      "assign": {
+        "title": "Assign technician",
+        "technician": "Responsible technician"
+      },
+      "alert": {
+        "required": "Enter requester and title.",
+        "moveBlocked": "Move not allowed for this ticket.",
+        "moveError": "Could not move the ticket."
+      },
+      "attachments": {
+        "title": "Attachments",
+        "hint": "Photos or PDF (max. 5 MB per file).",
+        "add": "Add attachment",
+        "empty": "No attachments on this ticket.",
+        "pending": "will upload on save",
+        "remove": "Remove attachment",
+        "count": "{{count}} of {{max}}",
+        "uploadError": "Could not upload attachment.",
+        "removeError": "Could not remove attachment.",
+        "removeConfirm": "Remove this attachment from the ticket?"
+      },
+      "defaultApprover": "Maintenance manager"
+    },
+    "map": {
+      "title": "Task map",
+      "subtitle": "View tickets and tasks by location on campus.",
+      "loading": {
+        "map": "Loading map...",
+        "list": "Loading list..."
+      },
+      "list": {
+        "title": "Service by location (list)",
+        "records": "{{count}} records"
+      },
+      "links": {
+        "tasks": "View tasks →",
+        "tickets": "View tickets →"
+      },
+      "kpis": {
+        "total": "Total tasks",
+        "todo": "To do",
+        "inProgress": "In progress",
+        "done": "Done",
+        "overdue": "Overdue"
+      }
+    },
+    "inventory": {
+      "title": "Inventory",
+      "subtitle": "Manage and track materials and supplies.",
+      "add": "Add inventory item",
+      "kpis": {
+        "totalItems": "Total items",
+        "pageValue": "Value (page)",
+        "lowStock": "Low stock",
+        "reserved": "Reserved"
+      },
+      "filters": {
+        "itemName": "Item name",
+        "category": "Category",
+        "status": "Status",
+        "available": "Available",
+        "lowStock": "Low stock",
+        "reserved": "Reserved"
+      },
+      "table": {
+        "photo": "Photo",
+        "title": "Title",
+        "description": "Description",
+        "category": "Category",
+        "qtyAvailable": "Qty. available",
+        "qtyMinimum": "Qty. minimum",
+        "location": "Location",
+        "distributor": "Distributor",
+        "cost": "Cost"
+      },
+      "actions": {
+        "addQty": "Add quantity",
+        "removeQty": "Remove quantity",
+        "searchImage": "Search public image",
+        "editItem": "Edit item"
+      },
+      "drawer": {
+        "edit": "Edit item",
+        "add": "Add item"
+      },
+      "formExtra": {
+        "sku": "SKU",
+        "purchaseDate": "Purchase date",
+        "upload": "Upload photo",
+        "url": "URL",
+        "urlPlaceholder": "https://"
+      },
+      "adjust": {
+        "title": "Stock in/out",
+        "confirm": "Confirm"
+      },
+      "alert": {
+        "nameRequired": "Enter the item name.",
+        "photoRequired": "Select a photo for the item.",
+        "qtyInvalid": "Enter a valid quantity."
+      }
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "Manage Grid module users.",
+      "new": "New user",
+      "create": "Create user",
+      "loading": "Loading users...",
+      "kpis": {
+        "total": "Total",
+        "activePage": "Active (page)",
+        "technicians": "Technicians",
+        "managers": "Managers"
+      },
+      "filters": {
+        "searchPlaceholder": "Search by name or email...",
+        "userType": "User type"
+      },
+      "roles": {
+        "technician": "Maintenance technician",
+        "manager": "Maintenance manager",
+        "teacher": "Teacher",
+        "secretary": "Secretary"
+      },
+      "table": {
+        "id": "ID",
+        "institutionalEmail": "Institutional email",
+        "phone": "Phone",
+        "userType": "Type",
+        "created": "Created",
+        "updated": "Updated",
+        "cpf": "CPF"
+      },
+      "drawer": {
+        "edit": "Edit user",
+        "new": "New user"
+      },
+      "alert": {
+        "required": "Enter name, email and user type."
+      }
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Operational dashboard or custom builder.",
+      "tabs": {
+        "dashboard": "Dashboard",
+        "builder": "Builder"
+      },
+      "loading": "Loading...",
+      "kpis": {
+        "created": "Tickets created",
+        "pending": "Pending",
+        "withoutTechnician": "No technician",
+        "inProgress": "In progress",
+        "awaitingEvaluation": "Awaiting evaluation",
+        "finished": "Finished",
+        "urgentOpen": "Urgent open"
+      },
+      "charts": {
+        "byMonth": "Tickets by month",
+        "byStatus": "Ticket status",
+        "finished": "Finished",
+        "byTechnician": "By technician",
+        "tickets": "tickets"
+      },
+      "recent": {
+        "title": "Title",
+        "id": "ID",
+        "technician": "Technician",
+        "status": "Status"
+      }
+    },
+    "control": {
+      "title": "Ticket control",
+      "subtitle": "Select a ticket to view details and advance in the workflow.",
+      "actions": {
+        "viewKanban": "View Kanban",
+        "newTicket": "New ticket"
+      },
+      "list": {
+        "title": "Tickets",
+        "searchPlaceholder": "Search code, title...",
+        "includeFinished": "Include finished"
+      },
+      "states": {
+        "empty": "No tickets found.",
+        "selectTitle": "Select a ticket",
+        "selectHint": "Choose an item from the list to view details."
+      },
+      "create": {
+        "title": "New ticket",
+        "hint": "The ticket will be created as Open.",
+        "submit": "Create ticket"
+      },
+      "form": {
+        "requester": "Requester",
+        "title": "Title",
+        "summary": "Summary",
+        "room": "Room",
+        "block": "Block",
+        "priority": "Priority",
+        "fixedDescription": "What was fixed",
+        "considerations": "Notes / resolution"
+      },
+      "defaultActor": "Grid operator",
+      "alert": {
+        "required": "Enter requester and title."
+      }
+    }
+  }
+}

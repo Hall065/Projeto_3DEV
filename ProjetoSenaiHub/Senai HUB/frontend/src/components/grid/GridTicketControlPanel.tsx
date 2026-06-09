@@ -9,10 +9,12 @@ import {
   PrimaryButton,
   selectClass,
 } from '../connect/ConnectShared'
+import { GridTicketAttachmentsPanel } from './GridTicketAttachmentsPanel'
 import { GridPriorityBadge, GridTicketStatusBadge } from './GridBadges'
 import { GridTicketWorkflowStepper } from './GridTicketWorkflowStepper'
 import { gridService } from '../../services/gridService'
 import { appendStageNote } from '../../utils/gridTicketWorkflow'
+import { parseApiError } from '../../utils/parseApiError'
 import type { GridTicket, GridTicketReport } from '../../types/grid'
 
 type StageFormProps = {
@@ -55,6 +57,16 @@ export function GridTicketControlPanel({
 
       <StageForm ticket={ticket} report={report} technicians={technicians} actorName={actorName} saving={saving} onRefresh={onRefresh} />
 
+      <ConnectCard className="surface-inset !border-hub-border/40 p-4 sm:p-5">
+        <GridTicketAttachmentsPanel
+          ticketId={ticket.id}
+          attachments={ticket.attachments ?? []}
+          onAttachmentsChange={() => {
+            void onRefresh()
+          }}
+        />
+      </ConnectCard>
+
       <WorkflowNotesHistory ticket={ticket} />
     </div>
   )
@@ -90,12 +102,7 @@ function StageForm({ ticket, report, technicians, actorName, saving, onRefresh }
       setStageNote('')
       await onRefresh()
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
-      const msg =
-        err?.response?.data?.errors?.status?.[0] ??
-        err?.response?.data?.message ??
-        'Não foi possível salvar. Verifique os dados e tente novamente.'
-      window.alert(msg)
+      window.alert(parseApiError(e, 'Nao foi possivel salvar. Verifique os dados e tente novamente.'))
     } finally {
       setLocalSaving(false)
     }

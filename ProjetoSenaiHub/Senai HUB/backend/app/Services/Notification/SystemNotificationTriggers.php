@@ -2,6 +2,7 @@
 
 namespace App\Services\Notification;
 
+use App\Models\AccessRequest;
 use App\Models\Connect\ConnectAttendanceSession;
 use App\Models\Connect\ConnectClass;
 use App\Models\Connect\ConnectContract;
@@ -78,6 +79,29 @@ class SystemNotificationTriggers
             'entity_type' => 'user',
             'entity_id' => $user->id,
             'severity' => 'warning',
+        ]);
+    }
+
+    public function accessRequestSubmitted(AccessRequest $request): void
+    {
+        $summary = "{$request->name} ({$request->email}) solicitou acesso ao SENAI HUB.";
+        if ($request->organization) {
+            $summary .= " Organizacao: {$request->organization}.";
+        }
+
+        $this->notifications->notifyRole(HubRole::ADMIN, [
+            'module' => 'hub',
+            'type' => 'hub.access_request',
+            'title' => 'Nova solicitacao de acesso',
+            'message' => $summary,
+            'action_url' => '/hub/usuarios',
+            'entity_type' => 'access_request',
+            'entity_id' => $request->id,
+            'severity' => 'info',
+            'metadata' => [
+                'email' => $request->email,
+                'organization' => $request->organization,
+            ],
         ]);
     }
 

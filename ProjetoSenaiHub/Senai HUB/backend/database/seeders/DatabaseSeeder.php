@@ -11,10 +11,11 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             ApplicationSeeder::class,
-            ApplicationPermissionSeeder::class,
             ConnectSeeder::class,
             GridSeeder::class,
             GridSampleTicketsSeeder::class,
+            SafeSeeder::class,
+            ApplicationPermissionSeeder::class,
         ]);
     }
 }

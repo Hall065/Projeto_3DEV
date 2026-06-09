@@ -37,6 +37,8 @@ class GridTicketResource extends JsonResource
             'workflow_locked' => $this->status === \App\Services\Grid\GridWorkflowService::LOCKED_TICKET_STATUS,
             'primary_task_id' => $this->whenLoaded('tasks', fn () => $this->tasks->sortBy('id')->first()?->id),
             'tasks_count' => $this->whenCounted('tasks'),
+            'attachments' => GridTicketAttachmentResource::collection($this->whenLoaded('attachments')),
+            'attachments_count' => $this->whenCounted('attachments'),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

@@ -15,6 +15,7 @@ use App\Models\Connect\ConnectCourse;
 use App\Models\Connect\ConnectAttendanceSession;
 use App\Models\Connect\ConnectStudent;
 use App\Models\Connect\ConnectTeacher;
+use App\Support\HubRole;
 use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,17 +35,22 @@ class DashboardController extends Controller
 
         $attendanceRate = $this->calculateAttendanceRate($user);
 
-        $chartData = $this->resolveAttendanceChart();
+        $chartData = $this->resolveAttendanceChart($user);
 
-        $recentActivities = ConnectActivity::query()
-            ->orderByDesc('occurred_at')
-            ->limit(8)
-            ->get();
+        $canSeeGlobalFeed = HubRole::isAdmin($user->role)
+            || in_array($user->role, [
+                HubRole::CONNECT_SECRETARIA,
+                HubRole::CONNECT_DIRETOR,
+                HubRole::CONNECT_AQV,
+            ], true);
 
-        $alerts = ConnectAlert::query()
-            ->orderByDesc('created_at')
-            ->limit(6)
-            ->get();
+        $recentActivities = $canSeeGlobalFeed
+            ? ConnectActivity::query()->orderByDesc('occurred_at')->limit(8)->get()
+            : collect();
+
+        $alerts = $canSeeGlobalFeed
+            ? ConnectAlert::query()->orderByDesc('created_at')->limit(6)->get()
+            : collect();
 
         $recentCadastros = UserAccessScope::connectStudentQuery($user)
             ->with(['connectClass.course', 'hubPerson'])
@@ -99,8 +105,8 @@ class DashboardController extends Controller
                 ->values();
         }
 
-        $kpiTrends = $this->computeKpiTrends($attendanceRate);
-        $kpiSparklines = $this->computeKpiSparklines();
+        $kpiTrends = $this->computeKpiTrends($user, $attendanceRate);
+        $kpiSparklines = $this->computeKpiSparklines($user);
 
         return response()->json([
             'data' => [
@@ -112,7 +118,9 @@ class DashboardController extends Controller
                     'active_courses' => $activeCourses,
                     'active_contracts' => $activeContracts,
                     'attendance_rate' => $attendanceRate,
-                    'pending_alerts' => ConnectAlert::query()->where('is_read', false)->count(),
+                    'pending_alerts' => $canSeeGlobalFeed
+                        ? ConnectAlert::query()->where('is_read', false)->count()
+                        : 0,
                 ],
                 'chart' => $chartData,
                 'attendance_breakdown' => $attendanceBreakdown,
@@ -172,61 +180,46 @@ class DashboardController extends Controller
      *
      * @return array<string, list<int|float>>
      */
-    private function computeKpiSparklines(): array
+    private function computeKpiSparklines(\App\Models\User $user): array
     {
         $weeks = 8;
 
         return [
             'students' => $this->weeklyActiveSnapshotSeries(
-                ConnectStudent::class,
-                $weeks,
-                fn ($query) => $query->where('status', 'active'),
+                $user,
+                fn () => UserAccessScope::connectStudentQuery($user)->where('status', 'active'),
             ),
             'teachers' => $this->weeklyActiveSnapshotSeries(
-                ConnectTeacher::class,
-                $weeks,
-                fn ($query) => $query->where('status', 'active'),
+                $user,
+                fn () => UserAccessScope::connectTeacherQuery($user)->where('status', 'active'),
             ),
             'classes' => $this->weeklyActiveSnapshotSeries(
-                ConnectClass::class,
-                $weeks,
-                fn ($query) => $query->where('status', 'active'),
+                $user,
+                fn () => UserAccessScope::connectClassQuery($user)->where('status', 'active'),
             ),
             'courses' => $this->weeklyActiveSnapshotSeries(
-                ConnectCourse::class,
-                $weeks,
-                fn ($query) => $query->where('status', 'active'),
+                $user,
+                fn () => UserAccessScope::connectCourseQuery($user)->where('status', 'active'),
             ),
             'contracts' => $this->weeklyActiveSnapshotSeries(
-                ConnectContract::class,
-                $weeks,
-                fn ($query) => $query->where('status', 'active'),
+                $user,
+                fn () => UserAccessScope::connectContractQuery($user)->where('status', 'active'),
             ),
-            'attendance' => $this->attendanceWeeklyRateSeries($weeks),
+            'attendance' => $this->attendanceWeeklyRateSeries($user, $weeks),
         ];
     }
 
     /**
-     * Total acumulado de registros ativos ao fim de cada semana (alinhado ao KPI do card).
-     *
-     * @param  class-string  $model
-     * @param  callable(\Illuminate\Database\Eloquent\Builder): void|null  $scope
+     * @param  callable(): \Illuminate\Database\Eloquent\Builder  $scopedQuery
      * @return list<int>
      */
-    private function weeklyActiveSnapshotSeries(string $model, int $weeks, ?callable $scope = null): array
+    private function weeklyActiveSnapshotSeries(\App\Models\User $user, callable $scopedQuery, int $weeks = 8): array
     {
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
-
-            $query = $model::query()->where('created_at', '<=', $end);
-
-            if ($scope !== null) {
-                $scope($query);
-            }
-
-            $points[] = (int) $query->count();
+            $points[] = (int) $scopedQuery()->where('created_at', '<=', $end)->count();
         }
 
         return $points;
@@ -235,14 +228,14 @@ class DashboardController extends Controller
     /**
      * @return list<float>
      */
-    private function attendanceWeeklyRateSeries(int $weeks): array
+    private function attendanceWeeklyRateSeries(\App\Models\User $user, int $weeks): array
     {
         $points = [];
 
         for ($w = $weeks - 1; $w >= 0; $w--) {
             $start = Carbon::now()->subWeeks($w)->startOfWeek();
             $end = Carbon::now()->subWeeks($w)->endOfWeek();
-            $rate = $this->attendanceRateForPeriod($start, $end);
+            $rate = $this->attendanceRateForPeriod($user, $start, $end);
             $points[] = $rate;
         }
 
@@ -252,7 +245,7 @@ class DashboardController extends Controller
     /**
      * @return array<string, array<string, mixed>>
      */
-    private function computeKpiTrends(float $currentAttendanceRate): array
+    private function computeKpiTrends(\App\Models\User $user, float $currentAttendanceRate): array
     {
         $now = Carbon::now();
         $thisMonthStart = $now->copy()->startOfMonth();
@@ -261,29 +254,29 @@ class DashboardController extends Controller
 
         return [
             'students' => $this->growthTrend(
-                ConnectStudent::query()->where('created_at', '>=', $thisMonthStart)->count(),
-                ConnectStudent::query()->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
+                UserAccessScope::connectStudentQuery($user)->where('created_at', '>=', $thisMonthStart)->count(),
+                UserAccessScope::connectStudentQuery($user)->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
                 'novos este mes',
             ),
             'teachers' => $this->growthTrend(
-                ConnectTeacher::query()->where('created_at', '>=', $thisMonthStart)->count(),
-                ConnectTeacher::query()->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
+                UserAccessScope::connectTeacherQuery($user)->where('created_at', '>=', $thisMonthStart)->count(),
+                UserAccessScope::connectTeacherQuery($user)->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
                 'vs. mes anterior',
             ),
             'classes' => $this->growthTrend(
-                ConnectClass::query()->where('created_at', '>=', $thisMonthStart)->count(),
-                ConnectClass::query()->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
+                UserAccessScope::connectClassQuery($user)->where('created_at', '>=', $thisMonthStart)->count(),
+                UserAccessScope::connectClassQuery($user)->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
                 'novas turmas',
             ),
             'courses' => $this->growthTrend(
-                ConnectCourse::query()->where('created_at', '>=', $thisMonthStart)->count(),
-                ConnectCourse::query()->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
+                UserAccessScope::connectCourseQuery($user)->where('created_at', '>=', $thisMonthStart)->count(),
+                UserAccessScope::connectCourseQuery($user)->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
                 'vs. mes anterior',
             ),
-            'attendance' => $this->attendanceTrend($currentAttendanceRate, $thisMonthStart, $lastMonthStart, $lastMonthEnd),
+            'attendance' => $this->attendanceTrend($user, $currentAttendanceRate, $thisMonthStart, $lastMonthStart, $lastMonthEnd),
             'contracts' => $this->growthTrend(
-                ConnectContract::query()->where('created_at', '>=', $thisMonthStart)->count(),
-                ConnectContract::query()->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
+                UserAccessScope::connectContractQuery($user)->where('created_at', '>=', $thisMonthStart)->count(),
+                UserAccessScope::connectContractQuery($user)->whereBetween('created_at', [$lastMonthStart, $lastMonthEnd])->count(),
                 'novos contratos',
             ),
         ];
@@ -314,9 +307,14 @@ class DashboardController extends Controller
     /**
      * @return array{direction: string, value: string, label: string}
      */
-    private function attendanceTrend(float $currentRate, Carbon $thisMonthStart, Carbon $lastMonthStart, Carbon $lastMonthEnd): array
-    {
-        $lastRate = $this->attendanceRateForPeriod($lastMonthStart, $lastMonthEnd);
+    private function attendanceTrend(
+        \App\Models\User $user,
+        float $currentRate,
+        Carbon $thisMonthStart,
+        Carbon $lastMonthStart,
+        Carbon $lastMonthEnd,
+    ): array {
+        $lastRate = $this->attendanceRateForPeriod($user, $lastMonthStart, $lastMonthEnd);
         $diff = round($currentRate - $lastRate, 1);
 
         return [
@@ -326,9 +324,9 @@ class DashboardController extends Controller
         ];
     }
 
-    private function attendanceRateForPeriod(Carbon $from, Carbon $to): float
+    private function attendanceRateForPeriod(\App\Models\User $user, Carbon $from, Carbon $to): float
     {
-        $sessionIds = ConnectAttendanceSession::query()
+        $sessionIds = UserAccessScope::attendanceSessionQuery($user)
             ->whereBetween('session_date', [$from->toDateString(), $to->toDateString()])
             ->pluck('id');
 
@@ -336,7 +334,7 @@ class DashboardController extends Controller
             return 0.0;
         }
 
-        $totals = ConnectAttendanceMark::query()
+        $totals = UserAccessScope::attendanceMarkQuery($user)
             ->whereIn('connect_attendance_session_id', $sessionIds)
             ->select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
@@ -355,15 +353,15 @@ class DashboardController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function resolveAttendanceChart(): array
+    private function resolveAttendanceChart(\App\Models\User $user): array
     {
-        return $this->buildAttendanceChartFromDb();
+        return $this->buildAttendanceChartFromDb($user);
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function buildAttendanceChartFromDb(): array
+    private function buildAttendanceChartFromDb(\App\Models\User $user): array
     {
         $monthsPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         $labels = [];
@@ -374,8 +372,8 @@ class DashboardController extends Controller
             $start = Carbon::now()->subMonths($m)->startOfMonth();
             $end = Carbon::now()->subMonths($m)->endOfMonth();
             $labels[] = $monthsPt[$start->month - 1];
-            $attendanceRates[] = $this->attendanceRateForPeriod($start, $end);
-            $enrollments[] = ConnectStudent::query()
+            $attendanceRates[] = $this->attendanceRateForPeriod($user, $start, $end);
+            $enrollments[] = UserAccessScope::connectStudentQuery($user)
                 ->whereBetween('created_at', [$start, $end])
                 ->count();
         }

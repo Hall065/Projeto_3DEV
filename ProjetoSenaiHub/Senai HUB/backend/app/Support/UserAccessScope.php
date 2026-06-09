@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Connect\ConnectAttendanceMark;
+use App\Models\Connect\ConnectAttendanceSession;
 use App\Models\Connect\ConnectClass;
 use App\Models\Connect\ConnectContract;
 use App\Models\Connect\ConnectCourse;
@@ -122,13 +123,41 @@ class UserAccessScope
         };
     }
 
+    public static function attendanceSessionQuery(User $user): Builder
+    {
+        $query = ConnectAttendanceSession::query();
+
+        return match ($user->role) {
+            HubRole::CONNECT_ALUNO => $query->whereHas('marks.student', fn (Builder $q) => $q->where('user_id', $user->id)),
+            HubRole::CONNECT_PROFESSOR => $query->whereHas('connectClass', function (Builder $q) use ($user): void {
+                $teacherId = ConnectTeacher::query()->where('user_id', $user->id)->value('id');
+                if ($teacherId) {
+                    $q->where('connect_teacher_id', $teacherId);
+                } else {
+                    $q->whereRaw('1 = 0');
+                }
+            }),
+            default => $query,
+        };
+    }
+
     public static function gridTicketQuery(User $user): Builder
     {
         $query = GridTicket::query();
 
         return match ($user->role) {
-            HubRole::GRID_FUNCIONARIO => $query->where('assignee', $user->name),
-            HubRole::GRID_PROFESSOR, HubRole::GRID_SECRETARIA => $query->where('requester', $user->name),
+            HubRole::GRID_FUNCIONARIO => $query->where(function (Builder $q) use ($user): void {
+                $q->where('assignee_user_id', $user->id)
+                    ->orWhere(function (Builder $q2) use ($user): void {
+                        $q2->whereNull('assignee_user_id')->where('assignee', $user->name);
+                    });
+            }),
+            HubRole::GRID_PROFESSOR, HubRole::GRID_SECRETARIA => $query->where(function (Builder $q) use ($user): void {
+                $q->where('requester_user_id', $user->id)
+                    ->orWhere(function (Builder $q2) use ($user): void {
+                        $q2->whereNull('requester_user_id')->where('requester', $user->name);
+                    });
+            }),
             default => $query,
         };
     }
@@ -138,8 +167,18 @@ class UserAccessScope
         $query = GridTask::query();
 
         return match ($user->role) {
-            HubRole::GRID_FUNCIONARIO => $query->where('assignee', $user->name),
-            HubRole::GRID_PROFESSOR, HubRole::GRID_SECRETARIA => $query->where('opened_by', $user->name),
+            HubRole::GRID_FUNCIONARIO => $query->where(function (Builder $q) use ($user): void {
+                $q->where('assignee_user_id', $user->id)
+                    ->orWhere(function (Builder $q2) use ($user): void {
+                        $q2->whereNull('assignee_user_id')->where('assignee', $user->name);
+                    });
+            }),
+            HubRole::GRID_PROFESSOR, HubRole::GRID_SECRETARIA => $query->where(function (Builder $q) use ($user): void {
+                $q->where('opened_by_user_id', $user->id)
+                    ->orWhere(function (Builder $q2) use ($user): void {
+                        $q2->whereNull('opened_by_user_id')->where('opened_by', $user->name);
+                    });
+            }),
             default => $query,
         };
     }

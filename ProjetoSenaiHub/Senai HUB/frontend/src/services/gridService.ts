@@ -6,6 +6,7 @@ import type {
   GridMapData,
   GridTaskCard,
   GridTicket,
+  GridTicketAttachment,
   GridTicketReport,
   GridUser,
   PaginatedResponse,
@@ -71,6 +72,17 @@ export const gridService = {
 
   async deleteTicket(id: number): Promise<void> {
     await api.delete(`/grid/tickets/${id}`)
+  },
+
+  async uploadTicketAttachment(ticketId: number, file: File): Promise<GridTicketAttachment> {
+    const form = new FormData()
+    form.append('file', file)
+    const { data } = await api.post<{ data: GridTicketAttachment }>(`/grid/tickets/${ticketId}/attachments`, form)
+    return data.data
+  },
+
+  async deleteTicketAttachment(ticketId: number, attachmentId: number): Promise<void> {
+    await api.delete(`/grid/tickets/${ticketId}/attachments/${attachmentId}`)
   },
 
   async getTasks(params?: Record<string, string | number | boolean>): Promise<{ data: GridTaskCard[] }> {

@@ -1,10 +1,14 @@
+import { Suspense, lazy, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { PageLoader } from '../components/ui/PageLoader'
 import { LandingPage } from '../pages/LandingPage'
 import { HubLayout } from '../layouts/HubLayout'
 import { ConnectLayout } from '../layouts/ConnectLayout'
 import { AuthLayout } from '../layouts/AuthLayout'
 import { LoginPage } from '../pages/LoginPage'
-import { RegisterPage } from '../pages/RegisterPage'
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
+import { ResetPasswordPage } from '../pages/ResetPasswordPage'
+import { RequestAccessPage } from '../pages/RequestAccessPage'
 import { ApplicationHubPage } from '../pages/ApplicationHubPage'
 import { GridLayout } from '../layouts/GridLayout'
 import { GridDashboardPage } from '../pages/grid/GridDashboardPage'
@@ -13,7 +17,6 @@ import { GridTicketControlPage } from '../pages/grid/GridTicketControlPage'
 import { GridTasksPage } from '../pages/grid/GridTasksPage'
 import { GridReportsPage } from '../pages/grid/GridReportsPage'
 import { GridInventoryPage } from '../pages/grid/GridInventoryPage'
-import { GridTaskMapPage } from '../pages/grid/GridTaskMapPage'
 import { GridUsersPage } from '../pages/grid/GridUsersPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { ThemesPage } from '../pages/ThemesPage'
@@ -33,19 +36,40 @@ import { AttendancePage } from '../pages/connect/AttendancePage'
 import { CalendarPage } from '../pages/connect/CalendarPage'
 import { AttendanceManagePage } from '../pages/connect/AttendanceManagePage'
 import { ConnectReportsPage } from '../pages/connect/ConnectReportsPage'
-import { LocationPage } from '../pages/connect/LocationPage'
 import { ContractsPage } from '../pages/connect/ContractsPage'
 import { SalaryPage } from '../pages/connect/SalaryPage'
-import { SpreadsheetHubPage } from '../pages/spreadsheet/SpreadsheetHubPage'
 import { AccessDeniedPage } from '../pages/AccessDeniedPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
+import { SafeLayout } from '../components/safe/SafeLayout'
+import { SafeDashboardPage } from '../pages/safe/SafeDashboardPage'
+import { SafeStudentsPage } from '../pages/safe/SafeStudentsPage'
+import { SafeAuthorizationsPage } from '../pages/safe/SafeAuthorizationsPage'
+import { SafeApprovalsPage } from '../pages/safe/SafeApprovalsPage'
+import { SafePortariaPage } from '../pages/safe/SafePortariaPage'
+import { SafeAuthorizationDetailPage } from '../pages/safe/SafeAuthorizationDetailPage'
+
+const LocationPage = lazy(() =>
+  import('../pages/connect/LocationPage').then((module) => ({ default: module.LocationPage })),
+)
+const GridTaskMapPage = lazy(() =>
+  import('../pages/grid/GridTaskMapPage').then((module) => ({ default: module.GridTaskMapPage })),
+)
+const SpreadsheetHubPage = lazy(() =>
+  import('../pages/spreadsheet/SpreadsheetHubPage').then((module) => ({ default: module.SpreadsheetHubPage })),
+)
+
+function LazyPage({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>
+}
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/cadastro" element={<RegisterPage />} />
+        <Route path="/recuperar-senha" element={<ForgotPasswordPage />} />
+        <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+        <Route path="/solicitar-acesso" element={<RequestAccessPage />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>
@@ -69,9 +93,9 @@ export function AppRoutes() {
           <Route path="/grid/tarefas" element={<GridTasksPage />} />
           <Route path="/grid/relatorios" element={<GridReportsPage />} />
           <Route path="/grid/estoque" element={<GridInventoryPage />} />
-          <Route path="/grid/mapa" element={<GridTaskMapPage />} />
+          <Route path="/grid/mapa" element={<LazyPage><GridTaskMapPage /></LazyPage>} />
           <Route path="/grid/usuarios" element={<GridUsersPage />} />
-          <Route path="/grid/planilhas" element={<SpreadsheetHubPage module="grid" />} />
+          <Route path="/grid/planilhas" element={<LazyPage><SpreadsheetHubPage module="grid" /></LazyPage>} />
         </Route>
         </Route>
         </Route>
@@ -89,10 +113,23 @@ export function AppRoutes() {
           <Route path="/connect/frequencia" element={<AttendancePage />} />
           <Route path="/connect/gerenciar-frequencia" element={<AttendanceManagePage />} />
           <Route path="/connect/relatorio" element={<ConnectReportsPage />} />
-          <Route path="/connect/localizacao" element={<LocationPage />} />
+          <Route path="/connect/localizacao" element={<LazyPage><LocationPage /></LazyPage>} />
           <Route path="/connect/contratos/alunos" element={<ContractsPage />} />
           <Route path="/connect/salario" element={<SalaryPage />} />
-          <Route path="/connect/planilhas" element={<SpreadsheetHubPage module="connect" />} />
+          <Route path="/connect/planilhas" element={<LazyPage><SpreadsheetHubPage module="connect" /></LazyPage>} />
+        </Route>
+        </Route>
+        </Route>
+
+        <Route element={<ModuleAccessRoute module="safe" />}>
+        <Route element={<PermissionRoute module="safe" />}>
+        <Route element={<SafeLayout />}>
+          <Route path="/safe" element={<SafeDashboardPage />} />
+          <Route path="/safe/alunos" element={<SafeStudentsPage />} />
+          <Route path="/safe/autorizacoes" element={<SafeAuthorizationsPage />} />
+          <Route path="/safe/autorizacoes/:id" element={<SafeAuthorizationDetailPage />} />
+          <Route path="/safe/aprovacoes" element={<SafeApprovalsPage />} />
+          <Route path="/safe/portaria" element={<SafePortariaPage />} />
         </Route>
         </Route>
         </Route>

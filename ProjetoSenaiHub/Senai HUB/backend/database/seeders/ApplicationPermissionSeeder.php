@@ -13,8 +13,9 @@ class ApplicationPermissionSeeder extends Seeder
     {
         $connect = Application::query()->where('slug', 'connect')->first();
         $grid = Application::query()->where('slug', 'grid')->first();
+        $safe = Application::query()->where('slug', 'safe')->first();
 
-        if (! $connect || ! $grid) {
+        if (! $connect || ! $grid || ! $safe) {
             return;
         }
 
@@ -22,7 +23,7 @@ class ApplicationPermissionSeeder extends Seeder
 
         foreach (User::query()->cursor() as $user) {
             $slugs = $permissions->applicationSlugsFor($user);
-            $ids = collect([$connect, $grid])
+            $ids = collect([$connect, $grid, $safe])
                 ->filter(fn (Application $app) => in_array($app->slug, $slugs, true))
                 ->pluck('id');
             $user->applications()->sync($ids);

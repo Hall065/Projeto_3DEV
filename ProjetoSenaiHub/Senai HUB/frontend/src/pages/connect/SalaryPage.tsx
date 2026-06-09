@@ -2,6 +2,7 @@ import {
   Calculator,
   CircleDollarSign,
   Download,
+  Eye,
   MinusCircle,
   PlusCircle,
   RefreshCw,
@@ -11,9 +12,9 @@ import {
   Wallet,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
-import { viewRowAction } from '../../components/connect/connectViewActions'
 import { KpiCard } from '../../components/connect/ConnectKpiCard'
 import {
   ConnectCard,
@@ -31,6 +32,7 @@ import {
 import { UserAvatar } from '../../components/ui/UserAvatar'
 import { usePermissions } from '../../hooks/usePermissions'
 import { connectService } from '../../services/connectService'
+import { parseApiError } from '../../utils/parseApiError'
 import type {
   ConnectSalaryRecord,
   ConnectStudent,
@@ -45,21 +47,35 @@ function formatBRL(value: number) {
   return brl.format(value)
 }
 
-function formatMonthLabel(value: string) {
+function formatMonthLabel(value: string, locale: string) {
   const [year, month] = value.split('-').map(Number)
   if (!year || !month) return value
-  const label = new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  const label = new Date(year, month - 1, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' })
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
-function formatMonthShort(value: string) {
+function formatMonthShort(value: string, locale: string) {
   const [year, month] = value.split('-').map(Number)
   if (!year || !month) return value
-  return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+  return new Date(year, month - 1, 1).toLocaleDateString(locale, { month: 'short', year: 'numeric' })
 }
 
-function exportSalariesCsv(records: ConnectSalaryRecord[], month: string) {
-  const header = ['Aluno', 'Matricula', 'Curso', 'Mes', 'Base', 'Bonus', 'Descontos', 'Liquido', 'Status']
+function exportSalariesCsv(
+  records: ConnectSalaryRecord[],
+  month: string,
+  t: (key: string) => string,
+) {
+  const header = [
+    t('connect.salary.table.student'),
+    t('connect.students.table.registration'),
+    t('connect.table.course'),
+    t('connect.salary.table.reference'),
+    t('connect.salary.table.base'),
+    t('connect.salary.table.bonus'),
+    t('connect.salary.table.deductions'),
+    t('connect.salary.table.net'),
+    t('connect.table.status'),
+  ]
   const rows = records.map((r) => [
     r.student?.full_name ?? '',
     r.student?.registration_number ?? '',
@@ -82,6 +98,7 @@ function exportSalariesCsv(records: ConnectSalaryRecord[], month: string) {
 }
 
 function AttendanceBreakdown({ preview }: { preview: SalaryPreviewData }) {
+  const { t } = useTranslation()
   const { attendance } = preview
   const total = Math.max(attendance.total_days, 1)
   const presentPct = (attendance.present_days / total) * 100
@@ -91,21 +108,22 @@ function AttendanceBreakdown({ preview }: { preview: SalaryPreviewData }) {
   return (
     <div className="space-y-3">
       <div className="flex h-3 overflow-hidden rounded-full bg-hub-bg">
-        <div className="bg-emerald-500 transition-all" style={{ width: `${presentPct}%` }} title="Presencas" />
-        <div className="bg-amber-400 transition-all" style={{ width: `${justifiedPct}%` }} title="Faltas justificadas" />
-        <div className="bg-red-500 transition-all" style={{ width: `${absentPct}%` }} title="Faltas injustificadas" />
+        <div className="bg-emerald-500 transition-all" style={{ width: `${presentPct}%` }} title={t('connect.attendance.legend.present')} />
+        <div className="bg-amber-400 transition-all" style={{ width: `${justifiedPct}%` }} title={t('connect.attendance.legend.justified')} />
+        <div className="bg-red-500 transition-all" style={{ width: `${absentPct}%` }} title={t('connect.attendance.legend.unjustified')} />
       </div>
       <div className="grid gap-2 text-sm sm:grid-cols-4">
-        <span className="text-emerald-700">{attendance.present_days} presenca(s)</span>
+        <span className="text-emerald-700">{t('connect.salary.attendance.present', { count: attendance.present_days })}</span>
         <span className="text-amber-700">{attendance.justified_absences} FJ</span>
         <span className="text-red-700">{attendance.unjustified_absences} FI</span>
-        <span className="font-semibold text-hub-navy">{attendance.rate}% no mes</span>
+        <span className="font-semibold text-hub-navy">{t('connect.salary.attendance.rate', { rate: attendance.rate })}</span>
       </div>
     </div>
   )
 }
 
 export function SalaryPage() {
+  const { t, i18n } = useTranslation()
   const { isAdmin, role } = usePermissions()
   const isStudentView = role === 'connect_aluno'
   const isCompanyView = role === 'connect_empresa'
@@ -155,9 +173,9 @@ export function SalaryPage() {
         setMeta(res.meta)
         setSummary(res.summary)
       })
-      .catch(() => setError('Nao foi possivel carregar os registros de salario.'))
+      .catch((err) => setError(parseApiError(err, t('common.error'))))
       .finally(() => setLoading(false))
-  }, [page, month, search, statusFilter, studentFilter])
+  }, [page, month, search, statusFilter, studentFilter, t])
 
   useEffect(() => {
     loadRecords()
@@ -195,16 +213,16 @@ export function SalaryPage() {
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
       const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      options.push({ value, label: formatMonthLabel(value) })
+      options.push({ value, label: formatMonthLabel(value, i18n.language) })
     }
     return options
-  }, [])
+  }, [i18n.language])
 
   const selectedStudentData = students.find((s) => String(s.id) === selectedStudent)
 
   const handlePreview = async () => {
     if (!selectedStudent) {
-      setError('Selecione um aluno para simular o salario.')
+      setError(t('connect.salary.alert.selectStudent'))
       return
     }
     setPreviewing(true)
@@ -221,8 +239,8 @@ export function SalaryPage() {
       if (useAutoDeductions) {
         setDeductions(String(data.amounts.deductions))
       }
-    } catch {
-      setError('Nao foi possivel simular o salario.')
+    } catch (err: unknown) {
+      setError(parseApiError(err, t('connect.salary.alert.calculateError')))
     } finally {
       setPreviewing(false)
     }
@@ -239,26 +257,26 @@ export function SalaryPage() {
         bonuses: Number(bonuses) || 0,
         deductions: Number(deductions) || 0,
       })
-      setSuccess('Salario calculado e salvo com sucesso.')
+      setSuccess(t('connect.salary.success.calculated'))
       setPreview(null)
       loadRecords()
-    } catch {
-      setError('Nao foi possivel calcular o salario.')
+    } catch (err: unknown) {
+      setError(parseApiError(err, t('connect.salary.alert.calculateError')))
     } finally {
       setCalculating(false)
     }
   }
 
   const handleBatchCalculate = async () => {
-    if (!window.confirm(`Calcular salario de todos os alunos para ${formatMonthLabel(month)}?`)) return
+    if (!window.confirm(t('connect.salary.alert.batchConfirm'))) return
     setBatching(true)
     setError(null)
     try {
       const res = await connectService.calculateSalaryBatch(month)
       setSuccess(res.message)
       loadRecords()
-    } catch {
-      setError('Nao foi possivel calcular em lote.')
+    } catch (err: unknown) {
+      setError(parseApiError(err, t('connect.salary.alert.calculateError')))
     } finally {
       setBatching(false)
     }
@@ -274,24 +292,24 @@ export function SalaryPage() {
         ...(statusFilter ? { status: statusFilter } : {}),
         ...(studentFilter ? { connect_student_id: studentFilter } : {}),
       })
-      exportSalariesCsv(res.data, month)
-    } catch {
-      setError('Nao foi possivel exportar os dados.')
+      exportSalariesCsv(res.data, month, t)
+    } catch (err: unknown) {
+      setError(parseApiError(err, t('common.error')))
     } finally {
       setExporting(false)
     }
   }
 
   const subtitle = isStudentView
-    ? 'Acompanhe sua remuneracao de aprendiz com base na frequencia do mes.'
+    ? t('connect.salary.subtitle.student')
     : isCompanyView
-      ? 'Consulte a remuneracao dos alunos vinculados a sua empresa.'
-      : 'Calcule, simule e acompanhe a remuneracao dos aprendizes com base em contratos e frequencia.'
+      ? t('connect.salary.subtitle.company')
+      : t('connect.salary.subtitle.admin')
 
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Salario"
+        title={t('connect.salary.title')}
         subtitle={subtitle}
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -303,7 +321,7 @@ export function SalaryPage() {
             {canCalculate && (
               <OutlineButton type="button" onClick={handleBatchCalculate} disabled={batching}>
                 <RefreshCw className={`h-4 w-4 ${batching ? 'animate-spin' : ''}`} />
-                {batching ? 'Calculando...' : 'Calcular todos'}
+                {batching ? t('connect.salary.actions.batchCalculating') : t('connect.salary.actions.batchCalculate')}
               </OutlineButton>
             )}
           </div>
@@ -315,25 +333,25 @@ export function SalaryPage() {
 
       {summary && (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <KpiCard icon={Users} label="Registros no mes" value={summary.total_records} variant="blue" />
-          <KpiCard icon={Wallet} label="Folha base" value={formatBRL(summary.total_base)} variant="senai" />
-          <KpiCard icon={CircleDollarSign} label="Total liquido" value={formatBRL(summary.total_net)} variant="green" />
-          <KpiCard icon={TrendingDown} label="Descontos" value={formatBRL(summary.total_deductions)} variant="amber" />
+          <KpiCard icon={Users} label={t('connect.salary.kpis.records')} value={summary.total_records} variant="blue" />
+          <KpiCard icon={Wallet} label={t('connect.salary.kpis.basePayroll')} value={formatBRL(summary.total_base)} variant="senai" />
+          <KpiCard icon={CircleDollarSign} label={t('connect.salary.kpis.netTotal')} value={formatBRL(summary.total_net)} variant="green" />
+          <KpiCard icon={TrendingDown} label={t('connect.salary.kpis.deductions')} value={formatBRL(summary.total_deductions)} variant="amber" />
         </div>
       )}
 
       {canCalculate && (
         <div className="mb-6 grid gap-4 xl:grid-cols-5">
           <ConnectCard className="space-y-4 p-5 xl:col-span-2">
-            <h3 className="font-semibold text-hub-navy">Simulador de salario</h3>
-            <FormField label="Aluno aprendiz">
+            <h3 className="font-semibold text-hub-navy">{t('connect.salary.simulator.title')}</h3>
+            <FormField label={t('connect.salary.simulator.apprentice')}>
               <select
                 className={selectClass}
                 value={selectedStudent}
                 onChange={(e) => setSelectedStudent(e.target.value)}
                 disabled={loadingStudents}
               >
-                <option value="">Selecione um aluno</option>
+                <option value="">{t('connect.contracts.form.student')}</option>
                 {students.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.full_name} {s.registration_number ? `(${s.registration_number})` : ''}
@@ -344,13 +362,13 @@ export function SalaryPage() {
 
             {selectedStudentData && (
               <div className="rounded-xl bg-hub-bg/80 px-4 py-3 text-sm text-hub-text-muted">
-                <p><span className="font-medium text-hub-navy">Turma:</span> {selectedStudentData.class?.name ?? '-'}</p>
-                <p><span className="font-medium text-hub-navy">Curso:</span> {selectedStudentData.class?.course?.name ?? '-'}</p>
+                <p><span className="font-medium text-hub-navy">{t('connect.table.class')}:</span> {selectedStudentData.class?.name ?? '-'}</p>
+                <p><span className="font-medium text-hub-navy">{t('connect.table.course')}:</span> {selectedStudentData.class?.course?.name ?? '-'}</p>
               </div>
             )}
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <FormField label="Bonificacoes (R$)">
+              <FormField label={t('connect.salary.form.bonuses')}>
                 <input
                   type="number"
                   min="0"
@@ -360,7 +378,7 @@ export function SalaryPage() {
                   onChange={(e) => setBonuses(e.target.value)}
                 />
               </FormField>
-              <FormField label="Descontos (R$)">
+              <FormField label={t('connect.salary.form.deductions')}>
                 <input
                   type="number"
                   min="0"
@@ -380,16 +398,16 @@ export function SalaryPage() {
                 onChange={(e) => setUseAutoDeductions(e.target.checked)}
                 className="h-4 w-4 rounded border-hub-border"
               />
-              Descontar faltas injustificadas automaticamente (22 dias uteis)
+              {t('connect.salary.form.absenceDeduction')}
             </label>
 
             <div className="flex flex-wrap gap-2">
               <OutlineButton type="button" onClick={handlePreview} disabled={previewing || !selectedStudent}>
                 <Calculator className="h-4 w-4" />
-                {previewing ? 'Simulando...' : 'Simular'}
+                {previewing ? t('connect.salary.actions.simulating') : t('connect.salary.actions.simulate')}
               </OutlineButton>
               <PrimaryButton type="button" onClick={handleCalculate} disabled={calculating || !selectedStudent || !preview}>
-                {calculating ? 'Salvando...' : 'Confirmar calculo'}
+                {calculating ? t('connect.common.saving') : t('connect.salary.actions.confirm')}
               </PrimaryButton>
             </div>
           </ConnectCard>
@@ -398,7 +416,7 @@ export function SalaryPage() {
             {!preview ? (
               <div className="flex min-h-[280px] flex-col items-center justify-center text-center text-sm text-hub-text-muted">
                 <Calculator className="mb-3 h-10 w-10 opacity-40" />
-                <p>Selecione um aluno e clique em <strong>Simular</strong> para ver o detalhamento antes de salvar.</p>
+                <p>{t('connect.salary.preview.empty')}</p>
               </div>
             ) : (
               <div className="space-y-5">
@@ -406,8 +424,8 @@ export function SalaryPage() {
                   <div>
                     <h3 className="font-semibold text-hub-navy">{preview.student.full_name}</h3>
                     <p className="text-sm text-hub-text-muted">
-                      {formatMonthLabel(month)}
-                      {preview.contract ? ` · ${preview.contract.company_name}` : ' · Sem contrato ativo (valor padrao)'}
+                      {formatMonthLabel(month, i18n.language)}
+                      {preview.contract ? ` · ${preview.contract.company_name}` : ` · ${t('connect.salary.preview.noContract')}`}
                     </p>
                   </div>
                   <p className="text-2xl font-bold text-emerald-600">{formatBRL(preview.amounts.net)}</p>
@@ -417,15 +435,15 @@ export function SalaryPage() {
 
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div className="rounded-xl bg-hub-bg px-4 py-3">
-                    <p className="text-xs text-hub-text-muted">Valor/dia</p>
+                    <p className="text-xs text-hub-text-muted">{t('connect.salary.preview.dailyRate')}</p>
                     <p className="font-semibold text-hub-navy">{formatBRL(preview.daily_rate)}</p>
                   </div>
                   <div className="rounded-xl bg-hub-bg px-4 py-3">
-                    <p className="text-xs text-hub-text-muted">Base contrato</p>
+                    <p className="text-xs text-hub-text-muted">{t('connect.salary.preview.contractBase')}</p>
                     <p className="font-semibold text-hub-navy">{formatBRL(preview.amounts.base)}</p>
                   </div>
                   <div className="rounded-xl bg-hub-bg px-4 py-3">
-                    <p className="text-xs text-hub-text-muted">Desconto faltas</p>
+                    <p className="text-xs text-hub-text-muted">{t('connect.salary.preview.absenceDeduction')}</p>
                     <p className="font-semibold text-red-600">{formatBRL(preview.amounts.absence_deduction)}</p>
                   </div>
                 </div>
@@ -454,12 +472,12 @@ export function SalaryPage() {
       <ConnectCard>
         <div className="flex w-full min-w-0 flex-col gap-3 border-b border-hub-border/60 p-4 lg:flex-row lg:items-end">
           <div className="min-w-0 flex-1">
-            <FormField label="Buscar aluno">
+            <FormField label={t('connect.salary.filters.searchStudent')}>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-hub-text-muted" />
                 <input
                   className={`${inputClass} pl-9`}
-                  placeholder="Nome ou matricula..."
+                  placeholder={t('connect.people.filters.searchPlaceholder')}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                 />
@@ -467,36 +485,36 @@ export function SalaryPage() {
             </FormField>
           </div>
           {!isStudentView && (
-            <FormField label="Filtrar aluno">
+            <FormField label={t('connect.salary.filters.filterStudent')}>
               <select className={selectClass} value={studentFilter} onChange={(e) => { setStudentFilter(e.target.value); setPage(1) }}>
-                <option value="">Todos</option>
+                <option value="">{t('connect.common.all')}</option>
                 {students.map((s) => (
                   <option key={s.id} value={s.id}>{s.full_name}</option>
                 ))}
               </select>
             </FormField>
           )}
-          <FormField label="Status">
+          <FormField label={t('connect.table.status')}>
             <select className={selectClass} value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}>
-              <option value="">Todos</option>
-              <option value="calculated">Calculado</option>
-              <option value="pending">Pendente</option>
-              <option value="paid">Pago</option>
+              <option value="">{t('connect.common.all')}</option>
+              <option value="calculated">{t('connect.salary.filters.calculated')}</option>
+              <option value="pending">{t('connect.salary.filters.pending')}</option>
+              <option value="paid">{t('connect.salary.filters.paid')}</option>
             </select>
           </FormField>
           <OutlineButton type="button" onClick={handleExport} disabled={exporting}>
             <Download className="h-4 w-4" />
-            {exporting ? 'Exportando...' : 'Exportar CSV'}
+            {exporting ? t('connect.attendance.actions.exporting') : t('connect.reports.summary.exportCsv')}
           </OutlineButton>
         </div>
 
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando historico de salarios..." className="min-h-[280px]" />
+          <ConnectLoadingSpinner label={t('common.loading')} className="min-h-[280px]" />
         ) : records.length === 0 ? (
           <div className="flex min-h-[240px] flex-col items-center justify-center p-8 text-center text-sm text-hub-text-muted">
             <Wallet className="mb-3 h-10 w-10 opacity-40" />
-            <p>Nenhum registro de salario para {formatMonthLabel(month)}.</p>
-            {canCalculate && <p className="mt-1">Use o simulador acima ou &quot;Calcular todos&quot; para gerar os registros.</p>}
+            <p>{t('connect.salary.empty.noRecords')}</p>
+            {canCalculate && <p className="mt-1">{t('connect.salary.empty.useSimulator')}</p>}
           </div>
         ) : (
           <>
@@ -504,14 +522,14 @@ export function SalaryPage() {
               <table className="w-full min-w-[900px] text-sm">
                 <thead className="glass-thead text-hub-text-muted">
                   <tr>
-                    <th className="px-4 py-3 text-left">Aluno</th>
-                    <th className="px-4 py-3 text-left">Referencia</th>
-                    <th className="px-4 py-3 text-left">Curso</th>
-                    <th className="px-4 py-3 text-right">Base</th>
-                    <th className="px-4 py-3 text-right">Bonus</th>
-                    <th className="px-4 py-3 text-right">Descontos</th>
-                    <th className="px-4 py-3 text-right">Liquido</th>
-                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-left">{t('connect.salary.table.student')}</th>
+                    <th className="px-4 py-3 text-left">{t('connect.salary.table.reference')}</th>
+                    <th className="px-4 py-3 text-left">{t('connect.table.course')}</th>
+                    <th className="px-4 py-3 text-right">{t('connect.salary.table.base')}</th>
+                    <th className="px-4 py-3 text-right">{t('connect.salary.table.bonus')}</th>
+                    <th className="px-4 py-3 text-right">{t('connect.salary.table.deductions')}</th>
+                    <th className="px-4 py-3 text-right">{t('connect.salary.table.net')}</th>
+                    <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -531,7 +549,7 @@ export function SalaryPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">{formatMonthShort(record.reference_month)}</td>
+                      <td className="px-4 py-3">{formatMonthShort(record.reference_month, i18n.language)}</td>
                       <td className="px-4 py-3">{record.student?.class?.course?.name ?? '-'}</td>
                       <td className="px-4 py-3 text-right">{formatBRL(record.base_amount)}</td>
                       <td className="px-4 py-3 text-right text-emerald-700">{formatBRL(record.bonuses)}</td>
@@ -542,14 +560,19 @@ export function SalaryPage() {
                       </td>
                       <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                         <ConnectRowActionsMenu
-                          ariaLabel={`Acoes do salario de ${record.student?.full_name ?? 'aluno'}`}
+                          ariaLabel={t('connect.common.actionsOf', { name: record.student?.full_name ?? t('connect.personKind.student') })}
                           actions={[
-                            viewRowAction(() => setViewSnapshot(record)),
+                            {
+                              key: 'view',
+                              label: t('connect.common.view'),
+                              icon: Eye,
+                              onClick: () => setViewSnapshot(record),
+                            },
                             ...(canCalculate
                               ? [
                                   {
                                     key: 'recalc',
-                                    label: 'Recalcular',
+                                    label: t('connect.salary.actions.recalculate'),
                                     icon: Calculator,
                                     onClick: () => {
                                       if (record.connect_student_id) {

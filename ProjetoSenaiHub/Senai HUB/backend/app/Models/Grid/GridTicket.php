@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable([
     'code',
     'requester',
+    'requester_user_id',
     'title',
     'summary',
     'room',
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'priority',
     'status',
     'assignee',
+    'assignee_user_id',
     'opened_at',
     'started_at',
     'completed_at',
@@ -48,6 +50,12 @@ class GridTicket extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(GridTask::class);
+    }
+
+    /** @return HasMany<GridTicketAttachment, $this> */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(GridTicketAttachment::class);
     }
 
     public function scopeSearch($query, ?string $search)

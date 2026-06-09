@@ -1,5 +1,6 @@
 import api from './api'
 import type { User } from '../types/auth'
+import { parseApiError } from '../utils/parseApiError'
 
 interface AuthResponse {
   data: {
@@ -8,24 +9,24 @@ interface AuthResponse {
   }
 }
 
-interface ApiValidationError {
-  message?: string
-  errors?: Record<string, string[]>
-}
-
 export async function loginRequest(email: string, password: string): Promise<AuthResponse['data']> {
   const { data } = await api.post<AuthResponse>('/auth/login', { email, password })
   return data.data
 }
 
-export async function registerRequest(payload: {
-  name: string
+export async function forgotPasswordRequest(email: string): Promise<string> {
+  const { data } = await api.post<{ message: string }>('/auth/forgot-password', { email })
+  return data.message
+}
+
+export async function resetPasswordRequest(payload: {
   email: string
+  token: string
   password: string
   password_confirmation: string
-}): Promise<AuthResponse['data']> {
-  const { data } = await api.post<AuthResponse>('/auth/register', payload)
-  return data.data
+}): Promise<string> {
+  const { data } = await api.post<{ message: string }>('/auth/reset-password', payload)
+  return data.message
 }
 
 export async function fetchCurrentUser(): Promise<User> {
@@ -63,32 +64,7 @@ export async function removeAvatarRequest(): Promise<User> {
 }
 
 export function parseAuthError(error: unknown): string {
-  if (typeof error === 'object' && error !== null && 'response' in error) {
-    const response = (error as { response?: { status?: number; data?: ApiValidationError } }).response
-    const payload = response?.data
-
-    if (response?.status === 419) {
-      return 'Sessao expirada. Tente novamente.'
-    }
-
-    if (response?.status === 422 && payload?.errors) {
-      const firstError = Object.values(payload.errors)[0]?.[0]
-      if (firstError) {
-        return firstError
-      }
-    }
-
-    if (payload?.message) {
-      return payload.message
-    }
-  }
-
-  if (typeof error === 'object' && error !== null && 'message' in error) {
-    const message = (error as { message?: string }).message
-    if (message === 'Network Error') {
-      return 'Nao foi possivel conectar ao servidor. Verifique se o backend esta rodando.'
-    }
-  }
-
-  return 'Ocorreu um erro. Tente novamente.'
+  return parseApiError(error)
 }
+
+export { parseApiError }

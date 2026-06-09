@@ -100,7 +100,9 @@ export function disposePinMarkerGroup(group: THREE.Group) {
   })
 }
 
-export function buildBlockPinMarkers<T extends { id: string; blockId: CampusBlockId }>(
+export function buildBlockPinMarkers<
+  T extends { id: string; blockId: CampusBlockId; position?: { x: number; y: number; z: number } },
+>(
   items: T[],
   blocks: PinMarkerBlock[],
   markerScale: number,
@@ -119,12 +121,16 @@ export function buildBlockPinMarkers<T extends { id: string; blockId: CampusBloc
 
     for (const item of blockItems) {
       const baseSeed = item.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-      let anchor = anchorOnBlock(box, baseSeed)
+      let anchor = item.position
+        ? new THREE.Vector3(item.position.x, item.position.y, item.position.z)
+        : anchorOnBlock(box, baseSeed)
 
-      for (let attempt = 0; attempt < 10; attempt += 1) {
-        const crowded = placedAnchors.some((existing) => existing.distanceTo(anchor) < minSeparation)
-        if (!crowded) break
-        anchor = anchorOnBlock(box, baseSeed + attempt * 53)
+      if (!item.position) {
+        for (let attempt = 0; attempt < 10; attempt += 1) {
+          const crowded = placedAnchors.some((existing) => existing.distanceTo(anchor) < minSeparation)
+          if (!crowded) break
+          anchor = anchorOnBlock(box, baseSeed + attempt * 53)
+        }
       }
 
       placedAnchors.push(anchor.clone())

@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useState } from 'react'
+﻿import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   BookOpen,
   CalendarCheck,
@@ -19,21 +20,20 @@ import {
   StatusBadge,
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
+import { useCachedQuery } from '../../hooks/useCachedQuery'
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus'
 import type { DashboardData } from '../../types/connect'
 
 export function ConnectOverviewPage() {
-  const [data, setData] = useState<DashboardData | null>(null)
+  const { t } = useTranslation()
   const [tab, setTab] = useState<'cadastros' | 'alertas'>('cadastros')
-  const [loading, setLoading] = useState(true)
+  const { data, loading, reload } = useCachedQuery<DashboardData>(
+    'connect-dashboard',
+    () => connectService.getDashboard(),
+    { ttlMs: 60_000 },
+  )
 
-  const loadDashboard = useCallback(() => connectService.getDashboard().then(setData), [])
-
-  useEffect(() => {
-    loadDashboard().finally(() => setLoading(false))
-  }, [loadDashboard])
-
-  useRefetchOnFocus(loadDashboard)
+  useRefetchOnFocus(() => reload(true))
 
   const attendance = data?.attendance_breakdown ?? { present: 0, justified: 0, unjustified: 0, rate: 0 }
   const teachers = data?.classes_by_teacher ?? []
@@ -44,8 +44,8 @@ export function ConnectOverviewPage() {
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Visão Geral"
-        subtitle="Acompanhe indicadores e atividades recentes do SENAI Connect."
+        title={t('connect.overview.title')}
+        subtitle={t('connect.overview.subtitle')}
       />
 
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -55,7 +55,7 @@ export function ConnectOverviewPage() {
           <>
             <KpiCard
               icon={GraduationCap}
-              label="Total de alunos cadastrados"
+              label={t('connect.overview.kpis.totalStudents')}
               value={kpis.total_students.toLocaleString('pt-BR')}
               variant="blue"
               sparkline={spark?.students ?? []}
@@ -63,7 +63,7 @@ export function ConnectOverviewPage() {
             />
             <KpiCard
               icon={Users}
-              label="Professores cadastrados"
+              label={t('connect.overview.kpis.totalTeachers')}
               value={kpis.total_teachers}
               variant="coral"
               sparkline={spark?.teachers ?? []}
@@ -71,7 +71,7 @@ export function ConnectOverviewPage() {
             />
             <KpiCard
               icon={School}
-              label="Turmas ativas"
+              label={t('connect.overview.kpis.activeClasses')}
               value={kpis.active_classes}
               variant="green"
               sparkline={spark?.classes ?? []}
@@ -79,7 +79,7 @@ export function ConnectOverviewPage() {
             />
             <KpiCard
               icon={BookOpen}
-              label="Cursos ativos"
+              label={t('connect.overview.kpis.activeCourses')}
               value={kpis.active_courses}
               variant="violet"
               sparkline={spark?.courses ?? []}
@@ -87,7 +87,7 @@ export function ConnectOverviewPage() {
             />
             <KpiCard
               icon={CalendarCheck}
-              label="Frequencia media do mes"
+              label={t('connect.overview.kpis.attendanceRate')}
               value={`${kpis.attendance_rate}%`}
               variant="senai"
               sparkline={spark?.attendance ?? []}
@@ -95,7 +95,7 @@ export function ConnectOverviewPage() {
             />
             <KpiCard
               icon={FileText}
-              label="Contratos ativos"
+              label={t('connect.overview.kpis.activeContracts')}
               value={kpis.active_contracts}
               variant="amber"
               sparkline={spark?.contracts ?? []}
@@ -109,7 +109,7 @@ export function ConnectOverviewPage() {
         <QuickReportsSection loading={loading} attendance={attendance} teachers={teachers} courses={courses} />
 
         <ConnectCard className="flex min-h-0 min-w-0 flex-col p-4 sm:p-6 lg:col-span-1 lg:h-full">
-          <h2 className="mb-4 shrink-0 text-lg font-semibold text-hub-navy sm:text-xl">Atividade Recente</h2>
+          <h2 className="mb-4 shrink-0 text-lg font-semibold text-hub-navy sm:text-xl">{t('connect.overview.recentActivity')}</h2>
           {loading ? (
             <ul className="scrollbar-glass-inset min-h-[240px] flex-1 space-y-4 overflow-y-auto pr-1 lg:min-h-0">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -138,7 +138,7 @@ export function ConnectOverviewPage() {
       <ConnectCard className="min-w-0 overflow-hidden">
           <div className="flex flex-col gap-4 border-b border-hub-border/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <h2 className="text-base font-semibold text-hub-navy sm:text-lg">Cadastros Recentes / Alertas</h2>
+              <h2 className="text-base font-semibold text-hub-navy sm:text-lg">{t('connect.overview.registrationsAlerts')}</h2>
               {!loading && data && (
               <span className="rounded-full bg-hub-red px-2 py-0.5 text-xs font-semibold text-white">
                 {data.alerts.length + data.cadastros.length}
@@ -155,7 +155,7 @@ export function ConnectOverviewPage() {
                     : 'pb-1 text-hub-text-muted'
                 }
               >
-                Cadastros recentes
+                {t('connect.overview.tabs.registrations')}
               </button>
               <button
                 type="button"
@@ -166,35 +166,35 @@ export function ConnectOverviewPage() {
                     : 'pb-1 text-hub-text-muted'
                 }
               >
-                Alertas
+                {t('connect.overview.tabs.alerts')}
               </button>
             </div>
           </div>
           {loading ? (
-            <ConnectLoadingSpinner label="Carregando cadastros e alertas..." className="min-h-[280px]" />
+            <ConnectLoadingSpinner label={t('connect.overview.loading')} className="min-h-[280px]" />
           ) : data ? (
           <ConnectTableScroll>
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">Tipo</th>
-                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">Nome</th>
-                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">Detalhes</th>
-                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">Data & Hora</th>
-                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">Usuario</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">{t('connect.table.type')}</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">{t('connect.table.name')}</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">{t('connect.table.details')}</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">{t('connect.table.dateTime')}</th>
+                  <th className="whitespace-nowrap px-4 py-3 font-medium sm:px-6">{t('connect.table.user')}</th>
                 </tr>
               </thead>
               <tbody>
                 {tab === 'cadastros'
                   ? data.cadastros.map((student) => (
                       <tr key={student.id} className="border-t border-hub-border/40">
-                        <td className="whitespace-nowrap px-4 py-3 sm:px-6">Aluno</td>
+                        <td className="whitespace-nowrap px-4 py-3 sm:px-6">{t('connect.overview.rowType.student')}</td>
                         <td className="px-4 py-3 font-medium sm:px-6">{student.full_name}</td>
                         <td className="max-w-[200px] truncate px-4 py-3 text-hub-text-muted sm:max-w-none sm:px-6">
                           {student.class?.name ?? student.class?.course?.name ?? EMPTY}
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 sm:px-6">{formatDateTime(student.created_at)}</td>
-                        <td className="whitespace-nowrap px-4 py-3 sm:px-6">Sistema</td>
+                        <td className="whitespace-nowrap px-4 py-3 sm:px-6">{t('connect.common.system')}</td>
                       </tr>
                     ))
                   : data.alerts.map((alert) => (

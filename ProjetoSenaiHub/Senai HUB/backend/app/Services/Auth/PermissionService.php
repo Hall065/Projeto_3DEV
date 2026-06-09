@@ -42,6 +42,10 @@ class PermissionService
             $permissions[] = 'grid.access';
         }
 
+        if ($module === 'safe' && ! in_array('safe.access', $permissions, true)) {
+            $permissions[] = 'safe.access';
+        }
+
         return $this->buildCustomPermissions($role, $permissions);
     }
 
@@ -60,6 +64,10 @@ class PermissionService
 
         if ($module === 'grid' && ! in_array('grid.access', $permissions, true)) {
             array_unshift($permissions, 'grid.access');
+        }
+
+        if ($module === 'safe' && ! in_array('safe.access', $permissions, true)) {
+            array_unshift($permissions, 'safe.access');
         }
 
         if ($module === 'connect') {
@@ -123,7 +131,7 @@ class PermissionService
     public function applicationSlugsFor(User $user): array
     {
         if (HubRole::isAdmin($user->role)) {
-            return ['connect', 'grid'];
+            return ['connect', 'grid', 'safe'];
         }
 
         return config("permissions.application_slugs_by_role.{$user->role}", []);
@@ -137,5 +145,10 @@ class PermissionService
     public function canAccessGrid(User $user): bool
     {
         return $this->can($user, 'grid.access');
+    }
+
+    public function canAccessSafe(User $user): bool
+    {
+        return $this->can($user, 'safe.access');
     }
 }

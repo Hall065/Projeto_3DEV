@@ -9,6 +9,7 @@ import {
   Wrench,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   breakdownFinishedCount,
   GridDistributionDonut,
@@ -31,6 +32,7 @@ import { gridService } from '../../services/gridService'
 import type { GridDashboardData, GridTicket } from '../../types/grid'
 
 function GridReportsDashboard() {
+  const { t } = useTranslation()
   const [data, setData] = useState<GridDashboardData | null>(null)
   const [allTickets, setAllTickets] = useState<GridTicket[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,14 +55,14 @@ function GridReportsDashboard() {
           Array.from({ length: 6 }).map((_, i) => <KpiCardSkeleton key={i} />)
         ) : (
           <>
-            <KpiCard icon={ClipboardList} label="Chamados criados" value={report.created} variant="blue" />
-            <KpiCard icon={AlertTriangle} label="Pendentes" value={report.pending} variant="amber" />
-            <KpiCard icon={UserX} label="Sem técnico" value={report.without_technician} variant="senai" />
-            <KpiCard icon={Wrench} label="Em andamento" value={report.in_progress} variant="coral" />
-            <KpiCard icon={Star} label="Avaliação pendente" value={report.awaiting_evaluation} variant="violet" />
-            <KpiCard icon={Download} label="Finalizados" value={report.finished} variant="green" />
+            <KpiCard icon={ClipboardList} label={t('grid.reports.kpis.created')} value={report.created} variant="blue" />
+            <KpiCard icon={AlertTriangle} label={t('grid.reports.kpis.pending')} value={report.pending} variant="amber" />
+            <KpiCard icon={UserX} label={t('grid.reports.kpis.withoutTechnician')} value={report.without_technician} variant="senai" />
+            <KpiCard icon={Wrench} label={t('grid.reports.kpis.inProgress')} value={report.in_progress} variant="coral" />
+            <KpiCard icon={Star} label={t('grid.reports.kpis.awaitingEvaluation')} value={report.awaiting_evaluation} variant="violet" />
+            <KpiCard icon={Download} label={t('grid.reports.kpis.finished')} value={report.finished} variant="green" />
             {report.urgent != null && report.urgent > 0 ? (
-              <KpiCard icon={AlertTriangle} label="Urgentes abertos" value={report.urgent} variant="senai" />
+              <KpiCard icon={AlertTriangle} label={t('grid.reports.kpis.urgentOpen')} value={report.urgent} variant="senai" />
             ) : null}
           </>
         )}
@@ -70,49 +72,49 @@ function GridReportsDashboard() {
 
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-6 xl:grid-cols-2 2xl:grid-cols-3">
         <ConnectCard className="min-w-0 overflow-hidden p-4 sm:p-6">
-          <h2 className="mb-4 font-semibold text-hub-navy sm:text-lg">Chamados por mês</h2>
+          <h2 className="mb-4 font-semibold text-hub-navy sm:text-lg">{t('grid.reports.charts.byMonth')}</h2>
           <GridMonthlyBarChart items={data?.tickets_by_month ?? []} loading={loading} />
         </ConnectCard>
         <ConnectCard className="min-w-0 overflow-hidden p-4 sm:p-6">
-          <h2 className="mb-4 font-semibold text-hub-navy sm:text-lg">Status dos chamados</h2>
+          <h2 className="mb-4 font-semibold text-hub-navy sm:text-lg">{t('grid.reports.charts.byStatus')}</h2>
           <GridDistributionDonut
             loading={loading}
             items={data?.maintenance_breakdown ?? []}
             centerValue={breakdownFinishedCount(data?.maintenance_breakdown ?? []) || '—'}
-            centerLabel="Finalizados"
+            centerLabel={t('grid.reports.charts.finished')}
           />
         </ConnectCard>
         <ConnectCard className="min-w-0 overflow-hidden p-4 sm:p-6 xl:col-span-2 2xl:col-span-1">
-          <h2 className="mb-4 font-semibold text-hub-navy sm:text-lg">Por técnico</h2>
-          <GridHorizontalBarChart items={data?.tickets_by_technician ?? []} loading={loading} valueLabel="chamados" />
+          <h2 className="mb-4 font-semibold text-hub-navy sm:text-lg">{t('grid.reports.charts.byTechnician')}</h2>
+          <GridHorizontalBarChart items={data?.tickets_by_technician ?? []} loading={loading} valueLabel={t('grid.reports.charts.tickets')} />
         </ConnectCard>
       </div>
 
       <ConnectCard className="mb-6 min-w-0 overflow-hidden">
         <h2 className="border-b border-hub-border/60 px-4 py-4 font-semibold text-hub-navy sm:px-6 sm:text-lg">
-          Chamados recentes
+          {t('grid.dashboard.recentTickets.title')}
         </h2>
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando..." className="min-h-[200px]" />
+          <ConnectLoadingSpinner label={t('grid.reports.loading')} className="min-h-[200px]" />
         ) : (
           <ConnectTableScroll>
             <table className="w-full min-w-[640px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left sm:px-6">ID</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Título</th>
-                  <th className="hidden px-4 py-3 text-left sm:table-cell sm:px-6">Técnico</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Status</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('grid.reports.recent.id')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('grid.reports.recent.title')}</th>
+                  <th className="hidden px-4 py-3 text-left sm:table-cell sm:px-6">{t('grid.reports.recent.technician')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('grid.reports.recent.status')}</th>
                 </tr>
               </thead>
               <tbody>
-                {data?.recent_tickets.map((t) => (
-                  <tr key={t.id} className="border-t border-hub-border/40">
-                    <td className="whitespace-nowrap px-4 py-3 sm:px-6">{t.code}</td>
-                    <td className="max-w-[200px] truncate px-4 py-3 sm:max-w-none sm:px-6">{t.title}</td>
-                    <td className="hidden px-4 py-3 sm:table-cell sm:px-6">{t.assignee || '—'}</td>
+                {data?.recent_tickets.map((ticket) => (
+                  <tr key={ticket.id} className="border-t border-hub-border/40">
+                    <td className="whitespace-nowrap px-4 py-3 sm:px-6">{ticket.code}</td>
+                    <td className="max-w-[200px] truncate px-4 py-3 sm:max-w-none sm:px-6">{ticket.title}</td>
+                    <td className="hidden px-4 py-3 sm:table-cell sm:px-6">{ticket.assignee || '—'}</td>
                     <td className="px-4 py-3 sm:px-6">
-                      <GridTicketStatusBadge status={t.status} />
+                      <GridTicketStatusBadge status={ticket.status} />
                     </td>
                   </tr>
                 ))}
@@ -126,20 +128,21 @@ function GridReportsDashboard() {
 }
 
 export function GridReportsPage() {
+  const { t } = useTranslation()
   const [tab, setTab] = useState<'dashboard' | 'builder'>('builder')
 
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Relatórios"
-        subtitle="Painel operacional ou construtor personalizado com secoes e colunas a sua escolha."
+        title={t('grid.reports.title')}
+        subtitle={t('grid.reports.subtitle')}
         actions={
           <div className="flex flex-wrap gap-2">
             <OutlineButton type="button" onClick={() => setTab('dashboard')}>
-              <BarChart3 className="h-4 w-4" /> Painel
+              <BarChart3 className="h-4 w-4" /> {t('grid.reports.tabs.dashboard')}
             </OutlineButton>
             <PrimaryButton type="button" onClick={() => setTab('builder')}>
-              <FileText className="h-4 w-4" /> Construtor
+              <FileText className="h-4 w-4" /> {t('grid.reports.tabs.builder')}
             </PrimaryButton>
           </div>
         }

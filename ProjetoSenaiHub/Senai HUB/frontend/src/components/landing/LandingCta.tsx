@@ -17,13 +17,13 @@ export function LandingCta() {
                 Comece agora a transformar educação em futuro.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-white/85">
-                Crie sua conta e tenha acesso ao melhor da educação profissional e tecnológica do SENAI.
+                Acesse com sua conta e tenha acesso ao melhor da educação profissional e tecnológica do SENAI.
               </p>
               <Link
-                to="/cadastro"
+                to="/login"
                 className="mt-8 inline-flex w-fit items-center justify-center rounded-lg bg-hub-red px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-hub-red-hover"
               >
-                Criar minha conta
+                Acessar plataforma
               </Link>
             </div>
           </div>

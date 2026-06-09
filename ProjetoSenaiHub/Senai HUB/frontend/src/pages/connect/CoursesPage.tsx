@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectCourseCard, ConnectCourseCardSkeleton } from '../../components/connect/ConnectCourseCard'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
@@ -15,6 +16,7 @@ import {
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import type { ConnectCourse, PaginatedMeta } from '../../types/connect'
+import { parseApiError } from '../../utils/parseApiError'
 
 const emptyForm = {
   name: '',
@@ -27,6 +29,7 @@ const emptyForm = {
 }
 
 export function CoursesPage() {
+  const { t } = useTranslation()
   const [courses, setCourses] = useState<ConnectCourse[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
@@ -81,7 +84,7 @@ export function CoursesPage() {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      window.alert('Informe o nome do curso.')
+      window.alert(t('connect.courses.alert.nameRequired'))
       return
     }
 
@@ -95,27 +98,31 @@ export function CoursesPage() {
       end_date: form.end_date || null,
     }
 
-    if (editingId) {
-      await connectService.updateCourse(editingId, payload)
-    } else {
-      await connectService.createCourse({
-        ...payload,
-        code: form.name.trim().substring(0, 12).replace(/\s+/g, '-').toUpperCase() || `CURSO-${Date.now().toString(36).slice(-4).toUpperCase()}`,
-      })
+    try {
+      if (editingId) {
+        await connectService.updateCourse(editingId, payload)
+      } else {
+        await connectService.createCourse({
+          ...payload,
+          code: form.name.trim().substring(0, 12).replace(/\s+/g, '-').toUpperCase() || `CURSO-${Date.now().toString(36).slice(-4).toUpperCase()}`,
+        })
+      }
+      setDrawerOpen(false)
+      load()
+    } catch (error: unknown) {
+      window.alert(parseApiError(error, 'Nao foi possivel salvar o curso.'))
     }
-    setDrawerOpen(false)
-    load()
   }
 
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Cursos"
-        subtitle="Gerenciamento de Cursos."
+        title={t('connect.courses.title')}
+        subtitle={t('connect.courses.subtitle')}
         actions={
           <PrimaryButton onClick={openCreate}>
             <Plus className="h-4 w-4" />
-            Criar curso
+            {t('connect.courses.create')}
           </PrimaryButton>
         }
       />
@@ -123,7 +130,7 @@ export function CoursesPage() {
       <div className="glass-panel mb-6 rounded-2xl p-4">
         <input
           className={inputClass}
-          placeholder="Buscar curso..."
+          placeholder={t('connect.courses.searchPlaceholder')}
           value={search}
           onChange={(e) => {
             setPage(1)
@@ -140,7 +147,7 @@ export function CoursesPage() {
         </div>
       ) : courses.length === 0 ? (
         <div className="glass-panel rounded-2xl px-6 py-16 text-center text-sm text-hub-text-muted">
-          Nenhum curso encontrado.
+          {t('connect.courses.empty')}
         </div>
       ) : (
         <>
@@ -164,18 +171,18 @@ export function CoursesPage() {
       <ConnectDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title={editingId ? 'Editar curso' : 'Cadastrar curso'}
-        subtitle="Apenas o nome é obrigatório. Alunos e professores podem ser vinculados depois."
+        title={editingId ? t('connect.courses.drawer.edit') : t('connect.courses.drawer.new')}
+        subtitle={editingId ? t('connect.courses.drawer.editSubtitle') : t('connect.courses.drawer.newSubtitle')}
         footer={
           <div className="flex justify-end gap-2">
-            <OutlineButton onClick={() => setForm(emptyForm)}>Limpar Campos</OutlineButton>
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
-            <PrimaryButton onClick={handleSave}>Salvar</PrimaryButton>
+            <OutlineButton onClick={() => setForm(emptyForm)}>{t('connect.courses.drawer.clearFields')}</OutlineButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
+            <PrimaryButton onClick={handleSave}>{t('common.save')}</PrimaryButton>
           </div>
         }
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <FormField label="Nome do curso" required>
+          <FormField label={t('connect.courses.form.name')} required>
             <input
               className={inputClass}
               value={form.name}
@@ -183,7 +190,7 @@ export function CoursesPage() {
               placeholder="Ex: Automação Industrial"
             />
           </FormField>
-          <FormField label="Área">
+          <FormField label={t('connect.courses.form.area')}>
             <input
               className={inputClass}
               value={form.area}
@@ -191,7 +198,7 @@ export function CoursesPage() {
               placeholder="Ex: Indústria 4.0"
             />
           </FormField>
-          <FormField label="Carga horária total" hint="Usada no planejamento do semestre">
+          <FormField label={t('connect.courses.form.workload')} hint="Usada no planejamento do semestre">
             <input
               type="number"
               min={0}
@@ -201,7 +208,7 @@ export function CoursesPage() {
               placeholder="Ex: 120 horas"
             />
           </FormField>
-          <FormField label="Inicio do curso" hint="Turmas devem ficar dentro deste periodo">
+          <FormField label={t('connect.courses.form.startDate')} hint="Turmas devem ficar dentro deste periodo">
             <input
               type="date"
               className={inputClass}
@@ -209,7 +216,7 @@ export function CoursesPage() {
               onChange={(e) => setForm({ ...form, start_date: e.target.value })}
             />
           </FormField>
-          <FormField label="Fim do curso">
+          <FormField label={t('connect.courses.form.endDate')}>
             <input
               type="date"
               className={inputClass}
@@ -217,17 +224,17 @@ export function CoursesPage() {
               onChange={(e) => setForm({ ...form, end_date: e.target.value })}
             />
           </FormField>
-          <FormField label="Status">
+          <FormField label={t('connect.table.status')}>
             <select
               className={selectClass}
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
             >
-              <option value="active">Ativo</option>
-              <option value="inactive">Inativo</option>
+              <option value="active">{t('connect.status.active')}</option>
+              <option value="inactive">{t('connect.status.inactive')}</option>
             </select>
           </FormField>
-          <FormField label="Descrição" hint="Opcional">
+          <FormField label={t('connect.courses.form.description')} hint={t('connect.students.form.optional')}>
             <textarea
               className={`${inputClass} min-h-[100px] py-2 sm:col-span-2`}
               value={form.description}

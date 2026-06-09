@@ -21,6 +21,18 @@ export interface GridKpiTrend {
   label: string
 }
 
+export interface GridTicketAttachment {
+  id: number
+  grid_ticket_id: number
+  original_name: string
+  mime_type: string
+  size_bytes: number
+  url: string
+  is_image: boolean
+  uploaded_by_user_id?: number | null
+  created_at?: string
+}
+
 export interface GridTicket {
   id: number
   code: string
@@ -48,6 +60,8 @@ export interface GridTicket {
   workflow_locked?: boolean
   primary_task_id?: number | null
   tasks_count?: number
+  attachments?: GridTicketAttachment[]
+  attachments_count?: number
   created_at?: string
   updated_at?: string
 }
