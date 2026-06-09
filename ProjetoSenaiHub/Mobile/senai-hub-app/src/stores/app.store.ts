@@ -3,7 +3,32 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type AppModule = 'hub' | 'connect' | 'grid';
 export type ThemeMode = 'light' | 'dark';
-export type AppLanguage = 'pt-BR' | 'en-US';
+
+export const APP_LANGUAGE_OPTIONS = [
+  { code: 'pt-BR', azureCode: 'pt', label: 'Português (Brasil)' },
+  { code: 'en-US', azureCode: 'en', label: 'Inglês' },
+  { code: 'es-ES', azureCode: 'es', label: 'Espanhol' },
+  { code: 'fr-FR', azureCode: 'fr', label: 'Francês' },
+  { code: 'de-DE', azureCode: 'de', label: 'Alemão' },
+  { code: 'it-IT', azureCode: 'it', label: 'Italiano' },
+  { code: 'ja-JP', azureCode: 'ja', label: 'Japonês' },
+  { code: 'zh-Hans', azureCode: 'zh-Hans', label: 'Chinês simplificado' },
+] as const;
+
+export type AppLanguage = (typeof APP_LANGUAGE_OPTIONS)[number]['code'];
+
+export function isAppLanguage(value: unknown): value is AppLanguage {
+  return APP_LANGUAGE_OPTIONS.some((option) => option.code === value);
+}
+
+export function getAppLanguageOption(language: AppLanguage) {
+  return APP_LANGUAGE_OPTIONS.find((option) => option.code === language) ?? APP_LANGUAGE_OPTIONS[0];
+}
+
+export function getAzureLanguageCode(language: AppLanguage): string | null {
+  if (language === 'pt-BR') return null;
+  return getAppLanguageOption(language).azureCode;
+}
 
 const PREFERENCES_KEY = '@senai-hub/preferences';
 
@@ -50,7 +75,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const parsed = JSON.parse(raw) as Partial<Pick<AppState, 'themeMode' | 'language'>>;
       set({
         themeMode: parsed.themeMode === 'dark' ? 'dark' : 'light',
-        language: parsed.language === 'en-US' ? 'en-US' : 'pt-BR',
+        language: isAppLanguage(parsed.language) ? parsed.language : 'pt-BR',
         preferencesInitialized: true,
       });
     } catch (error) {

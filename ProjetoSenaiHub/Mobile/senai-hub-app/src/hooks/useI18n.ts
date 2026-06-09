@@ -1,5 +1,7 @@
-import { useCallback } from 'react';
-import { useAppStore, type AppLanguage } from '@/stores/app.store';
+import { useCallback, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isAzureTranslatorConfigured, translateTextsWithAzure } from '@/services/azure-translator.service';
+import { APP_LANGUAGE_OPTIONS, useAppStore, type AppLanguage } from '@/stores/app.store';
 
 const en: Record<string, string> = {
   'Acesse sua conta': 'Sign in to your account',
@@ -64,6 +66,21 @@ const en: Record<string, string> = {
   'Modo escuro': 'Dark mode',
   'Tema atual': 'Current theme',
   'Idioma': 'Language',
+  'Português (Brasil)': 'Portuguese (Brazil)',
+  'Espanhol': 'Spanish',
+  'Francês': 'French',
+  'Alemão': 'German',
+  'Italiano': 'Italian',
+  'Japonês': 'Japanese',
+  'Chinês simplificado': 'Simplified Chinese',
+  'Idioma atual': 'Current language',
+  'Traducao do aplicativo': 'Application translation',
+  'Tradução do aplicativo': 'Application translation',
+  'Alterar idioma': 'Change language',
+  'Selecionar idioma': 'Select language',
+  'Aplicar idioma': 'Apply language',
+  'Idioma de tradução': 'Translation language',
+  'Escolha um idioma para traduzir o aplicativo pela API do Azure.': 'Choose a language to translate the application through the Azure API.',
   'Português': 'Portuguese',
   'Inglês': 'English',
   'Aplicar modo escuro': 'Apply dark mode',
@@ -351,16 +368,205 @@ const en: Record<string, string> = {
   'Carga média': 'Average workload',
 };
 
+const knownTranslationSources = Object.freeze(Object.keys(en));
+
+type RemoteLanguage = Exclude<AppLanguage, 'pt-BR'>;
+type RemoteTranslationCache = Partial<Record<RemoteLanguage, Record<string, string>>>;
+
+const AZURE_TRANSLATION_CACHE_KEY = '@senai-hub/azure-translations/v1';
+const AZURE_BATCH_SIZE = 50;
+const AZURE_RETRY_DELAY_MS = 60_000;
+
+const remoteCache: RemoteTranslationCache = {};
+const pendingTranslations: Partial<Record<RemoteLanguage, Set<string>>> = {};
+
+const listeners = new Set<() => void>();
+let cacheLoaded = false;
+let cacheLoadPromise: Promise<void> | null = null;
+let queueTimer: ReturnType<typeof setTimeout> | null = null;
+let lastAzureFailureAt = 0;
+
+function isRemoteLanguage(language: AppLanguage): language is RemoteLanguage {
+  return language !== 'pt-BR';
+}
+
+function getRemoteLanguageCache(language: RemoteLanguage) {
+  remoteCache[language] ??= {};
+  return remoteCache[language];
+}
+
+function getPendingTranslationQueue(language: RemoteLanguage) {
+  pendingTranslations[language] ??= new Set<string>();
+  return pendingTranslations[language];
+}
+
+function getLocalTranslation(value: string, language: AppLanguage): string | undefined {
+  if (language === 'en-US') return en[value];
+  return undefined;
+}
+
+function getRemoteTranslation(value: string, language: AppLanguage): string | undefined {
+  if (!isRemoteLanguage(language)) return undefined;
+  return getRemoteLanguageCache(language)[value];
+}
+
+function hasTranslation(value: string, language: AppLanguage): boolean {
+  return Boolean(getLocalTranslation(value, language) || getRemoteTranslation(value, language));
+}
+
+function notifyTranslationListeners() {
+  listeners.forEach((listener) => listener());
+}
+
+function subscribeToTranslations(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+async function loadRemoteCache() {
+  if (cacheLoaded) return;
+  if (!cacheLoadPromise) {
+    cacheLoadPromise = AsyncStorage.getItem(AZURE_TRANSLATION_CACHE_KEY)
+      .then((raw) => {
+        if (!raw) return;
+        const parsed = JSON.parse(raw) as Partial<RemoteTranslationCache>;
+        APP_LANGUAGE_OPTIONS.forEach((option) => {
+          if (!isRemoteLanguage(option.code)) return;
+          const cachedLanguage = parsed[option.code];
+          if (cachedLanguage && typeof cachedLanguage === 'object') {
+            remoteCache[option.code] = {
+              ...getRemoteLanguageCache(option.code),
+              ...cachedLanguage,
+            };
+          }
+        });
+      })
+      .catch((error) => {
+        console.warn('[Translator] Nao foi possivel carregar cache de traducoes:', error);
+      })
+      .finally(() => {
+        cacheLoaded = true;
+        cacheLoadPromise = null;
+      });
+  }
+
+  await cacheLoadPromise;
+}
+
+async function saveRemoteCache() {
+  try {
+    await AsyncStorage.setItem(AZURE_TRANSLATION_CACHE_KEY, JSON.stringify(remoteCache));
+  } catch (error) {
+    console.warn('[Translator] Nao foi possivel salvar cache de traducoes:', error);
+  }
+}
+
+async function flushPendingTranslations() {
+  await loadRemoteCache();
+  let updated = false;
+
+  await Promise.all(
+    (Object.keys(pendingTranslations) as RemoteLanguage[]).map(async (language) => {
+      const queue = getPendingTranslationQueue(language);
+      const texts = Array.from(queue).filter((text) => !hasTranslation(text, language));
+      queue.clear();
+
+      for (let index = 0; index < texts.length; index += AZURE_BATCH_SIZE) {
+        const batch = texts.slice(index, index + AZURE_BATCH_SIZE);
+        if (batch.length === 0) continue;
+
+        const translations = await translateTextsWithAzure(batch, language);
+        Object.assign(getRemoteLanguageCache(language), translations);
+        updated = updated || Object.keys(translations).length > 0;
+      }
+    })
+  );
+
+  if (updated) {
+    await saveRemoteCache();
+    notifyTranslationListeners();
+  }
+}
+
+export async function preloadTranslationsForLanguage(language: AppLanguage) {
+  if (!isRemoteLanguage(language)) return;
+  if (language !== 'en-US' && !isAzureTranslatorConfigured) {
+    throw new Error('Configure a chave do Azure Translator para usar este idioma.');
+  }
+
+  await loadRemoteCache();
+  const texts = knownTranslationSources.filter((text) => !hasTranslation(text, language));
+  if (texts.length === 0) return;
+
+  let updated = false;
+  for (let index = 0; index < texts.length; index += AZURE_BATCH_SIZE) {
+    const batch = texts.slice(index, index + AZURE_BATCH_SIZE);
+    const translations = await translateTextsWithAzure(batch, language);
+    Object.assign(getRemoteLanguageCache(language), translations);
+    updated = updated || Object.keys(translations).length > 0;
+  }
+
+  if (updated) {
+    await saveRemoteCache();
+    notifyTranslationListeners();
+  }
+}
+
+function queueAzureTranslation(value: string | undefined | null, language: AppLanguage) {
+  if (!value || !isRemoteLanguage(language) || !isAzureTranslatorConfigured) return;
+  if (Date.now() - lastAzureFailureAt < AZURE_RETRY_DELAY_MS) return;
+
+  const text = value.trim();
+  if (!text || hasTranslation(text, language)) return;
+
+  getPendingTranslationQueue(language).add(text);
+  if (queueTimer) return;
+
+  queueTimer = setTimeout(() => {
+    queueTimer = null;
+    void flushPendingTranslations().catch((error) => {
+      lastAzureFailureAt = Date.now();
+      console.warn('[Translator] Falha ao traduzir com Azure:', error);
+    });
+  }, 120);
+}
+
 export function translate(value: string | undefined | null, language: AppLanguage) {
   if (!value || language === 'pt-BR') return value ?? '';
-  return en[value] ?? value;
+
+  const text = value.trim();
+  if (!text) return value;
+
+  return getLocalTranslation(text, language) ?? getRemoteTranslation(text, language) ?? value;
 }
 
 export function useI18n() {
   const language = useAppStore((state) => state.language);
+  const [, setTranslationVersion] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    const unsubscribe = subscribeToTranslations(() => {
+      if (mounted) setTranslationVersion((version) => version + 1);
+    });
+
+    if (isRemoteLanguage(language)) {
+      void loadRemoteCache().then(() => {
+        if (mounted) setTranslationVersion((version) => version + 1);
+      });
+    }
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, [language]);
 
   const t = useCallback(
-    (value: string | undefined | null) => translate(value, language),
+    (value: string | undefined | null) => {
+      queueAzureTranslation(value, language);
+      return translate(value, language);
+    },
     [language]
   );
 

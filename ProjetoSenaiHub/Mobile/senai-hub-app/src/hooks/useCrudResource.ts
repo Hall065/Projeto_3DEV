@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useConfirmDialog } from '@/hooks/useConfirmDialog';
-import { useI18n } from '@/hooks/useI18n';
 
 interface CrudResourceConfig<T, FormValues> {
   load: () => Promise<T[]>;
@@ -23,7 +22,6 @@ export function useCrudResource<T extends { id: string }, FormValues>(
 ) {
   const { load, create, update, remove } = config;
   const { confirm } = useConfirmDialog();
-  const { language } = useI18n();
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -93,14 +91,11 @@ export function useCrudResource<T extends { id: string }, FormValues>(
       }
     };
 
-    const targetLabel = label ?? (language === 'en-US' ? 'this record' : 'este registro');
+    const targetLabel = label ?? 'este registro';
 
     void confirm({
       title: 'Excluir registro',
-      message:
-        language === 'en-US'
-          ? `Do you want to delete ${targetLabel}?`
-          : `Deseja excluir ${targetLabel}?`,
+      message: `Deseja excluir ${targetLabel}?`,
       confirmLabel: 'Excluir',
       cancelLabel: 'Cancelar',
     }).then((confirmed) => {

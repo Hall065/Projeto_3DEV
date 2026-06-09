@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Camera, KeyRound, Languages, LogOut, Moon, Sun } from 'lucide-react-native';
+import { ArrowLeft, Camera, Check, ChevronDown, KeyRound, Languages, LogOut, Moon, Sun, X } from 'lucide-react-native';
 import { AppButton, FeedbackMessage, ListRow, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
-import { useI18n } from '@/hooks/useI18n';
+import { preloadTranslationsForLanguage, useI18n } from '@/hooks/useI18n';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { getPostLoginRoute } from '@/lib/permissions';
 import { supabase } from '@/lib/supabase';
 import { fetchUserApplications, fetchUserProfile, updateUserProfile } from '@/services/hub.service';
 import { uploadService } from '@/services/upload.service';
-import { useAppStore } from '@/stores/app.store';
+import { APP_LANGUAGE_OPTIONS, getAppLanguageOption, useAppStore, type AppLanguage } from '@/stores/app.store';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function PerfilScreen() {
@@ -23,6 +23,9 @@ export default function PerfilScreen() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [languageModalOpen, setLanguageModalOpen] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<AppLanguage>(language);
+  const [languageApplying, setLanguageApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [values, setValues] = useState({
@@ -34,6 +37,8 @@ export default function PerfilScreen() {
   });
 
   const perfil = session?.perfil;
+  const currentLanguage = getAppLanguageOption(language);
+  const draftLanguage = getAppLanguageOption(selectedLanguage);
   const initials = perfil?.nome?.split(' ').filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() ?? 'SH';
 
   const refreshSession = async () => {
@@ -127,6 +132,27 @@ export default function PerfilScreen() {
     }
   };
 
+  const openLanguageModal = () => {
+    setSelectedLanguage(language);
+    setLanguageModalOpen(true);
+  };
+
+  const applyLanguage = async (nextLanguage = selectedLanguage) => {
+    setSelectedLanguage(nextLanguage);
+    setLanguageApplying(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      await preloadTranslationsForLanguage(nextLanguage);
+      setLanguage(nextLanguage);
+      setLanguageModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nao foi possivel alterar o idioma.');
+    } finally {
+      setLanguageApplying(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView style={[styles.container, { backgroundColor: theme.appBackground }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -181,29 +207,18 @@ export default function PerfilScreen() {
           />
           <View style={styles.preferenceGap} />
           <ListRow
-            title="Idioma"
-            subtitle={language === 'en-US' ? 'Inglês' : 'Português'}
+            title="Idioma atual"
+            subtitle={currentLanguage.label}
             initials="ID"
             accent={colors.blue}
           />
-          <View style={styles.preferenceButtons}>
-            <AppButton
-              label="Usar português"
-              variant={language === 'pt-BR' ? 'primary' : 'secondary'}
-              accent={colors.blue}
-              icon={<Languages size={16} color={language === 'pt-BR' ? colors.white : colors.blue} />}
-              onPress={() => setLanguage('pt-BR')}
-              wrapperStyle={styles.preferenceButton}
-            />
-            <AppButton
-              label="Usar inglês"
-              variant={language === 'en-US' ? 'primary' : 'secondary'}
-              accent={colors.blue}
-              icon={<Languages size={16} color={language === 'en-US' ? colors.white : colors.blue} />}
-              onPress={() => setLanguage('en-US')}
-              wrapperStyle={styles.preferenceButton}
-            />
-          </View>
+          <AppButton
+            label="Alterar idioma"
+            variant="secondary"
+            accent={colors.blue}
+            icon={<Languages size={16} color={theme.isDark ? theme.text : colors.blue} />}
+            onPress={openLanguageModal}
+          />
         </SurfaceCard>
 
         <SurfaceCard title="Dados pessoais" subtitle="Edicao protegida por senha">
@@ -259,6 +274,106 @@ export default function PerfilScreen() {
         {error ? <FeedbackMessage variant="danger" message={error} /> : null}
         {success ? <FeedbackMessage variant="success" message={success} /> : null}
       </ScrollView>
+
+      <Modal
+        visible={languageModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLanguageModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setLanguageModalOpen(false)} />
+          <View
+            style={[
+              styles.languageModal,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.line,
+              },
+            ]}
+          >
+            <View style={styles.modalHeader}>
+              <View style={styles.modalTitleWrap}>
+                <Text style={[styles.modalTitle, { color: theme.text }]}>{t('Selecionar idioma')}</Text>
+                <Text style={[styles.modalSubtitle, { color: theme.textMuted }]}>Azure Translator</Text>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('Cancelar')}
+                hitSlop={10}
+                style={[styles.modalClose, { borderColor: theme.line, backgroundColor: theme.surfaceSoft }]}
+                onPress={() => setLanguageModalOpen(false)}
+              >
+                <X size={16} color={theme.text} />
+              </Pressable>
+            </View>
+
+            <View style={[styles.selectTrigger, { borderColor: theme.line, backgroundColor: theme.input }]}>
+              <View style={styles.selectTextWrap}>
+                <Text style={[styles.selectLabel, { color: theme.textMuted }]}>{t('Idioma de tradução')}</Text>
+                <Text style={[styles.selectValue, { color: theme.text }]}>{t(draftLanguage.label)}</Text>
+              </View>
+              <ChevronDown size={18} color={theme.textMuted} />
+            </View>
+
+            <ScrollView style={styles.languageOptions} contentContainerStyle={styles.languageOptionsContent}>
+              {APP_LANGUAGE_OPTIONS.map((option) => {
+                const active = selectedLanguage === option.code;
+                return (
+                  <Pressable
+                    key={option.code}
+                    accessibilityRole="button"
+                    disabled={languageApplying}
+                    style={[
+                      styles.languageOption,
+                      languageApplying && styles.languageOptionDisabled,
+                      {
+                        borderColor: active ? colors.blue : theme.line,
+                        backgroundColor: active ? (theme.isDark ? 'rgba(41, 98, 255, 0.2)' : '#E8F1FF') : theme.surfaceSoft,
+                      },
+                    ]}
+                    onPress={() => void applyLanguage(option.code)}
+                  >
+                    <View style={styles.languageOptionText}>
+                      <Text style={[styles.languageOptionLabel, { color: theme.text }]}>{t(option.label)}</Text>
+                      <Text style={[styles.languageOptionMeta, { color: theme.textMuted }]}>{option.azureCode}</Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.languageCheck,
+                        {
+                          borderColor: active ? colors.blue : theme.line,
+                          backgroundColor: active ? colors.blue : 'transparent',
+                        },
+                      ]}
+                    >
+                      {active ? <Check size={13} color={colors.white} /> : null}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <AppButton
+                label="Cancelar"
+                variant="secondary"
+                accent={colors.navy}
+                disabled={languageApplying}
+                onPress={() => setLanguageModalOpen(false)}
+                wrapperStyle={styles.modalAction}
+              />
+              <AppButton
+                label="Aplicar idioma"
+                accent={colors.blue}
+                onPress={() => void applyLanguage()}
+                loading={languageApplying}
+                wrapperStyle={styles.modalAction}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -303,8 +418,6 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', marginBottom: 12 },
   backButtonWrap: { alignSelf: 'flex-start' },
   preferenceGap: { height: 10 },
-  preferenceButtons: { flexDirection: 'row', gap: 10 },
-  preferenceButton: { flex: 1 },
   profileTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   avatar: {
     width: 88,
@@ -332,4 +445,77 @@ const styles = StyleSheet.create({
     color: colors.navy,
     paddingHorizontal: 12,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(8, 18, 32, 0.58)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+  },
+  languageModal: {
+    width: '100%',
+    maxWidth: 430,
+    maxHeight: '84%',
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 14,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 12,
+  },
+  modalTitleWrap: { flex: 1, minWidth: 0 },
+  modalTitle: { fontSize: 16, fontWeight: '900' },
+  modalSubtitle: { marginTop: 3, fontSize: 12, fontWeight: '700' },
+  modalClose: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectTrigger: {
+    minHeight: 54,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  selectTextWrap: { flex: 1, minWidth: 0 },
+  selectLabel: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+  selectValue: { marginTop: 3, fontSize: 14, fontWeight: '900' },
+  languageOptions: { maxHeight: 320 },
+  languageOptionsContent: { gap: 8, paddingBottom: 4 },
+  languageOption: {
+    minHeight: 52,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  languageOptionDisabled: { opacity: 0.65 },
+  languageOptionText: { flex: 1, minWidth: 0 },
+  languageOptionLabel: { fontSize: 13, fontWeight: '900' },
+  languageOptionMeta: { marginTop: 3, fontSize: 11, fontWeight: '700' },
+  languageCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  modalAction: { flex: 1 },
 });
