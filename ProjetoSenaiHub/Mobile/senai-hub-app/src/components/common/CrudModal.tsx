@@ -12,7 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Camera, X } from 'lucide-react-native';
+import { Camera, Check, ChevronDown, X } from 'lucide-react-native';
 import { AnimatedPressable, AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
 import { colors } from '@/constants/colors';
 import { useI18n } from '@/hooks/useI18n';
@@ -67,6 +67,20 @@ function getErrorMessage(err: unknown) {
   return 'Não foi possível salvar o registro. Tente novamente.';
 }
 
+function normalizeSearch(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function optionMatches(option: CrudOption, query: string) {
+  const normalizedQuery = normalizeSearch(query);
+  if (!normalizedQuery) return true;
+  return normalizeSearch(`${option.label} ${option.description ?? ''}`).includes(normalizedQuery);
+}
+
 export function CrudModal({
   visible,
   title,
@@ -81,11 +95,15 @@ export function CrudModal({
   const { t } = useI18n();
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  const [openSelect, setOpenSelect] = useState<string | null>(null);
+  const [selectQueries, setSelectQueries] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (visible) {
       setValues(formatInitialFormValues(initialValues, fields));
       setError(null);
+      setOpenSelect(null);
+      setSelectQueries({});
     }
   }, [fields, initialValues, visible]);
 
@@ -156,6 +174,11 @@ export function CrudModal({
                   ? field.options
                   : [{ value: '', label: field.emptyOptionLabel ?? 'Sem vinculo' }, ...field.options]
                 : [];
+              const selectedOption = selectOptions.find((option) => option.value === fieldValue);
+              const query = selectQueries[field.name] ?? '';
+              const selectOpen = openSelect === field.name;
+              const filteredOptions = selectOptions.filter((option) => optionMatches(option, query));
+              const visibleOptions = filteredOptions.slice(0, 30);
               return (
                 <View key={field.name} style={styles.field}>
                   <Text style={[styles.label, { color: theme.text }]}>
@@ -180,45 +203,104 @@ export function CrudModal({
                         />
                     </View>
                   ) : field.options ? (
-                    <View style={styles.optionList}>
-                      {selectOptions.length === 0 ? (
-                        <Text style={[styles.emptyOptions, { color: theme.textMuted }]}>{t('Nenhum dado cadastrado ainda.')}</Text>
-                      ) : (
-                        selectOptions.map((option) => {
-                          const selected = fieldValue === option.value;
-                          return (
-                            <AnimatedPressable
-                              key={`${field.name}-${option.value || 'empty'}`}
-                              style={[
-                                styles.optionButton,
-                                {
-                                  backgroundColor: theme.input,
-                                  borderColor: theme.line,
-                                },
-                                selected && styles.optionButtonSelected,
-                              ]}
-                              onPress={() =>
-                                setValues((current) => ({ ...current, [field.name]: option.value }))
-                              }
-                            >
-                              <Text style={[styles.optionLabel, { color: theme.text }, selected && styles.optionLabelSelected]}>
-                                {t(option.label)}
-                              </Text>
-                              {option.description ? (
-                                <Text
-                                  style={[
-                                    styles.optionDescription,
-                                    { color: theme.textMuted },
-                                    selected && { color: theme.isDark ? theme.text : colors.navy },
-                                  ]}
-                                >
-                                  {t(option.description)}
+                    <View style={styles.selectWrap}>
+                      <View
+                        style={[
+                          styles.selectInputWrap,
+                          {
+                            backgroundColor: theme.input,
+                            borderColor: selectOpen ? colors.red : theme.line,
+                          },
+                        ]}
+                      >
+                        <TextInput
+                          accessibilityLabel={field.name}
+                          style={[styles.selectInput, { color: theme.text }]}
+                          placeholder={t(field.placeholder ?? `Selecione ${field.label}`)}
+                          placeholderTextColor={theme.textSubtle}
+                          value={selectOpen ? query : selectedOption ? t(selectedOption.label) : ''}
+                          onFocus={() => {
+                            setOpenSelect(field.name);
+                            setSelectQueries((current) => ({ ...current, [field.name]: '' }));
+                          }}
+                          onChangeText={(value) => {
+                            setOpenSelect(field.name);
+                            setSelectQueries((current) => ({ ...current, [field.name]: value }));
+                          }}
+                        />
+                        <AnimatedPressable
+                          accessibilityLabel={`Abrir opções de ${field.label}`}
+                          accessibilityRole="button"
+                          style={styles.selectIconButton}
+                          onPress={() => {
+                            setOpenSelect((current) => (current === field.name ? null : field.name));
+                            setSelectQueries((current) => ({ ...current, [field.name]: '' }));
+                          }}
+                          hitSlop={8}
+                        >
+                          <ChevronDown size={18} color={theme.textMuted} />
+                        </AnimatedPressable>
+                      </View>
+
+                      {selectOpen ? (
+                        <View style={[styles.selectDropdown, { backgroundColor: theme.surface, borderColor: theme.line }]}>
+                          {selectOptions.length === 0 ? (
+                            <Text style={[styles.emptyOptions, { color: theme.textMuted }]}>{t('Nenhum dado cadastrado ainda.')}</Text>
+                          ) : visibleOptions.length === 0 ? (
+                            <Text style={[styles.emptyOptions, { color: theme.textMuted }]}>{t('Nenhuma opção encontrada.')}</Text>
+                          ) : (
+                            <>
+                              <ScrollView
+                                nestedScrollEnabled
+                                keyboardShouldPersistTaps="handled"
+                                style={styles.selectOptionsScroll}
+                              >
+                                {visibleOptions.map((option) => {
+                                  const selected = fieldValue === option.value;
+                                  return (
+                                    <AnimatedPressable
+                                      key={`${field.name}-${option.value || 'empty'}`}
+                                      accessibilityRole="button"
+                                      style={[
+                                        styles.selectOption,
+                                        selected && { backgroundColor: theme.surfaceSoft },
+                                      ]}
+                                      onPress={() => {
+                                        setValues((current) => ({ ...current, [field.name]: option.value }));
+                                        setSelectQueries((current) => ({ ...current, [field.name]: '' }));
+                                        setOpenSelect(null);
+                                      }}
+                                    >
+                                      <View style={styles.selectOptionTextWrap}>
+                                        <Text
+                                          numberOfLines={1}
+                                          style={[
+                                            styles.selectOptionLabel,
+                                            { color: selected ? colors.red : theme.text },
+                                          ]}
+                                        >
+                                          {t(option.label)}
+                                        </Text>
+                                        {option.description ? (
+                                          <Text numberOfLines={1} style={[styles.selectOptionDescription, { color: theme.textMuted }]}>
+                                            {t(option.description)}
+                                          </Text>
+                                        ) : null}
+                                      </View>
+                                      {selected ? <Check size={16} color={colors.red} /> : null}
+                                    </AnimatedPressable>
+                                  );
+                                })}
+                              </ScrollView>
+                              {filteredOptions.length > visibleOptions.length ? (
+                                <Text style={[styles.moreOptionsHint, { color: theme.textMuted }]}>
+                                  {t('Continue digitando para refinar a busca.')}
                                 </Text>
                               ) : null}
-                            </AnimatedPressable>
-                          );
-                        })
-                      )}
+                            </>
+                          )}
+                        </View>
+                      ) : null}
                     </View>
                   ) : (
                     <TextInput
@@ -318,26 +400,62 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   inputMultiline: { minHeight: 86, textAlignVertical: 'top' },
-  optionList: { gap: 8 },
-  optionButton: {
-    minHeight: 42,
+  selectWrap: { position: 'relative' },
+  selectInputWrap: {
+    minHeight: 44,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.white,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectInput: {
+    flex: 1,
+    minHeight: 42,
+    color: colors.navy,
+    fontSize: 14,
+    paddingLeft: 12,
+    paddingRight: 4,
+    paddingVertical: 10,
+  },
+  selectIconButton: {
+    width: 40,
+    minHeight: 42,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  optionButtonSelected: {
-    borderColor: colors.red,
-    backgroundColor: colors.panelSoft,
+  selectDropdown: {
+    maxHeight: 220,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    marginTop: 6,
+    overflow: 'hidden',
   },
-  optionLabel: { color: colors.navy, fontSize: 13, fontWeight: '800' },
-  optionLabelSelected: { color: colors.red },
-  optionDescription: { color: colors.grayText, fontSize: 11, fontWeight: '700', marginTop: 2 },
-  optionDescriptionSelected: { color: colors.navy },
-  emptyOptions: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
+  selectOptionsScroll: { maxHeight: 180 },
+  selectOption: {
+    minHeight: 42,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  selectOptionTextWrap: { flex: 1, minWidth: 0 },
+  selectOptionLabel: { color: colors.navy, fontSize: 13, fontWeight: '800' },
+  selectOptionDescription: { color: colors.grayText, fontSize: 11, fontWeight: '700', marginTop: 2 },
+  emptyOptions: { color: colors.grayText, fontSize: 12, fontWeight: '700', padding: 12 },
+  moreOptionsHint: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    color: colors.grayText,
+    fontSize: 11,
+    fontWeight: '700',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
   imageField: { gap: 10 },
   imagePreview: {
     width: 92,

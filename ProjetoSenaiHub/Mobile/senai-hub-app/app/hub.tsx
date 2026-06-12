@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Image,
   type ImageSourcePropType,
@@ -8,17 +8,18 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ArrowRight,
-  Bell,
   CheckCircle2,
   LogOut,
 } from 'lucide-react-native';
 import { AnimatedPressable, FeedbackMessage } from '@/components/common/VisualPrimitives';
+import { AppHeader } from '@/components/layout/AppHeader';
+import { NotificationsModal } from '@/components/notifications/NotificationsModal';
 import { getBrandAsset } from '@/constants/brandAssets';
 import { colors } from '@/constants/colors';
 import { useI18n } from '@/hooks/useI18n';
+import { useNotifications } from '@/hooks/useNotifications';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { canAccessConnect, canAccessGrid } from '@/lib/permissions';
 import { useAuthStore } from '@/stores/auth.store';
@@ -69,7 +70,8 @@ export default function HubScreen() {
   const { session, logout } = useAuthStore();
   const theme = useThemeColors();
   const { t } = useI18n();
-  const insets = useSafeAreaInsets();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notifications = useNotifications(session?.userId);
 
   useEffect(() => {
     if (!session) {
@@ -78,14 +80,6 @@ export default function HubScreen() {
   }, [session, router]);
 
   if (!session?.perfil) return null;
-
-  const initials = session.perfil.nome
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
 
   const apps = [];
   if (canAccessConnect(session.perfil, session.aplicacoes)) {
@@ -112,22 +106,30 @@ export default function HubScreen() {
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.appBackground }]}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + 18, backgroundColor: theme.appBackground }]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.topbar}>
-        <Image source={getBrandAsset('hub', 'slogan', theme.isDark)} style={styles.logo} resizeMode="contain" />
-        <View style={styles.topActions}>
-          <View style={[styles.iconAction, { backgroundColor: theme.surface, borderColor: theme.line }]}>
-            <Bell size={19} color={theme.text} />
-          </View>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
+    <View style={[styles.container, { backgroundColor: theme.appBackground }]}>
+      <AppHeader
+        title="SENAI Hub"
+        brandArea="hub"
+        showMenu={false}
+        notificationCount={notifications.unreadCount}
+        onNotificationsPress={() => setNotificationsOpen(true)}
+      />
+
+      <ScrollView
+        style={{ backgroundColor: theme.appBackground }}
+        contentContainerStyle={[styles.content, { backgroundColor: theme.appBackground }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.titleRow}>
+          <View style={styles.titleCopy}>
+            <Text style={[styles.eyebrow, { color: theme.textMuted }]}>{t('Bem-vindo')}, {session.perfil.nome.split(' ')[0]}</Text>
+            <Text style={[styles.hubTitle, { color: theme.text }]}>{t('Hub de Aplicações')}</Text>
+            <Text style={[styles.description, { color: theme.textMuted }]}>{t('Acesse os sistemas disponíveis para o seu perfil.')}</Text>
           </View>
           <AnimatedPressable
-            style={[styles.iconAction, { backgroundColor: theme.surface, borderColor: theme.line }]}
+            accessibilityLabel="Sair da conta"
+            accessibilityRole="button"
+            style={[styles.logoutAction, { backgroundColor: theme.surface, borderColor: theme.line }]}
             onPress={async () => {
               await logout();
               router.replace('/login');
@@ -137,56 +139,58 @@ export default function HubScreen() {
             <LogOut size={19} color={theme.textMuted} />
           </AnimatedPressable>
         </View>
-      </View>
 
-      <Text style={[styles.eyebrow, { color: theme.textMuted }]}>{t('Bem-vindo')}, {session.perfil.nome.split(' ')[0]}</Text>
-      <Text style={[styles.hubTitle, { color: theme.text }]}>{t('Hub de Aplicações')}</Text>
-      <Text style={[styles.description, { color: theme.textMuted }]}>{t('Acesse os sistemas disponíveis para o seu perfil.')}</Text>
-
-      <FeedbackMessage
-        variant="info"
-        message="Os aplicativos exibidos abaixo dependem do seu perfil e permissões de acesso."
-        style={styles.infoBox}
-      />
-
-      <View style={styles.cards}>
-        {apps.map((app) => (
-          <AppCard
-            key={app.key}
-            title={app.title}
-            description={app.description}
-            accent={app.accent}
-            logo={app.logo}
-            image={app.image}
-            onPress={() => router.push(app.route)}
-          />
-        ))}
-      </View>
-
-      {apps.length === 0 ? (
         <FeedbackMessage
-          variant="warning"
-          message="Nenhuma aplicação liberada para seu perfil."
-          style={styles.emptyMessage}
+          variant="info"
+          message="Os aplicativos exibidos abaixo dependem do seu perfil e permissões de acesso."
+          style={styles.infoBox}
         />
-      ) : null}
-    </ScrollView>
+
+        <View style={styles.cards}>
+          {apps.map((app) => (
+            <AppCard
+              key={app.key}
+              title={app.title}
+              description={app.description}
+              accent={app.accent}
+              logo={app.logo}
+              image={app.image}
+              onPress={() => router.push(app.route)}
+            />
+          ))}
+        </View>
+
+        {apps.length === 0 ? (
+          <FeedbackMessage
+            variant="warning"
+            message="Nenhuma aplicação liberada para seu perfil."
+            style={styles.emptyMessage}
+          />
+        ) : null}
+      </ScrollView>
+
+      <NotificationsModal
+        visible={notificationsOpen}
+        notifications={notifications.notifications}
+        loading={notifications.loading}
+        onClose={() => setNotificationsOpen(false)}
+        onMarkAsRead={notifications.markAsRead}
+        onMarkAllAsRead={notifications.markAllAsRead}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 18, paddingBottom: 34 },
-  topbar: {
-    minHeight: 48,
+  titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 22,
+    alignItems: 'flex-start',
+    gap: 12,
   },
-  logo: { width: 156, height: 50 },
-  topActions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconAction: {
+  titleCopy: { flex: 1, minWidth: 0 },
+  logoutAction: {
     width: 36,
     height: 36,
     borderRadius: 8,
@@ -196,15 +200,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: colors.navy,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { color: colors.white, fontSize: 11, fontWeight: '900' },
   eyebrow: { color: colors.grayText, fontSize: 13, fontWeight: '700' },
   hubTitle: { color: colors.navy, fontSize: 27, fontWeight: '900', marginTop: 4 },
   description: { color: colors.grayText, fontSize: 13, marginTop: 5 },
