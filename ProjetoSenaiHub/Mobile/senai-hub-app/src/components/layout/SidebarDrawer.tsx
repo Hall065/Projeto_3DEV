@@ -2,6 +2,7 @@ import { cloneElement, isValidElement, useEffect, useRef, useState, type ReactEl
 import {
   Animated,
   Easing,
+  Image,
   Modal,
   Pressable,
   ScrollView,
@@ -126,7 +127,11 @@ export function SidebarDrawer({ items, moduleTitle, accentColor = colors.red }: 
 
           <View style={styles.userCard}>
             <View style={[styles.avatar, { backgroundColor: accentColor }]}>
-              <Text style={styles.avatarText}>{initials}</Text>
+              {session?.perfil?.foto_url ? (
+                <Image source={{ uri: session.perfil.foto_url }} style={styles.avatarImage} />
+              ) : (
+                <Text style={styles.avatarText}>{initials}</Text>
+              )}
             </View>
             <View style={styles.userTextWrap}>
               <Text numberOfLines={1} style={styles.userName}>
@@ -283,6 +288,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarText: {
     color: colors.white,

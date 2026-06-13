@@ -16,12 +16,15 @@ import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { ROUTES } from '@/constants/routes';
 import { useEmpresaContext } from '@/hooks/useEmpresaContext';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { getEmpresaDashboardMetrics, listContratosByEmpresaId } from '@/services/empresa.service';
 import { connectService } from '@/services/connect.service';
 import type { ContratoAluno, Curso, Turma } from '@/types/connect.types';
 
 export default function ConnectDashboard() {
   const router = useRouter();
+  const theme = useThemeColors();
+  const themedTone = theme.isDark ? 'dark' : 'light';
   const { isEmpresa, empresa, empresaId, loading: empresaLoading } = useEmpresaContext();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({
@@ -106,17 +109,17 @@ export default function ConnectDashboard() {
           />
         ) : null}
 
-        <SurfaceCard tone="dark" title={empresa?.nome ?? 'Empresa parceira'} subtitle="Resumo dos aprendizes vinculados">
+        <SurfaceCard tone={themedTone} title={empresa?.nome ?? 'Empresa parceira'} subtitle="Resumo dos aprendizes vinculados">
           <View style={styles.heroContent}>
-            <RingMetric value={empresaMetrics.totalAlunos} label="aprendizes" accent={connectTheme.accent} tone="dark" />
+            <RingMetric value={empresaMetrics.totalAlunos} label="aprendizes" accent={connectTheme.accent} tone={themedTone} />
             <View style={styles.heroBody}>
-              <Text style={styles.heroTitle}>Gestão dos seus contratos</Text>
-              <Text style={styles.heroText}>
+              <Text style={[styles.heroTitle, { color: theme.text }]}>Gestão dos seus contratos</Text>
+              <Text style={[styles.heroText, { color: theme.textMuted }]}>
                 Consulte contratos, frequência e cálculo salarial apenas dos alunos vinculados à sua empresa.
               </Text>
               <View style={styles.heroPills}>
-                <Pill label={`${empresaMetrics.contratosAtivos} contratos ativos`} variant="info" tone="dark" />
-                <Pill label={`${empresaMetrics.totalFrequencias} registros`} variant="success" tone="dark" />
+                <Pill label={`${empresaMetrics.contratosAtivos} contratos ativos`} variant="info" tone={themedTone} />
+                <Pill label={`${empresaMetrics.totalFrequencias} registros`} variant="success" tone={themedTone} />
               </View>
             </View>
           </View>
@@ -183,17 +186,17 @@ export default function ConnectDashboard() {
       description="Dashboard acadêmico do SENAI Connect."
       isLoading={screenLoading}
     >
-      <SurfaceCard tone="dark" title="Operação acadêmica" subtitle="Resumo carregado do Supabase">
+      <SurfaceCard tone={themedTone} title="Operação acadêmica" subtitle="Resumo carregado do Supabase">
         <View style={styles.heroContent}>
-          <RingMetric value={metrics.totalAlunos} label="alunos ativos" accent={connectTheme.accent} tone="dark" />
+          <RingMetric value={metrics.totalAlunos} label="alunos ativos" accent={connectTheme.accent} tone={themedTone} />
           <View style={styles.heroBody}>
-            <Text style={styles.heroTitle}>Acompanhamento centralizado</Text>
-            <Text style={styles.heroText}>
+            <Text style={[styles.heroTitle, { color: theme.text }]}>Acompanhamento centralizado</Text>
+            <Text style={[styles.heroText, { color: theme.textMuted }]}>
               Cursos, turmas, professores e frequência reunidos para consulta rápida.
             </Text>
             <View style={styles.heroPills}>
-              <Pill label={`${metrics.totalTurmas} turmas`} variant="info" tone="dark" />
-              <Pill label={`${metrics.totalCursos} cursos`} variant="success" tone="dark" />
+              <Pill label={`${metrics.totalTurmas} turmas`} variant="info" tone={themedTone} />
+              <Pill label={`${metrics.totalCursos} cursos`} variant="success" tone={themedTone} />
             </View>
           </View>
         </View>
@@ -276,8 +279,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   heroBody: { flex: 1, minWidth: 0 },
-  heroTitle: { color: colors.white, fontSize: 16, fontWeight: '900' },
-  heroText: { color: colors.mutedText, fontSize: 12, lineHeight: 17, marginTop: 5 },
+  heroTitle: { fontSize: 16, fontWeight: '900' },
+  heroText: { fontSize: 12, lineHeight: 17, marginTop: 5 },
   heroPills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
