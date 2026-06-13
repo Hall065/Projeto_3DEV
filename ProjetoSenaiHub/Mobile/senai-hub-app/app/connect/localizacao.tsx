@@ -2,13 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MapPin, Navigation, Search, Users } from 'lucide-react-native';
 import { AppButton, FeedbackMessage, ListRow, LoadingState, MetricTile, SearchField, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { CampusMap3DContainer } from '@/components/maps/CampusMap3D';
 import { CampusMap25D } from '@/components/maps/CampusMap25D';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { connectService } from '@/services/connect.service';
 import { useAuthStore } from '@/stores/auth.store';
-import type { Aluno, LocalizacaoAluno, Turma } from '@/types/connect.types';
+import type { Aluno, LocalizacaoAluno, Professor, Turma } from '@/types/connect.types';
+import { buildCampusPeopleSimulation } from '@/utils/campusPeopleSimulation';
 
 type Tab = 'turmas' | 'alunos';
 
@@ -22,6 +24,7 @@ export default function LocalizacaoScreen() {
   const [search, setSearch] = useState('');
   const [turmas, setTurmas] = useState<Turma[]>([]);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [professores, setProfessores] = useState<Professor[]>([]);
   const [localizacoes, setLocalizacoes] = useState<LocalizacaoAluno[]>([]);
   const [selectedTurmaId, setSelectedTurmaId] = useState<string | null>(null);
   const [selectedAlunoId, setSelectedAlunoId] = useState<string | null>(null);
@@ -37,9 +40,11 @@ export default function LocalizacaoScreen() {
       ? (await Promise.all(turmasData.map((turma) => connectService.listAlunosByTurma(turma.id)))).flat()
       : await connectService.listAlunos();
     const localizacoesData = await connectService.listLocalizacoes();
+    const professoresData = await connectService.listProfessores().catch(() => []);
     const alunoIds = new Set(alunosData.map((aluno) => aluno.id));
     setTurmas(turmasData);
     setAlunos(alunosData);
+    setProfessores(professoresData);
     setLocalizacoes(isProfessor ? localizacoesData.filter((item) => alunoIds.has(item.aluno_id)) : localizacoesData);
   }, [session?.perfil?.tipo, session?.userId]);
 
@@ -84,6 +89,25 @@ export default function LocalizacaoScreen() {
   });
   const selectedLocation = localizacoes.find((item) => item.aluno_id === selectedAlunoId) ?? null;
   const noCampus = localizacoes.filter((item) => item.dentro_do_senai ?? item.dentro_perimetro).length;
+  const campusPeople = useMemo(
+    () => buildCampusPeopleSimulation(localizacoes, professores),
+    [localizacoes, professores]
+  );
+
+  const handleMapPersonSelect = useCallback(
+    (personId: string | null) => {
+      if (!personId?.startsWith('student-')) {
+        setSelectedAlunoId(null);
+        return;
+      }
+
+      const alunoId = personId.slice('student-'.length);
+      if (alunos.some((aluno) => aluno.id === alunoId)) {
+        setSelectedAlunoId(alunoId);
+      }
+    },
+    [alunos]
+  );
 
   if (loading) return <LoadingState />;
 
@@ -155,11 +179,18 @@ export default function LocalizacaoScreen() {
           </ScrollView>
         </SurfaceCard>
 
-        <SurfaceCard title="Mapa 2.5D do campus" subtitle="Pin atualizado por Realtime">
-          <CampusMap25D
-            locations={selectedLocation ? [selectedLocation] : localizacoes}
-            selectedId={selectedAlunoId}
-            onSelect={(item) => setSelectedAlunoId(item.aluno_id)}
+        <SurfaceCard title="Mapa 3D do campus" subtitle="Blocos, alunos e equipe em tempo real">
+          <CampusMap3DContainer
+            people={campusPeople}
+            highlightPersonId={selectedAlunoId ? `student-${selectedAlunoId}` : null}
+            onSelectPerson={handleMapPersonSelect}
+            fallback={(
+              <CampusMap25D
+                locations={localizacoes}
+                selectedId={selectedAlunoId}
+                onSelect={(item) => setSelectedAlunoId(item.aluno_id)}
+              />
+            )}
           />
           {selectedLocation ? (
             <View style={styles.infoCard}>

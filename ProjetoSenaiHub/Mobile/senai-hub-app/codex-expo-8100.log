@@ -1,0 +1,125 @@
+env: load .env
+env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY SMTP_HOST SMTP_PORT SMTP_SECURE SMTP_USER SMTP_EMAIL_FROM SMTP_PASS EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET EXPO_PUBLIC_SENAI_LATITUDE EXPO_PUBLIC_SENAI_LONGITUDE EXPO_PUBLIC_SENAI_RAIO_METROS
+Starting project at C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+React Compiler enabled
+Starting Metro Bundler
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Waiting on http://localhost:8100
+Logs for your project will appear below.
+Web node_modules\expo-router\entry.js ▓▓░░░░░░░░░░░░░░ 13.2% ( 4/11)
+λ node_modules\expo-router\node\render.js ░░░░░░░░░░░░░░░░  4.7% ( 7/42)
+Web node_modules\expo-router\entry.js ▓▓░░░░░░░░░░░░░░ 13.2% ( 4/11)
+λ node_modules\expo-router\node\render.js ░░░░░░░░░░░░░░░░  4.7% ( 13/124)
+Web node_modules\expo-router\entry.js ▓▓▓░░░░░░░░░░░░░ 20.4% (14/31)
+λ node_modules\expo-router\node\render.js ▓▓░░░░░░░░░░░░░░ 12.6% ( 87/245)
+Web node_modules\expo-router\entry.js ▓▓▓░░░░░░░░░░░░░ 20.4% (109/279)
+λ node_modules\expo-router\node\render.js ▓▓░░░░░░░░░░░░░░ 13.9% (127/345)
+Web node_modules\expo-router\entry.js ▓▓▓░░░░░░░░░░░░░ 20.4% (109/279)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓░░░░░░░░░░░ 31.6% (264/480)
+Web node_modules\expo-router\entry.js ▓▓▓░░░░░░░░░░░░░ 20.4% (109/279)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓░░░░░░░░░░ 38.1% (331/539)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓░░░░░░░░░░░ 35.8% (286/484)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% (457/631)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓░░░░░░░░░░░ 35.8% (286/484)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% ( 533/2318)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓░░░░░░░░░░ 38.5% (314/506)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% ( 549/2325)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓░░░░░░░░░░ 38.5% (314/507)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% ( 549/2325)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 48.4% (387/586)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% ( 549/2325)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 48.4% (483/699)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% ( 588/2347)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 48.4% (483/699)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% ( 640/2421)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 48.4% (483/699)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% ( 691/2486)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 48.4% (491/706)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 56.3% ( 722/2525)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓░░░░░░░░░ 48.4% (491/706)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 84.1% (2318/2528)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 55.4% (658/884)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 84.2% (2331/2541)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 59.9% (701/913)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 84.4% (2345/2553)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 59.9% (701/913)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.9% (2423/2614)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 59.9% (701/913)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.4% (2485/2705)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 59.9% (701/913)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.4% (2491/2712)
+| node:events:486
+|       throw er; // Unhandled 'error' event
+|       ^
+| 
+| Error: write UNKNOWN
+| [90m    at target._send (node:internal/child_process:876:20)[39m
+| [90m    at target.send (node:internal/child_process:751:19)[39m
+|     at reportSuccess [90m(C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\[39mnode_modules\[4mjest-worker[24m\build\workers\processChild.js:82:11[90m)[39m
+| [90m    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+| Emitted 'error' event on process instance at:
+| [90m    at node:internal/child_process:880:39[39m
+| [90m    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)[39m {
+|   errno: [33m-4094[39m,
+|   code: [32m'UNKNOWN'[39m,
+|   syscall: [32m'write'[39m
+| }
+| 
+| Node.js v24.14.0
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 59.9% (709/932)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.4% (2539/2754)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 66.7% ( 850/1041)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.4% (2539/2754)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 67.3% ( 915/1118)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.4% (2559/2768)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 67.3% ( 915/1118)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.4% (2561/2769)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 67.3% ( 920/2717)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.6% (2732/2842)
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\ColladaLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\ColladaLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\GLTFLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\GLTFLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\MTLLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\MTLLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\OBJLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\OBJLoader, however this file does not exist. Falling back to file-based resolution.
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 67.3% (1096/2808)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.6% (2744/2861)
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\ColladaLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\ColladaLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\MTLLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\MTLLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\OBJLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\OBJLoader, however this file does not exist. Falling back to file-based resolution.
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 90.5% (2710/2849)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.6% (2830/2942)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 91.8% (2797/2920)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.2% (2876/2983)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 93.7% (2858/2953)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.6% (2941/3008)
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\ColladaLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\ColladaLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\GLTFLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\GLTFLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\MTLLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\MTLLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\OBJLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\OBJLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\ColladaLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\ColladaLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\MTLLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\MTLLoader, however this file does not exist. Falling back to file-based resolution.
+ WARN  The package C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three contains an invalid package.json configuration. Consider raising this issue with the package maintainer(s).
+Reason: The resolution for "C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\OBJLoader" defined in "exports" is C:\Users\gabri\OneDrive\Desktop\Senai\3 TERMO-SENAI\Projeto\Projeto_3DEV\ProjetoSenaiHub\Mobile\senai-hub-app\node_modules\three\examples\jsm\loaders\OBJLoader, however this file does not exist. Falling back to file-based resolution.
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.0% (3042/3084)
+λ node_modules\expo-router\node\render.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 97.5% (3079/3118)
+λ Bundled 293700ms node_modules\expo-router\node\render.js (3146 modules)
+Web node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (3131/3131)
+Web Bundled 296288ms node_modules\expo-router\entry.js (3131 modules)
