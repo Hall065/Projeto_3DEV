@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BookOpen, CalendarCheck, MapPin, WalletCards } from 'lucide-react-native';
-import { ListRow, LoadingState, MetricTile, Pill, RingMetric, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { ChartCard, DonutStatusChart, InteractiveBarChart, TrendLineChart } from '@/components/charts';
+import { MetricGrid } from '@/components/common/MetricGrid';
+import { ListRow, LoadingState, MetricTile, Pill, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { colors, connectTheme } from '@/constants/colors';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { studentService, type StudentDashboardData } from '@/services/student.service';
 import { useAuthStore } from '@/stores/auth.store';
+import { buildDateTrend } from '@/utils/dashboardAnalytics';
 
 export default function AlunoDashboardScreen() {
   const session = useAuthStore((s) => s.session);
@@ -26,8 +29,26 @@ export default function AlunoDashboardScreen() {
   const aluno = data?.aluno;
   const frequencias = data?.frequencias ?? [];
   const presentes = frequencias.filter((item) => item.status === 'presente').length;
+  const justificadas = frequencias.filter((item) => item.status === 'falta_justificada').length;
+  const injustificadas = frequencias.filter((item) => item.status === 'falta_injustificada').length;
   const frequenciaPerc = frequencias.length ? Math.round((presentes / frequencias.length) * 100) : 0;
   const dentro = Boolean(data?.localizacao?.dentro_do_senai ?? data?.localizacao?.dentro_perimetro);
+  const frequenciaData = [
+    { label: 'Presencas', value: presentes, color: colors.green },
+    { label: 'Justificadas', value: justificadas, color: colors.orange },
+    { label: 'Injustificadas', value: injustificadas, color: colors.red },
+  ];
+  const presencasTrend = buildDateTrend(
+    frequencias.filter((item) => item.status === 'presente'),
+    ['data_aula', 'data'],
+    { limit: 6 }
+  );
+  const salario = data?.salario;
+  const salarioData = [
+    { label: 'Base', value: Math.round(salario?.salario_base ?? 0), color: colors.blue },
+    { label: 'Desconto', value: Math.round(salario?.desconto ?? 0), color: colors.red },
+    { label: 'Final', value: Math.round(salario?.salario_final ?? 0), color: connectTheme.accent },
+  ];
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.appBackground }]} contentContainerStyle={styles.content}>
@@ -47,23 +68,39 @@ export default function AlunoDashboardScreen() {
         </View>
       </SurfaceCard>
 
-      <View style={styles.metricGrid}>
-        <MetricTile label="Frequencia mes" value={`${frequenciaPerc}%`} accent={colors.green} icon={<CalendarCheck size={16} color={colors.green} />} style={styles.metric} />
-        <MetricTile label="Faltas injustificadas" value={data?.salario?.faltas_injustificadas ?? 0} accent={colors.red} icon={<BookOpen size={16} color={colors.red} />} style={styles.metric} />
-        <MetricTile label="Salario final" value={`R$ ${Math.round(data?.salario?.salario_final ?? 0).toLocaleString('pt-BR')}`} accent={connectTheme.accent} icon={<WalletCards size={16} color={connectTheme.accent} />} style={styles.metric} />
-        <MetricTile label="Localizacao" value={dentro ? 'Ativa' : 'Inativa'} accent={dentro ? colors.green : colors.red} icon={<MapPin size={16} color={dentro ? colors.green : colors.red} />} style={styles.metric} />
-      </View>
+      <MetricGrid>
+        <MetricTile label="Frequencia mes" value={`${frequenciaPerc}%`} accent={colors.green} icon={<CalendarCheck size={16} color={colors.green} />} />
+        <MetricTile label="Faltas injustificadas" value={data?.salario?.faltas_injustificadas ?? 0} accent={colors.red} icon={<BookOpen size={16} color={colors.red} />} />
+        <MetricTile label="Salario final" value={`R$ ${Math.round(data?.salario?.salario_final ?? 0).toLocaleString('pt-BR')}`} accent={connectTheme.accent} icon={<WalletCards size={16} color={connectTheme.accent} />} />
+        <MetricTile label="Localizacao" value={dentro ? 'Ativa' : 'Inativa'} accent={dentro ? colors.green : colors.red} icon={<MapPin size={16} color={dentro ? colors.green : colors.red} />} />
+      </MetricGrid>
 
-      <SurfaceCard title="Resumo de frequencia" subtitle="Lancamentos deste mes">
-        <View style={styles.ringRow}>
-          <RingMetric value={`${frequenciaPerc}%`} label="presenca" accent={colors.green} />
-          <View style={styles.summary}>
-            <Text style={[styles.summaryText, { color: theme.text }]}>FJ: {frequencias.filter((item) => item.status === 'falta_justificada').length}</Text>
-            <Text style={[styles.summaryText, { color: theme.text }]}>FI: {frequencias.filter((item) => item.status === 'falta_injustificada').length}</Text>
-            <Text style={[styles.summaryText, { color: theme.text }]}>Registros: {frequencias.length}</Text>
-          </View>
-        </View>
-      </SurfaceCard>
+      <ChartCard
+        title="Resumo de frequencia"
+        subtitle="Lancamentos deste mes"
+        empty={frequencias.length === 0}
+        summary={`${frequenciaPerc}% de presenca em ${frequencias.length} registros`}
+      >
+        <DonutStatusChart data={frequenciaData} />
+      </ChartCard>
+
+      <ChartCard
+        title="Presencas por data"
+        subtitle="Evolucao recente do aluno"
+        empty={presencasTrend.length === 0}
+        summary={`${presentes} presencas registradas no periodo carregado`}
+      >
+        <TrendLineChart data={presencasTrend} color={colors.green} />
+      </ChartCard>
+
+      <ChartCard
+        title="Composicao salarial"
+        subtitle="Base, descontos e valor final"
+        empty={!salario}
+        summary={salario ? `Referencia ${salario.mes_referencia ?? salario.mes ?? 'atual'}` : 'Nenhum calculo salarial encontrado'}
+      >
+        <InteractiveBarChart data={salarioData} formatValue={(value) => `R$ ${value.toLocaleString('pt-BR')}`} />
+      </ChartCard>
 
       <SurfaceCard title="Aulas recentes" subtitle="Ultimos registros encontrados">
         {frequencias.slice(0, 5).map((item) => (
@@ -87,10 +124,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: 14, paddingBottom: 24 },
   statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
-  metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
-  metric: { width: '48%' },
-  ringRow: { flexDirection: 'row', alignItems: 'center', gap: 18 },
-  summary: { flex: 1, gap: 8 },
-  summaryText: { color: colors.navy, fontSize: 13, fontWeight: '800' },
   empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
 });

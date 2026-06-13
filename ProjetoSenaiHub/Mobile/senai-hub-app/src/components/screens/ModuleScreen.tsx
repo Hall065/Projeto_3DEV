@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { AppButton, LoadingState } from '@/components/common/VisualPrimitives';
+import { SkeletonCard } from '@/components/common/SkeletonCard';
+import { AppButton } from '@/components/common/VisualPrimitives';
 import { EmptyState } from '@/components/common/EmptyState';
 import { colors } from '@/constants/colors';
 import { useI18n } from '@/hooks/useI18n';
@@ -61,7 +62,11 @@ export function ModuleScreen({
       </View>
 
       {isLoading ? (
-        <LoadingState tone={tone} />
+        <View style={styles.loadingStack}>
+          <SkeletonCard rows={3} />
+          <SkeletonCard rows={2} />
+          <SkeletonCard rows={4} />
+        </View>
       ) : isEmpty ? (
         <EmptyState title={emptyTitle} description="Os dados aparecerão após conectar o Supabase." />
       ) : (
@@ -102,4 +107,5 @@ const styles = StyleSheet.create({
   },
   actionButtonText: { fontSize: 11 },
   body: { flex: 1 },
+  loadingStack: { gap: 12 },
 });

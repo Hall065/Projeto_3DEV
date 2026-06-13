@@ -2,11 +2,12 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AlertTriangle, CheckCircle2, ClipboardList, Map, Package, Wrench } from 'lucide-react-native';
+import { ChartCard, DonutStatusChart, InteractiveBarChart, TrendLineChart } from '@/components/charts';
+import { MetricGrid } from '@/components/common/MetricGrid';
 import {
   AppButton,
   ListRow,
   MetricTile,
-  MiniBars,
   Pill,
   RingMetric,
   SurfaceCard,
@@ -15,7 +16,8 @@ import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { ROUTES } from '@/constants/routes';
 import { gridService } from '@/services/grid.service';
-import type { Chamado, ItemEstoque } from '@/types/grid.types';
+import type { Chamado, ItemEstoque, Tarefa } from '@/types/grid.types';
+import { buildDateTrend, countByStatus, topGroups } from '@/utils/dashboardAnalytics';
 
 export default function GridDashboard() {
   const router = useRouter();
@@ -27,17 +29,20 @@ export default function GridDashboard() {
     chamadosConcluidos: 0,
   });
   const [chamados, setChamados] = useState<Chamado[]>([]);
+  const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [estoque, setEstoque] = useState<ItemEstoque[]>([]);
 
   useEffect(() => {
     Promise.all([
       gridService.getDashboardMetrics(),
       gridService.listChamados(),
+      gridService.listTarefas(),
       gridService.listEstoque(),
     ])
-      .then(([dashboardMetrics, chamadosData, estoqueData]) => {
+      .then(([dashboardMetrics, chamadosData, tarefasData, estoqueData]) => {
         setMetrics(dashboardMetrics);
         setChamados(chamadosData);
+        setTarefas(tarefasData);
         setEstoque(estoqueData);
       })
       .catch(() => {
@@ -48,6 +53,7 @@ export default function GridDashboard() {
           chamadosConcluidos: 0,
         });
         setChamados([]);
+        setTarefas([]);
         setEstoque([]);
       })
       .finally(() => setLoading(false));
@@ -60,6 +66,26 @@ export default function GridDashboard() {
     { label: 'Alta', value: chamados.filter((c) => c.prioridade === 'alta').length, color: colors.orange },
     { label: 'Urgente', value: chamados.filter((c) => c.prioridade === 'urgente').length, color: colors.red },
   ];
+  const chamadosPorStatus = countByStatus(chamados, [
+    { label: 'Abertos', status: 'aberto', color: colors.orange },
+    { label: 'Aguardando', status: 'aguardando', color: colors.blue },
+    { label: 'Em andamento', status: 'em_andamento', color: colors.purple },
+    { label: 'Concluidos', status: ['concluido', 'concluida'], color: colors.green },
+  ]);
+  const tarefasPorStatus = countByStatus(tarefas, [
+    { label: 'A fazer', status: 'a_fazer', color: colors.blue },
+    { label: 'Em andamento', status: 'em_andamento', color: colors.orange },
+    { label: 'Concluidas', status: ['concluido', 'concluida'], color: colors.green },
+  ]);
+  const estoquePorStatus = countByStatus(estoque, [
+    { label: 'Disponivel', status: 'disponivel', color: colors.green },
+    { label: 'Baixo', status: 'estoque_baixo', color: colors.orange },
+    { label: 'Indisponivel', status: ['indisponivel', 'esgotado'], color: colors.red },
+    { label: 'Reservado', status: 'reservado', color: colors.blue },
+  ]);
+  const chamadosTrend = buildDateTrend(chamados, ['data_abertura', 'criado_em', 'created_at'], { limit: 6 });
+  const estoquePorCategoria = topGroups(estoque, (item) => item.categoria_nome, { limit: 5, fallbackLabel: 'Sem categoria' });
+  const tarefasAbertas = tarefas.filter((tarefa) => tarefa.status === 'a_fazer' || tarefa.status === 'em_andamento').length;
 
   return (
     <ModuleScreen
@@ -84,12 +110,13 @@ export default function GridDashboard() {
         </View>
       </SurfaceCard>
 
-      <View style={styles.metricGrid}>
-        <MetricTile label="Chamados abertos" value={metrics.chamadosAbertos} accent={gridTheme.accent} icon={<ClipboardList size={16} color={gridTheme.accent} />} style={styles.metric} />
-        <MetricTile label="Em andamento" value={metrics.chamadosEmAndamento} accent={colors.orange} icon={<Wrench size={16} color={colors.orange} />} style={styles.metric} />
-        <MetricTile label="Concluídos" value={metrics.chamadosConcluidos} accent={colors.green} icon={<CheckCircle2 size={16} color={colors.green} />} style={styles.metric} />
-        <MetricTile label="Estoque crítico" value={itensCriticos.length} accent={colors.red} icon={<AlertTriangle size={16} color={colors.red} />} style={styles.metric} />
-      </View>
+      <MetricGrid>
+        <MetricTile label="Chamados abertos" value={metrics.chamadosAbertos} accent={gridTheme.accent} icon={<ClipboardList size={16} color={gridTheme.accent} />} />
+        <MetricTile label="Em andamento" value={metrics.chamadosEmAndamento} accent={colors.orange} icon={<Wrench size={16} color={colors.orange} />} />
+        <MetricTile label="Concluídos" value={metrics.chamadosConcluidos} accent={colors.green} icon={<CheckCircle2 size={16} color={colors.green} />} />
+        <MetricTile label="Estoque crítico" value={itensCriticos.length} accent={colors.red} icon={<AlertTriangle size={16} color={colors.red} />} />
+        <MetricTile label="Tarefas abertas" value={tarefasAbertas} accent={colors.blue} icon={<ClipboardList size={16} color={colors.blue} />} />
+      </MetricGrid>
 
       <SurfaceCard title="Atalhos rápidos" subtitle="Acesso direto às rotinas de manutenção">
         <View style={styles.quickGrid}>
@@ -143,9 +170,59 @@ export default function GridDashboard() {
         ))}
       </SurfaceCard>
 
-      <SurfaceCard title="Tarefas por prioridade" subtitle="Distribuição real dos chamados">
-        {chamados.length === 0 ? <Text style={styles.emptyDark}>Nenhum dado cadastrado ainda.</Text> : <MiniBars data={prioridades} />}
-      </SurfaceCard>
+      <ChartCard
+        title="Tarefas por prioridade"
+        subtitle="Distribuição real dos chamados"
+        empty={chamados.length === 0}
+        summary={`${chamados.length} chamados analisados por prioridade`}
+      >
+        <InteractiveBarChart data={prioridades} />
+      </ChartCard>
+
+      <ChartCard
+        title="Chamados por status"
+        subtitle="Composicao atual da fila"
+        empty={chamados.length === 0}
+        summary={`${chamados.length} chamados na base`}
+      >
+        <DonutStatusChart data={chamadosPorStatus} />
+      </ChartCard>
+
+      <ChartCard
+        title="Aberturas recentes"
+        subtitle="Evolucao de chamados por data"
+        empty={chamadosTrend.length === 0}
+        summary={`${chamadosTrend.length} pontos recentes de abertura`}
+      >
+        <TrendLineChart data={chamadosTrend} color={gridTheme.accent} />
+      </ChartCard>
+
+      <ChartCard
+        title="Tarefas por status"
+        subtitle="Distribuicao da execucao operacional"
+        empty={tarefas.length === 0}
+        summary={`${tarefas.length} tarefas analisadas`}
+      >
+        <DonutStatusChart data={tarefasPorStatus} />
+      </ChartCard>
+
+      <ChartCard
+        title="Estoque por status"
+        subtitle="Situacao atual dos itens"
+        empty={estoque.length === 0}
+        summary={`${estoque.length} itens cadastrados`}
+      >
+        <InteractiveBarChart data={estoquePorStatus} />
+      </ChartCard>
+
+      <ChartCard
+        title="Estoque por categoria"
+        subtitle="Categorias com mais itens cadastrados"
+        empty={estoquePorCategoria.length === 0}
+        summary={`${estoque.length} itens agrupados por categoria`}
+      >
+        <InteractiveBarChart data={estoquePorCategoria} />
+      </ChartCard>
 
       <SurfaceCard title="Itens com estoque baixo" subtitle="Peças que exigem reposição">
         {itensCriticos.length === 0 ? <Text style={styles.emptyDark}>Nenhum dado cadastrado ainda.</Text> : null}

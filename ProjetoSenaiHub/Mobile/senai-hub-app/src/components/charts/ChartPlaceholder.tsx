@@ -1,4 +1,4 @@
-import { MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { ChartCard, InteractiveBarChart } from '@/components/charts';
 import { colors } from '@/constants/colors';
 
 interface ChartPlaceholderProps {
@@ -7,8 +7,8 @@ interface ChartPlaceholderProps {
 
 export function ChartPlaceholder({ title }: ChartPlaceholderProps) {
   return (
-    <SurfaceCard title={title} subtitle="Resumo visual do período">
-      <MiniBars
+    <ChartCard title={title} subtitle="Resumo visual do periodo">
+      <InteractiveBarChart
         data={[
           { label: 'Seg', value: 42, color: colors.red },
           { label: 'Ter', value: 64, color: colors.blue },
@@ -17,6 +17,6 @@ export function ChartPlaceholder({ title }: ChartPlaceholderProps) {
           { label: 'Sex', value: 51, color: colors.purple },
         ]}
       />
-    </SurfaceCard>
+    </ChartCard>
   );
 }

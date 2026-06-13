@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Download, FileText, TrendingUp, Users } from 'lucide-react-native';
+import { ChartCard, InteractiveBarChart } from '@/components/charts';
 import { ExportModal } from '@/components/common/ExportModal';
-import { AnimatedPressable, FeedbackMessage, ListRow, MetricTile, MiniBars, ProgressBar, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { MetricGrid } from '@/components/common/MetricGrid';
+import { AnimatedPressable, FeedbackMessage, ListRow, MetricTile, ProgressBar, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { useEmpresaContext } from '@/hooks/useEmpresaContext';
@@ -67,10 +69,10 @@ export default function GerenciarFrequenciaScreen() {
   return (
     <ModuleScreen
       kicker="SENAI Connect"
-      title={isEmpresa ? 'Frequência dos aprendizes' : 'Gerenciar frequencia'}
+      title={isEmpresa ? 'Frequencia dos aprendizes' : 'Gerenciar frequencia'}
       description={
         isEmpresa
-          ? `Registros de presença dos aprendizes de ${empresa?.nome ?? 'sua empresa'}.`
+          ? `Registros de presenca dos aprendizes de ${empresa?.nome ?? 'sua empresa'}.`
           : 'Visualizacao, calculo e exportacao de relatorios.'
       }
       isLoading={screenLoading}
@@ -80,16 +82,16 @@ export default function GerenciarFrequenciaScreen() {
       {isEmpresa && !empresa && !screenLoading ? (
         <FeedbackMessage
           variant="warning"
-          message="Não foi possível identificar a empresa vinculada ao seu usuário."
+          message="Nao foi possivel identificar a empresa vinculada ao seu usuario."
         />
       ) : null}
 
-      <View style={styles.metricGrid}>
-        <MetricTile label="Registros" value={filteredItems.length} accent={connectTheme.accent} icon={<FileText size={16} color={connectTheme.accent} />} style={styles.metric} />
-        <MetricTile label="Presenca geral" value={`${presenca}%`} accent={colors.green} icon={<TrendingUp size={16} color={colors.green} />} style={styles.metric} />
-        <MetricTile label="Alunos monitorados" value={new Set(filteredItems.map((i) => i.aluno_id)).size} accent={colors.blue} icon={<Users size={16} color={colors.blue} />} style={styles.metric} />
-        <MetricTile label="Faltas" value={faltas} accent={colors.orange} icon={<Download size={16} color={colors.orange} />} style={styles.metric} />
-      </View>
+      <MetricGrid>
+        <MetricTile label="Registros" value={filteredItems.length} accent={connectTheme.accent} icon={<FileText size={16} color={connectTheme.accent} />} />
+        <MetricTile label="Presenca geral" value={`${presenca}%`} accent={colors.green} icon={<TrendingUp size={16} color={colors.green} />} />
+        <MetricTile label="Alunos monitorados" value={new Set(filteredItems.map((i) => i.aluno_id)).size} accent={colors.blue} icon={<Users size={16} color={colors.blue} />} />
+        <MetricTile label="Faltas" value={faltas} accent={colors.orange} icon={<Download size={16} color={colors.orange} />} />
+      </MetricGrid>
 
       {alunoOptions.length > 0 ? (
         <SurfaceCard title="Filtrar por aprendiz" subtitle="Somente alunos com contrato na empresa">
@@ -107,15 +109,20 @@ export default function GerenciarFrequenciaScreen() {
         </SurfaceCard>
       ) : null}
 
-      <SurfaceCard title="Evolucao da frequencia" subtitle="Comparativo dos registros reais">
-        <MiniBars
+      <ChartCard
+        title="Evolucao da frequencia"
+        subtitle="Comparativo dos registros reais"
+        empty={filteredItems.length === 0}
+        summary={`${presenca}% de presenca nos filtros atuais`}
+      >
+        <InteractiveBarChart
           data={[
-            { label: 'Pres.', value: presentes, color: colors.green },
+            { label: 'Presencas', value: presentes, color: colors.green },
             { label: 'Faltas', value: faltas, color: colors.red },
             { label: 'Total', value: filteredItems.length, color: colors.blue },
           ]}
         />
-      </SurfaceCard>
+      </ChartCard>
 
       <SurfaceCard title="Registros recentes" subtitle="Status de calculo e fechamento">
         {filteredItems.slice(0, 8).map((item) => (
@@ -130,7 +137,7 @@ export default function GerenciarFrequenciaScreen() {
           />
         ))}
         {filteredItems.length === 0 ? (
-          <FeedbackMessage variant="info" message="Nenhum registro de frequência encontrado para os filtros selecionados." />
+          <FeedbackMessage variant="info" message="Nenhum registro de frequencia encontrado para os filtros selecionados." />
         ) : null}
       </SurfaceCard>
 
@@ -177,8 +184,6 @@ function toRows(items: FrequenciaRegistro[]) {
 }
 
 const styles = StyleSheet.create({
-  metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
-  metric: { width: '48%' },
   filterRow: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
   filterChip: {
     borderRadius: 999,

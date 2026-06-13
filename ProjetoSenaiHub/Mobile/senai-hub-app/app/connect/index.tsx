@@ -2,12 +2,13 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { BookOpen, BriefcaseBusiness, CalendarCheck, CircleDollarSign, FileText, GraduationCap, Users } from 'lucide-react-native';
+import { ChartCard, DonutStatusChart, InteractiveBarChart, TrendLineChart } from '@/components/charts';
+import { MetricGrid } from '@/components/common/MetricGrid';
 import {
   AppButton,
   FeedbackMessage,
   ListRow,
   MetricTile,
-  MiniBars,
   Pill,
   RingMetric,
   SurfaceCard,
@@ -17,9 +18,15 @@ import { colors, connectTheme } from '@/constants/colors';
 import { ROUTES } from '@/constants/routes';
 import { useEmpresaContext } from '@/hooks/useEmpresaContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { getEmpresaDashboardMetrics, listContratosByEmpresaId } from '@/services/empresa.service';
+import {
+  getEmpresaDashboardMetrics,
+  listContratosByEmpresaId,
+  listFrequenciasByEmpresaId,
+  listSalariosByEmpresaId,
+} from '@/services/empresa.service';
 import { connectService } from '@/services/connect.service';
-import type { ContratoAluno, Curso, Turma } from '@/types/connect.types';
+import type { ContratoAluno, Curso, FrequenciaRegistro, SalarioAluno, Turma } from '@/types/connect.types';
+import { buildDateTrend, buildMonthTotals, countByStatus, percent, topGroups } from '@/utils/dashboardAnalytics';
 
 export default function ConnectDashboard() {
   const router = useRouter();
@@ -41,6 +48,8 @@ export default function ConnectDashboard() {
     totalSalarios: 0,
   });
   const [contratos, setContratos] = useState<ContratoAluno[]>([]);
+  const [frequencias, setFrequencias] = useState<FrequenciaRegistro[]>([]);
+  const [salarios, setSalarios] = useState<SalarioAluno[]>([]);
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [turmas, setTurmas] = useState<Turma[]>([]);
 
@@ -49,23 +58,33 @@ export default function ConnectDashboard() {
       setLoading(true);
       try {
         if (isEmpresa && empresaId) {
-          const [dashboardMetrics, contratosData] = await Promise.all([
+          const [dashboardMetrics, contratosData, frequenciasData, salariosData] = await Promise.all([
             getEmpresaDashboardMetrics(empresaId),
             listContratosByEmpresaId(empresaId),
+            listFrequenciasByEmpresaId(empresaId),
+            listSalariosByEmpresaId(empresaId),
           ]);
           setEmpresaMetrics(dashboardMetrics);
           setContratos(contratosData);
+          setFrequencias(frequenciasData);
+          setSalarios(salariosData);
           return;
         }
 
-        const [dashboardMetrics, cursosData, turmasData] = await Promise.all([
+        const [dashboardMetrics, cursosData, turmasData, frequenciasData, contratosData, salariosData] = await Promise.all([
           connectService.getDashboardMetrics(),
           connectService.listCursos(),
           connectService.listTurmas(),
+          connectService.listFrequencias(),
+          connectService.listContratos(),
+          connectService.listSalarios(),
         ]);
         setMetrics(dashboardMetrics);
         setCursos(cursosData);
         setTurmas(turmasData);
+        setFrequencias(frequenciasData);
+        setContratos(contratosData);
+        setSalarios(salariosData);
       } catch {
         setMetrics({ totalAlunos: 0, totalProfessores: 0, totalTurmas: 0, totalCursos: 0 });
         setEmpresaMetrics({
@@ -76,6 +95,8 @@ export default function ConnectDashboard() {
           totalSalarios: 0,
         });
         setContratos([]);
+        setFrequencias([]);
+        setSalarios([]);
         setCursos([]);
         setTurmas([]);
       } finally {
@@ -87,12 +108,37 @@ export default function ConnectDashboard() {
 
   const screenLoading = loading || (isEmpresa && empresaLoading);
 
+  const contratosPorStatus = [
+    { label: 'Ativos', value: contratos.filter((contrato) => contrato.status === 'ativo').length, color: colors.green },
+    { label: 'Pendentes', value: contratos.filter((contrato) => contrato.status === 'pendente').length, color: colors.orange },
+    {
+      label: 'Outros',
+      value: contratos.filter((contrato) => contrato.status !== 'ativo' && contrato.status !== 'pendente').length,
+      color: colors.blue,
+    },
+  ];
+
   const cursosPorPeriodo = [
     { label: 'Manhã', value: cursos.filter((c) => c.periodo === 'manha').length, color: colors.blue },
     { label: 'Tarde', value: cursos.filter((c) => c.periodo === 'tarde').length, color: connectTheme.accent },
     { label: 'Noite', value: cursos.filter((c) => c.periodo === 'noite').length, color: colors.orange },
     { label: 'Integral', value: cursos.filter((c) => c.periodo === 'integral').length, color: colors.green },
   ];
+  const frequenciaStatus = countByStatus(frequencias, [
+    { label: 'Presencas', status: ['presente', 'P'], color: colors.green },
+    { label: 'Justificadas', status: ['falta_justificada', 'FJ'], color: colors.orange },
+    { label: 'Injustificadas', status: ['falta_injustificada', 'FI'], color: colors.red },
+  ]);
+  const presentes = frequencias.filter((item) => item.status === 'presente' || item.status === 'P').length;
+  const presencaGeral = percent(presentes, frequencias.length);
+  const frequenciaTrend = buildDateTrend(frequencias, ['data_aula', 'data'], { limit: 6 });
+  const salariosPorMes = buildMonthTotals(
+    salarios,
+    ['mes_referencia', 'mes'],
+    (item) => item.salario_final ?? item.salario_base ?? 0,
+    { limit: 5 }
+  );
+  const turmasPorCurso = topGroups(turmas, (turma) => turma.curso_nome, { limit: 5, fallbackLabel: 'Sem curso' });
 
   if (isEmpresa) {
     return (
@@ -125,12 +171,39 @@ export default function ConnectDashboard() {
           </View>
         </SurfaceCard>
 
-        <View style={styles.metricGrid}>
-          <MetricTile label="Contratos" value={empresaMetrics.totalContratos} accent={connectTheme.accent} icon={<FileText size={16} color={connectTheme.accent} />} style={styles.metric} />
-          <MetricTile label="Aprendizes" value={empresaMetrics.totalAlunos} accent={colors.blue} icon={<Users size={16} color={colors.blue} />} style={styles.metric} />
-          <MetricTile label="Frequência" value={empresaMetrics.totalFrequencias} accent={colors.orange} icon={<CalendarCheck size={16} color={colors.orange} />} style={styles.metric} />
-          <MetricTile label="Cálculos" value={empresaMetrics.totalSalarios} accent={colors.green} icon={<CircleDollarSign size={16} color={colors.green} />} style={styles.metric} />
-        </View>
+        <MetricGrid>
+          <MetricTile label="Contratos" value={empresaMetrics.totalContratos} accent={connectTheme.accent} icon={<FileText size={16} color={connectTheme.accent} />} />
+          <MetricTile label="Aprendizes" value={empresaMetrics.totalAlunos} accent={colors.blue} icon={<Users size={16} color={colors.blue} />} />
+          <MetricTile label="Frequência" value={empresaMetrics.totalFrequencias} accent={colors.orange} icon={<CalendarCheck size={16} color={colors.orange} />} />
+          <MetricTile label="Cálculos" value={empresaMetrics.totalSalarios} accent={colors.green} icon={<CircleDollarSign size={16} color={colors.green} />} />
+        </MetricGrid>
+
+        <ChartCard
+          title="Contratos por status"
+          subtitle="Distribuicao dos vinculos da empresa"
+          empty={contratos.length === 0}
+          summary={`${contratos.length} contratos analisados`}
+        >
+          <DonutStatusChart data={contratosPorStatus} />
+        </ChartCard>
+
+        <ChartCard
+          title="Presenca dos aprendizes"
+          subtitle="Composicao real dos lancamentos"
+          empty={frequencias.length === 0}
+          summary={`${presencaGeral}% de presenca em ${frequencias.length} registros`}
+        >
+          <DonutStatusChart data={frequenciaStatus} />
+        </ChartCard>
+
+        <ChartCard
+          title="Fechamento salarial"
+          subtitle="Total calculado por mes"
+          empty={salariosPorMes.length === 0}
+          summary={`${salarios.length} calculos salariais analisados`}
+        >
+          <InteractiveBarChart data={salariosPorMes} formatValue={(value) => `R$ ${value.toLocaleString('pt-BR')}`} />
+        </ChartCard>
 
         <SurfaceCard title="Atalhos rápidos" subtitle="Áreas liberadas para o perfil empresa">
           <View style={styles.quickGrid}>
@@ -202,12 +275,12 @@ export default function ConnectDashboard() {
         </View>
       </SurfaceCard>
 
-      <View style={styles.metricGrid}>
-        <MetricTile label="Alunos ativos" value={metrics.totalAlunos} accent={connectTheme.accent} icon={<Users size={16} color={connectTheme.accent} />} style={styles.metric} />
-        <MetricTile label="Professores" value={metrics.totalProfessores} accent={colors.blue} icon={<GraduationCap size={16} color={colors.blue} />} style={styles.metric} />
-        <MetricTile label="Turmas" value={metrics.totalTurmas} accent={colors.orange} icon={<BookOpen size={16} color={colors.orange} />} style={styles.metric} />
-        <MetricTile label="Cursos" value={metrics.totalCursos} accent={colors.green} icon={<BriefcaseBusiness size={16} color={colors.green} />} style={styles.metric} />
-      </View>
+      <MetricGrid>
+        <MetricTile label="Alunos ativos" value={metrics.totalAlunos} accent={connectTheme.accent} icon={<Users size={16} color={connectTheme.accent} />} />
+        <MetricTile label="Professores" value={metrics.totalProfessores} accent={colors.blue} icon={<GraduationCap size={16} color={colors.blue} />} />
+        <MetricTile label="Turmas" value={metrics.totalTurmas} accent={colors.orange} icon={<BookOpen size={16} color={colors.orange} />} />
+        <MetricTile label="Cursos" value={metrics.totalCursos} accent={colors.green} icon={<BriefcaseBusiness size={16} color={colors.green} />} />
+      </MetricGrid>
 
       <SurfaceCard title="Atalhos rápidos" subtitle="Ações usadas na rotina acadêmica">
         <View style={styles.quickGrid}>
@@ -246,13 +319,50 @@ export default function ConnectDashboard() {
         </View>
       </SurfaceCard>
 
-      <SurfaceCard title="Cursos por período" subtitle="Distribuição real do catálogo">
-        {cursos.length === 0 ? (
-          <Text style={styles.empty}>Nenhum dado cadastrado ainda.</Text>
-        ) : (
-          <MiniBars data={cursosPorPeriodo} />
-        )}
-      </SurfaceCard>
+      <ChartCard
+        title="Cursos por período"
+        subtitle="Distribuição real do catálogo"
+        empty={cursos.length === 0}
+        summary={`${cursos.length} cursos analisados por periodo`}
+      >
+        <InteractiveBarChart data={cursosPorPeriodo} />
+      </ChartCard>
+
+      <ChartCard
+        title="Frequencia geral"
+        subtitle="Presencas, justificativas e faltas"
+        empty={frequencias.length === 0}
+        summary={`${presencaGeral}% de presenca em ${frequencias.length} registros`}
+      >
+        <DonutStatusChart data={frequenciaStatus} />
+      </ChartCard>
+
+      <ChartCard
+        title="Lancamentos por data"
+        subtitle="Evolucao recente das chamadas"
+        empty={frequenciaTrend.length === 0}
+        summary={`${frequenciaTrend.length} pontos recentes com registros de frequencia`}
+      >
+        <TrendLineChart data={frequenciaTrend} color={colors.green} />
+      </ChartCard>
+
+      <ChartCard
+        title="Turmas por curso"
+        subtitle="Cursos com mais turmas cadastradas"
+        empty={turmasPorCurso.length === 0}
+        summary={`${turmas.length} turmas analisadas`}
+      >
+        <InteractiveBarChart data={turmasPorCurso} />
+      </ChartCard>
+
+      <ChartCard
+        title="Salarios por mes"
+        subtitle="Fechamentos calculados no Connect"
+        empty={salariosPorMes.length === 0}
+        summary={`${salarios.length} calculos salariais analisados`}
+      >
+        <InteractiveBarChart data={salariosPorMes} formatValue={(value) => `R$ ${value.toLocaleString('pt-BR')}`} />
+      </ChartCard>
 
       <SurfaceCard title="Turmas cadastradas" subtitle="Últimas turmas carregadas do Supabase">
         {turmas.length === 0 ? <Text style={styles.empty}>Nenhum dado cadastrado ainda.</Text> : null}

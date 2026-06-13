@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { BookOpen, Clock3, Layers } from 'lucide-react-native';
+import { ChartCard, InteractiveBarChart } from '@/components/charts';
 import { CrudModal, type CrudField } from '@/components/common/CrudModal';
-import { FeedbackMessage, ListRow, MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { MetricGrid } from '@/components/common/MetricGrid';
+import { FeedbackMessage, ListRow, MetricTile, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { CURSO_MODALIDADE_OPTIONS, PERIODO_OPTIONS, USER_STATUS_OPTIONS } from '@/constants/form-options';
@@ -12,12 +14,12 @@ import type { Curso } from '@/types/connect.types';
 
 const fields: CrudField[] = [
   { name: 'nome', label: 'Nome do curso', required: true },
-  { name: 'descricao', label: 'Descrição', multiline: true },
+  { name: 'descricao', label: 'Descricao', multiline: true },
   { name: 'modalidade', label: 'Modalidade', required: true, options: CURSO_MODALIDADE_OPTIONS },
   { name: 'periodo', label: 'Periodo', required: true, options: PERIODO_OPTIONS },
-  { name: 'carga_horaria', label: 'Carga horária', keyboardType: 'numeric', mask: 'integer' },
-  { name: 'data_inicio', label: 'Data de início', placeholder: 'DD/MM/AAAA', mask: 'date' },
-  { name: 'data_termino', label: 'Data de término', placeholder: 'DD/MM/AAAA', mask: 'date' },
+  { name: 'carga_horaria', label: 'Carga horaria', keyboardType: 'numeric', mask: 'integer' },
+  { name: 'data_inicio', label: 'Data de inicio', placeholder: 'DD/MM/AAAA', mask: 'date' },
+  { name: 'data_termino', label: 'Data de termino', placeholder: 'DD/MM/AAAA', mask: 'date' },
   { name: 'status', label: 'Status', required: true, options: USER_STATUS_OPTIONS },
 ];
 
@@ -44,13 +46,19 @@ export default function CursosScreen() {
       update: connectService.updateCurso,
       remove: connectService.deleteCurso,
     });
+  const cursosPorPeriodo = [
+    { label: 'Manha', value: items.filter((c) => c.periodo === 'manha').length, color: colors.blue },
+    { label: 'Tarde', value: items.filter((c) => c.periodo === 'tarde').length, color: connectTheme.accent },
+    { label: 'Noite', value: items.filter((c) => c.periodo === 'noite').length, color: colors.orange },
+    { label: 'Integral', value: items.filter((c) => c.periodo === 'integral').length, color: colors.green },
+  ];
 
   return (
     <>
       <ModuleScreen
         kicker="SENAI Connect"
         title="Cursos"
-        description="Catálogo de cursos, carga horária e turmas vinculadas."
+        description="Catalogo de cursos, carga horaria e turmas vinculadas."
         isLoading={loading}
         actionLabel="+ Novo curso"
         onActionPress={() => {
@@ -58,31 +66,29 @@ export default function CursosScreen() {
           setModalOpen(true);
         }}
       >
-        <View style={styles.metricGrid}>
-          <MetricTile label="Cursos ativos" value={items.filter((c) => c.status === 'ativo').length} accent={connectTheme.accent} icon={<BookOpen size={16} color={connectTheme.accent} />} style={styles.metric} />
-          <MetricTile label="Períodos" value={new Set(items.map((c) => c.periodo).filter(Boolean)).size} accent={colors.blue} icon={<Layers size={16} color={colors.blue} />} style={styles.metric} />
-          <MetricTile label="Carga média" value={items.length ? Math.round(items.reduce((sum, c) => sum + (c.carga_horaria ?? 0), 0) / items.length) : 0} accent={colors.orange} icon={<Clock3 size={16} color={colors.orange} />} style={styles.metric} />
-        </View>
+        <MetricGrid>
+          <MetricTile label="Cursos ativos" value={items.filter((c) => c.status === 'ativo').length} accent={connectTheme.accent} icon={<BookOpen size={16} color={connectTheme.accent} />} />
+          <MetricTile label="Periodos" value={new Set(items.map((c) => c.periodo).filter(Boolean)).size} accent={colors.blue} icon={<Layers size={16} color={colors.blue} />} />
+          <MetricTile label="Carga media" value={items.length ? Math.round(items.reduce((sum, c) => sum + (c.carga_horaria ?? 0), 0) / items.length) : 0} accent={colors.orange} icon={<Clock3 size={16} color={colors.orange} />} />
+        </MetricGrid>
 
-        <SurfaceCard title="Cursos por período" subtitle="Distribuição do catálogo atual">
-          <MiniBars
-            data={[
-              { label: 'Manhã', value: items.filter((c) => c.periodo === 'manha').length, color: colors.blue },
-              { label: 'Tarde', value: items.filter((c) => c.periodo === 'tarde').length, color: connectTheme.accent },
-              { label: 'Noite', value: items.filter((c) => c.periodo === 'noite').length, color: colors.orange },
-              { label: 'Integral', value: items.filter((c) => c.periodo === 'integral').length, color: colors.green },
-            ]}
-          />
-        </SurfaceCard>
+        <ChartCard
+          title="Cursos por periodo"
+          subtitle="Distribuicao do catalogo atual"
+          empty={items.length === 0}
+          summary={`${items.length} cursos cadastrados`}
+        >
+          <InteractiveBarChart data={cursosPorPeriodo} />
+        </ChartCard>
 
-        <SurfaceCard title="Catálogo" subtitle="Cursos cadastrados">
+        <SurfaceCard title="Catalogo" subtitle="Cursos cadastrados">
           {error ? <FeedbackMessage variant="danger" message={error} /> : null}
           {items.length === 0 ? <Text style={styles.empty}>Nenhum curso encontrado.</Text> : null}
           {items.map((curso) => (
             <ListRow
               key={curso.id}
               title={curso.nome}
-              subtitle={`${curso.periodo ?? 'período não informado'} • ${curso.carga_horaria ?? 0}h`}
+              subtitle={`${curso.periodo ?? 'periodo nao informado'} - ${curso.carga_horaria ?? 0}h`}
               badge={curso.status}
               badgeVariant={curso.status === 'ativo' ? 'success' : 'neutral'}
               initials={curso.nome.slice(0, 2).toUpperCase()}
@@ -103,7 +109,7 @@ export default function CursosScreen() {
         fields={fields}
         initialValues={editing ? formValues(editing) : { modalidade: 'tecnico', periodo: 'manha', status: 'ativo' }}
         isSubmitting={submitting}
-        submitLabel={editing ? 'Salvar alterações' : 'Criar curso'}
+        submitLabel={editing ? 'Salvar alteracoes' : 'Criar curso'}
         onClose={() => setModalOpen(false)}
         onSubmit={async (values) => {
           if (editing) await updateItem(editing.id, values);
@@ -116,8 +122,5 @@ export default function CursosScreen() {
 }
 
 const styles = StyleSheet.create({
-  metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
-  metric: { width: '48%' },
   empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
-  error: { color: colors.red, fontSize: 12, fontWeight: '700', marginBottom: 8 },
 });

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { ChartColumn, CheckCircle2, ClipboardList, TrendingUp } from 'lucide-react-native';
+import { ChartCard, InteractiveBarChart } from '@/components/charts';
 import { ExportModal } from '@/components/common/ExportModal';
-import { MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { MetricGrid } from '@/components/common/MetricGrid';
+import { MetricTile, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { exportService } from '@/services/export.service';
@@ -48,16 +50,21 @@ export default function RelatoriosGridScreen() {
       actionLabel="Exportar"
       onActionPress={() => setExportOpen(true)}
     >
-      <View style={styles.metricGrid}>
-        <MetricTile label="Tarefas concluidas" value={tarefasConcluidas} accent={gridTheme.accent} icon={<CheckCircle2 size={16} color={gridTheme.accent} />} style={styles.metric} />
-        <MetricTile label="Tarefas abertas" value={tarefas.length - tarefasConcluidas} accent={colors.blue} icon={<TrendingUp size={16} color={colors.blue} />} style={styles.metric} />
-        <MetricTile label="Custo em estoque" value={`R$ ${Math.round(custoTotal).toLocaleString('pt-BR')}`} accent={colors.orange} icon={<ChartColumn size={16} color={colors.orange} />} style={styles.metric} />
-        <MetricTile label="Chamados" value={chamados.length} accent={colors.red} icon={<ClipboardList size={16} color={colors.red} />} style={styles.metric} />
-      </View>
+      <MetricGrid>
+        <MetricTile label="Tarefas concluidas" value={tarefasConcluidas} accent={gridTheme.accent} icon={<CheckCircle2 size={16} color={gridTheme.accent} />} />
+        <MetricTile label="Tarefas abertas" value={tarefas.length - tarefasConcluidas} accent={colors.blue} icon={<TrendingUp size={16} color={colors.blue} />} />
+        <MetricTile label="Custo em estoque" value={`R$ ${Math.round(custoTotal).toLocaleString('pt-BR')}`} accent={colors.orange} icon={<ChartColumn size={16} color={colors.orange} />} />
+        <MetricTile label="Chamados" value={chamados.length} accent={colors.red} icon={<ClipboardList size={16} color={colors.red} />} />
+      </MetricGrid>
 
-      <SurfaceCard title="Chamados por status" subtitle="Distribuicao real das solicitacoes">
-        {chamados.length === 0 ? <Text style={styles.empty}>Nenhum dado cadastrado ainda.</Text> : <MiniBars data={chamadosPorStatus} />}
-      </SurfaceCard>
+      <ChartCard
+        title="Chamados por status"
+        subtitle="Distribuicao real das solicitacoes"
+        empty={chamados.length === 0}
+        summary={`${chamados.length} chamados analisados`}
+      >
+        <InteractiveBarChart data={chamadosPorStatus} />
+      </ChartCard>
 
       <SurfaceCard title="Exportacoes" subtitle="Arquivos gerados">
         <Text style={styles.empty}>Use o botao Exportar para gerar PDF ou Excel.</Text>
@@ -107,12 +114,5 @@ function toRows(chamados: Chamado[], tarefas: Tarefa[], estoque: ItemEstoque[]) 
 }
 
 const styles = StyleSheet.create({
-  metricGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 12,
-  },
-  metric: { width: '48%' },
   empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
 });

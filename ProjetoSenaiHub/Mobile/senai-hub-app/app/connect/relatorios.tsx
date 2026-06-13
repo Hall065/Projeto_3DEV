@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { ChartColumn, FileText, GraduationCap, TrendingUp } from 'lucide-react-native';
-import { MetricTile, MiniBars, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { ChartCard, DonutStatusChart } from '@/components/charts';
+import { MetricGrid } from '@/components/common/MetricGrid';
+import { MetricTile, SurfaceCard } from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
 import { connectService } from '@/services/connect.service';
@@ -43,16 +45,21 @@ export default function RelatoriosConnectScreen() {
       description="Indicadores academicos calculados a partir do Supabase."
       isLoading={loading}
     >
-      <View style={styles.metricGrid}>
-        <MetricTile label="Alunos" value={metrics.totalAlunos} accent={connectTheme.accent} icon={<FileText size={16} color={connectTheme.accent} />} style={styles.metric} />
-        <MetricTile label="Frequencias" value={frequencias.length} accent={colors.green} icon={<TrendingUp size={16} color={colors.green} />} style={styles.metric} />
-        <MetricTile label="Cursos ativos" value={metrics.totalCursos} accent={colors.blue} icon={<GraduationCap size={16} color={colors.blue} />} style={styles.metric} />
-        <MetricTile label="Turmas" value={metrics.totalTurmas} accent={colors.orange} icon={<ChartColumn size={16} color={colors.orange} />} style={styles.metric} />
-      </View>
+      <MetricGrid>
+        <MetricTile label="Alunos" value={metrics.totalAlunos} accent={connectTheme.accent} icon={<FileText size={16} color={connectTheme.accent} />} />
+        <MetricTile label="Frequencias" value={frequencias.length} accent={colors.green} icon={<TrendingUp size={16} color={colors.green} />} />
+        <MetricTile label="Cursos ativos" value={metrics.totalCursos} accent={colors.blue} icon={<GraduationCap size={16} color={colors.blue} />} />
+        <MetricTile label="Turmas" value={metrics.totalTurmas} accent={colors.orange} icon={<ChartColumn size={16} color={colors.orange} />} />
+      </MetricGrid>
 
-      <SurfaceCard title="Frequencia registrada" subtitle="Distribuicao real dos lancamentos">
-        {frequencias.length === 0 ? <Text style={styles.empty}>Nenhum dado cadastrado ainda.</Text> : <MiniBars data={frequenciaData} />}
-      </SurfaceCard>
+      <ChartCard
+        title="Frequencia registrada"
+        subtitle="Distribuicao real dos lancamentos"
+        empty={frequencias.length === 0}
+        summary={`${frequencias.length} lancamentos analisados`}
+      >
+        <DonutStatusChart data={frequenciaData} />
+      </ChartCard>
 
       <SurfaceCard title="Exportacoes" subtitle="Arquivos gerados">
         <Text style={styles.empty}>Nenhum arquivo gerado ainda.</Text>
@@ -62,12 +69,5 @@ export default function RelatoriosConnectScreen() {
 }
 
 const styles = StyleSheet.create({
-  metricGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 12,
-  },
-  metric: { width: '48%' },
   empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
 });
