@@ -10,12 +10,20 @@
     "close": "Fechar",
     "discard": "Descartar",
     "wait": "Aguarde...",
-    "goToProfile": "Ir para o perfil"
+    "goToProfile": "Ir para o perfil",
+    "loading": "Carregando...",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "back": "Voltar",
+    "error": "Ocorreu um erro. Tente novamente."
   },
   "header": {
     "openMenu": "Abrir menu",
     "closeMenu": "Fechar menu",
-    "appHub": "Hub de Aplicações"
+    "appHub": "Hub de Aplicações",
+    "expandMenu": "Expandir menu",
+    "collapseMenu": "Recolher menu",
+    "demoUser": "Usuário Demo"
   },
   "notifications": {
     "title": "Notificações",
@@ -150,7 +158,16 @@
     "accessDeniedTitle": "Acesso negado",
     "accessDeniedBody": "Você não tem permissão para acessar esta página. Verifique seu perfil ou fale com o administrador.",
     "accessDeniedFrom": "Seu perfil não possui permissão para acessar esta área{{from}}. Solicite ao administrador se precisar deste acesso.",
-    "fromPath": " ({{path}})"
+    "fromPath": " ({{path}})",
+    "api": {
+      "fallback": "Ocorreu um erro. Tente novamente.",
+      "sessionExpired": "Sessão expirada. Tente novamente.",
+      "forbidden": "Você não tem permissão para esta ação.",
+      "notFound": "Recurso não encontrado.",
+      "networkError": "Não foi possível conectar ao servidor. Verifique se o backend está rodando.",
+      "serverError": "Erro interno do servidor. Tente novamente em instantes.",
+      "operationFailed": "Operação falhou."
+    }
   },
   "appCard": {
     "openApp": "Acessar Aplicativo"
@@ -183,6 +200,1102 @@
     "navAudience": "Para quem é",
     "navSupport": "Suporte",
     "accessHub": "Acessar o Hub",
-    "restrictedArea": "Área restrita"
+    "restrictedArea": "Área restrita",
+    "features": {
+      "title": "Recursos que fazem a diferença",
+      "subtitle": "Tecnologia a serviço da educação profissional e tecnológica.",
+      "hubTitle": "Hub de Aplicações",
+      "hubDesc": "Todos os sistemas SENAI em um único painel de acesso.",
+      "supportTitle": "Suporte Especializado",
+      "supportDesc": "Equipe dedicada para ajudar você em cada etapa.",
+      "securityTitle": "Segurança de Dados",
+      "securityDesc": "Proteção e privacidade em conformidade com as melhores práticas.",
+      "managementTitle": "Gestão Inteligente",
+      "managementDesc": "Indicadores e relatórios para decisões mais assertivas."
+    },
+    "audience": {
+      "title": "Para quem é o SENAI Hub?",
+      "subtitle": "Uma solução pensada para toda a comunidade escolar — do aluno ao gestor.",
+      "studentsTitle": "Alunos",
+      "studentsDesc": "Acesse conteúdos, acompanhe atividades e mantenha-se conectado à sua jornada de aprendizagem em um só lugar.",
+      "teachersTitle": "Professores",
+      "teachersDesc": "Gerencie turmas, compartilhe materiais e acompanhe o desempenho dos alunos com ferramentas pensadas para você.",
+      "adminTitle": "Equipe Administrativa",
+      "adminDesc": "Administre sistemas, usuários e operações escolares com visibilidade e controle em tempo real.",
+      "learnMore": "Saiba mais →"
+    },
+    "platform": {
+      "title": "Uma plataforma completa para o seu dia a dia.",
+      "body": "O Hub concentra os sistemas que você já usa no dia a dia em um único ponto de acesso. Menos senhas, menos cliques e mais tempo para o que importa: ensinar e aprender.",
+      "benefit1": "Acesso fácil e centralizado",
+      "benefit2": "Navegação intuitiva",
+      "benefit3": "Mais produtividade",
+      "benefit4": "Segurança e confiabilidade",
+      "exploreHub": "Explorar o Hub"
+    },
+    "cta": {
+      "title": "Comece agora a transformar educação em futuro.",
+      "body": "Acesse com sua conta e tenha acesso ao melhor da educação profissional e tecnológica do SENAI.",
+      "accessPlatform": "Acessar plataforma"
+    },
+    "preview": {
+      "appHub": "Hub de Aplicações",
+      "support": "Suporte",
+      "title": "Hub de Aplicações",
+      "subtitle": "Acesse os sistemas disponíveis para o seu perfil.",
+      "accessSystem": "Acessar Sistema"
+    },
+    "footer": {
+      "tagline": "Plataforma integrada de educação profissional e tecnológica do SENAI.",
+      "navigation": "Navegação",
+      "support": "Suporte",
+      "institutional": "Institucional",
+      "helpCenter": "Central de Ajuda",
+      "contactUs": "Fale Conosco",
+      "documentation": "Documentação",
+      "systemStatus": "Status do Sistema",
+      "aboutSenai": "Sobre o SENAI",
+      "privacyPolicy": "Política de Privacidade",
+      "termsOfUse": "Termos de Uso",
+      "copyright": "© {{year}} SENAI — Serviço Nacional de Aprendizagem Industrial. Todos os direitos reservados."
+    }
+  },
+  "sidebar": {
+    "contracts": "Contratos",
+    "openChat": "Abrir chat"
+  },
+  "hubSidebar": {
+    "usersAndRoles": "Usuários e perfis",
+    "archive": "Arquivo histórico"
+  },
+  "archive": {
+    "title": "Arquivo histórico",
+    "subtitle": "Consulte turmas encerradas, chamados finalizados e autorizações SAFE concluídas.",
+    "refresh": "Atualizar",
+    "loadError": "Não foi possível carregar o arquivo.",
+    "autoArchiveError": "Falha ao executar arquivamento automático.",
+    "noAccess": "Seu perfil não tem acesso ao arquivo histórico.",
+    "empty": "Nenhum registro arquivado disponível para seu perfil.",
+    "noRecords": "Nenhum registro encontrado neste filtro.",
+    "searchPlaceholder": "Buscar no arquivo...",
+    "openRecord": "Abrir registro",
+    "footerHint": "Os dados permanecem no banco — o arquivo apenas organiza registros encerrados. Turmas com end_date vencido podem ser arquivadas automaticamente às 01:00.",
+    "tabs": {
+      "connect": "Connect — Turmas",
+      "grid": "Grid — Chamados",
+      "safe": "SAFE — Autorizações"
+    },
+    "summary": {
+      "connectClasses": "Turmas encerradas",
+      "attendanceSessions": "{{count}} sessões de frequência registradas",
+      "gridTickets": "Chamados concluídos",
+      "safeAuthorizations": "Autorizações arquivadas"
+    },
+    "columns": {
+      "students": "Alunos",
+      "sessions": "Chamadas",
+      "code": "Código"
+    },
+    "safe": {
+      "allArchived": "Todas arquivadas",
+      "finalizado": "Finalizadas",
+      "negado": "Negadas"
+    },
+    "autoArchive": {
+      "pendingTitle": "Arquivamento pendente",
+      "pendingBody": "{{count}} turma(s) ativa(s) com término já passado aguardam arquivamento.",
+      "runNow": "Arquivar agora",
+      "running": "Arquivando..."
+    }
+  },
+  "hubUsers": {
+    "title": "Usuários e perfis de acesso",
+    "subtitle": "Crie contas sem acesso e configure módulo, perfil e abas liberadas.",
+    "newUser": "Novo usuário",
+    "searchPlaceholder": "Nome ou e-mail...",
+    "loadingUsers": "Carregando usuários...",
+    "editUser": "Editar usuário",
+    "basicData": "Dados básicos",
+    "fullName": "Nome completo",
+    "newPasswordOptional": "Nova senha (opcional)",
+    "initialPassword": "Senha inicial",
+    "moduleAndRole": "Módulo e perfil",
+    "accessModule": "Módulo de acesso",
+    "noAccess": "Nenhum (sem acesso)",
+    "roleInModule": "Perfil no módulo",
+    "companyName": "Nome da empresa",
+    "permissionsSection": "Abas e permissões",
+    "permissionsHint": "Marque somente o que este usuário pode ver. Os dados exibidos respeitam o escopo do perfil.",
+    "confirmDelete": "Excluir o usuário {{name}}?",
+    "errors": {
+      "loadUsers": "Não foi possível carregar usuários.",
+      "loadRoles": "Falha ao carregar perfis.",
+      "loadUser": "Não foi possível carregar os dados do usuário.",
+      "saveUser": "Não foi possível salvar o usuário.",
+      "deleteUser": "Não foi possível excluir o usuário."
+    }
+  },
+  "spreadsheet": {
+    "connectTitle": "Importar e exportar — Connect",
+    "connectSubtitle": "Baixe modelos CSV, preencha no Excel ou LibreOffice e importe em lote. Aceita CSV e Excel (.xlsx).",
+    "connectHint": "Chaves como matrícula, codigo_turma e codigo_curso vinculam registros entre planilhas.",
+    "gridTitle": "Importar e exportar — Grid",
+    "gridSubtitle": "Modelos CSV para chamados, tarefas, estoque e usuários. Aceita CSV e Excel (.xlsx).",
+    "gridHint": "Use codigo_chamado nas tarefas para vincular a um chamado existente.",
+    "formatsHint": "Formatos: CSV UTF-8 com separador ; ou Excel .xlsx. A primeira linha deve conter os nomes das colunas exatamente como no modelo.",
+    "loadingTemplates": "Carregando modelos...",
+    "availableTables": "Tabelas disponíveis",
+    "importExport": "Importar e exportar",
+    "exportOnly": "Somente exportar",
+    "downloadTemplate": "Baixar modelo",
+    "downloading": "Baixando...",
+    "downloadError": "Não foi possível baixar o arquivo.",
+    "exportData": "Exportar dados",
+    "exporting": "Exportando...",
+    "importFile": "Importar (CSV ou XLSX)",
+    "analyzing": "Analisando...",
+    "modelColumns": "Colunas do modelo",
+    "column": "Coluna",
+    "required": "Obrigatória",
+    "example": "Exemplo",
+    "previewTitle": "Pré-visualização da importação",
+    "previewSummary": "{{rows}} linha(s) · estimativa: {{created}} criado(s), {{updated}} atualizado(s), {{errors}} com erro (simulação sem gravar).",
+    "previewRow": "Linha {{row}}: {{message}}",
+    "confirmImport": "Confirmar importação",
+    "importing": "Importando...",
+    "importErrorsTitle": "Erros na importação",
+    "selectTable": "Selecione uma tabela ao lado.",
+    "historyTitle": "Histórico de importações",
+    "noHistory": "Nenhuma importação registrada ainda.",
+    "historyDate": "Data",
+    "historySheet": "Planilha",
+    "historyUser": "Usuário",
+    "historyResult": "Resultado",
+    "historyErrors": "{{count}} erros",
+    "templateDownloaded": "Modelo baixado com sucesso.",
+    "dataExported": "Dados exportados com sucesso.",
+    "operationFailed": "Operação falhou.",
+    "importComplete": "Importação concluída: {{created}} criado(s), {{updated}} atualizado(s).",
+    "importFailed": "Importação falhou.",
+    "loadTemplatesError": "Não foi possível carregar os modelos de planilha."
+  },
+  "profileAvatar": {
+    "title": "Foto de perfil",
+    "hint": "JPG, PNG, WebP ou GIF. Máximo 2 MB.",
+    "previewAlt": "Preview da foto de {{name}}",
+    "chooseImage": "Escolher imagem",
+    "removePhoto": "Remover foto",
+    "emptyHint": "Clique em \"Escolher imagem\" para enviar uma nova foto de perfil.",
+    "savePhoto": "Salvar foto",
+    "selectBeforeSave": "Selecione uma imagem antes de salvar.",
+    "updated": "Foto de perfil atualizada com sucesso.",
+    "removed": "Foto de perfil removida.",
+    "saveError": "Não foi possível salvar a foto.",
+    "removeError": "Não foi possível remover a foto.",
+    "processError": "Não foi possível processar a imagem.",
+    "invalidType": "Use uma imagem JPG, PNG, WebP ou GIF.",
+    "tooLarge": "A imagem deve ter no máximo 2 MB."
+  },
+  "reports": {
+    "builder": {
+      "connectTitle": "Relatórios personalizados",
+      "gridTitle": "Relatórios Grid",
+      "subtitle": "Monte o relatório escolhendo seções, colunas e filtros. Exporte em CSV, Excel, JSON ou PDF.",
+      "loading": "Carregando construtor de relatórios...",
+      "loadError": "Não foi possível carregar o construtor de relatórios.",
+      "exporting": "Exportando...",
+      "export": "Exportar",
+      "localPreview": "Preview local",
+      "generating": "Gerando...",
+      "updatePreview": "Atualizar preview",
+      "generatePreview": "Gerar preview",
+      "buildSuccess": "Relatório gerado com {{count}} seção(ões).",
+      "buildError": "Falha ao gerar o relatório.",
+      "exportSuccess": "Arquivo exportado com sucesso.",
+      "exportError": "Não foi possível exportar o relatório.",
+      "configuration": "Configuração",
+      "quickPreset": "Modelo rápido (sistema)",
+      "selectPreset": "Selecionar preset...",
+      "savedPresets": "Meus presets salvos",
+      "noSavedPresets": "Nenhum preset salvo no servidor.",
+      "shared": "(compartilhado)",
+      "deletePreset": "Excluir preset",
+      "newPresetPlaceholder": "Nome do novo preset...",
+      "presetSaved": "Preset salvo no servidor.",
+      "presetSaveError": "Não foi possível salvar o preset.",
+      "presetDeleteError": "Não foi possível remover o preset.",
+      "reportTitle": "Título do relatório",
+      "reportSubtitle": "Subtítulo (opcional)",
+      "startDate": "Data inicial",
+      "endDate": "Data final",
+      "filters": "Filtros",
+      "sections": "Seções do relatório",
+      "columns": "Colunas",
+      "exportCsv": "CSV (planilha)",
+      "exportXlsx": "Excel (.xlsx)",
+      "exportJson": "JSON (dados brutos)",
+      "exportPdf": "PDF / Imprimir",
+      "exportHtml": "HTML (arquivo)",
+      "statusBuilding": "Gerando relatório com dados do servidor...",
+      "statusReady": "Preview atualizado — exporte em CSV, Excel, JSON ou PDF pelo menu Exportar.",
+      "statusIdle": "Selecione um preset ou configure as seções e clique em Gerar preview.",
+      "assembling": "Montando seções e tabelas..."
+    }
+  },
+  "gridComponents": {
+    "shared": {
+      "overview": "Visão geral",
+      "activity": "Atividade ({{count}})",
+      "loadingUser": "Carregando usuário...",
+      "selectUser": "Selecione um usuário",
+      "loadingItem": "Carregando item...",
+      "selectItem": "Selecione um item",
+      "stockItem": "Item de estoque",
+      "noDescription": "Sem descrição cadastrada.",
+      "reservations": "Reservas ({{count}})",
+      "noReservations": "Nenhuma reserva ou consumo registrado.",
+      "consumed": "Consumido",
+      "reserved": "Reservado",
+      "task": "Tarefa",
+      "ticket": "Chamado",
+      "accessAndPermissions": "Acessos e permissões",
+      "adminAccount": "Conta administradora",
+      "mainModule": "Módulo principal",
+      "company": "Empresa",
+      "emailVerified": "E-mail verificado",
+      "pending": "Pendente",
+      "registeredAt": "Cadastrado em",
+      "lastUpdate": "Última atualização",
+      "releasedApps": "Aplicativos liberados",
+      "noApps": "Nenhum aplicativo vinculado.",
+      "profilePermissions": "Permissões do perfil",
+      "noPermissions": "Sem permissões listadas.",
+      "loadUserError": "Não foi possível carregar os detalhes do usuário.",
+      "loadItemError": "Não foi possível carregar os detalhes do item.",
+      "noActivity": "Nenhuma tarefa ou chamado atribuído a este usuário.",
+      "tasks": "Tarefas",
+      "inProgress": "Em andamento",
+      "completed": "Concluídas",
+      "tickets": "Chamados",
+      "institutionalEmail": "E-mail institucional",
+      "phone": "Telefone",
+      "cpf": "CPF",
+      "userType": "Tipo de usuário",
+      "status": "Status",
+      "available": "Disponível",
+      "inUse": "Em uso",
+      "inUseHint": "Tarefas em andamento",
+      "committed": "Comprometido",
+      "committedHint": "Reservado em chamados",
+      "consumedQty": "Consumido",
+      "totalQty": "Quantidade total (estoque)",
+      "minQty": "Quantidade mínima",
+      "location": "Localização",
+      "supplier": "Fornecedor / distribuidora",
+      "unitCost": "Custo unitário",
+      "stockValue": "Valor em estoque (disp.)",
+      "purchaseDate": "Data da compra",
+      "syncImage": "Buscar foto no Wikimedia",
+      "syncingImage": "Buscando...",
+      "units": "{{count}} un. · {{status}}"
+    },
+    "approveService": {
+      "title": "Aprovar serviço",
+      "body": "Como chefe de manutenção, confirme se o serviço foi executado corretamente. Após aprovar, o chamado segue para avaliação do solicitante.",
+      "resolutionSummary": "Resumo da resolução",
+      "resolutionPlaceholder": "Descreva o que foi verificado...",
+      "approvalNotes": "Observações da aprovação",
+      "approvalPlaceholder": "Comentários internos ou pendências...",
+      "approveAndSend": "Aprovar e enviar ao solicitante",
+      "success": "Aprovação registrada com sucesso.",
+      "error": "Não foi possível registrar a aprovação."
+    },
+    "evaluateTicket": {
+      "title": "Avaliar atendimento (solicitante)",
+      "body": "Avaliação do solicitante ({{requester}}). Após salvar, o chamado será finalizado e permanecerá disponível para consulta.",
+      "rating": "Nota (1 a 5)",
+      "ratingAria": "Nota {{n}}",
+      "evaluationNotes": "Considerações da avaliação",
+      "evaluationPlaceholder": "Comentários sobre o serviço prestado...",
+      "finishTicket": "Finalizar chamado",
+      "success": "Avaliação registrada com sucesso.",
+      "error": "Não foi possível registrar a avaliação."
+    },
+    "createTaskFromTicket": {
+      "title": "Nova tarefa a partir de chamado",
+      "subtitle": "Selecione um chamado aberto e defina o responsável e materiais.",
+      "searchTicket": "Buscar chamado",
+      "searchPlaceholder": "Código, título ou solicitante...",
+      "loadingTickets": "Carregando chamados...",
+      "noOpenTickets": "Nenhum chamado aberto encontrado.",
+      "ticketLabel": "Chamado {{code}}",
+      "assignee": "Responsável (técnico)",
+      "selectTechnician": "Selecione o técnico",
+      "taskDescription": "Descrição / observações da tarefa",
+      "taskPlaceholder": "Detalhes do atendimento...",
+      "materialsOptional": "Materiais do estoque (opcional)",
+      "creating": "Criando...",
+      "createTask": "Criar tarefa",
+      "selectTicket": "Selecione um chamado aberto.",
+      "assigneeRequired": "Informe o responsável pela tarefa.",
+      "loadError": "Não foi possível carregar os chamados.",
+      "saveError": "Não foi possível criar a tarefa.",
+      "roomBlock": "{{requester}} · Sala {{room}}/{{block}}"
+    },
+    "ticketControlPanel": {
+      "loading": "Carregando chamado...",
+      "requesterLocation": "{{requester}} · Sala {{room}} / Bloco {{block}}",
+      "saveError": "Não foi possível salvar. Verifique os dados e tente novamente.",
+      "stageNotes": "Observações desta etapa",
+      "stageNotesPlaceholder": "Registre o que ocorreu em \"{{stage}}\"...",
+      "saveNoteOnly": "Salvar observação sem avançar",
+      "assignTitle": "Atribuir técnico",
+      "assignSubtitle": "O chamado passará para Pendente após salvar.",
+      "selectTechnician": "Selecione...",
+      "assignTechnician": "Atribuir técnico",
+      "startTitle": "Iniciar atendimento",
+      "startSubtitle": "Técnico: {{technician}}. Será criada uma tarefa em andamento.",
+      "starting": "Iniciando...",
+      "startService": "Iniciar atendimento",
+      "executionTitle": "Execução do serviço",
+      "linkedTask": "Tarefa vinculada: {{code}} ({{status}})",
+      "noLinkedTask": "Nenhuma tarefa vinculada encontrada.",
+      "fixedDescription": "O que foi consertado / executado",
+      "fixedPlaceholder": "Descreva o serviço realizado...",
+      "completing": "Concluindo...",
+      "completeAndApprove": "Concluir tarefa e enviar para aprovação",
+      "approvalTitle": "Aprovação do chefe de manutenção",
+      "approvalSubtitle": "Confirme se o serviço foi executado corretamente.",
+      "verificationSummary": "Resumo da verificação",
+      "verificationPlaceholder": "O que foi verificado...",
+      "approvalNotes": "Observações da aprovação",
+      "approvalPlaceholder": "Comentários do chefe...",
+      "approving": "Aprovando...",
+      "approveService": "Aprovar serviço",
+      "evaluationTitle": "Avaliação do solicitante",
+      "evaluationSubtitle": "Solicitante: {{requester}}",
+      "evaluationComments": "Comentários da avaliação",
+      "evaluationPlaceholder": "Comentários do solicitante sobre o atendimento...",
+      "finishing": "Finalizando...",
+      "finishTicket": "Finalizar chamado",
+      "finishedTitle": "Chamado finalizado",
+      "finishedSubtitle": "Nenhuma ação pendente. Consulte o histórico abaixo.",
+      "evaluationResult": "Avaliação: {{rating}}/5 por {{by}}",
+      "approvedBy": "Aprovado por {{by}}{{at}}",
+      "approvedAt": " em {{date}}",
+      "historyTitle": "Histórico e observações",
+      "noNotes": "Nenhuma observação registrada ainda.",
+      "historyGeneral": "Histórico geral",
+      "historyFixed": "O que foi consertado",
+      "historyResolution": "Resumo da resolução",
+      "historyApproval": "Aprovação (chefe)",
+      "historyEvaluation": "Avaliação (solicitante)"
+    },
+    "inventoryPicker": {
+      "loadError": "Não foi possível carregar o catálogo de estoque.",
+      "noStock": "Não há itens com estoque disponível no momento.",
+      "item": "Item",
+      "qty": "Qtd",
+      "removeItem": "Remover item",
+      "outOfStock": "{{title}} — SEM ESTOQUE",
+      "lowStock": "{{title}} — acabando ({{qty}} un.)",
+      "available": "{{title}} ({{qty}} disp.)",
+      "lowStockWarning": "Estoque baixo: {{qty}} un. (mín. {{min}})",
+      "zeroStock": "Item zerado — não pode ser usado nesta solicitação.",
+      "addItem": "Adicionar item do estoque",
+      "hint": "Itens zerados não podem ser selecionados. Estoque baixo é sinalizado antes da reserva (ao mover para Em andamento).",
+      "cannotSaveTitle": "Não foi possível salvar os materiais:",
+      "lowStockConfirmTitle": "Atenção — estoque baixo:",
+      "lowStockConfirmBody": "Deseja continuar? A reserva ocorre ao mover a tarefa para \"Em andamento\".",
+      "continue": "Deseja continuar?"
+    },
+    "taskKanbanCard": {
+      "ticketRef": "Chamado {{code}}",
+      "openedAt": "Aberto em",
+      "assignee": "Responsável",
+      "items": "Itens:",
+      "edit": "Editar",
+      "delete": "Excluir"
+    },
+    "ticketKanbanCard": {
+      "approve": "Aprovar",
+      "evaluate": "Avaliar",
+      "technician": "Técnico:",
+      "lockedHint": "Aguardando conclusão da tarefa vinculada",
+      "edit": "Editar",
+      "assign": "Atribuir",
+      "delete": "Excluir"
+    },
+    "ticketCard": {
+      "actionsAria": "Ações do chamado {{code}}",
+      "edit": "Editar",
+      "assign": "Atribuir técnico",
+      "delete": "Excluir",
+      "requester": "Solicitante",
+      "location": "Local",
+      "openedAt": "Abertura",
+      "assignee": "Responsável"
+    },
+    "charts": {
+      "emptyData": "Sem dados para exibir.",
+      "loadingChart": "Carregando gráfico...",
+      "loadingData": "Carregando dados...",
+      "loading": "Carregando...",
+      "noRecordsInPeriod": "Nenhum registro no período.",
+      "noDataAvailable": "Nenhum dado disponível.",
+      "ticketsTotal": "{{count}} chamados no total",
+      "distributionAria": "Distribuição de {{label}}",
+      "statusTitle": "Status dos chamados",
+      "statusSubtitle": "Distribuição por situação atual",
+      "ticketsLabel": "Chamados",
+      "priorityTitle": "Prioridade",
+      "prioritySubtitle": "Chamados por nível de urgência",
+      "tasksByColumnTitle": "Tarefas por coluna",
+      "tasksByColumnSubtitle": "Quadro Kanban de manutenção",
+      "ticketsByMonthTitle": "Chamados por mês",
+      "ticketsByMonthSubtitle": "Últimos 6 meses",
+      "byTechnicianTitle": "Por técnico",
+      "byTechnicianSubtitle": "Chamados atribuídos",
+      "ticketsValueLabel": "chamados",
+      "criticalItemsTitle": "Itens críticos",
+      "criticalItemsSubtitle": "Estoque abaixo do mínimo",
+      "unitsValueLabel": "un",
+      "shortLabels": {
+        "aguardando_aprovacao": "Aguard. aprov.",
+        "avaliacao_pendente": "Aval. pendente",
+        "em_atendimento": "Em atendimento"
+      },
+      "finishedLabel": "Finalizados"
+    },
+    "stockAlert": {
+      "outOfStockBody": "está sem estoque (zerado). Remova o item ou escolha outro — não será possível reservar na execução.",
+      "lowStockBody": "está acabando: {{available}} un. disponíveis{{minimum}}.",
+      "minimumSuffix": " (mínimo: {{min}})"
+    },
+    "reportPanel": {
+      "title": "Relatório de atendimento específico",
+      "subtitle": "Selecione um chamado para ver o histórico completo do atendimento.",
+      "ticketField": "Chamado",
+      "selectPlaceholder": "Selecione um chamado...",
+      "loading": "Carregando relatório...",
+      "openedBy": "Aberto por",
+      "when": "Quando",
+      "serviceStart": "Início do atendimento",
+      "technicalCompletion": "Conclusão técnica",
+      "supervisorApproval": "Aprovação chefe",
+      "totalTime": "Tempo total",
+      "location": "Local",
+      "locationValue": "Sala {{room}} / Bloco {{block}}",
+      "whyTitle": "Por quê (solicitação)",
+      "whatWasDoneTitle": "O que foi feito",
+      "noLinkedTasks": "Nenhuma tarefa vinculada.",
+      "taskMeta": "Responsável: {{assignee}} · Status: {{status}}",
+      "whatWasFixedTitle": "O que foi consertado",
+      "considerationsTitle": "Considerações",
+      "materialsTitle": "Materiais utilizados",
+      "noMaterials": "Nenhum material registrado.",
+      "materialLine": "{{quantity}} un · {{status}}",
+      "approvalTitle": "Aprovação do chefe de manutenção",
+      "approvedBy": "Aprovado por: {{by}}",
+      "noApprovalNotes": "Sem observações.",
+      "evaluationTitle": "Avaliação do solicitante",
+      "rating": "Nota: {{rating}}/5",
+      "evaluatedBy": "Por: {{by}}",
+      "noEvaluationComments": "Sem comentários.",
+      "awaitingEvaluation": "Aguardando avaliação do solicitante.",
+      "awaitingApproval": "Aguardando aprovação do chefe de manutenção.",
+      "notYetEvaluated": "Ainda não avaliado.",
+      "currentStatus": "Status atual: {{status}}"
+    }
+  },
+  "connectComponents": {
+    "courseCard": {
+      "coverAlt": "Capa do curso {{name}}",
+      "actionsAria": "Ações do curso {{name}}",
+      "manageRoster": "Gerenciar matrículas",
+      "edit": "Editar",
+      "workloadTbd": "Carga a definir",
+      "defaultArea": "Formação profissional",
+      "defaultDescription": "Curso técnico SENAI com formação prática alinhada às demandas da indústria.",
+      "editCourse": "Editar curso"
+    },
+    "rosterDrawer": {
+      "courseTitle": "Matrículas do curso",
+      "classTitle": "Alunos da turma",
+      "close": "Fechar",
+      "addLink": "Adicionar vínculo",
+      "personField": "Pessoa",
+      "noPeopleAvailable": "Nenhuma pessoa disponível",
+      "selectPlaceholder": "Selecione...",
+      "link": "Vincular",
+      "linked": "Vinculados",
+      "loading": "Carregando...",
+      "noPeopleInRole": "Nenhuma pessoa neste papel.",
+      "noStudentsInClass": "Nenhum aluno na turma.",
+      "removePerson": "Remover {{name}}",
+      "loadError": "Não foi possível carregar as matrículas.",
+      "linkError": "Não foi possível vincular a pessoa.",
+      "unlinkError": "Não foi possível remover o vínculo."
+    },
+    "charts": {
+      "quickReports": "Relatórios rápidos",
+      "attendanceTitle": "Frequência geral",
+      "attendanceSubtitle": "Mês atual — presença, faltas justificadas e injustificadas",
+      "teacherSessionsTitle": "Aulas na semana",
+      "teacherSessionsSubtitle": "Por professor (últimos 7 dias)",
+      "studentsByCourseTitle": "Alunos por curso",
+      "studentsByCourseSubtitle": "Matrículas ativas por curso",
+      "noAttendanceRecords": "Sem registros de frequência ainda.",
+      "present": "Presentes",
+      "presentShort": "Presentes",
+      "presentHint": "Alunos com registro de presença no período.",
+      "justified": "Faltas justificadas",
+      "justifiedShort": "Faltas justif.",
+      "justifiedHint": "Ausências com justificativa aceita.",
+      "unjustified": "Faltas injustificadas",
+      "unjustifiedShort": "Faltas injustif.",
+      "unjustifiedHint": "Ausências sem justificativa ou pendentes.",
+      "generalPresence": "Presença geral",
+      "recordsInPeriod": "{{count}} registros no período",
+      "calculatingAttendance": "Calculando frequência...",
+      "attendanceDistributionAria": "Distribuição de frequência: {{rate}}% de presença",
+      "loadingWeeklySessions": "Buscando aulas da semana...",
+      "sessionsTooltip": "{{name}}: {{count}} aulas",
+      "distributingStudents": "Distribuindo alunos por curso...",
+      "noStudentsInCourses": "Nenhum aluno matriculado em cursos ativos."
+    }
+  },
+  "mapComponents": {
+    "container": {
+      "loading": "Carregando mapa...",
+      "maximizeTitle": "Maximizar mapa",
+      "maximize": "Maximizar",
+      "fullscreenTitle": "Mapa do campus SENAI",
+      "view3d": "Visualização 3D",
+      "view2d": "Visualização 2D (modelos 3D indisponíveis)",
+      "close": "Fechar"
+    },
+    "viewer3d": {
+      "loading": "Carregando mapa 3D...",
+      "noBlocksLoaded": "Nenhum bloco do campus foi carregado.",
+      "loadModelsError": "Não foi possível carregar os modelos 3D do campus.",
+      "emptyModelsError": "Os modelos 3D foram carregados, mas estão vazios.",
+      "missingModels": "Modelos ausentes: {{names}}",
+      "modelTimeout": "Timeout ao carregar {{url}}",
+      "resetViewTitle": "Restaurar visão do campus",
+      "campus": "Campus",
+      "hintMarkers": "Arraste para navegar · Clique no marcador ou bloco",
+      "hintBlocks": "Arraste para rotacionar · Scroll para aproximar · Clique no bloco"
+    },
+    "ticketsPanel": {
+      "selectedKind": "{{kind}} selecionado",
+      "room": "Sala: {{room}}",
+      "assignee": "Responsável: {{assignee}}",
+      "priority": "Prioridade: {{priority}}",
+      "blockCount": "{{count}} atendimento(s) no bloco",
+      "emptyBlock": "Nenhum chamado ou tarefa em {{block}} no momento.",
+      "campusTitle": "Chamados no campus",
+      "campusHint": "Clique em um marcador ou bloco para detalhes",
+      "open": "Abertos",
+      "inProgress": "Em andamento",
+      "completed": "Concluídos",
+      "kindTotals": "{{tickets}} chamado(s) · {{tasks}} tarefa(s)",
+      "markerStatus": {
+        "open": "Abertos",
+        "in_progress": "Em andamento",
+        "completed": "Concluídos"
+      },
+      "markerKind": {
+        "ticket": "Chamado",
+        "task": "Tarefa"
+      }
+    },
+    "blockPanel": {
+      "tickets": "Chamados",
+      "open": "Abertos",
+      "completed": "Concluídos",
+      "selectBlockHint": "Clique em um bloco para ver os chamados associados"
+    },
+    "peoplePanel": {
+      "selectedPerson": "Pessoa selecionada",
+      "room": "Sala: {{room}}",
+      "peopleInBlock": "{{count}} pessoa(s) no bloco",
+      "onCampus": "No campus",
+      "emptyBlock": "Nenhuma pessoa simulada em {{block}} no momento.",
+      "students": "Alunos",
+      "teachers": "Professores",
+      "staff": "Funcionários",
+      "roles": {
+        "aluno": "Aluno",
+        "professor": "Professor",
+        "funcionario": "Funcionário"
+      },
+      "simulatedLocation": "Localização simulada",
+      "clickMarkerHint": "Clique em um marcador ou bloco para detalhes"
+    }
+  },
+  "toastUi": {
+    "closeToast": "Fechar aviso"
+  },
+  "safeValidation": {
+    "fillRegistrationNameClass": "Preencha matrícula, nome e turma.",
+    "fillReason": "Informe o motivo da solicitação.",
+    "selectStudentOrNameClass": "Selecione um aluno ou informe nome e turma."
+  },
+  "permissions": {
+    "fullAccess": "Acesso total ao sistema",
+    "modules": {
+      "connect": "Connect",
+      "grid": "Grid",
+      "hub": "Hub",
+      "system": "Sistema",
+      "other": "Outros"
+    },
+    "labels": {
+      "connect.access": "Acesso ao Connect",
+      "connect.dashboard": "Painel Connect",
+      "connect.people.manage": "Gestão de pessoas",
+      "connect.students.manage": "Gestão de alunos",
+      "connect.students.view": "Visualizar alunos",
+      "connect.teachers.manage": "Gestão de professores",
+      "connect.teachers.view": "Visualizar professores",
+      "connect.courses.view": "Visualizar cursos",
+      "connect.contracts.view": "Visualizar contratos",
+      "connect.contracts.view_own": "Contratos próprios",
+      "connect.salary.view": "Visualizar salário",
+      "connect.salary.view_own": "Salário próprio",
+      "connect.attendance.view_own": "Frequência própria",
+      "connect.classes.manage": "Gestão de turmas",
+      "connect.classes.view": "Visualizar turmas",
+      "connect.courses.manage": "Gestão de cursos",
+      "connect.contracts.manage": "Gestão de contratos",
+      "connect.attendance.view": "Visualizar frequência",
+      "connect.attendance.manage": "Registrar frequência",
+      "connect.reports.view": "Relatórios Connect",
+      "connect.spreadsheets": "Planilhas Connect",
+      "connect.location.view": "Localização no campus",
+      "grid.access": "Acesso ao Grid",
+      "grid.dashboard": "Painel Grid",
+      "grid.tickets.manage": "Gestão de chamados",
+      "grid.tickets.view": "Visualizar chamados",
+      "grid.tickets.update": "Atualizar chamados",
+      "grid.controle": "Controle de chamados",
+      "grid.tasks.map": "Mapa de tarefas",
+      "grid.tasks.manage": "Gestão de tarefas",
+      "grid.inventory.manage": "Gestão de estoque",
+      "grid.inventory.view": "Visualizar estoque",
+      "grid.users.manage": "Gestão de usuários Grid",
+      "grid.reports.view": "Relatórios Grid",
+      "grid.spreadsheets": "Planilhas Grid",
+      "hub.users.manage": "Gestão de usuários"
+    }
+  },
+  "images": {
+    "avatar": {
+      "invalidType": "Use uma imagem JPG, PNG, WebP ou GIF.",
+      "tooLarge": "A imagem deve ter no máximo 2 MB.",
+      "processFailed": "Não foi possível processar a imagem.",
+      "readFailed": "Não foi possível ler a imagem selecionada."
+    },
+    "wallpaper": {
+      "invalidType": "Use uma imagem JPG, PNG, WebP ou GIF.",
+      "tooLarge": "A imagem deve ter no máximo 5 MB.",
+      "processFailed": "Não foi possível processar a imagem.",
+      "loadFailed": "Não foi possível carregar a imagem."
+    }
+  },
+  "courseThemes": {
+    "active": "Curso ativo",
+    "inactive": "Inativo"
+  },
+  "wallpapers": {
+    "custom": {
+      "name": "Imagem personalizada",
+      "description": "Foto ou ilustração enviada por você."
+    },
+    "presets": {
+      "senai-dawn": {
+        "name": "Amanhecer",
+        "description": "Pêssego e azul claro — estilo vidro da referência."
+      },
+      "senai-classic": {
+        "name": "Clássico SENAI",
+        "description": "Neutro com orbes navy, vermelho e azul suave."
+      },
+      "senai-cool": {
+        "name": "Industrial",
+        "description": "Azuis e cinzas com destaque técnico."
+      },
+      "senai-warm": {
+        "name": "Energia",
+        "description": "Vermelho SENAI, âmbar e navy suave."
+      },
+      "senai-minimal": {
+        "name": "Minimal",
+        "description": "Suave, com poucos destaques de cor."
+      },
+      "senai-sunset": {
+        "name": "Pôr do sol",
+        "description": "Laranja, rosa e roxo no fim do dia."
+      },
+      "senai-lavender": {
+        "name": "Lavanda",
+        "description": "Roxo claro e lilás relaxante."
+      },
+      "senai-mint": {
+        "name": "Menta",
+        "description": "Verde água e turquesa leve."
+      },
+      "senai-dark-navy": {
+        "name": "Navy noturno",
+        "description": "Azul profundo SENAI — ideal para ambientes escuros."
+      },
+      "senai-dark-charcoal": {
+        "name": "Carvão",
+        "description": "Cinza escuro neutro, baixo contraste."
+      },
+      "senai-dark-red": {
+        "name": "SENAI escuro",
+        "description": "Fundo escuro com brilho vermelho institucional."
+      },
+      "senai-midnight": {
+        "name": "Meia-noite",
+        "description": "Índigo e violeta profundos."
+      },
+      "senai-forest": {
+        "name": "Floresta",
+        "description": "Verde escuro com reflexos sutis."
+      },
+      "senai-ocean-deep": {
+        "name": "Oceano profundo",
+        "description": "Azul petróleo e ciano escuro."
+      },
+      "senai-slate": {
+        "name": "Ardósia",
+        "description": "Cinza-azulado escuro uniforme."
+      },
+      "senai-neon": {
+        "name": "Neon técnico",
+        "description": "Escuro com orbes coloridos mais intensos."
+      }
+    }
+  },
+  "appearanceContext": {
+    "imageTooLarge": "Imagem grande demais para salvar neste navegador. Tente uma foto menor."
+  },
+  "connectDrawer": {
+    "closePanel": "Fechar painel"
+  },
+  "connectActions": {
+    "openMenu": "Abrir menu de ações"
+  },
+  "health": {
+    "checking": "Verificando API...",
+    "offline": "Backend offline",
+    "apiStatus": "API {{status}}"
+  },
+  "map": {
+    "schoolPlaceholder": {
+      "dev3d": "Visualização 3D em desenvolvimento",
+      "alt": "Placeholder do mapa escolar 3D",
+      "subtitle": "React Three Fiber + múltiplos andares + entidades em tempo real",
+      "activeFloor": "Andar ativo: {{name}} ({{count}} entidades mock)"
+    },
+    "viewer2d": {
+      "hint": "Mapa 2D do campus · Clique em um bloco para ver detalhes"
+    }
+  },
+  "reportPreview": {
+    "total": "Total: {{total}}"
+  },
+  "settingsFooter": {
+    "back": "Voltar",
+    "saveDefault": "Salvar"
+  },
+  "connect": {
+    "rosterRole": {
+      "coordinator": "Coordenador"
+    },
+    "shared": {
+      "loadingData": "Carregando dados...",
+      "pagination": "Mostrando {{from}} a {{to}} de {{total}} registros",
+      "noAttendanceRecords": "Sem registros de frequência ainda.",
+      "present": "Presentes ({{pct}}%)",
+      "justified": "Faltas justificadas ({{pct}}%)",
+      "unjustified": "Faltas injustificadas ({{pct}}%)",
+      "noWeeklyLessons": "Nenhuma aula registrada na semana."
+    },
+    "statusBadge": {
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "finished": "Encerrado",
+      "calculated": "Calculado",
+      "inside": "Presente",
+      "outside": "Ausente"
+    },
+    "entityView": {
+      "subtitle": "Visualização completa",
+      "loading": "Carregando detalhes...",
+      "loadError": "Não foi possível carregar os detalhes. Tente novamente.",
+      "noData": "Sem dados para exibir.",
+      "noRecords": "Nenhum registro.",
+      "viaClass": "via {{name}}",
+      "kinds": {
+        "student": "Detalhes do aluno",
+        "teacher": "Detalhes do professor",
+        "class": "Detalhes da turma",
+        "course": "Detalhes do curso",
+        "person": "Detalhes da pessoa",
+        "contract": "Detalhes do contrato",
+        "salary": "Detalhes do salário",
+        "attendance": "Detalhes da frequência",
+        "location": "Localização",
+        "grid-ticket": "Chamado",
+        "grid-user": "Usuário",
+        "grid-inventory": "Item de estoque"
+      },
+      "sections": {
+        "personalData": "Dados pessoais",
+        "currentClass": "Turma atual",
+        "activeCourses": "Cursos em andamento",
+        "completedCourses": "Cursos concluídos",
+        "contracts": "Contratos",
+        "salaryHistory": "Histórico de salários",
+        "classHistory": "Turmas (histórico)",
+        "contact": "Contato",
+        "responsibleClasses": "Turmas sob responsabilidade",
+        "globalCourses": "Cursos (vínculo global)",
+        "info": "Informações",
+        "classStudents": "Alunos da turma",
+        "courseDetails": "Detalhes do curso",
+        "courseClasses": "Turmas do curso",
+        "courseRoster": "Matrículas no curso",
+        "globalRegistration": "Cadastro global",
+        "connectStudentProfile": "Perfil Connect — Aluno",
+        "connectTeacherProfile": "Perfil Connect — Professor",
+        "linkedCourses": "Cursos vinculados",
+        "contractDetails": "Contrato",
+        "linkedStudent": "Aluno vinculado",
+        "salaryRecord": "Registro de salário",
+        "attendanceSession": "Sessão de frequência",
+        "location": "Localização",
+        "ticket": "Chamado",
+        "gridUser": "Usuário Grid",
+        "inventoryItem": "Item de estoque"
+      },
+      "fields": {
+        "cpf": "CPF",
+        "email": "E-mail",
+        "phone": "Celular",
+        "birthDate": "Nascimento",
+        "registeredAt": "Cadastro",
+        "class": "Turma",
+        "course": "Curso",
+        "shift": "Turno",
+        "teacher": "Professor",
+        "capacity": "Capacidade",
+        "startDate": "Início",
+        "endDate": "Término",
+        "enrolledStudents": "Alunos matriculados",
+        "name": "Nome",
+        "rm": "RM",
+        "area": "Área",
+        "workload": "Carga horária",
+        "classesCount": "Turmas",
+        "role": "Papel",
+        "specialty": "Especialidade",
+        "registration": "Matrícula",
+        "company": "Empresa",
+        "monthlyValue": "Valor mensal",
+        "reference": "Referência",
+        "baseSalary": "Salário base",
+        "bonuses": "Bonificações",
+        "deductions": "Descontos",
+        "netAmount": "Valor líquido",
+        "calculatedAt": "Calculado em",
+        "date": "Data",
+        "subject": "Disciplina",
+        "lessonsPerDay": "Aulas no dia",
+        "presence": "Presença",
+        "totalMarks": "Total marcações",
+        "missedLessons": "Aulas faltadas (dia)",
+        "address": "Endereço",
+        "lastUpdate": "Última atualização",
+        "code": "Código",
+        "title": "Título",
+        "requester": "Solicitante",
+        "location": "Local",
+        "priority": "Prioridade",
+        "assignee": "Responsável",
+        "openedAt": "Abertura",
+        "profile": "Perfil",
+        "category": "Categoria",
+        "qtyAvailable": "Qtd. disponível",
+        "qtyMin": "Qtd. mínima",
+        "supplier": "Fornecedor",
+        "cost": "Custo",
+        "contractType": "Tipo",
+        "student": "Aluno",
+        "netSalary": "Valor líquido",
+        "referenceMonth": "Referência"
+      },
+      "student": {
+        "subtitle": "Aluno · RM {{rm}}",
+        "noClass": "Sem turma vinculada.",
+        "noActiveCourses": "Nenhum curso ativo no cadastro global.",
+        "noCompletedCourses": "Nenhum curso concluído registrado."
+      },
+      "teacher": {
+        "defaultSpecialty": "Professor",
+        "noCourses": "Nenhum curso vinculado."
+      },
+      "class": {
+        "noCourse": "Sem curso",
+        "noTeacher": "Sem professor"
+      },
+      "course": {
+        "rosterSummary": "{{students}} aluno(s) · {{teachers}} professor(es)"
+      },
+      "person": {
+        "classLine": "{{name}} · Turma {{className}}"
+      },
+      "contract": {
+        "title": "Contrato · {{type}}"
+      },
+      "grid": {
+        "roomBlock": "{{room}} / {{block}}"
+      }
+    },
+    "students": {
+      "alert": {
+        "saveError": "Não foi possível salvar o aluno.",
+        "deleteError": "Não foi possível excluir o aluno."
+      },
+      "form": {
+        "namePlaceholder": "Ex: Maria Silva",
+        "rmPlaceholder": "Ex: RM20250130",
+        "cpfPlaceholder": "000.000.000-00",
+        "emailPlaceholder": "aluno@email.com",
+        "phonePlaceholder": "(11) 99999-9999",
+        "addressPlaceholder": "Rua, número, bairro, cidade",
+        "guardianPlaceholder": "Nome do responsável legal",
+        "notesPlaceholder": "Alergias, necessidades especiais, etc."
+      }
+    },
+    "teachers": {
+      "alert": {
+        "saveError": "Não foi possível salvar o professor.",
+        "deleteError": "Não foi possível excluir o professor."
+      },
+      "form": {
+        "namePlaceholder": "Ex: João Santos",
+        "emailPlaceholder": "professor@senai.edu.br",
+        "specialtyPlaceholder": "Ex: Automação Industrial",
+        "cpfPlaceholder": "000.000.000-00",
+        "phonePlaceholder": "(11) 99999-9999"
+      }
+    },
+    "people": {
+      "alert": {
+        "saveError": "Não foi possível salvar a pessoa."
+      },
+      "form": {
+        "namePlaceholder": "Ex: Maria Silva",
+        "emailPlaceholder": "pessoa@senai.edu.br",
+        "phonePlaceholder": "(11) 99999-9999",
+        "cpfPlaceholder": "000.000.000-00",
+        "registrationPlaceholder": "Ex: RM20250130",
+        "specialtyPlaceholder": "Ex: Automação Industrial"
+      }
+    },
+    "courses": {
+      "alert": {
+        "saveError": "Não foi possível salvar o curso."
+      },
+      "form": {
+        "namePlaceholder": "Ex: Automação Industrial",
+        "areaPlaceholder": "Ex: Indústria 4.0",
+        "workloadPlaceholder": "Ex: 120 horas",
+        "descriptionPlaceholder": "Descreva o curso, ementa e objetivos..."
+      }
+    },
+    "classes": {
+      "form": {
+        "namePlaceholder": "Ex: TURMA AUT25-02",
+        "semesterPlaceholder": "2025-1",
+        "capacityPlaceholder": "Ex: 30",
+        "descriptionPlaceholder": "Descreva a turma, objetivos e observações...",
+        "periodHint": "Turmas devem ficar dentro deste período"
+      }
+    }
+  },
+  "grid": {
+    "ticketControlPanel": {
+      "stages": {
+        "aberto": "Aberto",
+        "pendente": "Pendente",
+        "em_atendimento": "Em atendimento",
+        "aguardando_aprovacao": "Aguardando aprovação",
+        "avaliacao": "Avaliação",
+        "aprovacao": "Aprovação"
+      }
+    },
+    "inventory": {
+      "categories": {
+        "informatica": "Informática",
+        "eletrica": "Elétrica",
+        "climatizacao": "Climatização",
+        "hidraulica": "Hidráulica"
+      }
+    },
+    "users": {
+      "roles": {
+        "administrator": "Administrador"
+      }
+    }
+  },
+  "safe": {
+    "approvals": {
+      "approvedSuccess": "Solicitação aprovada.",
+      "denyConfirm": "Negar esta solicitação?",
+      "deniedSuccess": "Solicitação negada.",
+      "approve": "Aprovar",
+      "deny": "Negar"
+    },
+    "portaria": {
+      "confirmedSuccess": "Autorização confirmada.",
+      "denyConfirm": "Recusar esta autorização na portaria?",
+      "deniedSuccess": "Autorização recusada.",
+      "confirm": "Confirmar",
+      "deny": "Recusar"
+    },
+    "authorizations": {
+      "drawerTitle": "Nova autorização",
+      "submitting": "Enviando...",
+      "createSubmit": "Criar solicitação",
+      "form": {
+        "registeredStudent": "Aluno cadastrado",
+        "manualEntry": "Informar manualmente",
+        "studentName": "Nome do aluno",
+        "className": "Turma",
+        "typeEntry": "Entrada",
+        "typeExit": "Saída",
+        "date": "Data",
+        "time": "Horário",
+        "absences": "Faltas (saída)"
+      }
+    },
+    "students": {
+      "form": {
+        "registration": "Matrícula",
+        "name": "Nome",
+        "class": "Turma"
+      },
+      "table": {
+        "registration": "Matrícula",
+        "name": "Nome",
+        "class": "Turma"
+      }
+    }
   }
 }

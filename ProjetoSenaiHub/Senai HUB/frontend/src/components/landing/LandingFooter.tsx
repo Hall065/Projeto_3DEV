@@ -1,25 +1,6 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { logoSenaiHub } from '../../assets/brand'
-
-const navigation = [
-  { label: 'Recursos', href: '#recursos' },
-  { label: 'Soluções', href: '#solucoes' },
-  { label: 'Benefícios', href: '#beneficios' },
-  { label: 'Para quem é', href: '#para-quem' },
-]
-
-const support = [
-  { label: 'Central de Ajuda', href: '#suporte' },
-  { label: 'Fale Conosco', href: '#suporte' },
-  { label: 'Documentação', href: '#suporte' },
-  { label: 'Status do Sistema', href: '#suporte' },
-]
-
-const institutional = [
-  { label: 'Sobre o SENAI', href: '#suporte' },
-  { label: 'Política de Privacidade', href: '#suporte' },
-  { label: 'Termos de Uso', href: '#suporte' },
-]
 
 function SocialIcon({ name }: { name: 'facebook' | 'instagram' | 'linkedin' | 'youtube' }) {
   const common = 'h-4 w-4 fill-current'
@@ -76,15 +57,35 @@ function FooterColumn({ title, links }: { title: string; links: { label: string;
 }
 
 export function LandingFooter() {
+  const { t } = useTranslation()
+
+  const navigation = [
+    { label: t('landing.navFeatures'), href: '#recursos' },
+    { label: t('landing.navSolutions'), href: '#solucoes' },
+    { label: t('landing.navBenefits'), href: '#beneficios' },
+    { label: t('landing.navAudience'), href: '#para-quem' },
+  ]
+
+  const support = [
+    { label: t('landing.footer.helpCenter'), href: '#suporte' },
+    { label: t('landing.footer.contactUs'), href: '#suporte' },
+    { label: t('landing.footer.documentation'), href: '#suporte' },
+    { label: t('landing.footer.systemStatus'), href: '#suporte' },
+  ]
+
+  const institutional = [
+    { label: t('landing.footer.aboutSenai'), href: '#suporte' },
+    { label: t('landing.footer.privacyPolicy'), href: '#suporte' },
+    { label: t('landing.footer.termsOfUse'), href: '#suporte' },
+  ]
+
   return (
     <footer id="suporte" className="hub-chrome text-white">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-1">
             <img src={logoSenaiHub} alt="SENAI HUB" className="h-12 w-auto sm:h-14" />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
-              Plataforma integrada de educação profissional e tecnológica do SENAI.
-            </p>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">{t('landing.footer.tagline')}</p>
             <div className="mt-6 flex gap-3">
               {social.map(({ icon, label, href }) => (
                 <a
@@ -101,19 +102,18 @@ export function LandingFooter() {
             </div>
           </div>
 
-          <FooterColumn title="Navegação" links={navigation} />
-          <FooterColumn title="Suporte" links={support} />
-          <FooterColumn title="Institucional" links={institutional} />
+          <FooterColumn title={t('landing.footer.navigation')} links={navigation} />
+          <FooterColumn title={t('landing.footer.support')} links={support} />
+          <FooterColumn title={t('landing.footer.institutional')} links={institutional} />
         </div>
 
         <div className="mt-12 border-t border-white/10 pt-8 text-center">
           <p className="text-xs text-white/50">
-            © {new Date().getFullYear()} SENAI — Serviço Nacional de Aprendizagem Industrial. Todos os direitos
-            reservados.
+            {t('landing.footer.copyright', { year: new Date().getFullYear() })}
           </p>
           <p className="mt-2 text-xs text-white/40">
             <Link to="/login" className="hover:text-white/70">
-              Área restrita
+              {t('landing.restrictedArea')}
             </Link>
           </p>
         </div>

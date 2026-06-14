@@ -16,7 +16,7 @@ export interface NavPermissionOption {
   group: string
 }
 
-export type NavPermissionsByModule = Record<'connect' | 'grid', NavPermissionOption[]>
+export type NavPermissionsByModule = Record<'connect' | 'grid' | 'safe', NavPermissionOption[]>
 
 export interface PaginatedUsers {
   data: User[]

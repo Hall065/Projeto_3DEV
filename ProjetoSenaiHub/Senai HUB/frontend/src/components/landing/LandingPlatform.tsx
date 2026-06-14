@@ -1,15 +1,18 @@
 import { Link } from 'react-router-dom'
 import { Check } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { HubPreviewMockup } from './HubPreviewMockup'
 
-const benefits = [
-  'Acesso fácil e centralizado',
-  'Navegação intuitiva',
-  'Mais produtividade',
-  'Segurança e confiabilidade',
-]
-
 export function LandingPlatform() {
+  const { t } = useTranslation()
+
+  const benefits = [
+    t('landing.platform.benefit1'),
+    t('landing.platform.benefit2'),
+    t('landing.platform.benefit3'),
+    t('landing.platform.benefit4'),
+  ]
+
   return (
     <section id="solucoes" className="py-16 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-10 xl:max-w-7xl xl:px-12">
@@ -20,11 +23,10 @@ export function LandingPlatform() {
 
           <div className="glass-panel-solid mx-auto w-full max-w-md rounded-3xl p-8 lg:mx-0 lg:max-w-lg lg:pl-8 xl:pl-10">
             <h2 className="text-2xl font-bold leading-snug text-hub-navy sm:text-[1.75rem] lg:text-3xl">
-              Uma plataforma completa para o seu dia a dia.
+              {t('landing.platform.title')}
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-hub-text-muted sm:text-base">
-              O Hub concentra os sistemas que você já usa no dia a dia em um único ponto de acesso.
-              Menos senhas, menos cliques e mais tempo para o que importa: ensinar e aprender.
+              {t('landing.platform.body')}
             </p>
             <ul className="mt-7 space-y-3.5">
               {benefits.map((item) => (
@@ -40,7 +42,7 @@ export function LandingPlatform() {
               to="/login"
               className="mt-8 inline-flex items-center justify-center rounded-lg bg-hub-red px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-hub-red-hover"
             >
-              Explorar o Hub
+              {t('landing.platform.exploreHub')}
             </Link>
           </div>
         </div>

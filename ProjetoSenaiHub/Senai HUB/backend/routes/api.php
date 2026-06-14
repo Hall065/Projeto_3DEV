@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ArchiveController;
 use App\Http\Controllers\Api\AccessRequestController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\Admin\UserManagementController;
 use App\Http\Controllers\Api\CustomReportController;
 use App\Http\Controllers\Api\GlobalSearchController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PublicConfigController;
 use App\Http\Controllers\Api\ReportPresetController;
 use App\Http\Controllers\Api\SpreadsheetController;
@@ -84,6 +86,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
     });
 
     Route::get('/applications', [ApplicationController::class, 'index']);
+
+    Route::prefix('archive')->group(function (): void {
+        Route::get('/summary', [ArchiveController::class, 'summary']);
+        Route::get('/connect/classes', [ArchiveController::class, 'connectClasses']);
+        Route::get('/grid/tickets', [ArchiveController::class, 'gridTickets']);
+        Route::get('/safe/authorizations', [ArchiveController::class, 'safeAuthorizations']);
+        Route::post('/run-auto-archive', [ArchiveController::class, 'runAutoArchive'])->middleware('admin');
+    });
 
     Route::prefix('admin')->middleware('admin')->group(function (): void {
         Route::get('/roles', [UserManagementController::class, 'roles']);
@@ -178,6 +188,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::middleware('permission:connect.courses.manage')->group(function (): void {
             Route::post('/courses', [CourseController::class, 'store']);
             Route::put('/courses/{course}', [CourseController::class, 'update']);
+            Route::delete('/courses/{course}', [CourseController::class, 'destroy']);
             Route::get('/courses/{course}/roster', [CourseRosterController::class, 'index']);
             Route::post('/courses/{course}/roster', [CourseRosterController::class, 'store']);
             Route::delete('/courses/{course}/roster/{person}', [CourseRosterController::class, 'destroy']);

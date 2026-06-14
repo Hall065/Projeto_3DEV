@@ -21,8 +21,8 @@ import {
 import { connectService } from '../../services/connectService'
 import type { ConnectContract, ConnectStudent, PaginatedMeta } from '../../types/connect'
 import { downloadCsv } from '../../utils/csvExport'
-import { parseApiError } from '../../utils/parseApiError'
-
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 const emptyContractForm = {
   connect_student_id: '',
   contract_type: 'aprendizagem',
@@ -36,6 +36,8 @@ const emptyContractForm = {
 
 export function ContractsPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete } = useConfirmAction()
   const [contracts, setContracts] = useState<ConnectContract[]>([])
   const [students, setStudents] = useState<ConnectStudent[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
@@ -108,6 +110,7 @@ export function ContractsPage() {
   const handleSave = async (keepOpen = false) => {
     const payload = buildPayload()
     try {
+      const wasEdit = !!editingId
       if (editingId) {
         await connectService.updateContract(editingId, payload)
       } else {
@@ -120,9 +123,10 @@ export function ContractsPage() {
         setDrawerOpen(false)
         setEditingId(null)
       }
+      crudToast.notifySaved(wasEdit)
       load()
     } catch (error: unknown) {
-      window.alert(parseApiError(error, t('connect.classes.alert.saveError')))
+      crudToast.notifyError(error, t('connect.classes.alert.saveError'))
     }
   }
 
@@ -152,12 +156,13 @@ export function ContractsPage() {
 
   const handleDelete = async (contract: ConnectContract) => {
     const label = contract.student?.full_name ?? t('connect.contracts.drawer.new')
-    if (!window.confirm(t('connect.confirm.delete', { entity: `o contrato de ${label}` }))) return
+    if (!(await confirmDelete(`o contrato de ${label}`))) return
     try {
       await connectService.deleteContract(contract.id)
+      crudToast.notifyDeleted()
       load()
     } catch (error: unknown) {
-      window.alert(parseApiError(error, t('connect.classes.alert.deleteError')))
+      crudToast.notifyError(error, t('connect.classes.alert.deleteError'))
     }
   }
 

@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { ChevronLeft, ChevronRight, Minus, TrendingDown, TrendingUp } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 
 export const EMPTY = '-'
 
@@ -41,12 +43,15 @@ export function ConnectTableScroll({ children }: { children: React.ReactNode }) 
 
 /** Spinner duplo (mesmo visual dos Relatórios Rápidos) */
 export function ConnectLoadingSpinner({
-  label = 'Carregando dados...',
+  label,
   className = '',
 }: {
   label?: string
   className?: string
 }) {
+  const { t } = useTranslation()
+  const displayLabel = label ?? t('connect.shared.loadingData')
+
   return (
     <div
       className={`flex min-h-[200px] w-full flex-col items-center justify-center gap-4 py-8 ${className}`}
@@ -61,7 +66,7 @@ export function ConnectLoadingSpinner({
           style={{ animationDirection: 'reverse', animationDuration: '1.2s' }}
         />
       </div>
-      <p className="max-w-[220px] text-center text-xs font-medium text-hub-text-muted sm:text-sm">{label}</p>
+      <p className="max-w-[220px] text-center text-xs font-medium text-hub-text-muted sm:text-sm">{displayLabel}</p>
     </div>
   )
 }
@@ -71,25 +76,23 @@ export function ConnectCard({ children, className = '' }: { children: React.Reac
 }
 
 export function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation()
   const normalized = status.toLowerCase()
-  const active = ['active', 'ativa', 'ativo', 'open', 'calculated', 'presente', 'inside'].some((s) => normalized.includes(s))
-  const warning = ['justified', 'pending', 'inactive'].some((s) => normalized.includes(s))
+  const isFinished = normalized.includes('finished') || normalized.includes('encerrad') || normalized.includes('concluid')
+  const active = !isFinished && ['active', 'ativa', 'ativo', 'open', 'calculated', 'presente', 'inside'].some((s) => normalized.includes(s))
+  const warning = !isFinished && ['justified', 'pending', 'inactive'].some((s) => normalized.includes(s))
 
-  const classes = active
+  const classes = isFinished
+    ? 'bg-slate-100 text-slate-700'
+    : active
     ? 'bg-emerald-50 text-emerald-700'
     : warning
       ? 'bg-amber-50 text-amber-700'
       : 'bg-gray-100 text-gray-600'
 
-  const labelMap: Record<string, string> = {
-    active: 'Ativo',
-    inactive: 'Inativo',
-    calculated: 'Calculado',
-    inside: 'Presente',
-    outside: 'Ausente',
-  }
-
-  const label = labelMap[normalized] ?? status
+  const statusKeys = ['active', 'inactive', 'finished', 'calculated', 'inside', 'outside'] as const
+  const matchedKey = statusKeys.find((key) => normalized.includes(key))
+  const label = matchedKey ? t(`connect.statusBadge.${matchedKey}`) : status
 
   return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${classes}`}>{label}</span>
 }
@@ -131,7 +134,7 @@ function accentStyles(accent: ConnectAccent) {
       }
 }
 
-/** Card com faixa colorida SENAI; ícone neutro em watermark (cor fica no card, não no ícone) */
+/** Accent card with SENAI stripe and watermark icon */
 export function ConnectAccentCard({
   accent = 'navy',
   icon: Icon,
@@ -232,12 +235,17 @@ export function ConnectPagination({
   meta?: { current_page: number; last_page: number; total: number; from: number | null; to: number | null }
   onPageChange: (page: number) => void
 }) {
+  const { t } = useTranslation()
   if (!meta || meta.last_page <= 1) return null
 
   return (
     <div className="flex flex-col gap-3 border-t border-hub-border/60 px-4 py-3 text-sm text-hub-text-muted sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
       <p>
-        Mostrando {meta.from ?? 0} a {meta.to ?? 0} de {meta.total} registros
+        {t('connect.shared.pagination', {
+          from: meta.from ?? 0,
+          to: meta.to ?? 0,
+          total: meta.total,
+        })}
       </p>
       <div className="flex items-center gap-1">
         <button
@@ -358,12 +366,13 @@ export function SimpleDonut({
   unjustified: number
   rate: number
 }) {
+  const { t } = useTranslation()
   const total = present + justified + unjustified || 1
   const p = (present / total) * 100
   const j = (justified / total) * 100
 
   if (total <= 1 && rate === 0) {
-    return <p className="text-sm text-hub-text-muted">Sem registros de frequencia ainda.</p>
+    return <p className="text-sm text-hub-text-muted">{t('connect.shared.noAttendanceRecords')}</p>
   }
 
   return (
@@ -380,13 +389,13 @@ export function SimpleDonut({
       </div>
       <ul className="space-y-2 text-sm">
         <li className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-emerald-500" /> Presentes ({present}%)
+          <span className="h-3 w-3 rounded-full bg-emerald-500" /> {t('connect.shared.present', { pct: present })}
         </li>
         <li className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-amber-500" /> Faltas justificadas ({justified}%)
+          <span className="h-3 w-3 rounded-full bg-amber-500" /> {t('connect.shared.justified', { pct: justified })}
         </li>
         <li className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-red-500" /> Faltas injustificadas ({unjustified}%)
+          <span className="h-3 w-3 rounded-full bg-red-500" /> {t('connect.shared.unjustified', { pct: unjustified })}
         </li>
       </ul>
     </div>
@@ -394,8 +403,9 @@ export function SimpleDonut({
 }
 
 export function SimpleBarChart({ items }: { items: { name: string; sessions: number }[] }) {
+  const { t } = useTranslation()
   if (items.length === 0) {
-    return <p className="text-sm text-hub-text-muted">Nenhuma aula registrada na semana.</p>
+    return <p className="text-sm text-hub-text-muted">{t('connect.shared.noWeeklyLessons')}</p>
   }
 
   const max = Math.max(...items.map((i) => i.sessions), 1)
@@ -436,7 +446,8 @@ export function formatDateTime(value?: string) {
 
 export function formatShift(shift?: string) {
   if (!shift) return EMPTY
-  const map: Record<string, string> = { manha: 'Manha', tarde: 'Tarde', noite: 'Noite' }
-  return map[shift] ?? shift
+  const key = `connect.shift.${shift}`
+  const translated = i18n.t(key)
+  return translated !== key ? translated : shift
 }
 

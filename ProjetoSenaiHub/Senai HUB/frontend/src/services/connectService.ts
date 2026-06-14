@@ -112,6 +112,10 @@ export const connectService = {
     return data.data
   },
 
+  async deleteCourse(id: number): Promise<void> {
+    await api.delete(`/connect/courses/${id}`)
+  },
+
   async getCalendar(params: Record<string, string | number>): Promise<ConnectLessonSchedule[]> {
     const { data } = await api.get<{ data: ConnectLessonSchedule[] }>('/connect/calendar', { params })
     return data.data

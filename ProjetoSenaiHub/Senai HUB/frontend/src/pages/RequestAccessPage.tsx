@@ -5,23 +5,23 @@ import { useTranslation } from 'react-i18next'
 import { AuthButton } from '../components/auth/AuthButton'
 import { AuthField } from '../components/auth/AuthField'
 import { AuthFormCard } from '../components/auth/AuthFormCard'
+import { useCrudToast } from '../hooks/useCrudToast'
 import { submitAccessRequest } from '../services/accessRequestService'
 import { parseApiError } from '../utils/parseApiError'
 
 export function RequestAccessPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [organization, setOrganization] = useState('')
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     setError(null)
-    setSuccess(null)
     setSubmitting(true)
 
     try {
@@ -31,7 +31,7 @@ export function RequestAccessPage() {
         organization: organization.trim() || undefined,
         message: message.trim() || undefined,
       })
-      setSuccess(responseMessage)
+      crudToast.notifySuccess(responseMessage)
       setName('')
       setEmail('')
       setOrganization('')
@@ -53,12 +53,6 @@ export function RequestAccessPage() {
         </Link>
       }
     >
-      {success && (
-        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-          {success}
-        </div>
-      )}
-
       {error && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}

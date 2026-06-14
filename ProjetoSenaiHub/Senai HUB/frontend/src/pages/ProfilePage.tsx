@@ -58,6 +58,7 @@ import { getAppBrandAssets } from '../utils/appBrandAssets'
 import { useAuth } from '../contexts/AuthContext'
 
 import { usePermissions } from '../hooks/usePermissions'
+import { useCrudToast } from '../hooks/useCrudToast'
 
 import { intlLocale, normalizeLocale } from '../i18n'
 
@@ -150,6 +151,7 @@ export function ProfilePage() {
   const { user, updateProfile, changePassword, logout, isSubmitting, refreshUser } = useAuth()
 
   const { isAdmin } = usePermissions()
+  const crudToast = useCrudToast()
 
 
 
@@ -171,7 +173,7 @@ export function ProfilePage() {
 
   const [avatarModalOpen, setAvatarModalOpen] = useState(false)
 
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [pageError, setPageError] = useState<string | null>(null)
 
 
 
@@ -207,7 +209,7 @@ export function ProfilePage() {
 
         setApplications([])
 
-        showMessage('error', parseApiError(err, t('profile.loadAppsError')))
+        setPageError(parseApiError(err, t('profile.loadAppsError')))
 
       })
 
@@ -227,29 +229,19 @@ export function ProfilePage() {
 
 
 
-  function showMessage(type: 'success' | 'error', message: string) {
-
-    setFeedback({ type, message })
-
-    window.setTimeout(() => setFeedback(null), 4000)
-
-  }
-
-
-
   async function handleSaveProfile() {
 
-    setFeedback(null)
+    setPageError(null)
 
     try {
 
       await updateProfile({ name: name.trim(), email: email.trim() })
 
-      showMessage('success', t('profile.profileSaved'))
+      crudToast.notifySuccess(t('profile.profileSaved'))
 
     } catch (err: unknown) {
 
-      showMessage('error', parseApiError(err, t('profile.profileSaveError')))
+      crudToast.notifyError(err, t('profile.profileSaveError'))
 
     }
 
@@ -258,53 +250,29 @@ export function ProfilePage() {
 
 
   async function handleChangePassword() {
-
-    setFeedback(null)
-
+    setPageError(null)
     if (password !== passwordConfirmation) {
-
-      showMessage('error', t('profile.passwordMismatch'))
-
+      crudToast.notifyWarning(t('profile.passwordMismatch'))
       return
-
     }
-
     if (password.length < 8) {
-
-      showMessage('error', t('profile.passwordMinLength'))
-
+      crudToast.notifyWarning(t('profile.passwordMinLength'))
       return
-
     }
-
-
 
     try {
-
       await changePassword({
-
         current_password: currentPassword,
-
         password,
-
         password_confirmation: passwordConfirmation,
-
       })
-
       setCurrentPassword('')
-
       setPassword('')
-
       setPasswordConfirmation('')
-
-      showMessage('success', t('profile.passwordChanged'))
-
+      crudToast.notifySuccess(t('profile.passwordChanged'))
     } catch (err: unknown) {
-
-      showMessage('error', parseApiError(err, t('profile.passwordChangeError')))
-
+      crudToast.notifyError(err, t('profile.passwordChangeError'))
     }
-
   }
 
 
@@ -381,7 +349,7 @@ export function ProfilePage() {
 
 
 
-      {feedback && <AlertBanner type={feedback.type} message={feedback.message} />}
+      {pageError && <AlertBanner type="error" message={pageError} />}
 
 
 
@@ -938,9 +906,9 @@ export function ProfilePage() {
 
         onClose={() => setAvatarModalOpen(false)}
 
-        onSuccess={(message) => showMessage('success', message)}
+        onSuccess={(message) => crudToast.notifySuccess(message)}
 
-        onError={(message) => showMessage('error', message)}
+        onError={(message) => crudToast.notifyError(message)}
 
       />
 

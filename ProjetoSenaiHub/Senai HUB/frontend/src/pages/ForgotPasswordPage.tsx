@@ -6,13 +6,14 @@ import { AuthButton } from '../components/auth/AuthButton'
 import { AuthField } from '../components/auth/AuthField'
 import { AuthFormCard } from '../components/auth/AuthFormCard'
 import { useAuth } from '../contexts/AuthContext'
+import { useCrudToast } from '../hooks/useCrudToast'
 import { forgotPasswordRequest, parseAuthError } from '../services/authService'
 
 export function ForgotPasswordPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const { isAuthenticated, isInitializing } = useAuth()
   const [email, setEmail] = useState('')
-  const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -27,12 +28,11 @@ export function ForgotPasswordPage() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     setError(null)
-    setMessage(null)
     setIsSubmitting(true)
 
     try {
       const response = await forgotPasswordRequest(email)
-      setMessage(response || t('auth.forgotSuccess'))
+      crudToast.notifySuccess(response || t('auth.forgotSuccess'))
     } catch (err) {
       setError(parseAuthError(err))
     } finally {
@@ -64,7 +64,6 @@ export function ForgotPasswordPage() {
           required
         />
 
-        {message && <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">{message}</p>}
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
         <AuthButton isLoading={isSubmitting}>{t('auth.sendLink')}</AuthButton>

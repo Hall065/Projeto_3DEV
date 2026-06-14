@@ -16,8 +16,8 @@ import {
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import type { ConnectCourse, PaginatedMeta } from '../../types/connect'
-import { parseApiError } from '../../utils/parseApiError'
-
+import { useCrudToast } from '../../hooks/useCrudToast'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
 const emptyForm = {
   name: '',
   description: '',
@@ -30,6 +30,8 @@ const emptyForm = {
 
 export function CoursesPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete } = useConfirmAction()
   const [courses, setCourses] = useState<ConnectCourse[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
@@ -84,7 +86,7 @@ export function CoursesPage() {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      window.alert(t('connect.courses.alert.nameRequired'))
+      crudToast.notifyWarning(t('connect.courses.alert.nameRequired'))
       return
     }
 
@@ -99,6 +101,7 @@ export function CoursesPage() {
     }
 
     try {
+      const wasEdit = !!editingId
       if (editingId) {
         await connectService.updateCourse(editingId, payload)
       } else {
@@ -108,9 +111,21 @@ export function CoursesPage() {
         })
       }
       setDrawerOpen(false)
+      crudToast.notifySaved(wasEdit)
       load()
     } catch (error: unknown) {
-      window.alert(parseApiError(error, 'Nao foi possivel salvar o curso.'))
+      crudToast.notifyError(error, t('connect.courses.alert.saveError'))
+    }
+  }
+
+  const handleDelete = async (course: ConnectCourse) => {
+    if (!(await confirmDelete(`o curso "${course.name}"`))) return
+    try {
+      await connectService.deleteCourse(course.id)
+      crudToast.notifyDeleted()
+      load()
+    } catch (error: unknown) {
+      crudToast.notifyError(error, t('connect.courses.alert.deleteError'))
     }
   }
 
@@ -159,6 +174,7 @@ export function CoursesPage() {
                 onView={() => setViewId(course.id)}
                 onEdit={() => openEdit(course)}
                 onRoster={() => openRoster(course)}
+                onDelete={() => void handleDelete(course)}
               />
             ))}
           </div>
@@ -187,7 +203,7 @@ export function CoursesPage() {
               className={inputClass}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Ex: Automação Industrial"
+              placeholder={t('connect.courses.form.placeholders.name')}
             />
           </FormField>
           <FormField label={t('connect.courses.form.area')}>
@@ -195,7 +211,7 @@ export function CoursesPage() {
               className={inputClass}
               value={form.area}
               onChange={(e) => setForm({ ...form, area: e.target.value })}
-              placeholder="Ex: Indústria 4.0"
+              placeholder={t('connect.courses.form.placeholders.area')}
             />
           </FormField>
           <FormField label={t('connect.courses.form.workload')} hint="Usada no planejamento do semestre">
@@ -205,7 +221,7 @@ export function CoursesPage() {
               className={inputClass}
               value={form.workload_hours}
               onChange={(e) => setForm({ ...form, workload_hours: e.target.value })}
-              placeholder="Ex: 120 horas"
+              placeholder={t('connect.courses.form.placeholders.workload')}
             />
           </FormField>
           <FormField label={t('connect.courses.form.startDate')} hint="Turmas devem ficar dentro deste periodo">
@@ -239,7 +255,7 @@ export function CoursesPage() {
               className={`${inputClass} min-h-[100px] py-2 sm:col-span-2`}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Descreva o curso, ementa e objetivos..."
+              placeholder={t('connect.courses.form.placeholders.description')}
             />
           </FormField>
         </div>

@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface ConnectDrawerProps {
   open: boolean
@@ -19,6 +20,7 @@ const widthClasses = {
 }
 
 export function ConnectDrawer({ open, onClose, title, subtitle, children, footer, width = 'xl' }: ConnectDrawerProps) {
+  const { t } = useTranslation()
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
@@ -36,7 +38,7 @@ export function ConnectDrawer({ open, onClose, title, subtitle, children, footer
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end p-0 sm:p-2">
-      <button type="button" className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="Fechar painel" />
+      <button type="button" className="absolute inset-0 bg-black/40" onClick={onClose} aria-label={t('connectDrawer.closePanel')} />
       <div
         className={`glass-panel-solid relative flex h-full w-full max-w-[100vw] flex-col shadow-2xl ${widthClasses[width]}`}
         role="dialog"
@@ -47,7 +49,7 @@ export function ConnectDrawer({ open, onClose, title, subtitle, children, footer
             <h2 className="text-lg font-bold text-hub-navy">{title}</h2>
             {subtitle && <p className="mt-1 text-sm text-hub-text-muted">{subtitle}</p>}
           </div>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-hub-bg" aria-label="Fechar">
+          <button type="button" onClick={onClose} className="rounded-lg p-2 hover:bg-hub-bg" aria-label={t('common.close')}>
             <X className="h-5 w-5" />
           </button>
         </div>

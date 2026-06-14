@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   chartColorByIndex,
   chartColorForTheme,
@@ -7,6 +8,9 @@ import {
   sanitizeChartSegmentKey,
 } from '../../constants/chartPalette'
 import { useAppearance } from '../../contexts/AppearanceContext'
+import i18n, { intlLocale, normalizeLocale } from '../../i18n'
+import { TICKET_WORKFLOW_ORDER } from '../../utils/gridTicketWorkflow'
+import { getTicketStatusLabel } from './GridBadges'
 import { IsometricDistributionDonut, type IsometricDonutSegmentInput } from '../connect/ConnectCharts'
 import { ConnectLoadingSpinner } from '../connect/ConnectShared'
 
@@ -19,8 +23,12 @@ export function breakdownTotalCount(items: GridChartBreakdownItem[]): number {
   return items.reduce((sum, item) => sum + (item.count ?? 0), 0)
 }
 
-export function breakdownFinishedCount(items: GridChartBreakdownItem[], finishedLabel = 'Finalizados'): number {
-  return items.find((item) => item.label === finishedLabel)?.count ?? 0
+export function breakdownFinishedCount(items: GridChartBreakdownItem[], finishedLabel?: string): number {
+  const candidates = new Set([
+    finishedLabel ?? i18n.t('gridComponents.charts.finishedLabel'),
+    getTicketStatusLabel('concluido'),
+  ])
+  return items.find((item) => candidates.has(item.label))?.count ?? 0
 }
 
 function ChartPanel({
@@ -63,14 +71,12 @@ function ChartReveal({ children, delayMs = 0 }: { children: React.ReactNode; del
   )
 }
 
-const GRID_DONUT_SHORT_LABELS: Record<string, string> = {
-  'Aguardando aprovação': 'Aguard. aprov.',
-  'Avaliação pendente': 'Aval. pendente',
-  'Em atendimento': 'Em atendimento',
-}
-
-function gridDonutShortLabel(label: string): string {
-  if (GRID_DONUT_SHORT_LABELS[label]) return GRID_DONUT_SHORT_LABELS[label]
+function gridDonutShortLabel(label: string, t: (key: string, options?: { defaultValue?: string }) => string): string {
+  for (const status of TICKET_WORKFLOW_ORDER) {
+    if (label === getTicketStatusLabel(status)) {
+      return t(`gridComponents.charts.shortLabels.${status}`, { defaultValue: label })
+    }
+  }
   if (label.length <= 16) return label
   return `${label.slice(0, 15)}…`
 }
@@ -81,7 +87,7 @@ export function GridDistributionDonut({
   centerLabel,
   centerValue,
   loading,
-  emptyMessage = 'Sem dados para exibir.',
+  emptyMessage,
 }: {
   items: GridChartBreakdownItem[]
   centerLabel: string
@@ -89,8 +95,11 @@ export function GridDistributionDonut({
   loading?: boolean
   emptyMessage?: string
 }) {
+  const { t, i18n: i18nInstance } = useTranslation()
   const { wallpaperTone } = useAppearance()
   const isDark = wallpaperTone === 'dark'
+  const numberLocale = intlLocale(normalizeLocale(i18nInstance.language))
+  const resolvedEmptyMessage = emptyMessage ?? t('gridComponents.charts.emptyData')
   const totalCount = breakdownTotalCount(items)
   const pctSum = items.reduce((sum, item) => sum + item.value, 0) || 1
 
@@ -100,7 +109,7 @@ export function GridDistributionDonut({
     return {
       key: sanitizeChartSegmentKey(item.label, index),
       label: item.label,
-      short: gridDonutShortLabel(item.label),
+      short: gridDonutShortLabel(item.label, t),
       pct: item.count != null && totalCount > 0 ? (item.count / totalCount) * 100 : (item.value / pctSum) * 100,
       color,
       gradient: resolveChartGradient(lightColor, index, isDark),
@@ -114,12 +123,14 @@ export function GridDistributionDonut({
       centerValue={centerValue}
       centerLabel={centerLabel}
       centerSubtitle={
-        totalCount > 0 ? `${totalCount.toLocaleString('pt-BR')} chamados no total` : undefined
+        totalCount > 0
+          ? t('gridComponents.charts.ticketsTotal', { count: totalCount.toLocaleString(numberLocale) })
+          : undefined
       }
       loading={loading}
-      loadingLabel="Carregando gráfico..."
-      emptyMessage={emptyMessage}
-      ariaLabel={`Distribuição de ${centerLabel}`}
+      loadingLabel={t('gridComponents.charts.loadingChart')}
+      emptyMessage={resolvedEmptyMessage}
+      ariaLabel={t('gridComponents.charts.distributionAria', { label: centerLabel })}
     />
   )
 }
@@ -134,6 +145,7 @@ export function GridMonthlyBarChart({
   items: { label: string; count: number }[]
   loading?: boolean
 }) {
+  const { t } = useTranslation()
   const { wallpaperTone } = useAppearance()
   const isDark = wallpaperTone === 'dark'
   const [animated, setAnimated] = useState(false)
@@ -144,14 +156,14 @@ export function GridMonthlyBarChart({
       setAnimated(false)
       return
     }
-    const t = window.setTimeout(() => setAnimated(true), 150)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(() => setAnimated(true), 150)
+    return () => window.clearTimeout(timer)
   }, [loading, items])
 
-  if (loading) return <ConnectLoadingSpinner label="Carregando dados..." className="min-h-[180px]" />
+  if (loading) return <ConnectLoadingSpinner label={t('gridComponents.charts.loadingData')} className="min-h-[180px]" />
 
   if (items.length === 0) {
-    return <p className="py-10 text-center text-sm text-hub-text-muted">Nenhum registro no período.</p>
+    return <p className="py-10 text-center text-sm text-hub-text-muted">{t('gridComponents.charts.noRecordsInPeriod')}</p>
   }
 
   return (
@@ -237,30 +249,32 @@ export function GridMonthlyBarChart({
 export function GridHorizontalBarChart({
   items,
   loading,
-  valueLabel = 'itens',
+  valueLabel,
 }: {
   items: { name: string; count: number }[]
   loading?: boolean
   valueLabel?: string
 }) {
+  const { t } = useTranslation()
   const { wallpaperTone } = useAppearance()
   const isDark = wallpaperTone === 'dark'
   const [animated, setAnimated] = useState(false)
   const max = Math.max(...items.map((i) => i.count), 1)
+  const resolvedValueLabel = valueLabel ?? t('gridComponents.charts.ticketsValueLabel')
 
   useEffect(() => {
     if (loading) {
       setAnimated(false)
       return
     }
-    const t = window.setTimeout(() => setAnimated(true), 200)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(() => setAnimated(true), 200)
+    return () => window.clearTimeout(timer)
   }, [loading, items])
 
-  if (loading) return <ConnectLoadingSpinner label="Carregando..." className="min-h-[160px]" />
+  if (loading) return <ConnectLoadingSpinner label={t('gridComponents.charts.loading')} className="min-h-[160px]" />
 
   if (items.length === 0) {
-    return <p className="py-10 text-center text-sm text-hub-text-muted">Nenhum dado disponível.</p>
+    return <p className="py-10 text-center text-sm text-hub-text-muted">{t('gridComponents.charts.noDataAvailable')}</p>
   }
 
   return (
@@ -277,7 +291,7 @@ export function GridHorizontalBarChart({
                   {item.name}
                 </span>
                 <span className="chart-stat-badge shrink-0 rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums">
-                  {item.count} {valueLabel}
+                  {item.count} {resolvedValueLabel}
                 </span>
               </div>
               <div className="chart-bar-track relative h-3 overflow-hidden rounded-full sm:h-3.5">
@@ -317,41 +331,42 @@ export function GridQuickReportsSection({
   topInventory: { name: string; count: number }[]
   tasksByColumn?: { label: string; count: number }[]
 }) {
+  const { t } = useTranslation()
   const statusTotal = breakdownTotalCount(maintenanceBreakdown)
   const priorityTotal = breakdownTotalCount(priorityBreakdown)
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-6 sm:gap-8">
-      <ChartPanel title="Status dos chamados" subtitle="Distribuição por situação atual">
+      <ChartPanel title={t('gridComponents.charts.statusTitle')} subtitle={t('gridComponents.charts.statusSubtitle')}>
         <GridDistributionDonut
           items={maintenanceBreakdown}
           centerValue={statusTotal || '—'}
-          centerLabel="Chamados"
+          centerLabel={t('gridComponents.charts.ticketsLabel')}
           loading={loading}
         />
       </ChartPanel>
-      <ChartPanel title="Prioridade" subtitle="Chamados por nível de urgência">
+      <ChartPanel title={t('gridComponents.charts.priorityTitle')} subtitle={t('gridComponents.charts.prioritySubtitle')}>
         <GridDistributionDonut
           items={priorityBreakdown}
           centerValue={priorityTotal || '—'}
-          centerLabel="Chamados"
+          centerLabel={t('gridComponents.charts.ticketsLabel')}
           loading={loading}
         />
       </ChartPanel>
       {tasksByColumn && tasksByColumn.some((c) => c.count > 0) && (
-        <ChartPanel title="Tarefas por coluna" subtitle="Quadro Kanban de manutenção">
+        <ChartPanel title={t('gridComponents.charts.tasksByColumnTitle')} subtitle={t('gridComponents.charts.tasksByColumnSubtitle')}>
           <GridMonthlyBarChart items={tasksByColumn.map((c) => ({ label: c.label, count: c.count }))} loading={loading} />
         </ChartPanel>
       )}
-      <ChartPanel title="Chamados por mês" subtitle="Últimos 6 meses">
+      <ChartPanel title={t('gridComponents.charts.ticketsByMonthTitle')} subtitle={t('gridComponents.charts.ticketsByMonthSubtitle')}>
         <GridMonthlyBarChart items={ticketsByMonth} loading={loading} />
       </ChartPanel>
-      <ChartPanel title="Por técnico" subtitle="Chamados atribuídos">
-        <GridHorizontalBarChart items={ticketsByTechnician} loading={loading} valueLabel="chamados" />
+      <ChartPanel title={t('gridComponents.charts.byTechnicianTitle')} subtitle={t('gridComponents.charts.byTechnicianSubtitle')}>
+        <GridHorizontalBarChart items={ticketsByTechnician} loading={loading} valueLabel={t('gridComponents.charts.ticketsValueLabel')} />
       </ChartPanel>
       {topInventory.length > 0 && (
-        <ChartPanel title="Itens críticos" subtitle="Estoque abaixo do mínimo">
-          <GridHorizontalBarChart items={topInventory} loading={loading} valueLabel="un" />
+        <ChartPanel title={t('gridComponents.charts.criticalItemsTitle')} subtitle={t('gridComponents.charts.criticalItemsSubtitle')}>
+          <GridHorizontalBarChart items={topInventory} loading={loading} valueLabel={t('gridComponents.charts.unitsValueLabel')} />
         </ChartPanel>
       )}
     </div>

@@ -2,6 +2,7 @@ import { Plus, Search, Signpost } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
+import { GRID_API_ROLE_TECHNICIAN } from '../../constants/gridRoles'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import {
   ConnectCard,
@@ -19,10 +20,11 @@ import { GridTicketControlPanel, GridTicketControlPanelSkeleton } from '../../co
 import { useAuth } from '../../contexts/AuthContext'
 import { gridService } from '../../services/gridService'
 import type { GridPriority, GridTicket, GridTicketReport } from '../../types/grid'
-import { parseApiError } from '../../utils/parseApiError'
+import { useCrudToast } from '../../hooks/useCrudToast'
 
 export function GridTicketControlPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [tickets, setTickets] = useState<GridTicket[]>([])
@@ -55,9 +57,9 @@ export function GridTicketControlPage() {
     gridService
       .getTickets(params)
       .then((res) => setTickets(res.data))
-      .catch((err) => window.alert(parseApiError(err, t('common.error'))))
+      .catch((err) => crudToast.notifyError(err, t('common.error')))
       .finally(() => setLoadingList(false))
-  }, [search, t])
+  }, [search, t, crudToast])
 
   const loadDetail = useCallback(async (id: number) => {
     setLoadingDetail(true)
@@ -68,7 +70,7 @@ export function GridTicketControlPage() {
     } catch (err: unknown) {
       setTicket(null)
       setReport(null)
-      window.alert(parseApiError(err, t('common.error')))
+      crudToast.notifyError(err, t('common.error'))
     } finally {
       setLoadingDetail(false)
     }
@@ -79,7 +81,7 @@ export function GridTicketControlPage() {
   }, [loadList])
 
   useEffect(() => {
-    gridService.getUsers({ per_page: 50, role: 'Técnico de manutenção' }).then((res) => {
+    gridService.getUsers({ per_page: 50, role: GRID_API_ROLE_TECHNICIAN }).then((res) => {
       const names = res.data.map((u) => u.name)
       setTechnicians(names.length ? names : res.data.map((u) => u.name))
     })
@@ -119,7 +121,7 @@ export function GridTicketControlPage() {
 
   const handleCreate = async () => {
     if (!createForm.requester.trim() || !createForm.title.trim()) {
-      window.alert(t('grid.control.alert.required'))
+      crudToast.notifyWarning(t('grid.control.alert.required'))
       return
     }
     setCreateSaving(true)
@@ -140,8 +142,9 @@ export function GridTicketControlPage() {
       setCreateAttachments([])
       loadList()
       setSelectedId(created.id)
+      crudToast.notifySaved(false)
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('common.error')))
+      crudToast.notifyError(err, t('common.error'))
     } finally {
       setCreateSaving(false)
     }

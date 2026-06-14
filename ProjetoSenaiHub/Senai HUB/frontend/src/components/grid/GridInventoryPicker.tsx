@@ -1,6 +1,8 @@
 import { AlertTriangle, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { OutlineButton, selectClass } from '../connect/ConnectShared'
+import i18n from '../../i18n'
 import { gridService } from '../../services/gridService'
 import type { GridInventoryItem, GridInventoryLine } from '../../types/grid'
 import {
@@ -9,7 +11,8 @@ import {
 } from '../../utils/gridInventoryAvailability'
 import { GridInventoryStockAlert } from './GridInventoryStockAlert'
 import { GridInventoryThumb } from './GridInventoryThumb'
-import { parseApiError } from '../../utils/parseApiError'
+import type { ConfirmOptions } from '../../contexts/ConfirmContext'
+import { useCrudToast } from '../../hooks/useCrudToast'
 
 export function GridInventoryPicker({
   value,
@@ -18,14 +21,16 @@ export function GridInventoryPicker({
   value: GridInventoryLine[]
   onChange: (items: GridInventoryLine[]) => void
 }) {
+  const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const [catalog, setCatalog] = useState<GridInventoryItem[]>([])
 
   useEffect(() => {
     gridService
       .getInventory({ per_page: 100 })
       .then((res) => setCatalog(res.data))
-      .catch((err) => window.alert(parseApiError(err, 'Nao foi possivel carregar o catalogo de estoque.')))
-  }, [])
+      .catch((err) => crudToast.notifyError(err, t('gridComponents.inventoryPicker.loadError')))
+  }, [crudToast, t])
 
   const validation = useMemo(() => validateInventoryRequest(value, catalog), [value, catalog])
 
@@ -33,7 +38,7 @@ export function GridInventoryPicker({
     const first = catalog.find((c) => c.qty_available > 0) ?? catalog[0]
     if (!first) return
     if (first.qty_available <= 0) {
-      window.alert('Não há itens com estoque disponível no momento.')
+      crudToast.notifyWarning(t('gridComponents.inventoryPicker.noStock'))
       return
     }
     onChange([...value, { inventory_item_id: first.id, quantity: 1, title: first.title }])
@@ -81,7 +86,9 @@ export function GridInventoryPicker({
           <div key={index} className={`flex flex-wrap items-end gap-2 rounded-lg border p-2 ${rowBorder}`}>
             {item ? <GridInventoryThumb title={item.title} imageUrl={item.image_url} category={item.category} size="sm" /> : null}
             <div className="min-w-[140px] flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase text-hub-text-muted">Item</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase text-hub-text-muted">
+                {t('gridComponents.inventoryPicker.item')}
+              </label>
               <select
                 className={selectClass}
                 value={row.inventory_item_id}
@@ -91,10 +98,10 @@ export function GridInventoryPicker({
                   const stock = getInventoryStockLevel(c)
                   const label =
                     stock === 'out'
-                      ? `${c.title} — SEM ESTOQUE`
+                      ? t('gridComponents.inventoryPicker.outOfStock', { title: c.title })
                       : stock === 'low'
-                        ? `${c.title} — acabando (${c.qty_available} un.)`
-                        : `${c.title} (${c.qty_available} disp.)`
+                        ? t('gridComponents.inventoryPicker.lowStock', { title: c.title, qty: c.qty_available })
+                        : t('gridComponents.inventoryPicker.available', { title: c.title, qty: c.qty_available })
                   return (
                     <option key={c.id} value={c.id} disabled={c.qty_available <= 0}>
                       {label}
@@ -104,7 +111,9 @@ export function GridInventoryPicker({
               </select>
             </div>
             <div className="w-24">
-              <label className="mb-1 block text-[10px] font-semibold uppercase text-hub-text-muted">Qtd</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase text-hub-text-muted">
+                {t('gridComponents.inventoryPicker.qty')}
+              </label>
               <input
                 type="number"
                 min={item && item.qty_available > 0 ? 1 : 0}
@@ -119,51 +128,58 @@ export function GridInventoryPicker({
               type="button"
               className="rounded p-2 text-hub-red hover:bg-red-50"
               onClick={() => onChange(value.filter((_, i) => i !== index))}
-              aria-label="Remover item"
+              aria-label={t('gridComponents.inventoryPicker.removeItem')}
             >
               <Trash2 className="h-4 w-4" />
             </button>
             {level === 'low' && item && (
               <p className="flex w-full items-start gap-1 text-[11px] text-amber-800">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                Estoque baixo: {item.qty_available} un. (mín. {item.qty_min})
+                {t('gridComponents.inventoryPicker.lowStockWarning', { qty: item.qty_available, min: item.qty_min })}
               </p>
             )}
             {level === 'out' && (
               <p className="w-full text-[11px] font-medium text-red-700">
-                Item zerado — não pode ser usado nesta solicitação.
+                {t('gridComponents.inventoryPicker.zeroStock')}
               </p>
             )}
           </div>
         )
       })}
       <OutlineButton type="button" onClick={addRow}>
-        <Plus className="h-4 w-4" /> Adicionar item do estoque
+        <Plus className="h-4 w-4" /> {t('gridComponents.inventoryPicker.addItem')}
       </OutlineButton>
-      <p className="text-xs text-hub-text-muted">
-        Itens zerados não podem ser selecionados. Estoque baixo é sinalizado antes da reserva (ao mover para Em
-        andamento).
-      </p>
+      <p className="text-xs text-hub-text-muted">{t('gridComponents.inventoryPicker.hint')}</p>
     </div>
   )
 }
 
 /** Valida antes de enviar a solicitação; retorna false se o usuário cancelar ou houver erro. */
-export function guardInventoryBeforeSubmit(
+export async function guardInventoryBeforeSubmit(
   lines: GridInventoryLine[],
   catalog: GridInventoryItem[],
-): boolean {
+  toast?: Pick<ReturnType<typeof useCrudToast>, 'notifyWarning'>,
+  confirm?: (options: ConfirmOptions) => Promise<boolean>,
+): Promise<boolean> {
   const result = validateInventoryRequest(lines, catalog)
   if (!result.valid) {
-    window.alert(['Não foi possível salvar os materiais:', '', ...result.errors.map((e) => `• ${e}`)].join('\n'))
+    const message = [
+      i18n.t('gridComponents.inventoryPicker.cannotSaveTitle'),
+      '',
+      ...result.errors.map((e) => `• ${e}`),
+    ].join('\n')
+    if (toast) {
+      toast.notifyWarning(message)
+    }
     return false
   }
   if (result.warnings.length > 0) {
+    if (!confirm) return false
     const list = result.warnings.map((w) => `• ${w}`).join('\n')
-    return window.confirm(
-      `Atenção — estoque baixo:\n\n${list}\n\nDeseja continuar? A reserva ocorre ao mover a tarefa para "Em andamento".`,
-    )
+    return confirm({
+      title: i18n.t('gridComponents.inventoryPicker.lowStockConfirmTitle'),
+      message: `${list}\n\n${i18n.t('gridComponents.inventoryPicker.lowStockConfirmBody')}`,
+    })
   }
   return true
 }
-

@@ -15,6 +15,7 @@ import {
   safeLogoMarkLight,
 } from '../assets/brand'
 import type { WallpaperTone } from './wallpaperTone'
+import i18n from '../i18n'
 
 /** Slugs com pacote completo de logos: `{slug}-logo-expanded|icon|mark-light|mark-dark`. */
 export type AppBrandSlug = 'connect' | 'grid' | 'safe'
@@ -82,6 +83,10 @@ export const HUB_BRAND_ASSETS: HubBrandAssetSet = {
 }
 
 export const MODULE_BRAND_SLUGS: AppBrandSlug[] = ['connect', 'grid', 'safe']
+
+export function getAppBrandName(slug: string): string {
+  return i18n.t(`modules.${slug}`, { defaultValue: slug })
+}
 
 export function getAppBrandAssets(slug: string): AppBrandAssetSet | undefined {
   if (slug in APP_BRAND_ASSETS) {

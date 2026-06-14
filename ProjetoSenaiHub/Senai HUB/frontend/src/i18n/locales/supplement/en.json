@@ -10,12 +10,20 @@
     "close": "Close",
     "discard": "Discard",
     "wait": "Please wait...",
-    "goToProfile": "Go to profile"
+    "goToProfile": "Go to profile",
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "back": "Back",
+    "error": "An error occurred. Please try again."
   },
   "header": {
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "appHub": "Application Hub"
+    "appHub": "Application Hub",
+    "expandMenu": "Expand menu",
+    "collapseMenu": "Collapse menu",
+    "demoUser": "Demo User"
   },
   "notifications": {
     "title": "Notifications",
@@ -150,7 +158,16 @@
     "accessDeniedTitle": "Access denied",
     "accessDeniedBody": "You do not have permission to access this page. Check your profile or contact the administrator.",
     "accessDeniedFrom": "Your profile does not have permission to access this area{{from}}. Ask the administrator if you need this access.",
-    "fromPath": " ({{path}})"
+    "fromPath": " ({{path}})",
+    "api": {
+      "fallback": "An error occurred. Please try again.",
+      "sessionExpired": "Session expired. Please try again.",
+      "forbidden": "You do not have permission for this action.",
+      "notFound": "Resource not found.",
+      "networkError": "Could not connect to the server. Check if the backend is running.",
+      "serverError": "Internal server error. Please try again shortly.",
+      "operationFailed": "Operation failed."
+    }
   },
   "appCard": {
     "openApp": "Open application"
@@ -183,6 +200,1102 @@
     "navAudience": "Who it's for",
     "navSupport": "Support",
     "accessHub": "Access Hub",
-    "restrictedArea": "Restricted area"
+    "restrictedArea": "Restricted area",
+    "features": {
+      "title": "Features that make a difference",
+      "subtitle": "Technology at the service of professional and technological education.",
+      "hubTitle": "Application Hub",
+      "hubDesc": "All SENAI systems in a single access panel.",
+      "supportTitle": "Dedicated Support",
+      "supportDesc": "A team ready to help you at every step.",
+      "securityTitle": "Data Security",
+      "securityDesc": "Protection and privacy aligned with best practices.",
+      "managementTitle": "Smart Management",
+      "managementDesc": "Indicators and reports for better decisions."
+    },
+    "audience": {
+      "title": "Who is SENAI Hub for?",
+      "subtitle": "A solution designed for the entire school community — from students to managers.",
+      "studentsTitle": "Students",
+      "studentsDesc": "Access content, track activities and stay connected to your learning journey in one place.",
+      "teachersTitle": "Teachers",
+      "teachersDesc": "Manage classes, share materials and track student performance with tools built for you.",
+      "adminTitle": "Administrative Team",
+      "adminDesc": "Manage systems, users and school operations with real-time visibility and control.",
+      "learnMore": "Learn more →"
+    },
+    "platform": {
+      "title": "A complete platform for your daily work.",
+      "body": "The Hub brings together the systems you already use every day in a single access point. Fewer passwords, fewer clicks and more time for what matters: teaching and learning.",
+      "benefit1": "Easy, centralized access",
+      "benefit2": "Intuitive navigation",
+      "benefit3": "More productivity",
+      "benefit4": "Security and reliability",
+      "exploreHub": "Explore the Hub"
+    },
+    "cta": {
+      "title": "Start turning education into the future today.",
+      "body": "Sign in with your account and access the best of SENAI professional and technological education.",
+      "accessPlatform": "Access platform"
+    },
+    "preview": {
+      "appHub": "Application Hub",
+      "support": "Support",
+      "title": "Application Hub",
+      "subtitle": "Access the systems available for your profile.",
+      "accessSystem": "Access System"
+    },
+    "footer": {
+      "tagline": "Integrated platform for SENAI professional and technological education.",
+      "navigation": "Navigation",
+      "support": "Support",
+      "institutional": "Institutional",
+      "helpCenter": "Help Center",
+      "contactUs": "Contact Us",
+      "documentation": "Documentation",
+      "systemStatus": "System Status",
+      "aboutSenai": "About SENAI",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfUse": "Terms of Use",
+      "copyright": "© {{year}} SENAI — National Industrial Learning Service. All rights reserved."
+    }
+  },
+  "sidebar": {
+    "contracts": "Contracts",
+    "openChat": "Open chat"
+  },
+  "hubSidebar": {
+    "usersAndRoles": "Users and roles",
+    "archive": "Historical archive"
+  },
+  "archive": {
+    "title": "Historical archive",
+    "subtitle": "Browse finished classes, completed tickets, and archived SAFE authorizations.",
+    "refresh": "Refresh",
+    "loadError": "Could not load the archive.",
+    "autoArchiveError": "Failed to run automatic archiving.",
+    "noAccess": "Your profile cannot access the historical archive.",
+    "empty": "No archived records available for your profile.",
+    "noRecords": "No records found for this filter.",
+    "searchPlaceholder": "Search archive...",
+    "openRecord": "Open record",
+    "footerHint": "Data stays in the database — the archive only organizes closed records. Classes past end_date may auto-archive daily at 01:00.",
+    "tabs": {
+      "connect": "Connect — Classes",
+      "grid": "Grid — Tickets",
+      "safe": "SAFE — Authorizations"
+    },
+    "summary": {
+      "connectClasses": "Finished classes",
+      "attendanceSessions": "{{count}} attendance sessions recorded",
+      "gridTickets": "Completed tickets",
+      "safeAuthorizations": "Archived authorizations"
+    },
+    "columns": {
+      "students": "Students",
+      "sessions": "Sessions",
+      "code": "Code"
+    },
+    "safe": {
+      "allArchived": "All archived",
+      "finalizado": "Completed",
+      "negado": "Denied"
+    },
+    "autoArchive": {
+      "pendingTitle": "Pending archive",
+      "pendingBody": "{{count}} active class(es) past end date await archiving.",
+      "runNow": "Archive now",
+      "running": "Archiving..."
+    }
+  },
+  "hubUsers": {
+    "title": "Users and access roles",
+    "subtitle": "Create accounts without access and configure module, role and enabled tabs.",
+    "newUser": "New user",
+    "searchPlaceholder": "Name or email...",
+    "loadingUsers": "Loading users...",
+    "editUser": "Edit user",
+    "basicData": "Basic data",
+    "fullName": "Full name",
+    "newPasswordOptional": "New password (optional)",
+    "initialPassword": "Initial password",
+    "moduleAndRole": "Module and role",
+    "accessModule": "Access module",
+    "noAccess": "None (no access)",
+    "roleInModule": "Role in module",
+    "companyName": "Company name",
+    "permissionsSection": "Tabs and permissions",
+    "permissionsHint": "Select only what this user can see. Displayed data respects the role scope.",
+    "confirmDelete": "Delete user {{name}}?",
+    "errors": {
+      "loadUsers": "Could not load users.",
+      "loadRoles": "Failed to load roles.",
+      "loadUser": "Could not load user data.",
+      "saveUser": "Could not save user.",
+      "deleteUser": "Could not delete user."
+    }
+  },
+  "spreadsheet": {
+    "connectTitle": "Import and export — Connect",
+    "connectSubtitle": "Download CSV templates, fill in Excel or LibreOffice and import in bulk. Accepts CSV and Excel (.xlsx).",
+    "connectHint": "Keys such as registration, class_code and course_code link records across spreadsheets.",
+    "gridTitle": "Import and export — Grid",
+    "gridSubtitle": "CSV templates for tickets, tasks, inventory and users. Accepts CSV and Excel (.xlsx).",
+    "gridHint": "Use ticket_code in tasks to link to an existing ticket.",
+    "formatsHint": "Formats: UTF-8 CSV with ; separator or Excel .xlsx. The first row must contain column names exactly as in the template.",
+    "loadingTemplates": "Loading templates...",
+    "availableTables": "Available tables",
+    "importExport": "Import and export",
+    "exportOnly": "Export only",
+    "downloadTemplate": "Download template",
+    "downloading": "Downloading...",
+    "downloadError": "Could not download the file.",
+    "exportData": "Export data",
+    "exporting": "Exporting...",
+    "importFile": "Import (CSV or XLSX)",
+    "analyzing": "Analyzing...",
+    "modelColumns": "Template columns",
+    "column": "Column",
+    "required": "Required",
+    "example": "Example",
+    "previewTitle": "Import preview",
+    "previewSummary": "{{rows}} row(s) · estimate: {{created}} created, {{updated}} updated, {{errors}} with errors (simulation without saving).",
+    "previewRow": "Row {{row}}: {{message}}",
+    "confirmImport": "Confirm import",
+    "importing": "Importing...",
+    "importErrorsTitle": "Import errors",
+    "selectTable": "Select a table on the left.",
+    "historyTitle": "Import history",
+    "noHistory": "No imports recorded yet.",
+    "historyDate": "Date",
+    "historySheet": "Spreadsheet",
+    "historyUser": "User",
+    "historyResult": "Result",
+    "historyErrors": "{{count}} errors",
+    "templateDownloaded": "Template downloaded successfully.",
+    "dataExported": "Data exported successfully.",
+    "operationFailed": "Operation failed.",
+    "importComplete": "Import complete: {{created}} created, {{updated}} updated.",
+    "importFailed": "Import failed.",
+    "loadTemplatesError": "Could not load spreadsheet templates."
+  },
+  "profileAvatar": {
+    "title": "Profile photo",
+    "hint": "JPG, PNG, WebP or GIF. Maximum 2 MB.",
+    "previewAlt": "Photo preview for {{name}}",
+    "chooseImage": "Choose image",
+    "removePhoto": "Remove photo",
+    "emptyHint": "Click \"Choose image\" to upload a new profile photo.",
+    "savePhoto": "Save photo",
+    "selectBeforeSave": "Select an image before saving.",
+    "updated": "Profile photo updated successfully.",
+    "removed": "Profile photo removed.",
+    "saveError": "Could not save photo.",
+    "removeError": "Could not remove photo.",
+    "processError": "Could not process image.",
+    "invalidType": "Use a JPG, PNG, WebP or GIF image.",
+    "tooLarge": "The image must be at most 2 MB."
+  },
+  "reports": {
+    "builder": {
+      "connectTitle": "Custom reports",
+      "gridTitle": "Grid reports",
+      "subtitle": "Build your report by choosing sections, columns and filters. Export to CSV, Excel, JSON or PDF.",
+      "loading": "Loading report builder...",
+      "loadError": "Could not load report builder.",
+      "exporting": "Exporting...",
+      "export": "Export",
+      "localPreview": "Local preview",
+      "generating": "Generating...",
+      "updatePreview": "Update preview",
+      "generatePreview": "Generate preview",
+      "buildSuccess": "Report generated with {{count}} section(s).",
+      "buildError": "Failed to generate report.",
+      "exportSuccess": "File exported successfully.",
+      "exportError": "Could not export report.",
+      "configuration": "Configuration",
+      "quickPreset": "Quick template (system)",
+      "selectPreset": "Select preset...",
+      "savedPresets": "My saved presets",
+      "noSavedPresets": "No presets saved on the server.",
+      "shared": "(shared)",
+      "deletePreset": "Delete preset",
+      "newPresetPlaceholder": "New preset name...",
+      "presetSaved": "Preset saved on the server.",
+      "presetSaveError": "Could not save preset.",
+      "presetDeleteError": "Could not remove preset.",
+      "reportTitle": "Report title",
+      "reportSubtitle": "Subtitle (optional)",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "filters": "Filters",
+      "sections": "Report sections",
+      "columns": "Columns",
+      "exportCsv": "CSV (spreadsheet)",
+      "exportXlsx": "Excel (.xlsx)",
+      "exportJson": "JSON (raw data)",
+      "exportPdf": "PDF / Print",
+      "exportHtml": "HTML (file)",
+      "statusBuilding": "Generating report with server data...",
+      "statusReady": "Preview updated — export to CSV, Excel, JSON or PDF from the Export menu.",
+      "statusIdle": "Select a preset or configure sections and click Generate preview.",
+      "assembling": "Assembling sections and tables..."
+    }
+  },
+  "gridComponents": {
+    "shared": {
+      "overview": "Overview",
+      "activity": "Activity ({{count}})",
+      "loadingUser": "Loading user...",
+      "selectUser": "Select a user",
+      "loadingItem": "Loading item...",
+      "selectItem": "Select an item",
+      "stockItem": "Inventory item",
+      "noDescription": "No description registered.",
+      "reservations": "Reservations ({{count}})",
+      "noReservations": "No reservations or consumption recorded.",
+      "consumed": "Consumed",
+      "reserved": "Reserved",
+      "task": "Task",
+      "ticket": "Ticket",
+      "accessAndPermissions": "Access and permissions",
+      "adminAccount": "Administrator account",
+      "mainModule": "Main module",
+      "company": "Company",
+      "emailVerified": "Email verified",
+      "pending": "Pending",
+      "registeredAt": "Registered on",
+      "lastUpdate": "Last update",
+      "releasedApps": "Enabled applications",
+      "noApps": "No linked applications.",
+      "profilePermissions": "Profile permissions",
+      "noPermissions": "No permissions listed.",
+      "loadUserError": "Could not load user details.",
+      "loadItemError": "Could not load item details.",
+      "noActivity": "No tasks or tickets assigned to this user.",
+      "tasks": "Tasks",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "tickets": "Tickets",
+      "institutionalEmail": "Institutional email",
+      "phone": "Phone",
+      "cpf": "CPF",
+      "userType": "User type",
+      "status": "Status",
+      "available": "Available",
+      "inUse": "In use",
+      "inUseHint": "Tasks in progress",
+      "committed": "Committed",
+      "committedHint": "Reserved in tickets",
+      "consumedQty": "Consumed",
+      "totalQty": "Total quantity (stock)",
+      "minQty": "Minimum quantity",
+      "location": "Location",
+      "supplier": "Supplier / distributor",
+      "unitCost": "Unit cost",
+      "stockValue": "Stock value (available)",
+      "purchaseDate": "Purchase date",
+      "syncImage": "Fetch photo from Wikimedia",
+      "syncingImage": "Fetching...",
+      "units": "{{count}} units · {{status}}"
+    },
+    "approveService": {
+      "title": "Approve service",
+      "body": "As maintenance supervisor, confirm the service was performed correctly. After approval, the ticket goes to requester evaluation.",
+      "resolutionSummary": "Resolution summary",
+      "resolutionPlaceholder": "Describe what was verified...",
+      "approvalNotes": "Approval notes",
+      "approvalPlaceholder": "Internal comments or pending items...",
+      "approveAndSend": "Approve and send to requester",
+      "success": "Approval recorded successfully.",
+      "error": "Could not record approval."
+    },
+    "evaluateTicket": {
+      "title": "Evaluate service (requester)",
+      "body": "Requester evaluation ({{requester}}). After saving, the ticket will be closed and remain available for reference.",
+      "rating": "Rating (1 to 5)",
+      "ratingAria": "Rating {{n}}",
+      "evaluationNotes": "Evaluation notes",
+      "evaluationPlaceholder": "Comments about the service provided...",
+      "finishTicket": "Close ticket",
+      "success": "Evaluation recorded successfully.",
+      "error": "Could not record evaluation."
+    },
+    "createTaskFromTicket": {
+      "title": "New task from ticket",
+      "subtitle": "Select an open ticket and define assignee and materials.",
+      "searchTicket": "Search ticket",
+      "searchPlaceholder": "Code, title or requester...",
+      "loadingTickets": "Loading tickets...",
+      "noOpenTickets": "No open tickets found.",
+      "ticketLabel": "Ticket {{code}}",
+      "assignee": "Assignee (technician)",
+      "selectTechnician": "Select technician",
+      "taskDescription": "Description / task notes",
+      "taskPlaceholder": "Service details...",
+      "materialsOptional": "Inventory materials (optional)",
+      "creating": "Creating...",
+      "createTask": "Create task",
+      "selectTicket": "Select an open ticket.",
+      "assigneeRequired": "Enter the task assignee.",
+      "loadError": "Could not load tickets.",
+      "saveError": "Could not create task.",
+      "roomBlock": "{{requester}} · Room {{room}}/{{block}}"
+    },
+    "ticketControlPanel": {
+      "loading": "Loading ticket...",
+      "requesterLocation": "{{requester}} · Room {{room}} / Block {{block}}",
+      "saveError": "Could not save. Check the data and try again.",
+      "stageNotes": "Notes for this stage",
+      "stageNotesPlaceholder": "Record what happened in \"{{stage}}\"...",
+      "saveNoteOnly": "Save note without advancing",
+      "assignTitle": "Assign technician",
+      "assignSubtitle": "The ticket will move to Pending after saving.",
+      "selectTechnician": "Select...",
+      "assignTechnician": "Assign technician",
+      "startTitle": "Start service",
+      "startSubtitle": "Technician: {{technician}}. An in-progress task will be created.",
+      "starting": "Starting...",
+      "startService": "Start service",
+      "executionTitle": "Service execution",
+      "linkedTask": "Linked task: {{code}} ({{status}})",
+      "noLinkedTask": "No linked task found.",
+      "fixedDescription": "What was fixed / performed",
+      "fixedPlaceholder": "Describe the service performed...",
+      "completing": "Completing...",
+      "completeAndApprove": "Complete task and send for approval",
+      "approvalTitle": "Maintenance supervisor approval",
+      "approvalSubtitle": "Confirm the service was performed correctly.",
+      "verificationSummary": "Verification summary",
+      "verificationPlaceholder": "What was verified...",
+      "approvalNotes": "Approval notes",
+      "approvalPlaceholder": "Supervisor comments...",
+      "approving": "Approving...",
+      "approveService": "Approve service",
+      "evaluationTitle": "Requester evaluation",
+      "evaluationSubtitle": "Requester: {{requester}}",
+      "evaluationComments": "Evaluation comments",
+      "evaluationPlaceholder": "Requester comments about the service...",
+      "finishing": "Closing...",
+      "finishTicket": "Close ticket",
+      "finishedTitle": "Ticket closed",
+      "finishedSubtitle": "No pending actions. See history below.",
+      "evaluationResult": "Evaluation: {{rating}}/5 by {{by}}",
+      "approvedBy": "Approved by {{by}}{{at}}",
+      "approvedAt": " on {{date}}",
+      "historyTitle": "History and notes",
+      "noNotes": "No notes recorded yet.",
+      "historyGeneral": "General history",
+      "historyFixed": "What was fixed",
+      "historyResolution": "Resolution summary",
+      "historyApproval": "Approval (supervisor)",
+      "historyEvaluation": "Evaluation (requester)"
+    },
+    "inventoryPicker": {
+      "loadError": "Could not load inventory catalog.",
+      "noStock": "No items with available stock at the moment.",
+      "item": "Item",
+      "qty": "Qty",
+      "removeItem": "Remove item",
+      "outOfStock": "{{title}} — OUT OF STOCK",
+      "lowStock": "{{title}} — running low ({{qty}} units)",
+      "available": "{{title}} ({{qty}} avail.)",
+      "lowStockWarning": "Low stock: {{qty}} units (min. {{min}})",
+      "zeroStock": "Zero stock — cannot be used in this request.",
+      "addItem": "Add inventory item",
+      "hint": "Zero-stock items cannot be selected. Low stock is flagged before reservation (when moving to In progress).",
+      "cannotSaveTitle": "Could not save materials:",
+      "lowStockConfirmTitle": "Warning — low stock:",
+      "lowStockConfirmBody": "Continue? Reservation occurs when moving the task to \"In progress\".",
+      "continue": "Do you want to continue?"
+    },
+    "taskKanbanCard": {
+      "ticketRef": "Ticket {{code}}",
+      "openedAt": "Opened on",
+      "assignee": "Assignee",
+      "items": "Items:",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "ticketKanbanCard": {
+      "approve": "Approve",
+      "evaluate": "Evaluate",
+      "technician": "Technician:",
+      "lockedHint": "Waiting for linked task completion",
+      "edit": "Edit",
+      "assign": "Assign",
+      "delete": "Delete"
+    },
+    "ticketCard": {
+      "actionsAria": "Actions for ticket {{code}}",
+      "edit": "Edit",
+      "assign": "Assign technician",
+      "delete": "Delete",
+      "requester": "Requester",
+      "location": "Location",
+      "openedAt": "Opened",
+      "assignee": "Assignee"
+    },
+    "charts": {
+      "emptyData": "No data to display.",
+      "loadingChart": "Loading chart...",
+      "loadingData": "Loading data...",
+      "loading": "Loading...",
+      "noRecordsInPeriod": "No records in this period.",
+      "noDataAvailable": "No data available.",
+      "ticketsTotal": "{{count}} tickets in total",
+      "distributionAria": "Distribution of {{label}}",
+      "statusTitle": "Ticket status",
+      "statusSubtitle": "Distribution by current situation",
+      "ticketsLabel": "Tickets",
+      "priorityTitle": "Priority",
+      "prioritySubtitle": "Tickets by urgency level",
+      "tasksByColumnTitle": "Tasks by column",
+      "tasksByColumnSubtitle": "Maintenance Kanban board",
+      "ticketsByMonthTitle": "Tickets by month",
+      "ticketsByMonthSubtitle": "Last 6 months",
+      "byTechnicianTitle": "By technician",
+      "byTechnicianSubtitle": "Assigned tickets",
+      "ticketsValueLabel": "tickets",
+      "criticalItemsTitle": "Critical items",
+      "criticalItemsSubtitle": "Stock below minimum",
+      "unitsValueLabel": "units",
+      "shortLabels": {
+        "aguardando_aprovacao": "Await. approval",
+        "avaliacao_pendente": "Eval. pending",
+        "em_atendimento": "In service"
+      },
+      "finishedLabel": "Completed"
+    },
+    "stockAlert": {
+      "outOfStockBody": "is out of stock. Remove the item or choose another — it cannot be reserved during execution.",
+      "lowStockBody": "is running low: {{available}} units available{{minimum}}.",
+      "minimumSuffix": " (minimum: {{min}})"
+    },
+    "reportPanel": {
+      "title": "Specific service report",
+      "subtitle": "Select a ticket to view the full service history.",
+      "ticketField": "Ticket",
+      "selectPlaceholder": "Select a ticket...",
+      "loading": "Loading report...",
+      "openedBy": "Opened by",
+      "when": "When",
+      "serviceStart": "Service start",
+      "technicalCompletion": "Technical completion",
+      "supervisorApproval": "Supervisor approval",
+      "totalTime": "Total time",
+      "location": "Location",
+      "locationValue": "Room {{room}} / Block {{block}}",
+      "whyTitle": "Why (request)",
+      "whatWasDoneTitle": "What was done",
+      "noLinkedTasks": "No linked tasks.",
+      "taskMeta": "Assignee: {{assignee}} · Status: {{status}}",
+      "whatWasFixedTitle": "What was fixed",
+      "considerationsTitle": "Considerations",
+      "materialsTitle": "Materials used",
+      "noMaterials": "No materials recorded.",
+      "materialLine": "{{quantity}} units · {{status}}",
+      "approvalTitle": "Maintenance supervisor approval",
+      "approvedBy": "Approved by: {{by}}",
+      "noApprovalNotes": "No notes.",
+      "evaluationTitle": "Requester evaluation",
+      "rating": "Rating: {{rating}}/5",
+      "evaluatedBy": "By: {{by}}",
+      "noEvaluationComments": "No comments.",
+      "awaitingEvaluation": "Awaiting requester evaluation.",
+      "awaitingApproval": "Awaiting maintenance supervisor approval.",
+      "notYetEvaluated": "Not yet evaluated.",
+      "currentStatus": "Current status: {{status}}"
+    }
+  },
+  "connectComponents": {
+    "courseCard": {
+      "coverAlt": "Course cover for {{name}}",
+      "actionsAria": "Actions for course {{name}}",
+      "manageRoster": "Manage enrollments",
+      "edit": "Edit",
+      "workloadTbd": "Workload TBD",
+      "defaultArea": "Professional training",
+      "defaultDescription": "SENAI technical course with practical training aligned to industry demands.",
+      "editCourse": "Edit course"
+    },
+    "rosterDrawer": {
+      "courseTitle": "Course enrollments",
+      "classTitle": "Class students",
+      "close": "Close",
+      "addLink": "Add link",
+      "personField": "Person",
+      "noPeopleAvailable": "No people available",
+      "selectPlaceholder": "Select...",
+      "link": "Link",
+      "linked": "Linked",
+      "loading": "Loading...",
+      "noPeopleInRole": "No people in this role.",
+      "noStudentsInClass": "No students in this class.",
+      "removePerson": "Remove {{name}}",
+      "loadError": "Could not load enrollments.",
+      "linkError": "Could not link the person.",
+      "unlinkError": "Could not remove the link."
+    },
+    "charts": {
+      "quickReports": "Quick reports",
+      "attendanceTitle": "Overall attendance",
+      "attendanceSubtitle": "Current month — present, excused and unexcused absences",
+      "teacherSessionsTitle": "Classes this week",
+      "teacherSessionsSubtitle": "By teacher (last 7 days)",
+      "studentsByCourseTitle": "Students by course",
+      "studentsByCourseSubtitle": "Active enrollments by course",
+      "noAttendanceRecords": "No attendance records yet.",
+      "present": "Present",
+      "presentShort": "Present",
+      "presentHint": "Students with attendance records in the period.",
+      "justified": "Justified absences",
+      "justifiedShort": "Justif. abs.",
+      "justifiedHint": "Absences with accepted justification.",
+      "unjustified": "Unjustified absences",
+      "unjustifiedShort": "Unjustif. abs.",
+      "unjustifiedHint": "Absences without justification or pending.",
+      "generalPresence": "Overall presence",
+      "recordsInPeriod": "{{count}} records in period",
+      "calculatingAttendance": "Calculating attendance...",
+      "attendanceDistributionAria": "Attendance distribution: {{rate}}% presence",
+      "loadingWeeklySessions": "Loading weekly lessons...",
+      "sessionsTooltip": "{{name}}: {{count}} lessons",
+      "distributingStudents": "Distributing students by course...",
+      "noStudentsInCourses": "No students enrolled in active courses."
+    }
+  },
+  "mapComponents": {
+    "container": {
+      "loading": "Loading map...",
+      "maximizeTitle": "Maximize map",
+      "maximize": "Maximize",
+      "fullscreenTitle": "SENAI campus map",
+      "view3d": "3D view",
+      "view2d": "2D view (3D models unavailable)",
+      "close": "Close"
+    },
+    "viewer3d": {
+      "loading": "Loading 3D map...",
+      "noBlocksLoaded": "No campus blocks were loaded.",
+      "loadModelsError": "Could not load campus 3D models.",
+      "emptyModelsError": "3D models loaded but are empty.",
+      "missingModels": "Missing models: {{names}}",
+      "modelTimeout": "Timeout loading {{url}}",
+      "resetViewTitle": "Restore campus view",
+      "campus": "Campus",
+      "hintMarkers": "Drag to navigate · Click marker or block",
+      "hintBlocks": "Drag to rotate · Scroll to zoom · Click block"
+    },
+    "ticketsPanel": {
+      "selectedKind": "{{kind}} selected",
+      "room": "Room: {{room}}",
+      "assignee": "Assignee: {{assignee}}",
+      "priority": "Priority: {{priority}}",
+      "blockCount": "{{count}} service(s) in block",
+      "emptyBlock": "No tickets or tasks in {{block}} at the moment.",
+      "campusTitle": "Campus tickets",
+      "campusHint": "Click a marker or block for details",
+      "open": "Open",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "kindTotals": "{{tickets}} ticket(s) · {{tasks}} task(s)",
+      "markerStatus": {
+        "open": "Open",
+        "in_progress": "In progress",
+        "completed": "Completed"
+      },
+      "markerKind": {
+        "ticket": "Ticket",
+        "task": "Task"
+      }
+    },
+    "blockPanel": {
+      "tickets": "Tickets",
+      "open": "Open",
+      "completed": "Completed",
+      "selectBlockHint": "Click a block to see associated tickets"
+    },
+    "peoplePanel": {
+      "selectedPerson": "Selected person",
+      "room": "Room: {{room}}",
+      "peopleInBlock": "{{count}} person(s) in block",
+      "onCampus": "On campus",
+      "emptyBlock": "No simulated people in {{block}} at the moment.",
+      "students": "Students",
+      "teachers": "Teachers",
+      "staff": "Staff",
+      "roles": {
+        "aluno": "Student",
+        "professor": "Teacher",
+        "funcionario": "Staff member"
+      },
+      "simulatedLocation": "Simulated location",
+      "clickMarkerHint": "Click a marker or block for details"
+    }
+  },
+  "toastUi": {
+    "closeToast": "Dismiss notification"
+  },
+  "safeValidation": {
+    "fillRegistrationNameClass": "Fill in registration, name and class.",
+    "fillReason": "Enter the request reason.",
+    "selectStudentOrNameClass": "Select a student or enter name and class."
+  },
+  "permissions": {
+    "fullAccess": "Full system access",
+    "modules": {
+      "connect": "Connect",
+      "grid": "Grid",
+      "hub": "Hub",
+      "system": "System",
+      "other": "Other"
+    },
+    "labels": {
+      "connect.access": "Connect access",
+      "connect.dashboard": "Connect dashboard",
+      "connect.people.manage": "People management",
+      "connect.students.manage": "Student management",
+      "connect.students.view": "View students",
+      "connect.teachers.manage": "Teacher management",
+      "connect.teachers.view": "View teachers",
+      "connect.courses.view": "View courses",
+      "connect.contracts.view": "View contracts",
+      "connect.contracts.view_own": "Own contracts",
+      "connect.salary.view": "View salary",
+      "connect.salary.view_own": "Own salary",
+      "connect.attendance.view_own": "Own attendance",
+      "connect.classes.manage": "Class management",
+      "connect.classes.view": "View classes",
+      "connect.courses.manage": "Course management",
+      "connect.contracts.manage": "Contract management",
+      "connect.attendance.view": "View attendance",
+      "connect.attendance.manage": "Record attendance",
+      "connect.reports.view": "Connect reports",
+      "connect.spreadsheets": "Connect spreadsheets",
+      "connect.location.view": "Campus location",
+      "grid.access": "Grid access",
+      "grid.dashboard": "Grid dashboard",
+      "grid.tickets.manage": "Ticket management",
+      "grid.tickets.view": "View tickets",
+      "grid.tickets.update": "Update tickets",
+      "grid.controle": "Ticket control",
+      "grid.tasks.map": "Task map",
+      "grid.tasks.manage": "Task management",
+      "grid.inventory.manage": "Inventory management",
+      "grid.inventory.view": "View inventory",
+      "grid.users.manage": "Grid user management",
+      "grid.reports.view": "Grid reports",
+      "grid.spreadsheets": "Grid spreadsheets",
+      "hub.users.manage": "User management"
+    }
+  },
+  "images": {
+    "avatar": {
+      "invalidType": "Use a JPG, PNG, WebP or GIF image.",
+      "tooLarge": "The image must be at most 2 MB.",
+      "processFailed": "Could not process the image.",
+      "readFailed": "Could not read the selected image."
+    },
+    "wallpaper": {
+      "invalidType": "Use a JPG, PNG, WebP or GIF image.",
+      "tooLarge": "The image must be at most 5 MB.",
+      "processFailed": "Could not process the image.",
+      "loadFailed": "Could not load the image."
+    }
+  },
+  "courseThemes": {
+    "active": "Active course",
+    "inactive": "Inactive"
+  },
+  "wallpapers": {
+    "custom": {
+      "name": "Custom image",
+      "description": "Photo or illustration uploaded by you."
+    },
+    "presets": {
+      "senai-dawn": {
+        "name": "Dawn",
+        "description": "Peach and light blue — glass-style reference."
+      },
+      "senai-classic": {
+        "name": "SENAI Classic",
+        "description": "Neutral with navy, red and soft blue orbs."
+      },
+      "senai-cool": {
+        "name": "Industrial",
+        "description": "Blues and grays with technical accent."
+      },
+      "senai-warm": {
+        "name": "Energy",
+        "description": "SENAI red, amber and soft navy."
+      },
+      "senai-minimal": {
+        "name": "Minimal",
+        "description": "Soft, with few color highlights."
+      },
+      "senai-sunset": {
+        "name": "Sunset",
+        "description": "Orange, pink and purple at day's end."
+      },
+      "senai-lavender": {
+        "name": "Lavender",
+        "description": "Light purple and relaxing lilac."
+      },
+      "senai-mint": {
+        "name": "Mint",
+        "description": "Aqua green and light turquoise."
+      },
+      "senai-dark-navy": {
+        "name": "Night navy",
+        "description": "Deep SENAI blue — ideal for dark environments."
+      },
+      "senai-dark-charcoal": {
+        "name": "Charcoal",
+        "description": "Neutral dark gray, low contrast."
+      },
+      "senai-dark-red": {
+        "name": "SENAI dark",
+        "description": "Dark background with institutional red glow."
+      },
+      "senai-midnight": {
+        "name": "Midnight",
+        "description": "Deep indigo and violet."
+      },
+      "senai-forest": {
+        "name": "Forest",
+        "description": "Dark green with subtle reflections."
+      },
+      "senai-ocean-deep": {
+        "name": "Deep ocean",
+        "description": "Petrol blue and dark cyan."
+      },
+      "senai-slate": {
+        "name": "Slate",
+        "description": "Uniform dark blue-gray."
+      },
+      "senai-neon": {
+        "name": "Technical neon",
+        "description": "Dark with more intense colored orbs."
+      }
+    }
+  },
+  "appearanceContext": {
+    "imageTooLarge": "Image too large to save in this browser. Try a smaller photo."
+  },
+  "connectDrawer": {
+    "closePanel": "Close panel"
+  },
+  "connectActions": {
+    "openMenu": "Open actions menu"
+  },
+  "health": {
+    "checking": "Checking API...",
+    "offline": "Backend offline",
+    "apiStatus": "API {{status}}"
+  },
+  "map": {
+    "schoolPlaceholder": {
+      "dev3d": "3D visualization in development",
+      "alt": "3D school map placeholder",
+      "subtitle": "React Three Fiber + multiple floors + real-time entities",
+      "activeFloor": "Active floor: {{name}} ({{count}} mock entities)"
+    },
+    "viewer2d": {
+      "hint": "2D campus map · Click a block for details"
+    }
+  },
+  "reportPreview": {
+    "total": "Total: {{total}}"
+  },
+  "settingsFooter": {
+    "back": "Back",
+    "saveDefault": "Save"
+  },
+  "connect": {
+    "rosterRole": {
+      "coordinator": "Coordinator"
+    },
+    "shared": {
+      "loadingData": "Loading data...",
+      "pagination": "Showing {{from}} to {{to}} of {{total}} records",
+      "noAttendanceRecords": "No attendance records yet.",
+      "present": "Present ({{pct}}%)",
+      "justified": "Justified absences ({{pct}}%)",
+      "unjustified": "Unjustified absences ({{pct}}%)",
+      "noWeeklyLessons": "No lessons recorded this week."
+    },
+    "statusBadge": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "finished": "Finished",
+      "calculated": "Calculated",
+      "inside": "Present",
+      "outside": "Absent"
+    },
+    "entityView": {
+      "subtitle": "Full view",
+      "loading": "Loading details...",
+      "loadError": "Could not load details. Please try again.",
+      "noData": "No data to display.",
+      "noRecords": "No records.",
+      "viaClass": "via {{name}}",
+      "kinds": {
+        "student": "Student details",
+        "teacher": "Teacher details",
+        "class": "Class details",
+        "course": "Course details",
+        "person": "Person details",
+        "contract": "Contract details",
+        "salary": "Salary details",
+        "attendance": "Attendance details",
+        "location": "Location",
+        "grid-ticket": "Ticket",
+        "grid-user": "User",
+        "grid-inventory": "Inventory item"
+      },
+      "sections": {
+        "personalData": "Personal data",
+        "currentClass": "Current class",
+        "activeCourses": "Active courses",
+        "completedCourses": "Completed courses",
+        "contracts": "Contracts",
+        "salaryHistory": "Salary history",
+        "classHistory": "Classes (history)",
+        "contact": "Contact",
+        "responsibleClasses": "Classes under responsibility",
+        "globalCourses": "Courses (global link)",
+        "info": "Information",
+        "classStudents": "Class students",
+        "courseDetails": "Course details",
+        "courseClasses": "Course classes",
+        "courseRoster": "Course enrollments",
+        "globalRegistration": "Global registration",
+        "connectStudentProfile": "Connect profile — Student",
+        "connectTeacherProfile": "Connect profile — Teacher",
+        "linkedCourses": "Linked courses",
+        "contractDetails": "Contract",
+        "linkedStudent": "Linked student",
+        "salaryRecord": "Salary record",
+        "attendanceSession": "Attendance session",
+        "location": "Location",
+        "ticket": "Ticket",
+        "gridUser": "Grid user",
+        "inventoryItem": "Inventory item"
+      },
+      "fields": {
+        "cpf": "CPF",
+        "email": "Email",
+        "phone": "Phone",
+        "birthDate": "Birth date",
+        "registeredAt": "Registered",
+        "class": "Class",
+        "course": "Course",
+        "shift": "Shift",
+        "teacher": "Teacher",
+        "capacity": "Capacity",
+        "startDate": "Start",
+        "endDate": "End",
+        "enrolledStudents": "Enrolled students",
+        "name": "Name",
+        "rm": "ID",
+        "area": "Area",
+        "workload": "Workload",
+        "classesCount": "Classes",
+        "role": "Role",
+        "specialty": "Specialty",
+        "registration": "Registration",
+        "company": "Company",
+        "monthlyValue": "Monthly value",
+        "reference": "Reference",
+        "baseSalary": "Base salary",
+        "bonuses": "Bonuses",
+        "deductions": "Deductions",
+        "netAmount": "Net amount",
+        "calculatedAt": "Calculated at",
+        "date": "Date",
+        "subject": "Subject",
+        "lessonsPerDay": "Lessons per day",
+        "presence": "Presence",
+        "totalMarks": "Total marks",
+        "missedLessons": "Missed lessons (day)",
+        "address": "Address",
+        "lastUpdate": "Last update",
+        "code": "Code",
+        "title": "Title",
+        "requester": "Requester",
+        "location": "Location",
+        "priority": "Priority",
+        "assignee": "Assignee",
+        "openedAt": "Opened",
+        "profile": "Profile",
+        "category": "Category",
+        "qtyAvailable": "Qty. available",
+        "qtyMin": "Min. qty.",
+        "supplier": "Supplier",
+        "cost": "Cost",
+        "contractType": "Type",
+        "student": "Student",
+        "netSalary": "Net amount",
+        "referenceMonth": "Reference"
+      },
+      "student": {
+        "subtitle": "Student · ID {{rm}}",
+        "noClass": "No linked class.",
+        "noActiveCourses": "No active courses in global registry.",
+        "noCompletedCourses": "No completed courses recorded."
+      },
+      "teacher": {
+        "defaultSpecialty": "Teacher",
+        "noCourses": "No linked courses."
+      },
+      "class": {
+        "noCourse": "No course",
+        "noTeacher": "No teacher"
+      },
+      "course": {
+        "rosterSummary": "{{students}} student(s) · {{teachers}} teacher(s)"
+      },
+      "person": {
+        "classLine": "{{name}} · Class {{className}}"
+      },
+      "contract": {
+        "title": "Contract · {{type}}"
+      },
+      "grid": {
+        "roomBlock": "{{room}} / {{block}}"
+      }
+    },
+    "students": {
+      "alert": {
+        "saveError": "Could not save the student.",
+        "deleteError": "Could not delete the student."
+      },
+      "form": {
+        "namePlaceholder": "E.g. Maria Silva",
+        "rmPlaceholder": "E.g. RM20250130",
+        "cpfPlaceholder": "000.000.000-00",
+        "emailPlaceholder": "student@email.com",
+        "phonePlaceholder": "(11) 99999-9999",
+        "addressPlaceholder": "Street, number, neighborhood, city",
+        "guardianPlaceholder": "Legal guardian name",
+        "notesPlaceholder": "Allergies, special needs, etc."
+      }
+    },
+    "teachers": {
+      "alert": {
+        "saveError": "Could not save the teacher.",
+        "deleteError": "Could not delete the teacher."
+      },
+      "form": {
+        "namePlaceholder": "E.g. João Santos",
+        "emailPlaceholder": "teacher@senai.edu.br",
+        "specialtyPlaceholder": "E.g. Industrial Automation",
+        "cpfPlaceholder": "000.000.000-00",
+        "phonePlaceholder": "(11) 99999-9999"
+      }
+    },
+    "people": {
+      "alert": {
+        "saveError": "Could not save the person."
+      },
+      "form": {
+        "namePlaceholder": "E.g. Maria Silva",
+        "emailPlaceholder": "person@senai.edu.br",
+        "phonePlaceholder": "(11) 99999-9999",
+        "cpfPlaceholder": "000.000.000-00",
+        "registrationPlaceholder": "E.g. RM20250130",
+        "specialtyPlaceholder": "E.g. Industrial Automation"
+      }
+    },
+    "courses": {
+      "alert": {
+        "saveError": "Could not save the course."
+      },
+      "form": {
+        "namePlaceholder": "E.g. Industrial Automation",
+        "areaPlaceholder": "E.g. Industry 4.0",
+        "workloadPlaceholder": "E.g. 120 hours",
+        "descriptionPlaceholder": "Describe the course, syllabus and objectives..."
+      }
+    },
+    "classes": {
+      "form": {
+        "namePlaceholder": "E.g. CLASS AUT25-02",
+        "semesterPlaceholder": "2025-1",
+        "capacityPlaceholder": "E.g. 30",
+        "descriptionPlaceholder": "Describe the class, goals and notes...",
+        "periodHint": "Classes must fall within this period"
+      }
+    }
+  },
+  "grid": {
+    "ticketControlPanel": {
+      "stages": {
+        "aberto": "Open",
+        "pendente": "Pending",
+        "em_atendimento": "In service",
+        "aguardando_aprovacao": "Awaiting approval",
+        "avaliacao": "Evaluation",
+        "aprovacao": "Approval"
+      }
+    },
+    "inventory": {
+      "categories": {
+        "informatica": "IT",
+        "eletrica": "Electrical",
+        "climatizacao": "HVAC",
+        "hidraulica": "Plumbing"
+      }
+    },
+    "users": {
+      "roles": {
+        "administrator": "Administrator"
+      }
+    }
+  },
+  "safe": {
+    "approvals": {
+      "approvedSuccess": "Request approved.",
+      "denyConfirm": "Deny this request?",
+      "deniedSuccess": "Request denied.",
+      "approve": "Approve",
+      "deny": "Deny"
+    },
+    "portaria": {
+      "confirmedSuccess": "Authorization confirmed.",
+      "denyConfirm": "Refuse this authorization at reception?",
+      "deniedSuccess": "Authorization refused.",
+      "confirm": "Confirm",
+      "deny": "Refuse"
+    },
+    "authorizations": {
+      "drawerTitle": "New authorization",
+      "submitting": "Submitting...",
+      "createSubmit": "Create request",
+      "form": {
+        "registeredStudent": "Registered student",
+        "manualEntry": "Enter manually",
+        "studentName": "Student name",
+        "className": "Class",
+        "typeEntry": "Entry",
+        "typeExit": "Exit",
+        "date": "Date",
+        "time": "Time",
+        "absences": "Absences (exit)"
+      }
+    },
+    "students": {
+      "form": {
+        "registration": "Registration",
+        "name": "Name",
+        "class": "Class"
+      },
+      "table": {
+        "registration": "Registration",
+        "name": "Name",
+        "class": "Class"
+      }
+    }
   }
 }

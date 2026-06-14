@@ -1,5 +1,6 @@
 import { ChevronRight, Headphones, Shield, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { NavLink, useLocation } from 'react-router-dom'
 import { SidebarAppLogo } from '../layout/SidebarAppLogo'
 import {
@@ -18,11 +19,14 @@ interface ConnectSidebarProps {
 }
 
 export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }: ConnectSidebarProps) {
+  const { t } = useTranslation()
   const isCollapsed = collapsed && !mobileOpen
   const location = useLocation()
   const { can, canAny } = usePermissions()
   const navLabel = useNavLabel('connect')
-  const mainNav = filterNavItems(connectNavItems, can)
+  const mainNav = filterNavItems(connectNavItems, can).filter(
+    (item) => item.to !== connectContractNav.to && item.to !== connectSalaryNav.to,
+  )
   const showContracts = canAny('connect.contracts.view', 'connect.contracts.view_own', 'connect.contracts.manage')
   const showSalary = canAny('connect.salary.view', 'connect.salary.view_own')
   const [contractsOpen, setContractsOpen] = useState(location.pathname.startsWith('/connect/contratos'))
@@ -66,7 +70,7 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
             type="button"
             onClick={onMobileClose}
             className="rounded-lg p-2 hover:bg-white/10 lg:hidden"
-            aria-label="Fechar menu"
+            aria-label={t('header.closeMenu')}
           >
             <X className="h-5 w-5" />
           </button>
@@ -103,7 +107,7 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
               <connectContractNav.icon className="h-5 w-5 shrink-0" />
               {!isCollapsed && (
                 <>
-                  <span className="flex-1">Contratos</span>
+                  <span className="flex-1">{t('sidebar.contracts')}</span>
                   <ChevronRight className={`h-4 w-4 transition ${contractsOpen ? 'rotate-90' : ''}`} />
                 </>
               )}
@@ -139,7 +143,7 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
         {!isCollapsed && (
           <div className="mb-4 flex items-start gap-2 text-xs leading-relaxed text-white/60">
             <Shield className="mt-0.5 h-4 w-4 shrink-0" />
-            <p>Menus exibidos conforme perfil de acesso.</p>
+            <p>{t('safe.sidebar.profileHint')}</p>
           </div>
         )}
 
@@ -154,7 +158,7 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
             <Headphones className="h-5 w-5 shrink-0" />
             {!isCollapsed && (
               <>
-                <span className="flex-1 text-left">Suporte</span>
+                <span className="flex-1 text-left">{t('safe.sidebar.support')}</span>
                 <ChevronRight className={`h-4 w-4 ${supportOpen ? 'rotate-90' : ''}`} />
               </>
             )}
@@ -162,8 +166,8 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
           {supportOpen && !isCollapsed && (
             <div className="mt-1 rounded-xl border border-white/10 bg-[#002847] p-3 text-sm">
               <div className="mb-2 flex justify-between">
-                <span className="text-xs font-semibold uppercase text-white/70">Suporte</span>
-                <button type="button" onClick={() => setSupportOpen(false)} aria-label="Fechar">
+                <span className="text-xs font-semibold uppercase text-white/70">{t('safe.sidebar.support')}</span>
+                <button type="button" onClick={() => setSupportOpen(false)} aria-label={t('header.closeMenu')}>
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>

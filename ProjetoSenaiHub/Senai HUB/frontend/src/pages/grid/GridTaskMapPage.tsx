@@ -11,7 +11,7 @@ import {
 import { GridPriorityBadge, GridTicketStatusBadge } from '../../components/grid/GridBadges'
 import { MapSimulationBadge } from '../../components/map/MapSimulationBadge'
 import { usePublicConfig } from '../../hooks/usePublicConfig'
-import { CampusMapContainer } from '../../components/map/CampusMap3DViewer'
+import { CampusMapContainer } from '../../components/map/CampusMapContainer'
 import { gridService } from '../../services/gridService'
 import type { GridTaskCard, GridTicket } from '../../types/grid'
 import { UserAvatar } from '../../components/ui/UserAvatar'

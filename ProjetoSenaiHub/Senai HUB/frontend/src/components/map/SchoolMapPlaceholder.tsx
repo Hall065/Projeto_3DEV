@@ -1,4 +1,5 @@
 import { Layers, MapPin } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useMapState } from '../../hooks/useMapState'
 import mapPlaceholder from '../../assets/map-placeholder.svg'
 
@@ -11,6 +12,7 @@ interface SchoolMapPlaceholderProps {
  * Substituir por SchoolMapCanvas (React Three Fiber) na proxima fase.
  */
 export function SchoolMapPlaceholder({ className = '' }: SchoolMapPlaceholderProps) {
+  const { t } = useTranslation()
   const { config, activeFloor, activeFloorId, setActiveFloorId } = useMapState()
 
   return (
@@ -20,7 +22,7 @@ export function SchoolMapPlaceholder({ className = '' }: SchoolMapPlaceholderPro
           <MapPin className="h-5 w-5 text-primary" />
           <div>
             <h3 className="font-semibold text-slate-900">{config.name}</h3>
-            <p className="text-xs text-slate-500">Visualizacao 3D em desenvolvimento</p>
+            <p className="text-xs text-slate-500">{t('map.schoolPlaceholder.development')}</p>
           </div>
         </div>
 
@@ -43,18 +45,19 @@ export function SchoolMapPlaceholder({ className = '' }: SchoolMapPlaceholderPro
       <div className="relative aspect-video bg-slate-100">
         <img
           src={mapPlaceholder}
-          alt="Placeholder do mapa escolar 3D"
+          alt={t('map.schoolPlaceholder.alt')}
           className="h-full w-full object-cover opacity-80"
         />
         <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40">
           <div className="rounded-lg bg-white/95 px-6 py-4 text-center shadow-lg">
-            <p className="text-sm font-medium text-slate-900">Mapa 3D — Em breve</p>
-            <p className="mt-1 text-xs text-slate-500">
-              React Three Fiber + multiplos andares + entidades em tempo real
-            </p>
+            <p className="text-sm font-medium text-slate-900">{t('map.schoolPlaceholder.title')}</p>
+            <p className="mt-1 text-xs text-slate-500">{t('map.schoolPlaceholder.subtitle')}</p>
             {activeFloor && (
               <p className="mt-2 text-xs text-primary">
-                Andar ativo: {activeFloor.name} ({activeFloor.entities.length} entidades mock)
+                {t('map.schoolPlaceholder.activeFloor', {
+                  name: activeFloor.name,
+                  count: activeFloor.entities.length,
+                })}
               </p>
             )}
           </div>
@@ -63,4 +66,3 @@ export function SchoolMapPlaceholder({ className = '' }: SchoolMapPlaceholderPro
     </section>
   )
 }
-

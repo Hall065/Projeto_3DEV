@@ -1,3 +1,5 @@
+import i18n from '../i18n'
+
 const CUSTOM_IMAGE_KEY = 'senai_hub_custom_wallpaper'
 const MAX_FILE_BYTES = 5 * 1024 * 1024
 const MAX_DIMENSION = 1920
@@ -24,10 +26,10 @@ export function removeCustomWallpaperImage(): void {
 
 export function validateWallpaperFile(file: File): string | null {
   if (!ACCEPTED_TYPES.includes(file.type)) {
-    return 'Use uma imagem JPG, PNG, WebP ou GIF.'
+    return i18n.t('images.wallpaper.invalidType')
   }
   if (file.size > MAX_FILE_BYTES) {
-    return 'A imagem deve ter no máximo 5 MB.'
+    return i18n.t('images.wallpaper.tooLarge')
   }
   return null
 }
@@ -52,13 +54,13 @@ export async function compressWallpaperFile(file: File): Promise<string> {
         canvas.height = height
         const ctx = canvas.getContext('2d')
         if (!ctx) {
-          reject(new Error('Não foi possível processar a imagem.'))
+          reject(new Error(i18n.t('images.wallpaper.processFailed')))
           return
         }
         ctx.drawImage(img, 0, 0, width, height)
         resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY))
       }
-      img.onerror = () => reject(new Error('Não foi possível carregar a imagem.'))
+      img.onerror = () => reject(new Error(i18n.t('images.wallpaper.loadFailed')))
       img.src = objectUrl
     })
 

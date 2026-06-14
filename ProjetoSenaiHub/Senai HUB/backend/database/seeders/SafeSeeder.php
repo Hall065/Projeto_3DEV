@@ -50,9 +50,9 @@ class SafeSeeder extends Seeder
         );
 
         $students = collect([
-            ['registration' => '20240001', 'name' => 'João Silva Santos', 'class_name' => 'DS-2'],
-            ['registration' => '20240002', 'name' => 'Maria Eduarda Lima', 'class_name' => 'DS-2'],
-            ['registration' => '20240003', 'name' => 'Pedro Henrique Alves', 'class_name' => 'DS-1'],
+            ['registration' => '2025AUT0003', 'name' => 'Maria Silva', 'class_name' => 'TURMA AUT25-02'],
+            ['registration' => '2025AUT0021', 'name' => 'João Paulo Vieira', 'class_name' => 'TURMA AUT25-02'],
+            ['registration' => '2025AUT0015', 'name' => 'Ana Carolina Souza', 'class_name' => 'TURMA AUT25-02'],
         ])->map(fn (array $data) => SafeStudent::query()->updateOrCreate(
             ['registration' => $data['registration']],
             array_merge($data, ['active' => true]),

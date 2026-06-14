@@ -1,5 +1,6 @@
 import { Download, FileSpreadsheet, History, Upload } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -7,6 +8,8 @@ import {
   OutlineButton,
   PrimaryButton,
 } from '../../components/connect/ConnectShared'
+import { useCrudToast } from '../../hooks/useCrudToast'
+import { intlLocale, normalizeLocale } from '../../i18n'
 import { spreadsheetService } from '../../services/spreadsheetService'
 import { parseApiError } from '../../utils/parseApiError'
 import type {
@@ -18,23 +21,18 @@ import type {
 
 type SpreadsheetModule = 'connect' | 'grid'
 
-const moduleCopy: Record<SpreadsheetModule, { title: string; subtitle: string; hint: string }> = {
-  connect: {
-    title: 'Importar e exportar — Connect',
-    subtitle:
-      'Baixe modelos CSV, preencha no Excel ou LibreOffice e importe em lote. Aceita CSV e Excel (.xlsx).',
-    hint: 'Chaves como matricula, codigo_turma e codigo_curso vinculam registros entre planilhas.',
-  },
-  grid: {
-    title: 'Importar e exportar — Grid',
-    subtitle:
-      'Modelos CSV para chamados, tarefas, estoque e usuarios. Aceita CSV e Excel (.xlsx).',
-    hint: 'Use codigo_chamado nas tarefas para vincular a um chamado existente.',
-  },
-}
-
 export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
-  const copy = moduleCopy[module]
+  const { t, i18n } = useTranslation()
+  const crudToast = useCrudToast()
+  const locale = intlLocale(normalizeLocale(i18n.language))
+  const copy = useMemo(
+    () => ({
+      title: t(module === 'connect' ? 'spreadsheet.connectTitle' : 'spreadsheet.gridTitle'),
+      subtitle: t(module === 'connect' ? 'spreadsheet.connectSubtitle' : 'spreadsheet.gridSubtitle'),
+      hint: t(module === 'connect' ? 'spreadsheet.connectHint' : 'spreadsheet.gridHint'),
+    }),
+    [module, t],
+  )
   const fileRef = useRef<HTMLInputElement>(null)
   const [templates, setTemplates] = useState<SpreadsheetTemplate[]>([])
   const [selectedKey, setSelectedKey] = useState('')
@@ -58,11 +56,11 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
         setSelectedKey((prev) => prev || list[0]?.key || '')
         loadLogs()
       })
-      .catch((err) => setError(parseApiError(err, 'Nao foi possivel carregar os modelos de planilha.')))
+      .catch((err) => setError(parseApiError(err, t('spreadsheet.loadTemplatesError'))))
       .finally(() => setLoading(false))
-  }, [module])
+  }, [module, t])
 
-  const selected = templates.find((t) => t.key === selectedKey)
+  const selected = templates.find((item) => item.key === selectedKey)
 
   const run = async (action: 'template' | 'export' | 'preview', file?: File) => {
     if (!selectedKey) return
@@ -76,8 +74,10 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
     try {
       if (action === 'template') {
         await spreadsheetService.downloadTemplate(module, selectedKey)
+        crudToast.notifySuccess(t('spreadsheet.templateDownloaded'))
       } else if (action === 'export') {
         await spreadsheetService.exportData(module, selectedKey)
+        crudToast.notifySuccess(t('spreadsheet.dataExported'))
       } else if (action === 'preview' && file) {
         const data = await spreadsheetService.previewFile(module, selectedKey, file)
         setPreview(data)
@@ -85,7 +85,7 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
         setResult(null)
       }
     } catch (err) {
-      setError(parseApiError(err, 'Operacao falhou.'))
+      crudToast.notifyError(err, t('spreadsheet.operationFailed'))
     } finally {
       setBusy(null)
       if (fileRef.current) fileRef.current.value = ''
@@ -102,8 +102,11 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
       setPreview(null)
       setPendingFile(null)
       loadLogs()
+      crudToast.notifySuccess(
+        t('spreadsheet.importComplete', { created: data.created, updated: data.updated }),
+      )
     } catch (err) {
-      setError(parseApiError(err, 'Importacao falhou.'))
+      crudToast.notifyError(err, t('spreadsheet.importFailed'))
     } finally {
       setBusy(null)
     }
@@ -115,22 +118,19 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
 
       <ConnectCard className="mb-4 p-4">
         <p className="text-sm text-hub-text-muted">{copy.hint}</p>
-        <p className="mt-2 text-xs text-hub-text-muted">
-          Formatos: CSV UTF-8 com separador <strong>;</strong> ou Excel <strong>.xlsx</strong>. A primeira linha deve
-          conter os nomes das colunas exatamente como no modelo.
-        </p>
+        <p className="mt-2 text-xs text-hub-text-muted">{t('spreadsheet.formatsHint')}</p>
       </ConnectCard>
 
       {loading ? (
         <ConnectCard>
-          <ConnectLoadingSpinner label="Carregando modelos..." />
+          <ConnectLoadingSpinner label={t('spreadsheet.loadingTemplates')} />
         </ConnectCard>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
           <ConnectCard className="p-3">
             <h3 className="mb-3 flex items-center gap-2 px-2 text-sm font-semibold text-hub-navy">
               <FileSpreadsheet className="h-4 w-4" />
-              Tabelas disponiveis
+              {t('spreadsheet.availableTables')}
             </h3>
             <ul className="space-y-1">
               {templates.map((item) => (
@@ -152,7 +152,7 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
                   >
                     {item.label}
                     <span className="mt-0.5 block text-xs font-normal text-hub-text-muted">
-                      {item.importable ? 'Importar e exportar' : 'Somente exportar'}
+                      {item.importable ? t('spreadsheet.importExport') : t('spreadsheet.exportOnly')}
                     </span>
                   </button>
                 </li>
@@ -170,13 +170,13 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <PrimaryButton type="button" disabled={busy !== null} onClick={() => run('template')}>
                       <Download className="h-4 w-4" />
-                      {busy === 'template' ? 'Baixando...' : 'Baixar modelo'}
+                      {busy === 'template' ? t('spreadsheet.downloading') : t('spreadsheet.downloadTemplate')}
                     </PrimaryButton>
 
                     {selected.exportable && (
                       <OutlineButton type="button" disabled={busy !== null} onClick={() => run('export')}>
                         <Download className="h-4 w-4" />
-                        {busy === 'export' ? 'Exportando...' : 'Exportar dados'}
+                        {busy === 'export' ? t('spreadsheet.exporting') : t('spreadsheet.exportData')}
                       </OutlineButton>
                     )}
 
@@ -198,28 +198,30 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
                           onClick={() => fileRef.current?.click()}
                         >
                           <Upload className="h-4 w-4" />
-                          {busy === 'preview' ? 'Analisando...' : 'Importar (CSV ou XLSX)'}
+                          {busy === 'preview' ? t('spreadsheet.analyzing') : t('spreadsheet.importFile')}
                         </OutlineButton>
                       </>
                     )}
                   </div>
 
                   <div className="mt-6">
-                    <h4 className="mb-2 text-sm font-semibold text-hub-navy">Colunas do modelo</h4>
+                    <h4 className="mb-2 text-sm font-semibold text-hub-navy">{t('spreadsheet.modelColumns')}</h4>
                     <div className="overflow-x-auto rounded-lg border border-hub-border/60">
                       <table className="w-full min-w-[480px] text-sm">
                         <thead className="bg-hub-bg/80 text-left text-hub-text-muted">
                           <tr>
-                            <th className="px-3 py-2">Coluna</th>
-                            <th className="px-3 py-2">Obrigatoria</th>
-                            <th className="px-3 py-2">Exemplo</th>
+                            <th className="px-3 py-2">{t('spreadsheet.column')}</th>
+                            <th className="px-3 py-2">{t('spreadsheet.required')}</th>
+                            <th className="px-3 py-2">{t('spreadsheet.example')}</th>
                           </tr>
                         </thead>
                         <tbody>
                           {selected.columns.map((col) => (
                             <tr key={col.key} className="border-t border-hub-border/40">
                               <td className="px-3 py-2 font-mono text-xs">{col.header}</td>
-                              <td className="px-3 py-2">{col.required ? 'Sim' : 'Nao'}</td>
+                              <td className="px-3 py-2">
+                                {col.required ? t('connect.common.yes') : t('connect.common.no')}
+                              </td>
                               <td className="px-3 py-2 text-hub-text-muted">{col.example || '—'}</td>
                             </tr>
                           ))}
@@ -236,24 +238,27 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
 
                   {preview && (
                     <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-                      <p className="font-semibold">Pre-visualizacao da importacao</p>
+                      <p className="font-semibold">{t('spreadsheet.previewTitle')}</p>
                       <p className="mt-1">
-                        {preview.total_rows} linha(s) · estimativa: <strong>{preview.created}</strong> criado(s),{' '}
-                        <strong>{preview.updated}</strong> atualizado(s),{' '}
-                        <strong>{preview.errors.length}</strong> com erro (simulacao sem gravar).
+                        {t('spreadsheet.previewSummary', {
+                          rows: preview.total_rows,
+                          created: preview.created,
+                          updated: preview.updated,
+                          errors: preview.errors.length,
+                        })}
                       </p>
                       {preview.errors.length > 0 && (
                         <ul className="mt-2 max-h-32 list-disc space-y-1 overflow-y-auto pl-5 text-red-800">
                           {preview.errors.slice(0, 15).map((err) => (
                             <li key={`${err.row}-${err.message}`}>
-                              Linha {err.row}: {err.message}
+                              {t('spreadsheet.previewRow', { row: err.row, message: err.message })}
                             </li>
                           ))}
                         </ul>
                       )}
                       <div className="mt-3 flex gap-2">
                         <PrimaryButton type="button" disabled={busy === 'import'} onClick={confirmImport}>
-                          {busy === 'import' ? 'Importando...' : 'Confirmar importacao'}
+                          {busy === 'import' ? t('spreadsheet.importing') : t('spreadsheet.confirmImport')}
                         </PrimaryButton>
                         <OutlineButton
                           type="button"
@@ -262,58 +267,53 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
                             setPendingFile(null)
                           }}
                         >
-                          Cancelar
+                          {t('common.cancel')}
                         </OutlineButton>
                       </div>
                     </div>
                   )}
 
-                  {result && (
-                    <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
-                      <p>
-                        Importacao concluida: <strong>{result.created}</strong> criado(s),{' '}
-                        <strong>{result.updated}</strong> atualizado(s).
-                      </p>
-                      {result.errors.length > 0 && (
-                        <ul className="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-5 text-red-700">
-                          {result.errors.map((err) => (
-                            <li key={`${err.row}-${err.message}`}>
-                              Linha {err.row}: {err.message}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                  {result && result.errors.length > 0 && (
+                    <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-950">
+                      <p className="font-semibold">{t('spreadsheet.importErrorsTitle')}</p>
+                      <ul className="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-5 text-red-700">
+                        {result.errors.map((err) => (
+                          <li key={`${err.row}-${err.message}`}>
+                            {t('spreadsheet.previewRow', { row: err.row, message: err.message })}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
                 </>
               ) : (
-                <p className="text-sm text-hub-text-muted">Selecione uma tabela ao lado.</p>
+                <p className="text-sm text-hub-text-muted">{t('spreadsheet.selectTable')}</p>
               )}
             </ConnectCard>
 
             <ConnectCard className="p-4">
               <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-hub-navy">
                 <History className="h-4 w-4" />
-                Historico de importacoes
+                {t('spreadsheet.historyTitle')}
               </h3>
               {logs.length === 0 ? (
-                <p className="text-sm text-hub-text-muted">Nenhuma importacao registrada ainda.</p>
+                <p className="text-sm text-hub-text-muted">{t('spreadsheet.noHistory')}</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[520px] text-sm">
                     <thead className="text-left text-hub-text-muted">
                       <tr>
-                        <th className="py-2">Data</th>
-                        <th className="py-2">Planilha</th>
-                        <th className="py-2">Usuario</th>
-                        <th className="py-2">Resultado</th>
+                        <th className="py-2">{t('spreadsheet.historyDate')}</th>
+                        <th className="py-2">{t('spreadsheet.historySheet')}</th>
+                        <th className="py-2">{t('spreadsheet.historyUser')}</th>
+                        <th className="py-2">{t('spreadsheet.historyResult')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {logs.map((log) => (
                         <tr key={log.id} className="border-t border-hub-border/40">
                           <td className="py-2 text-xs">
-                            {log.created_at ? new Date(log.created_at).toLocaleString('pt-BR') : '—'}
+                            {log.created_at ? new Date(log.created_at).toLocaleString(locale) : '—'}
                           </td>
                           <td className="py-2">
                             {log.spreadsheet_key}
@@ -325,7 +325,10 @@ export function SpreadsheetHubPage({ module }: { module: SpreadsheetModule }) {
                           <td className="py-2">
                             +{log.created_count} / ~{log.updated_count}
                             {log.errors_count > 0 && (
-                              <span className="text-red-600"> · {log.errors_count} erros</span>
+                              <span className="text-red-600">
+                                {' '}
+                                · {t('spreadsheet.historyErrors', { count: log.errors_count })}
+                              </span>
                             )}
                           </td>
                         </tr>

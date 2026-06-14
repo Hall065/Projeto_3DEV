@@ -148,7 +148,7 @@ class UserManagementController extends Controller
         }
 
         return response()->json([
-            'data' => new UserResource($user),
+            'data' => new HubUserDetailResource($user->fresh(['applications'])),
             'message' => 'Usuario atualizado com sucesso.',
         ]);
     }

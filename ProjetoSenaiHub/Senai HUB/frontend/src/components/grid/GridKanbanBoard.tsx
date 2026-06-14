@@ -44,6 +44,7 @@ export function GridKanbanBoard<TItem extends ItemWithId, TCol extends string>({
   columnsGridClass = 'lg:grid-cols-3',
   canDragItem,
   canDropToColumn,
+  confirmColumnMove,
 }: {
   columns: KanbanColumnDef<TCol>[]
   items: TItem[]
@@ -57,6 +58,7 @@ export function GridKanbanBoard<TItem extends ItemWithId, TCol extends string>({
   columnsGridClass?: string
   canDragItem?: (item: TItem) => boolean
   canDropToColumn?: (item: TItem, fromColumn: TCol, toColumn: TCol) => boolean
+  confirmColumnMove?: (item: TItem, fromColumn: TCol, toColumn: TCol) => Promise<boolean>
 }) {
   const columnIds = useMemo(() => columns.map((c) => c.id), [columns])
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
@@ -147,7 +149,10 @@ export function GridKanbanBoard<TItem extends ItemWithId, TCol extends string>({
     const overContainer =
       findContainer(over.id) ?? (columnIds.includes(over.id as TCol) ? (over.id as TCol) : undefined)
 
-    if (!activeContainer || !overContainer) return
+    if (!activeContainer || !overContainer) {
+      setLocalItems(items)
+      return
+    }
 
     let nextItems = localItems
 
@@ -165,21 +170,40 @@ export function GridKanbanBoard<TItem extends ItemWithId, TCol extends string>({
       }
     }
 
-    setLocalItems(nextItems)
-    onItemsChange(nextItems)
-
     const finalItem = nextItems.find((i) => i.id === active.id)
     const endCol = finalItem ? getColumnId(finalItem) : overContainer
 
     if (startedCol && endCol && startedCol !== endCol) {
-      const movedItem = nextItems.find((i) => i.id === active.id)
+      const movedItem = nextItems.find((i) => i.id === active.id) ?? items.find((i) => i.id === active.id)
       if (movedItem && canDropToColumn && !canDropToColumn(movedItem, startedCol, endCol)) {
         setLocalItems(items)
-        onItemsChange(items)
         return
       }
+
+      if (confirmColumnMove) {
+        setLocalItems(items)
+        const sourceItem = items.find((i) => i.id === active.id)
+        if (!sourceItem) return
+
+        void (async () => {
+          const ok = await confirmColumnMove(sourceItem, startedCol, endCol)
+          if (!ok) return
+
+          setLocalItems(nextItems)
+          onItemsChange(nextItems)
+          await onItemMove(Number(active.id), endCol)
+        })()
+        return
+      }
+
+      setLocalItems(nextItems)
+      onItemsChange(nextItems)
       void onItemMove(Number(active.id), endCol)
+      return
     }
+
+    setLocalItems(nextItems)
+    onItemsChange(nextItems)
   }
 
   const handleDragCancel = () => {
@@ -248,6 +272,7 @@ function KanbanColumn<TCol extends string>({
   return (
     <div
       ref={setNodeRef}
+      data-kanban-column={column.id}
       className={`glass-panel flex min-w-0 flex-col rounded-2xl transition-all duration-300 ease-out ${
         isOver ? 'ring-2 ring-hub-red/35 ring-offset-2 ring-offset-transparent' : ''
       }`}
@@ -290,6 +315,7 @@ function SortableKanbanCard({
   return (
     <div
       ref={setNodeRef}
+      data-kanban-card={id}
       style={style}
       className={`kanban-sortable-card touch-none ${
         disabled ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'

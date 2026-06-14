@@ -1,35 +1,33 @@
+import { useTranslation } from 'react-i18next'
 import { audienceAdmin, audienceStudent, audienceTeacher } from '../../assets/landing'
 
-const audiences = [
-  {
-    image: audienceStudent,
-    title: 'Alunos',
-    description:
-      'Acesse conteúdos, acompanhe atividades e mantenha-se conectado à sua jornada de aprendizagem em um só lugar.',
-  },
-  {
-    image: audienceTeacher,
-    title: 'Professores',
-    description:
-      'Gerencie turmas, compartilhe materiais e acompanhe o desempenho dos alunos com ferramentas pensadas para você.',
-  },
-  {
-    image: audienceAdmin,
-    title: 'Equipe Administrativa',
-    description:
-      'Administre sistemas, usuários e operações escolares com visibilidade e controle em tempo real.',
-  },
-]
-
 export function LandingAudience() {
+  const { t } = useTranslation()
+
+  const audiences = [
+    {
+      image: audienceStudent,
+      title: t('landing.audience.studentsTitle'),
+      description: t('landing.audience.studentsDesc'),
+    },
+    {
+      image: audienceTeacher,
+      title: t('landing.audience.teachersTitle'),
+      description: t('landing.audience.teachersDesc'),
+    },
+    {
+      image: audienceAdmin,
+      title: t('landing.audience.adminTitle'),
+      description: t('landing.audience.adminDesc'),
+    },
+  ]
+
   return (
     <section id="para-quem" className="py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="glass-panel-solid mx-auto max-w-2xl rounded-2xl px-6 py-8 text-center sm:px-10">
-          <h2 className="text-2xl font-bold text-hub-navy sm:text-3xl">Para quem é o SENAI Hub?</h2>
-          <p className="mt-4 text-base text-hub-text-muted">
-            Uma solução pensada para toda a comunidade escolar — do aluno ao gestor.
-          </p>
+          <h2 className="text-2xl font-bold text-hub-navy sm:text-3xl">{t('landing.audience.title')}</h2>
+          <p className="mt-4 text-base text-hub-text-muted">{t('landing.audience.subtitle')}</p>
         </div>
 
         <div className="mt-12 grid gap-8 md:grid-cols-3">
@@ -52,7 +50,7 @@ export function LandingAudience() {
                   href="#recursos"
                   className="mt-4 inline-flex items-center text-sm font-semibold text-hub-red transition-colors hover:text-hub-red-hover"
                 >
-                  Saiba mais →
+                  {t('landing.audience.learnMore')}
                 </a>
               </div>
             </article>

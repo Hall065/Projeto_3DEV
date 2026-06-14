@@ -1,5 +1,6 @@
 import { Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
 import { viewRowAction } from '../../components/connect/connectViewActions'
 import {
@@ -21,10 +22,12 @@ import {
   type NavPermissionOption,
   type NavPermissionsByModule,
 } from '../../services/adminService'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import type { User } from '../../types/auth'
 import { parseApiError } from '../../utils/parseApiError'
 
-type ModuleChoice = '' | 'connect' | 'grid'
+type ModuleChoice = '' | 'connect' | 'grid' | 'safe'
 
 type FormState = {
   name: string
@@ -46,7 +49,7 @@ const emptyForm: FormState = {
   permissions: [],
 }
 
-const ACCESS_KEYS = new Set(['connect.access', 'grid.access'])
+const ACCESS_KEYS = new Set(['connect.access', 'grid.access', 'safe.access'])
 
 function withoutAccessKeys(permissions: string[]): string[] {
   return permissions.filter((p) => !ACCESS_KEYS.has(p))
@@ -81,6 +84,9 @@ function groupNavPermissions(items: NavPermissionOption[]): { group: string; ite
 }
 
 export function HubUsersPage() {
+  const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmAction } = useConfirmAction()
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<HubRoleOption[]>([])
   const [navPermissions, setNavPermissions] = useState<NavPermissionsByModule | null>(null)
@@ -98,7 +104,7 @@ export function HubUsersPage() {
     adminService
       .getUsers({ search, per_page: 50 })
       .then((res) => setUsers(res.data))
-      .catch((err) => setError(parseApiError(err, 'Nao foi possivel carregar usuarios.')))
+      .catch((err) => setError(parseApiError(err, t('hubUsers.errors.loadUsers'))))
       .finally(() => setLoading(false))
   }
 
@@ -109,7 +115,7 @@ export function HubUsersPage() {
         setNavPermissions(navData)
         load()
       })
-      .catch((err) => setError(parseApiError(err, 'Falha ao carregar perfis.')))
+      .catch((err) => setError(parseApiError(err, t('hubUsers.errors.loadRoles'))))
   }, [])
 
   useEffect(() => {
@@ -144,7 +150,11 @@ export function HubUsersPage() {
     setEditing(user)
     try {
       const detail = await adminService.getUser(user.id)
-      const module = (detail.role_module === 'connect' || detail.role_module === 'grid' ? detail.role_module : '') as ModuleChoice
+      const module = (
+        detail.role_module === 'connect' || detail.role_module === 'grid' || detail.role_module === 'safe'
+          ? detail.role_module
+          : ''
+      ) as ModuleChoice
       const effective = withoutAccessKeys(
         detail.custom_permissions?.length ? detail.custom_permissions : detail.default_permissions ?? detail.permissions ?? [],
       )
@@ -159,7 +169,7 @@ export function HubUsersPage() {
       })
       setDrawerOpen(true)
     } catch (err: unknown) {
-      setError(parseApiError(err, 'Nao foi possivel carregar os dados do usuario.'))
+      setError(parseApiError(err, t('hubUsers.errors.loadUser')))
     }
   }
 
@@ -213,32 +223,34 @@ export function HubUsersPage() {
         })
       }
       setDrawerOpen(false)
+      crudToast.notifySaved(!!editing)
       load()
     } catch (err: unknown) {
-      setError(parseApiError(err, 'Nao foi possivel salvar o usuario.'))
+      crudToast.notifyError(err, t('hubUsers.errors.saveUser'))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (user: User) => {
-    if (!window.confirm(`Excluir o usuario ${user.name}?`)) return
+    if (!(await confirmAction({ message: t('hubUsers.confirmDelete', { name: user.name }), variant: 'danger' }))) return
     try {
       await adminService.deleteUser(user.id)
+      crudToast.notifyDeleted()
       load()
     } catch (err: unknown) {
-      setError(parseApiError(err, 'Nao foi possivel excluir o usuario.'))
+      crudToast.notifyError(err, t('hubUsers.errors.deleteUser'))
     }
   }
 
   return (
     <div className="w-full min-w-0">
       <ConnectPageHeader
-        title="Usuarios e perfis de acesso"
-        subtitle="Crie contas sem acesso e configure modulo, perfil e abas liberadas."
+        title={t('hubUsers.title')}
+        subtitle={t('hubUsers.subtitle')}
         actions={
           <PrimaryButton type="button" onClick={openCreate}>
-            <Plus className="h-4 w-4" /> Novo usuario
+            <Plus className="h-4 w-4" /> {t('hubUsers.newUser')}
           </PrimaryButton>
         }
       />
@@ -248,10 +260,10 @@ export function HubUsersPage() {
       )}
 
       <ConnectCard className="mb-4 p-4">
-        <FormField label="Buscar">
+        <FormField label={t('common.search')}>
           <input
             className={inputClass}
-            placeholder="Nome ou e-mail..."
+            placeholder={t('hubUsers.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -260,16 +272,16 @@ export function HubUsersPage() {
 
       <ConnectCard>
         {loading ? (
-          <ConnectLoadingSpinner label="Carregando usuarios..." className="min-h-[240px]" />
+          <ConnectLoadingSpinner label={t('hubUsers.loadingUsers')} className="min-h-[240px]" />
         ) : (
           <ConnectTableScroll>
             <table className="w-full min-w-[640px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left">Nome</th>
-                  <th className="px-4 py-3 text-left">E-mail</th>
-                  <th className="px-4 py-3 text-left">Perfil</th>
-                  <th className="px-4 py-3 text-right">Acoes</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.name')}</th>
+                  <th className="px-4 py-3 text-left">{t('connect.table.email')}</th>
+                  <th className="px-4 py-3 text-left">{t('common.role')}</th>
+                  <th className="px-4 py-3 text-right">{t('connect.common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -293,15 +305,15 @@ export function HubUsersPage() {
                     </td>
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <ConnectRowActionsMenu
-                        ariaLabel={`Ações de ${user.name}`}
+                        ariaLabel={t('connect.common.actionsOf', { name: user.name })}
                         actions={[
                           viewRowAction(() => setDetailUserId(user.id)),
-                          { key: 'edit', label: 'Editar', icon: Pencil, onClick: () => void openEdit(user) },
+                          { key: 'edit', label: t('connect.common.edit'), icon: Pencil, onClick: () => void openEdit(user) },
                           ...(!user.is_admin
                             ? [
                                 {
                                   key: 'delete',
-                                  label: 'Excluir',
+                                  label: t('connect.common.delete'),
                                   icon: Trash2,
                                   variant: 'danger' as const,
                                   onClick: () => void handleDelete(user),
@@ -326,16 +338,16 @@ export function HubUsersPage() {
           <div className="glass-panel-solid h-full w-full max-w-lg overflow-y-auto p-6 shadow-xl">
             <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-hub-navy">
               <Users className="h-5 w-5" />
-              {editing ? 'Editar usuario' : 'Novo usuario'}
+              {editing ? t('hubUsers.editUser') : t('hubUsers.newUser')}
             </h3>
 
             <div className="space-y-4">
               <section className="space-y-3">
-                <h4 className="text-sm font-semibold text-hub-navy">Dados basicos</h4>
-                <FormField label="Nome completo">
+                <h4 className="text-sm font-semibold text-hub-navy">{t('hubUsers.basicData')}</h4>
+                <FormField label={t('hubUsers.fullName')}>
                   <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </FormField>
-                <FormField label="E-mail">
+                <FormField label={t('connect.table.email')}>
                   <input
                     type="email"
                     className={inputClass}
@@ -343,7 +355,7 @@ export function HubUsersPage() {
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                   />
                 </FormField>
-                <FormField label={editing ? 'Nova senha (opcional)' : 'Senha inicial'}>
+                <FormField label={editing ? t('hubUsers.newPasswordOptional') : t('hubUsers.initialPassword')}>
                   <input
                     type="password"
                     className={inputClass}
@@ -354,22 +366,23 @@ export function HubUsersPage() {
               </section>
 
               <section className="space-y-3 border-t border-hub-border/40 pt-4">
-                <h4 className="text-sm font-semibold text-hub-navy">Modulo e perfil</h4>
-                <FormField label="Modulo de acesso">
+                <h4 className="text-sm font-semibold text-hub-navy">{t('hubUsers.moduleAndRole')}</h4>
+                <FormField label={t('hubUsers.accessModule')}>
                   <select
                     className={selectClass}
                     value={form.module}
                     onChange={(e) => handleModuleChange(e.target.value as ModuleChoice)}
                   >
-                    <option value="">Nenhum (sem acesso)</option>
+                    <option value="">{t('hubUsers.noAccess')}</option>
                     <option value="connect">Connect</option>
                     <option value="grid">Grid</option>
+                    <option value="safe">SAFE</option>
                   </select>
                 </FormField>
 
                 {form.module && (
                   <>
-                    <FormField label="Perfil no modulo">
+                    <FormField label={t('hubUsers.roleInModule')}>
                       <select
                         className={selectClass}
                         value={form.role}
@@ -387,7 +400,7 @@ export function HubUsersPage() {
                     </FormField>
 
                     {form.role === 'connect_empresa' && (
-                      <FormField label="Nome da empresa">
+                      <FormField label={t('hubUsers.companyName')}>
                         <input
                           className={inputClass}
                           value={form.company_name}
@@ -402,9 +415,9 @@ export function HubUsersPage() {
               {form.module && permissionGroups.length > 0 && (
                 <section className="space-y-3 border-t border-hub-border/40 pt-4">
                   <div>
-                    <h4 className="text-sm font-semibold text-hub-navy">Abas e permissoes</h4>
+                    <h4 className="text-sm font-semibold text-hub-navy">{t('hubUsers.permissionsSection')}</h4>
                     <p className="mt-1 text-xs text-hub-text-muted">
-                      Marque somente o que este usuario pode ver. Os dados exibidos respeitam o escopo do perfil.
+                      {t('hubUsers.permissionsHint')}
                     </p>
                   </div>
 
@@ -432,10 +445,10 @@ export function HubUsersPage() {
 
             <div className="mt-6 flex gap-2">
               <PrimaryButton type="button" onClick={handleSave} disabled={saving}>
-                {saving ? 'Salvando...' : 'Salvar'}
+                {saving ? t('connect.common.saving') : t('common.save')}
               </PrimaryButton>
               <OutlineButton type="button" onClick={() => setDrawerOpen(false)}>
-                Cancelar
+                {t('common.cancel')}
               </OutlineButton>
             </div>
           </div>

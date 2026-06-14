@@ -1,18 +1,21 @@
 import { ArrowRight, ChevronDown, Headphones, LayoutGrid } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { logoSenaiHub } from '../../assets/brand'
 import { AppBrandMark } from '../brand/AppBrandMark'
 import coverConnect from '../../assets/hub/cover-connect.png'
 import coverGrid from '../../assets/hub/cover-grid.png'
 import coverSafe from '../../assets/hub/cover-safe.png'
-import { APP_BRAND_ASSETS, MODULE_BRAND_SLUGS } from '../../utils/appBrandAssets'
+import { getAppBrandName, MODULE_BRAND_SLUGS } from '../../utils/appBrandAssets'
 
 const previewApps = MODULE_BRAND_SLUGS.map((slug) => ({
   slug,
-  name: APP_BRAND_ASSETS[slug].name,
+  name: getAppBrandName(slug),
   cover: slug === 'connect' ? coverConnect : slug === 'grid' ? coverGrid : coverSafe,
 }))
 
 export function HubPreviewMockup() {
+  const { t } = useTranslation()
+
   return (
     <div className="glass-panel-solid overflow-hidden rounded-2xl shadow-[0_8px_40px_rgba(2,26,58,0.12)]">
       <div className="flex items-center gap-1.5 border-b border-white/40 bg-white/40 px-3 py-2 backdrop-blur-md">
@@ -32,11 +35,11 @@ export function HubPreviewMockup() {
           <nav className="mt-5 space-y-2">
             <div className="flex items-center gap-1.5 rounded-md bg-hub-red px-2 py-1.5 text-[9px] font-semibold leading-tight text-white sm:text-[10px]">
               <LayoutGrid className="h-3 w-3 shrink-0" />
-              Hub de Aplicações
+              {t('landing.preview.appHub')}
             </div>
             <div className="flex items-center gap-1.5 rounded-md bg-hub-navy px-2 py-1.5 text-[9px] font-medium leading-tight text-white/90 sm:text-[10px]">
               <Headphones className="h-3 w-3 shrink-0" />
-              Suporte
+              {t('landing.preview.support')}
             </div>
           </nav>
         </aside>
@@ -49,10 +52,8 @@ export function HubPreviewMockup() {
           </div>
 
           <div className="flex-1 p-3 sm:p-4">
-            <h3 className="text-sm font-bold text-hub-navy sm:text-base">Hub de Aplicações</h3>
-            <p className="mt-0.5 text-[10px] text-hub-text-muted sm:text-[11px]">
-              Acesse os sistemas disponíveis para o seu perfil.
-            </p>
+            <h3 className="text-sm font-bold text-hub-navy sm:text-base">{t('landing.preview.title')}</h3>
+            <p className="mt-0.5 text-[10px] text-hub-text-muted sm:text-[11px]">{t('landing.preview.subtitle')}</p>
 
             <div className="mt-3 grid grid-cols-2 gap-2.5 sm:mt-4 sm:gap-3">
               {previewApps.map(({ slug, name, cover }) => (
@@ -71,7 +72,7 @@ export function HubPreviewMockup() {
                       </span>
                     </div>
                     <span className="mt-auto flex items-center justify-center gap-1 rounded border border-hub-navy/15 py-1 text-[8px] font-medium text-hub-navy sm:text-[9px]">
-                      Acessar Sistema
+                      {t('landing.preview.accessSystem')}
                       <ArrowRight className="h-2.5 w-2.5" />
                     </span>
                   </div>

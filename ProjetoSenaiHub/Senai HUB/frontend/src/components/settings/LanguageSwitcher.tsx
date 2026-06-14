@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react'
 import { Check, Globe } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PrimaryButton } from '../connect/ConnectShared'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { normalizeLocale, setLocale, supportedLocales, type LocaleCode } from '../../i18n'
 
 export function LanguageSwitcher() {
   const { t, i18n } = useTranslation()
+  const crudToast = useCrudToast()
   const activeLocale = normalizeLocale(i18n.language)
   const [draft, setDraft] = useState<LocaleCode>(activeLocale)
-  const [applied, setApplied] = useState(false)
 
   useEffect(() => {
     setDraft(normalizeLocale(i18n.language))
@@ -18,8 +19,7 @@ export function LanguageSwitcher() {
 
   function handleApply() {
     setLocale(draft)
-    setApplied(true)
-    window.setTimeout(() => setApplied(false), 3000)
+    crudToast.notifySuccess(t('settings.languageApplied'))
   }
 
   return (
@@ -64,11 +64,6 @@ export function LanguageSwitcher() {
         <PrimaryButton type="button" onClick={handleApply} disabled={!dirty}>
           {t('common.apply')}
         </PrimaryButton>
-        {applied && (
-          <p className="text-sm text-emerald-700" role="status">
-            {t('settings.languageApplied')}
-          </p>
-        )}
       </div>
     </div>
   )

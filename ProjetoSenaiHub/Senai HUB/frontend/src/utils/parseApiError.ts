@@ -1,3 +1,5 @@
+import i18n from '../i18n'
+
 interface ApiValidationError {
   message?: string
   errors?: Record<string, string[]>
@@ -22,20 +24,21 @@ function readAxiosStatus(error: unknown): number | undefined {
 /**
  * Converte erros Axios/Laravel em mensagem legível para o usuário.
  */
-export function parseApiError(error: unknown, fallback = 'Ocorreu um erro. Tente novamente.'): string {
+export function parseApiError(error: unknown, fallback?: string): string {
+  const defaultFallback = fallback ?? i18n.t('errors.api.fallback')
   const status = readAxiosStatus(error)
   const payload = readAxiosPayload(error)
 
   if (status === 419) {
-    return 'Sessao expirada. Tente novamente.'
+    return i18n.t('errors.api.sessionExpired')
   }
 
   if (status === 403) {
-    return payload?.message ?? 'Voce nao tem permissao para esta acao.'
+    return payload?.message ?? i18n.t('errors.api.forbidden')
   }
 
   if (status === 404) {
-    return payload?.message ?? 'Recurso nao encontrado.'
+    return payload?.message ?? i18n.t('errors.api.notFound')
   }
 
   if (status === 422 && payload?.errors) {
@@ -52,13 +55,13 @@ export function parseApiError(error: unknown, fallback = 'Ocorreu um erro. Tente
   if (typeof error === 'object' && error !== null && 'message' in error) {
     const message = (error as { message?: string }).message
     if (message === 'Network Error') {
-      return 'Nao foi possivel conectar ao servidor. Verifique se o backend esta rodando.'
+      return i18n.t('errors.api.networkError')
     }
   }
 
   if (status && status >= 500) {
-    return 'Erro interno do servidor. Tente novamente em instantes.'
+    return i18n.t('errors.api.serverError')
   }
 
-  return fallback
+  return defaultFallback
 }

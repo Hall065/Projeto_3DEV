@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../../services/api'
 import { CustomReportBuilder } from '../../components/reports/CustomReportBuilder'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { parseApiError } from '../../utils/parseApiError'
 import { downloadCsv, printHtmlDocument } from '../../utils/downloadFile'
 import {
@@ -25,6 +26,7 @@ type ConnectSummary = {
 
 function ConnectReportsSummary() {
   const { t, i18n } = useTranslation()
+  const crudToast = useCrudToast()
   const [data, setData] = useState<ConnectSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -75,7 +77,7 @@ function ConnectReportsSummary() {
       anchor.click()
       URL.revokeObjectURL(url)
     } catch (err) {
-      window.alert(parseApiError(err, t('connect.reports.summary.exportXlsxError')))
+      crudToast.notifyError(err, t('connect.reports.summary.exportXlsxError'))
     } finally {
       setExportingXlsx(false)
     }

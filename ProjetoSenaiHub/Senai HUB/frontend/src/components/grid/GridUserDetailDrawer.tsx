@@ -1,17 +1,19 @@
 import { ClipboardList, Ticket, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../connect/ConnectDrawer'
 import { ConnectDrawerHeroCard } from '../connect/ConnectDrawerHeroCard'
 import { ConnectLoadingSpinner, StatusBadge } from '../connect/ConnectShared'
 import { UserAvatar } from '../ui/UserAvatar'
 import { gridService } from '../../services/gridService'
 import type { GridUserDetail } from '../../types/grid'
-import { parseApiError } from '../../utils/parseApiError'
 
-function formatDateTime(value?: string | null) {
+import { intlLocale, normalizeLocale } from '../../i18n'
+
+function formatDateTime(value: string | undefined | null, locale: string) {
   if (!value) return '—'
   try {
-    return new Date(value).toLocaleString('pt-BR')
+    return new Date(value).toLocaleString(locale)
   } catch {
     return value
   }
@@ -51,6 +53,8 @@ export function GridUserDetailDrawer({
   open: boolean
   onClose: () => void
 }) {
+  const { t, i18n } = useTranslation()
+  const locale = intlLocale(normalizeLocale(i18n.language))
   const [tab, setTab] = useState<'overview' | 'activity'>('overview')
   const [detail, setDetail] = useState<GridUserDetail | null>(null)
   const [loading, setLoading] = useState(false)
@@ -70,7 +74,7 @@ export function GridUserDetailDrawer({
     gridService
       .getUser(userId)
       .then(setDetail)
-      .catch((err) => setError(parseApiError(err, 'Nao foi possivel carregar os detalhes do usuario.')))
+      .catch(() => setError(t('gridComponents.shared.loadUserError')))
       .finally(() => setLoading(false))
   }, [open, userId])
 
@@ -78,12 +82,12 @@ export function GridUserDetailDrawer({
     <ConnectDrawer
       open={open}
       onClose={onClose}
-      title={detail?.name ?? 'Usuário'}
-      subtitle={detail?.role ?? 'Carregando...'}
+      title={detail?.name ?? t('common.user')}
+      subtitle={detail?.role ?? t('common.loading')}
       width="2xl"
     >
       {loading ? (
-        <ConnectLoadingSpinner label="Carregando usuário..." className="min-h-[320px]" />
+        <ConnectLoadingSpinner label={t('gridComponents.shared.loadingUser')} className="min-h-[320px]" />
       ) : error ? (
         <p className="py-12 text-center text-sm text-red-600">{error}</p>
       ) : detail ? (
@@ -112,7 +116,7 @@ export function GridUserDetailDrawer({
                 tab === 'overview' ? 'border-hub-red text-hub-red' : 'border-transparent text-hub-text-muted hover:text-hub-navy'
               }`}
             >
-              Visão geral
+              {t('gridComponents.shared.overview')}
             </button>
             <button
               type="button"
@@ -121,36 +125,38 @@ export function GridUserDetailDrawer({
                 tab === 'activity' ? 'border-hub-red text-hub-red' : 'border-transparent text-hub-text-muted hover:text-hub-navy'
               }`}
             >
-              Atividade ({detail.activity?.length ?? 0})
+              {t('gridComponents.shared.activity', { count: detail.activity?.length ?? 0 })}
             </button>
           </div>
 
           {tab === 'overview' ? (
             <>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatKpi label="Tarefas" value={detail.stats.tasks_total} />
-                <StatKpi label="Em andamento" value={detail.stats.tasks_in_progress} variant={detail.stats.tasks_in_progress > 0 ? 'warn' : undefined} />
-                <StatKpi label="Concluídas" value={detail.stats.tasks_completed} />
-                <StatKpi label="Chamados" value={detail.stats.tickets_assigned} variant="muted" />
+                <StatKpi label={t('gridComponents.shared.tasks')} value={detail.stats.tasks_total} />
+                <StatKpi
+                  label={t('gridComponents.shared.inProgress')}
+                  value={detail.stats.tasks_in_progress}
+                  variant={detail.stats.tasks_in_progress > 0 ? 'warn' : undefined}
+                />
+                <StatKpi label={t('gridComponents.shared.completed')} value={detail.stats.tasks_completed} />
+                <StatKpi label={t('gridComponents.shared.tickets')} value={detail.stats.tickets_assigned} variant="muted" />
               </div>
 
               <dl className="surface-inset rounded-2xl border border-hub-border/50 px-4">
                 <DetailRow label="ID" value={detail.id} />
-                <DetailRow label="E-mail institucional" value={detail.email} />
-                <DetailRow label="Telefone" value={detail.phone || '—'} />
-                <DetailRow label="CPF" value={detail.cpf || '—'} />
-                <DetailRow label="Tipo de usuário" value={detail.role} />
-                <DetailRow label="Status" value={<StatusBadge status={detail.status} />} />
-                <DetailRow label="Cadastrado em" value={formatDateTime(detail.created_at)} />
-                <DetailRow label="Última atualização" value={formatDateTime(detail.updated_at)} />
+                <DetailRow label={t('connect.table.email')} value={detail.email} />
+                <DetailRow label={t('gridComponents.shared.phone')} value={detail.phone || '—'} />
+                <DetailRow label={t('gridComponents.shared.cpf')} value={detail.cpf || '—'} />
+                <DetailRow label={t('gridComponents.shared.userType')} value={detail.role} />
+                <DetailRow label={t('gridComponents.shared.status')} value={<StatusBadge status={detail.status} />} />
+                <DetailRow label={t('gridComponents.shared.registeredAt')} value={formatDateTime(detail.created_at, locale)} />
+                <DetailRow label={t('gridComponents.shared.lastUpdate')} value={formatDateTime(detail.updated_at, locale)} />
               </dl>
             </>
           ) : (
             <div className="rounded-2xl border border-hub-border/50">
               {(detail.activity?.length ?? 0) === 0 ? (
-                <p className="px-4 py-10 text-center text-sm text-hub-text-muted">
-                  Nenhuma tarefa ou chamado atribuído a este usuário.
-                </p>
+                <p className="px-4 py-10 text-center text-sm text-hub-text-muted">{t('gridComponents.shared.noActivity')}</p>
               ) : (
                 <ul className="divide-y divide-hub-border/40">
                   {detail.activity.map((row) => (
@@ -165,10 +171,10 @@ export function GridUserDetailDrawer({
                           {row.code} · {row.title}
                         </p>
                         <p className="text-xs text-hub-text-muted">
-                          {row.type === 'task' ? 'Tarefa' : 'Chamado'} · {row.status}
+                          {row.type === 'task' ? t('gridComponents.shared.task') : t('gridComponents.shared.ticket')} · {row.status}
                         </p>
                       </div>
-                      <span className="shrink-0 text-xs text-hub-text-muted">{formatDateTime(row.updated_at)}</span>
+                      <span className="shrink-0 text-xs text-hub-text-muted">{formatDateTime(row.updated_at, locale)}</span>
                     </li>
                   ))}
                 </ul>
@@ -178,7 +184,7 @@ export function GridUserDetailDrawer({
         </div>
       ) : (
         <p className="flex items-center justify-center gap-2 py-12 text-sm text-hub-text-muted">
-          <User className="h-5 w-5" /> Selecione um usuário
+          <User className="h-5 w-5" /> {t('gridComponents.shared.selectUser')}
         </p>
       )}
     </ConnectDrawer>

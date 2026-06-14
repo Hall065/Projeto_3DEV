@@ -1,0 +1,1331 @@
+{
+  "pt": {
+    "errors": {
+      "api": {
+        "fallback": "Ocorreu um erro. Tente novamente.",
+        "sessionExpired": "Sessão expirada. Tente novamente.",
+        "forbidden": "Você não tem permissão para esta ação.",
+        "notFound": "Recurso não encontrado.",
+        "networkError": "Não foi possível conectar ao servidor. Verifique se o backend está rodando.",
+        "serverError": "Erro interno do servidor. Tente novamente em instantes.",
+        "operationFailed": "Operação falhou."
+      }
+    },
+    "permissions": {
+      "fullAccess": "Acesso total ao sistema",
+      "modules": {
+        "connect": "Connect",
+        "grid": "Grid",
+        "hub": "Hub",
+        "system": "Sistema",
+        "other": "Outros"
+      },
+      "labels": {
+        "connect.access": "Acesso ao Connect",
+        "connect.dashboard": "Painel Connect",
+        "connect.people.manage": "Gestão de pessoas",
+        "connect.students.manage": "Gestão de alunos",
+        "connect.students.view": "Visualizar alunos",
+        "connect.teachers.manage": "Gestão de professores",
+        "connect.teachers.view": "Visualizar professores",
+        "connect.courses.view": "Visualizar cursos",
+        "connect.contracts.view": "Visualizar contratos",
+        "connect.contracts.view_own": "Contratos próprios",
+        "connect.salary.view": "Visualizar salário",
+        "connect.salary.view_own": "Salário próprio",
+        "connect.attendance.view_own": "Frequência própria",
+        "connect.classes.manage": "Gestão de turmas",
+        "connect.classes.view": "Visualizar turmas",
+        "connect.courses.manage": "Gestão de cursos",
+        "connect.contracts.manage": "Gestão de contratos",
+        "connect.attendance.view": "Visualizar frequência",
+        "connect.attendance.manage": "Registrar frequência",
+        "connect.reports.view": "Relatórios Connect",
+        "connect.spreadsheets": "Planilhas Connect",
+        "connect.location.view": "Localização no campus",
+        "grid.access": "Acesso ao Grid",
+        "grid.dashboard": "Painel Grid",
+        "grid.tickets.manage": "Gestão de chamados",
+        "grid.tickets.view": "Visualizar chamados",
+        "grid.tickets.update": "Atualizar chamados",
+        "grid.controle": "Controle de chamados",
+        "grid.tasks.map": "Mapa de tarefas",
+        "grid.tasks.manage": "Gestão de tarefas",
+        "grid.inventory.manage": "Gestão de estoque",
+        "grid.inventory.view": "Visualizar estoque",
+        "grid.users.manage": "Gestão de usuários Grid",
+        "grid.reports.view": "Relatórios Grid",
+        "grid.spreadsheets": "Planilhas Grid",
+        "hub.users.manage": "Gestão de usuários"
+      }
+    },
+    "images": {
+      "avatar": {
+        "invalidType": "Use uma imagem JPG, PNG, WebP ou GIF.",
+        "tooLarge": "A imagem deve ter no máximo 2 MB.",
+        "processFailed": "Não foi possível processar a imagem.",
+        "readFailed": "Não foi possível ler a imagem selecionada."
+      },
+      "wallpaper": {
+        "invalidType": "Use uma imagem JPG, PNG, WebP ou GIF.",
+        "tooLarge": "A imagem deve ter no máximo 5 MB.",
+        "processFailed": "Não foi possível processar a imagem.",
+        "loadFailed": "Não foi possível carregar a imagem."
+      }
+    },
+    "courseThemes": {
+      "active": "Curso ativo",
+      "inactive": "Inativo"
+    },
+    "wallpapers": {
+      "custom": {
+        "name": "Imagem personalizada",
+        "description": "Foto ou ilustração enviada por você."
+      },
+      "presets": {
+        "senai-dawn": { "name": "Amanhecer", "description": "Pêssego e azul claro — estilo vidro da referência." },
+        "senai-classic": { "name": "Clássico SENAI", "description": "Neutro com orbes navy, vermelho e azul suave." },
+        "senai-cool": { "name": "Industrial", "description": "Azuis e cinzas com destaque técnico." },
+        "senai-warm": { "name": "Energia", "description": "Vermelho SENAI, âmbar e navy suave." },
+        "senai-minimal": { "name": "Minimal", "description": "Suave, com poucos destaques de cor." },
+        "senai-sunset": { "name": "Pôr do sol", "description": "Laranja, rosa e roxo no fim do dia." },
+        "senai-lavender": { "name": "Lavanda", "description": "Roxo claro e lilás relaxante." },
+        "senai-mint": { "name": "Menta", "description": "Verde água e turquesa leve." },
+        "senai-dark-navy": { "name": "Navy noturno", "description": "Azul profundo SENAI — ideal para ambientes escuros." },
+        "senai-dark-charcoal": { "name": "Carvão", "description": "Cinza escuro neutro, baixo contraste." },
+        "senai-dark-red": { "name": "SENAI escuro", "description": "Fundo escuro com brilho vermelho institucional." },
+        "senai-midnight": { "name": "Meia-noite", "description": "Índigo e violeta profundos." },
+        "senai-forest": { "name": "Floresta", "description": "Verde escuro com reflexos sutis." },
+        "senai-ocean-deep": { "name": "Oceano profundo", "description": "Azul petróleo e ciano escuro." },
+        "senai-slate": { "name": "Ardósia", "description": "Cinza-azulado escuro uniforme." },
+        "senai-neon": { "name": "Neon técnico", "description": "Escuro com orbes coloridos mais intensos." }
+      }
+    },
+    "appearanceContext": {
+      "imageTooLarge": "Imagem grande demais para salvar neste navegador. Tente uma foto menor."
+    },
+    "connectDrawer": { "closePanel": "Fechar painel" },
+    "connectActions": { "openMenu": "Abrir menu de ações" },
+    "health": {
+      "checking": "Verificando API...",
+      "offline": "Backend offline",
+      "apiStatus": "API {{status}}"
+    },
+    "map": {
+      "schoolPlaceholder": {
+        "dev3d": "Visualização 3D em desenvolvimento",
+        "alt": "Placeholder do mapa escolar 3D",
+        "comingSoon": "Mapa 3D — Em breve",
+        "subtitle": "React Three Fiber + múltiplos andares + entidades em tempo real",
+        "activeFloor": "Andar ativo: {{name}} ({{count}} entidades mock)"
+      },
+      "viewer2d": {
+        "hint": "Mapa 2D do campus · Clique em um bloco para ver detalhes"
+      }
+    },
+    "reportPreview": { "total": "Total: {{total}}" },
+    "settingsFooter": { "back": "Voltar", "saveDefault": "Salvar" },
+    "connect": {
+      "rosterRole": { "coordinator": "Coordenador" },
+      "shared": {
+        "loadingData": "Carregando dados...",
+        "pagination": "Mostrando {{from}} a {{to}} de {{total}} registros",
+        "noAttendanceRecords": "Sem registros de frequência ainda.",
+        "present": "Presentes ({{pct}}%)",
+        "justified": "Faltas justificadas ({{pct}}%)",
+        "unjustified": "Faltas injustificadas ({{pct}}%)",
+        "noWeeklyLessons": "Nenhuma aula registrada na semana."
+      },
+      "statusBadge": {
+        "active": "Ativo",
+        "inactive": "Inativo",
+        "calculated": "Calculado",
+        "inside": "Presente",
+        "outside": "Ausente"
+      },
+      "entityView": {
+        "subtitle": "Visualização completa",
+        "loading": "Carregando detalhes...",
+        "loadError": "Não foi possível carregar os detalhes. Tente novamente.",
+        "noData": "Sem dados para exibir.",
+        "noRecords": "Nenhum registro.",
+        "viaClass": "via {{name}}",
+        "kinds": {
+          "student": "Detalhes do aluno",
+          "teacher": "Detalhes do professor",
+          "class": "Detalhes da turma",
+          "course": "Detalhes do curso",
+          "person": "Detalhes da pessoa",
+          "contract": "Detalhes do contrato",
+          "salary": "Detalhes do salário",
+          "attendance": "Detalhes da frequência",
+          "location": "Localização",
+          "grid-ticket": "Chamado",
+          "grid-user": "Usuário",
+          "grid-inventory": "Item de estoque"
+        },
+        "sections": {
+          "personalData": "Dados pessoais",
+          "currentClass": "Turma atual",
+          "activeCourses": "Cursos em andamento",
+          "completedCourses": "Cursos concluídos",
+          "contracts": "Contratos",
+          "salaryHistory": "Histórico de salários",
+          "classHistory": "Turmas (histórico)",
+          "contact": "Contato",
+          "responsibleClasses": "Turmas sob responsabilidade",
+          "globalCourses": "Cursos (vínculo global)",
+          "info": "Informações",
+          "classStudents": "Alunos da turma",
+          "courseDetails": "Detalhes do curso",
+          "courseClasses": "Turmas do curso",
+          "courseRoster": "Matrículas no curso",
+          "globalRegistration": "Cadastro global",
+          "connectStudentProfile": "Perfil Connect — Aluno",
+          "connectTeacherProfile": "Perfil Connect — Professor",
+          "linkedCourses": "Cursos vinculados",
+          "contractDetails": "Contrato",
+          "linkedStudent": "Aluno vinculado",
+          "salaryRecord": "Registro de salário",
+          "attendanceSession": "Sessão de frequência",
+          "location": "Localização",
+          "ticket": "Chamado",
+          "gridUser": "Usuário Grid",
+          "inventoryItem": "Item de estoque"
+        },
+        "fields": {
+          "cpf": "CPF",
+          "email": "E-mail",
+          "phone": "Celular",
+          "birthDate": "Nascimento",
+          "registeredAt": "Cadastro",
+          "class": "Turma",
+          "course": "Curso",
+          "shift": "Turno",
+          "teacher": "Professor",
+          "capacity": "Capacidade",
+          "startDate": "Início",
+          "endDate": "Término",
+          "enrolledStudents": "Alunos matriculados",
+          "name": "Nome",
+          "rm": "RM",
+          "area": "Área",
+          "workload": "Carga horária",
+          "classesCount": "Turmas",
+          "role": "Papel",
+          "specialty": "Especialidade",
+          "registration": "Matrícula",
+          "company": "Empresa",
+          "monthlyValue": "Valor mensal",
+          "reference": "Referência",
+          "baseSalary": "Salário base",
+          "bonuses": "Bonificações",
+          "deductions": "Descontos",
+          "netAmount": "Valor líquido",
+          "calculatedAt": "Calculado em",
+          "date": "Data",
+          "subject": "Disciplina",
+          "lessonsPerDay": "Aulas no dia",
+          "presence": "Presença",
+          "totalMarks": "Total marcações",
+          "missedLessons": "Aulas faltadas (dia)",
+          "address": "Endereço",
+          "lastUpdate": "Última atualização",
+          "code": "Código",
+          "title": "Título",
+          "requester": "Solicitante",
+          "location": "Local",
+          "priority": "Prioridade",
+          "assignee": "Responsável",
+          "openedAt": "Abertura",
+          "profile": "Perfil",
+          "category": "Categoria",
+          "qtyAvailable": "Qtd. disponível",
+          "qtyMin": "Qtd. mínima",
+          "supplier": "Fornecedor",
+          "cost": "Custo",
+          "contractType": "Tipo",
+          "student": "Aluno",
+          "netSalary": "Valor líquido",
+          "referenceMonth": "Referência"
+        },
+        "student": {
+          "subtitle": "Aluno · RM {{rm}}",
+          "noClass": "Sem turma vinculada.",
+          "noActiveCourses": "Nenhum curso ativo no cadastro global.",
+          "noCompletedCourses": "Nenhum curso concluído registrado."
+        },
+        "teacher": {
+          "defaultSpecialty": "Professor",
+          "noCourses": "Nenhum curso vinculado."
+        },
+        "class": {
+          "noCourse": "Sem curso",
+          "noTeacher": "Sem professor"
+        },
+        "course": {
+          "rosterSummary": "{{students}} aluno(s) · {{teachers}} professor(es)"
+        },
+        "person": {
+          "classLine": "{{name}} · Turma {{className}}"
+        },
+        "contract": {
+          "title": "Contrato · {{type}}"
+        },
+        "grid": {
+          "roomBlock": "{{room}} / {{block}}"
+        }
+      },
+      "students": {
+        "alert": {
+          "saveError": "Não foi possível salvar o aluno.",
+          "deleteError": "Não foi possível excluir o aluno."
+        },
+        "form": {
+          "namePlaceholder": "Ex: Maria Silva",
+          "rmPlaceholder": "Ex: RM20250130",
+          "cpfPlaceholder": "000.000.000-00",
+          "emailPlaceholder": "aluno@email.com",
+          "phonePlaceholder": "(11) 99999-9999",
+          "addressPlaceholder": "Rua, número, bairro, cidade",
+          "guardianPlaceholder": "Nome do responsável legal",
+          "notesPlaceholder": "Alergias, necessidades especiais, etc."
+        }
+      },
+      "teachers": {
+        "alert": {
+          "saveError": "Não foi possível salvar o professor.",
+          "deleteError": "Não foi possível excluir o professor."
+        },
+        "form": {
+          "namePlaceholder": "Ex: João Santos",
+          "emailPlaceholder": "professor@senai.edu.br",
+          "specialtyPlaceholder": "Ex: Automação Industrial",
+          "cpfPlaceholder": "000.000.000-00",
+          "phonePlaceholder": "(11) 99999-9999"
+        }
+      },
+      "people": {
+        "alert": {
+          "saveError": "Não foi possível salvar a pessoa."
+        },
+        "form": {
+          "namePlaceholder": "Ex: Maria Silva",
+          "emailPlaceholder": "pessoa@senai.edu.br",
+          "phonePlaceholder": "(11) 99999-9999",
+          "cpfPlaceholder": "000.000.000-00",
+          "registrationPlaceholder": "Ex: RM20250130",
+          "specialtyPlaceholder": "Ex: Automação Industrial"
+        }
+      },
+      "courses": {
+        "alert": {
+          "saveError": "Não foi possível salvar o curso."
+        },
+        "form": {
+          "namePlaceholder": "Ex: Automação Industrial",
+          "areaPlaceholder": "Ex: Indústria 4.0",
+          "workloadPlaceholder": "Ex: 120 horas",
+          "descriptionPlaceholder": "Descreva o curso, ementa e objetivos..."
+        }
+      },
+      "classes": {
+        "form": {
+          "namePlaceholder": "Ex: TURMA AUT25-02",
+          "semesterPlaceholder": "2025-1",
+          "capacityPlaceholder": "Ex: 30",
+          "descriptionPlaceholder": "Descreva a turma, objetivos e observações...",
+          "periodHint": "Turmas devem ficar dentro deste período"
+        }
+      }
+    },
+    "connectComponents": {
+      "charts": {
+        "noAttendanceRecords": "Sem registros de frequência ainda.",
+        "present": "Presentes",
+        "presentShort": "Presentes",
+        "presentHint": "Alunos com registro de presença no período.",
+        "justified": "Faltas justificadas",
+        "justifiedShort": "Faltas justif.",
+        "justifiedHint": "Ausências com justificativa aceita.",
+        "unjustified": "Faltas injustificadas",
+        "unjustifiedShort": "Faltas injustif.",
+        "unjustifiedHint": "Ausências sem justificativa ou pendentes.",
+        "generalPresence": "Presença geral",
+        "recordsInPeriod": "{{count}} registros no período",
+        "calculatingAttendance": "Calculando frequência...",
+        "attendanceDistributionAria": "Distribuição de frequência: {{rate}}% de presença",
+        "loadingWeeklySessions": "Buscando aulas da semana...",
+        "sessionsTooltip": "{{name}}: {{count}} aulas",
+        "distributingStudents": "Distribuindo alunos por curso...",
+        "noStudentsInCourses": "Nenhum aluno matriculado em cursos ativos."
+      }
+    },
+    "grid": {
+      "ticketControlPanel": {
+        "stages": {
+          "aberto": "Aberto",
+          "pendente": "Pendente",
+          "em_atendimento": "Em atendimento",
+          "aguardando_aprovacao": "Aguardando aprovação",
+          "avaliacao": "Avaliação",
+          "aprovacao": "Aprovação"
+        }
+      },
+      "inventory": {
+        "categories": {
+          "informatica": "Informática",
+          "eletrica": "Elétrica",
+          "climatizacao": "Climatização",
+          "hidraulica": "Hidráulica"
+        }
+      },
+      "users": {
+        "roles": {
+          "administrator": "Administrador"
+        }
+      }
+    },
+    "safe": {
+      "approvals": {
+        "approvedSuccess": "Solicitação aprovada.",
+        "denyConfirm": "Negar esta solicitação?",
+        "deniedSuccess": "Solicitação negada.",
+        "approve": "Aprovar",
+        "deny": "Negar"
+      },
+      "portaria": {
+        "confirmedSuccess": "Autorização confirmada.",
+        "denyConfirm": "Recusar esta autorização na portaria?",
+        "deniedSuccess": "Autorização recusada.",
+        "confirm": "Confirmar",
+        "deny": "Recusar"
+      },
+      "authorizations": {
+        "drawerTitle": "Nova autorização",
+        "submitting": "Enviando...",
+        "createSubmit": "Criar solicitação",
+        "form": {
+          "registeredStudent": "Aluno cadastrado",
+          "manualEntry": "Informar manualmente",
+          "studentName": "Nome do aluno",
+          "className": "Turma",
+          "typeEntry": "Entrada",
+          "typeExit": "Saída",
+          "date": "Data",
+          "time": "Horário",
+          "absences": "Faltas (saída)"
+        }
+      },
+      "students": {
+        "form": {
+          "registration": "Matrícula",
+          "name": "Nome",
+          "class": "Turma"
+        },
+        "table": {
+          "registration": "Matrícula",
+          "name": "Nome",
+          "class": "Turma"
+        }
+      }
+    },
+    "common": {
+      "loading": "Carregando...",
+      "cancel": "Cancelar",
+      "save": "Salvar",
+      "back": "Voltar",
+      "error": "Ocorreu um erro. Tente novamente."
+    },
+    "header": {
+      "expandMenu": "Expandir menu",
+      "collapseMenu": "Recolher menu"
+    }
+  },
+  "en": {
+    "errors": {
+      "api": {
+        "fallback": "An error occurred. Please try again.",
+        "sessionExpired": "Session expired. Please try again.",
+        "forbidden": "You do not have permission for this action.",
+        "notFound": "Resource not found.",
+        "networkError": "Could not connect to the server. Check if the backend is running.",
+        "serverError": "Internal server error. Please try again shortly.",
+        "operationFailed": "Operation failed."
+      }
+    },
+    "permissions": {
+      "fullAccess": "Full system access",
+      "modules": {
+        "connect": "Connect",
+        "grid": "Grid",
+        "hub": "Hub",
+        "system": "System",
+        "other": "Other"
+      },
+      "labels": {
+        "connect.access": "Connect access",
+        "connect.dashboard": "Connect dashboard",
+        "connect.people.manage": "People management",
+        "connect.students.manage": "Student management",
+        "connect.students.view": "View students",
+        "connect.teachers.manage": "Teacher management",
+        "connect.teachers.view": "View teachers",
+        "connect.courses.view": "View courses",
+        "connect.contracts.view": "View contracts",
+        "connect.contracts.view_own": "Own contracts",
+        "connect.salary.view": "View salary",
+        "connect.salary.view_own": "Own salary",
+        "connect.attendance.view_own": "Own attendance",
+        "connect.classes.manage": "Class management",
+        "connect.classes.view": "View classes",
+        "connect.courses.manage": "Course management",
+        "connect.contracts.manage": "Contract management",
+        "connect.attendance.view": "View attendance",
+        "connect.attendance.manage": "Record attendance",
+        "connect.reports.view": "Connect reports",
+        "connect.spreadsheets": "Connect spreadsheets",
+        "connect.location.view": "Campus location",
+        "grid.access": "Grid access",
+        "grid.dashboard": "Grid dashboard",
+        "grid.tickets.manage": "Ticket management",
+        "grid.tickets.view": "View tickets",
+        "grid.tickets.update": "Update tickets",
+        "grid.controle": "Ticket control",
+        "grid.tasks.map": "Task map",
+        "grid.tasks.manage": "Task management",
+        "grid.inventory.manage": "Inventory management",
+        "grid.inventory.view": "View inventory",
+        "grid.users.manage": "Grid user management",
+        "grid.reports.view": "Grid reports",
+        "grid.spreadsheets": "Grid spreadsheets",
+        "hub.users.manage": "User management"
+      }
+    },
+    "images": {
+      "avatar": {
+        "invalidType": "Use a JPG, PNG, WebP or GIF image.",
+        "tooLarge": "The image must be at most 2 MB.",
+        "processFailed": "Could not process the image.",
+        "readFailed": "Could not read the selected image."
+      },
+      "wallpaper": {
+        "invalidType": "Use a JPG, PNG, WebP or GIF image.",
+        "tooLarge": "The image must be at most 5 MB.",
+        "processFailed": "Could not process the image.",
+        "loadFailed": "Could not load the image."
+      }
+    },
+    "courseThemes": {
+      "active": "Active course",
+      "inactive": "Inactive"
+    },
+    "wallpapers": {
+      "custom": {
+        "name": "Custom image",
+        "description": "Photo or illustration uploaded by you."
+      },
+      "presets": {
+        "senai-dawn": { "name": "Dawn", "description": "Peach and light blue — glass-style reference." },
+        "senai-classic": { "name": "SENAI Classic", "description": "Neutral with navy, red and soft blue orbs." },
+        "senai-cool": { "name": "Industrial", "description": "Blues and grays with technical accent." },
+        "senai-warm": { "name": "Energy", "description": "SENAI red, amber and soft navy." },
+        "senai-minimal": { "name": "Minimal", "description": "Soft, with few color highlights." },
+        "senai-sunset": { "name": "Sunset", "description": "Orange, pink and purple at day's end." },
+        "senai-lavender": { "name": "Lavender", "description": "Light purple and relaxing lilac." },
+        "senai-mint": { "name": "Mint", "description": "Aqua green and light turquoise." },
+        "senai-dark-navy": { "name": "Night navy", "description": "Deep SENAI blue — ideal for dark environments." },
+        "senai-dark-charcoal": { "name": "Charcoal", "description": "Neutral dark gray, low contrast." },
+        "senai-dark-red": { "name": "SENAI dark", "description": "Dark background with institutional red glow." },
+        "senai-midnight": { "name": "Midnight", "description": "Deep indigo and violet." },
+        "senai-forest": { "name": "Forest", "description": "Dark green with subtle reflections." },
+        "senai-ocean-deep": { "name": "Deep ocean", "description": "Petrol blue and dark cyan." },
+        "senai-slate": { "name": "Slate", "description": "Uniform dark blue-gray." },
+        "senai-neon": { "name": "Technical neon", "description": "Dark with more intense colored orbs." }
+      }
+    },
+    "appearanceContext": {
+      "imageTooLarge": "Image too large to save in this browser. Try a smaller photo."
+    },
+    "connectDrawer": { "closePanel": "Close panel" },
+    "connectActions": { "openMenu": "Open actions menu" },
+    "health": {
+      "checking": "Checking API...",
+      "offline": "Backend offline",
+      "apiStatus": "API {{status}}"
+    },
+    "map": {
+      "schoolPlaceholder": {
+        "dev3d": "3D visualization in development",
+        "alt": "3D school map placeholder",
+        "comingSoon": "3D Map — Coming soon",
+        "subtitle": "React Three Fiber + multiple floors + real-time entities",
+        "activeFloor": "Active floor: {{name}} ({{count}} mock entities)"
+      },
+      "viewer2d": {
+        "hint": "2D campus map · Click a block for details"
+      }
+    },
+    "reportPreview": { "total": "Total: {{total}}" },
+    "settingsFooter": { "back": "Back", "saveDefault": "Save" },
+    "connect": {
+      "rosterRole": { "coordinator": "Coordinator" },
+      "shared": {
+        "loadingData": "Loading data...",
+        "pagination": "Showing {{from}} to {{to}} of {{total}} records",
+        "noAttendanceRecords": "No attendance records yet.",
+        "present": "Present ({{pct}}%)",
+        "justified": "Justified absences ({{pct}}%)",
+        "unjustified": "Unjustified absences ({{pct}}%)",
+        "noWeeklyLessons": "No lessons recorded this week."
+      },
+      "statusBadge": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "calculated": "Calculated",
+        "inside": "Present",
+        "outside": "Absent"
+      },
+      "entityView": {
+        "subtitle": "Full view",
+        "loading": "Loading details...",
+        "loadError": "Could not load details. Please try again.",
+        "noData": "No data to display.",
+        "noRecords": "No records.",
+        "viaClass": "via {{name}}",
+        "kinds": {
+          "student": "Student details",
+          "teacher": "Teacher details",
+          "class": "Class details",
+          "course": "Course details",
+          "person": "Person details",
+          "contract": "Contract details",
+          "salary": "Salary details",
+          "attendance": "Attendance details",
+          "location": "Location",
+          "grid-ticket": "Ticket",
+          "grid-user": "User",
+          "grid-inventory": "Inventory item"
+        },
+        "sections": {
+          "personalData": "Personal data",
+          "currentClass": "Current class",
+          "activeCourses": "Active courses",
+          "completedCourses": "Completed courses",
+          "contracts": "Contracts",
+          "salaryHistory": "Salary history",
+          "classHistory": "Classes (history)",
+          "contact": "Contact",
+          "responsibleClasses": "Classes under responsibility",
+          "globalCourses": "Courses (global link)",
+          "info": "Information",
+          "classStudents": "Class students",
+          "courseDetails": "Course details",
+          "courseClasses": "Course classes",
+          "courseRoster": "Course enrollments",
+          "globalRegistration": "Global registration",
+          "connectStudentProfile": "Connect profile — Student",
+          "connectTeacherProfile": "Connect profile — Teacher",
+          "linkedCourses": "Linked courses",
+          "contractDetails": "Contract",
+          "linkedStudent": "Linked student",
+          "salaryRecord": "Salary record",
+          "attendanceSession": "Attendance session",
+          "location": "Location",
+          "ticket": "Ticket",
+          "gridUser": "Grid user",
+          "inventoryItem": "Inventory item"
+        },
+        "fields": {
+          "cpf": "CPF",
+          "email": "Email",
+          "phone": "Phone",
+          "birthDate": "Birth date",
+          "registeredAt": "Registered",
+          "class": "Class",
+          "course": "Course",
+          "shift": "Shift",
+          "teacher": "Teacher",
+          "capacity": "Capacity",
+          "startDate": "Start",
+          "endDate": "End",
+          "enrolledStudents": "Enrolled students",
+          "name": "Name",
+          "rm": "ID",
+          "area": "Area",
+          "workload": "Workload",
+          "classesCount": "Classes",
+          "role": "Role",
+          "specialty": "Specialty",
+          "registration": "Registration",
+          "company": "Company",
+          "monthlyValue": "Monthly value",
+          "reference": "Reference",
+          "baseSalary": "Base salary",
+          "bonuses": "Bonuses",
+          "deductions": "Deductions",
+          "netAmount": "Net amount",
+          "calculatedAt": "Calculated at",
+          "date": "Date",
+          "subject": "Subject",
+          "lessonsPerDay": "Lessons per day",
+          "presence": "Presence",
+          "totalMarks": "Total marks",
+          "missedLessons": "Missed lessons (day)",
+          "address": "Address",
+          "lastUpdate": "Last update",
+          "code": "Code",
+          "title": "Title",
+          "requester": "Requester",
+          "location": "Location",
+          "priority": "Priority",
+          "assignee": "Assignee",
+          "openedAt": "Opened",
+          "profile": "Profile",
+          "category": "Category",
+          "qtyAvailable": "Qty. available",
+          "qtyMin": "Min. qty.",
+          "supplier": "Supplier",
+          "cost": "Cost",
+          "contractType": "Type",
+          "student": "Student",
+          "netSalary": "Net amount",
+          "referenceMonth": "Reference"
+        },
+        "student": {
+          "subtitle": "Student · ID {{rm}}",
+          "noClass": "No linked class.",
+          "noActiveCourses": "No active courses in global registry.",
+          "noCompletedCourses": "No completed courses recorded."
+        },
+        "teacher": {
+          "defaultSpecialty": "Teacher",
+          "noCourses": "No linked courses."
+        },
+        "class": {
+          "noCourse": "No course",
+          "noTeacher": "No teacher"
+        },
+        "course": {
+          "rosterSummary": "{{students}} student(s) · {{teachers}} teacher(s)"
+        },
+        "person": {
+          "classLine": "{{name}} · Class {{className}}"
+        },
+        "contract": {
+          "title": "Contract · {{type}}"
+        },
+        "grid": {
+          "roomBlock": "{{room}} / {{block}}"
+        }
+      },
+      "students": {
+        "alert": {
+          "saveError": "Could not save the student.",
+          "deleteError": "Could not delete the student."
+        },
+        "form": {
+          "namePlaceholder": "E.g. Maria Silva",
+          "rmPlaceholder": "E.g. RM20250130",
+          "cpfPlaceholder": "000.000.000-00",
+          "emailPlaceholder": "student@email.com",
+          "phonePlaceholder": "(11) 99999-9999",
+          "addressPlaceholder": "Street, number, neighborhood, city",
+          "guardianPlaceholder": "Legal guardian name",
+          "notesPlaceholder": "Allergies, special needs, etc."
+        }
+      },
+      "teachers": {
+        "alert": {
+          "saveError": "Could not save the teacher.",
+          "deleteError": "Could not delete the teacher."
+        },
+        "form": {
+          "namePlaceholder": "E.g. João Santos",
+          "emailPlaceholder": "teacher@senai.edu.br",
+          "specialtyPlaceholder": "E.g. Industrial Automation",
+          "cpfPlaceholder": "000.000.000-00",
+          "phonePlaceholder": "(11) 99999-9999"
+        }
+      },
+      "people": {
+        "alert": {
+          "saveError": "Could not save the person."
+        },
+        "form": {
+          "namePlaceholder": "E.g. Maria Silva",
+          "emailPlaceholder": "person@senai.edu.br",
+          "phonePlaceholder": "(11) 99999-9999",
+          "cpfPlaceholder": "000.000.000-00",
+          "registrationPlaceholder": "E.g. RM20250130",
+          "specialtyPlaceholder": "E.g. Industrial Automation"
+        }
+      },
+      "courses": {
+        "alert": {
+          "saveError": "Could not save the course."
+        },
+        "form": {
+          "namePlaceholder": "E.g. Industrial Automation",
+          "areaPlaceholder": "E.g. Industry 4.0",
+          "workloadPlaceholder": "E.g. 120 hours",
+          "descriptionPlaceholder": "Describe the course, syllabus and objectives..."
+        }
+      },
+      "classes": {
+        "form": {
+          "namePlaceholder": "E.g. CLASS AUT25-02",
+          "semesterPlaceholder": "2025-1",
+          "capacityPlaceholder": "E.g. 30",
+          "descriptionPlaceholder": "Describe the class, goals and notes...",
+          "periodHint": "Classes must fall within this period"
+        }
+      }
+    },
+    "connectComponents": {
+      "charts": {
+        "noAttendanceRecords": "No attendance records yet.",
+        "present": "Present",
+        "presentShort": "Present",
+        "presentHint": "Students with attendance records in the period.",
+        "justified": "Justified absences",
+        "justifiedShort": "Justif. abs.",
+        "justifiedHint": "Absences with accepted justification.",
+        "unjustified": "Unjustified absences",
+        "unjustifiedShort": "Unjustif. abs.",
+        "unjustifiedHint": "Absences without justification or pending.",
+        "generalPresence": "Overall presence",
+        "recordsInPeriod": "{{count}} records in period",
+        "calculatingAttendance": "Calculating attendance...",
+        "attendanceDistributionAria": "Attendance distribution: {{rate}}% presence",
+        "loadingWeeklySessions": "Loading weekly lessons...",
+        "sessionsTooltip": "{{name}}: {{count}} lessons",
+        "distributingStudents": "Distributing students by course...",
+        "noStudentsInCourses": "No students enrolled in active courses."
+      }
+    },
+    "grid": {
+      "ticketControlPanel": {
+        "stages": {
+          "aberto": "Open",
+          "pendente": "Pending",
+          "em_atendimento": "In service",
+          "aguardando_aprovacao": "Awaiting approval",
+          "avaliacao": "Evaluation",
+          "aprovacao": "Approval"
+        }
+      },
+      "inventory": {
+        "categories": {
+          "informatica": "IT",
+          "eletrica": "Electrical",
+          "climatizacao": "HVAC",
+          "hidraulica": "Plumbing"
+        }
+      },
+      "users": {
+        "roles": {
+          "administrator": "Administrator"
+        }
+      }
+    },
+    "safe": {
+      "approvals": {
+        "approvedSuccess": "Request approved.",
+        "denyConfirm": "Deny this request?",
+        "deniedSuccess": "Request denied.",
+        "approve": "Approve",
+        "deny": "Deny"
+      },
+      "portaria": {
+        "confirmedSuccess": "Authorization confirmed.",
+        "denyConfirm": "Refuse this authorization at reception?",
+        "deniedSuccess": "Authorization refused.",
+        "confirm": "Confirm",
+        "deny": "Refuse"
+      },
+      "authorizations": {
+        "drawerTitle": "New authorization",
+        "submitting": "Submitting...",
+        "createSubmit": "Create request",
+        "form": {
+          "registeredStudent": "Registered student",
+          "manualEntry": "Enter manually",
+          "studentName": "Student name",
+          "className": "Class",
+          "typeEntry": "Entry",
+          "typeExit": "Exit",
+          "date": "Date",
+          "time": "Time",
+          "absences": "Absences (exit)"
+        }
+      },
+      "students": {
+        "form": {
+          "registration": "Registration",
+          "name": "Name",
+          "class": "Class"
+        },
+        "table": {
+          "registration": "Registration",
+          "name": "Name",
+          "class": "Class"
+        }
+      }
+    },
+    "common": {
+      "loading": "Loading...",
+      "cancel": "Cancel",
+      "save": "Save",
+      "back": "Back",
+      "error": "An error occurred. Please try again."
+    },
+    "header": {
+      "expandMenu": "Expand menu",
+      "collapseMenu": "Collapse menu"
+    }
+  },
+  "es": {
+    "errors": {
+      "api": {
+        "fallback": "Ocurrió un error. Inténtelo de nuevo.",
+        "sessionExpired": "Sesión expirada. Inténtelo de nuevo.",
+        "forbidden": "No tiene permiso para esta acción.",
+        "notFound": "Recurso no encontrado.",
+        "networkError": "No fue posible conectar al servidor. Verifique si el backend está en ejecución.",
+        "serverError": "Error interno del servidor. Inténtelo de nuevo en unos instantes.",
+        "operationFailed": "Operación fallida."
+      }
+    },
+    "permissions": {
+      "fullAccess": "Acceso total al sistema",
+      "modules": {
+        "connect": "Connect",
+        "grid": "Grid",
+        "hub": "Hub",
+        "system": "Sistema",
+        "other": "Otros"
+      },
+      "labels": {
+        "connect.access": "Acceso a Connect",
+        "connect.dashboard": "Panel Connect",
+        "connect.people.manage": "Gestión de personas",
+        "connect.students.manage": "Gestión de alumnos",
+        "connect.students.view": "Ver alumnos",
+        "connect.teachers.manage": "Gestión de profesores",
+        "connect.teachers.view": "Ver profesores",
+        "connect.courses.view": "Ver cursos",
+        "connect.contracts.view": "Ver contratos",
+        "connect.contracts.view_own": "Contratos propios",
+        "connect.salary.view": "Ver salario",
+        "connect.salary.view_own": "Salario propio",
+        "connect.attendance.view_own": "Frecuencia propia",
+        "connect.classes.manage": "Gestión de clases",
+        "connect.classes.view": "Ver clases",
+        "connect.courses.manage": "Gestión de cursos",
+        "connect.contracts.manage": "Gestión de contratos",
+        "connect.attendance.view": "Ver frecuencia",
+        "connect.attendance.manage": "Registrar frecuencia",
+        "connect.reports.view": "Informes Connect",
+        "connect.spreadsheets": "Hojas Connect",
+        "connect.location.view": "Ubicación en el campus",
+        "grid.access": "Acceso a Grid",
+        "grid.dashboard": "Panel Grid",
+        "grid.tickets.manage": "Gestión de tickets",
+        "grid.tickets.view": "Ver tickets",
+        "grid.tickets.update": "Actualizar tickets",
+        "grid.controle": "Control de tickets",
+        "grid.tasks.map": "Mapa de tareas",
+        "grid.tasks.manage": "Gestión de tareas",
+        "grid.inventory.manage": "Gestión de inventario",
+        "grid.inventory.view": "Ver inventario",
+        "grid.users.manage": "Gestión de usuarios Grid",
+        "grid.reports.view": "Informes Grid",
+        "grid.spreadsheets": "Hojas Grid",
+        "hub.users.manage": "Gestión de usuarios"
+      }
+    },
+    "images": {
+      "avatar": {
+        "invalidType": "Use una imagen JPG, PNG, WebP o GIF.",
+        "tooLarge": "La imagen debe tener como máximo 2 MB.",
+        "processFailed": "No fue posible procesar la imagen.",
+        "readFailed": "No fue posible leer la imagen seleccionada."
+      },
+      "wallpaper": {
+        "invalidType": "Use una imagen JPG, PNG, WebP o GIF.",
+        "tooLarge": "La imagen debe tener como máximo 5 MB.",
+        "processFailed": "No fue posible procesar la imagen.",
+        "loadFailed": "No fue posible cargar la imagen."
+      }
+    },
+    "courseThemes": {
+      "active": "Curso activo",
+      "inactive": "Inactivo"
+    },
+    "wallpapers": {
+      "custom": {
+        "name": "Imagen personalizada",
+        "description": "Foto o ilustración enviada por usted."
+      },
+      "presets": {
+        "senai-dawn": { "name": "Amanecer", "description": "Durazno y azul claro — estilo vidrio de referencia." },
+        "senai-classic": { "name": "Clásico SENAI", "description": "Neutro con orbes navy, rojo y azul suave." },
+        "senai-cool": { "name": "Industrial", "description": "Azules y grises con acento técnico." },
+        "senai-warm": { "name": "Energía", "description": "Rojo SENAI, ámbar y navy suave." },
+        "senai-minimal": { "name": "Minimal", "description": "Suave, con pocos destaques de color." },
+        "senai-sunset": { "name": "Atardecer", "description": "Naranja, rosa y púrpura al final del día." },
+        "senai-lavender": { "name": "Lavanda", "description": "Púrpura claro y lila relajante." },
+        "senai-mint": { "name": "Menta", "description": "Verde agua y turquesa ligero." },
+        "senai-dark-navy": { "name": "Navy nocturno", "description": "Azul profundo SENAI — ideal para ambientes oscuros." },
+        "senai-dark-charcoal": { "name": "Carbón", "description": "Gris oscuro neutro, bajo contraste." },
+        "senai-dark-red": { "name": "SENAI oscuro", "description": "Fondo oscuro con brillo rojo institucional." },
+        "senai-midnight": { "name": "Medianoche", "description": "Índigo y violeta profundos." },
+        "senai-forest": { "name": "Bosque", "description": "Verde oscuro con reflejos sutiles." },
+        "senai-ocean-deep": { "name": "Océano profundo", "description": "Azul petróleo y cian oscuro." },
+        "senai-slate": { "name": "Pizarra", "description": "Gris azulado oscuro uniforme." },
+        "senai-neon": { "name": "Neón técnico", "description": "Oscuro con orbes de colores más intensos." }
+      }
+    },
+    "appearanceContext": {
+      "imageTooLarge": "Imagen demasiado grande para guardar en este navegador. Pruebe una foto más pequeña."
+    },
+    "connectDrawer": { "closePanel": "Cerrar panel" },
+    "connectActions": { "openMenu": "Abrir menú de acciones" },
+    "health": {
+      "checking": "Verificando API...",
+      "offline": "Backend sin conexión",
+      "apiStatus": "API {{status}}"
+    },
+    "map": {
+      "schoolPlaceholder": {
+        "dev3d": "Visualización 3D en desarrollo",
+        "alt": "Marcador del mapa escolar 3D",
+        "comingSoon": "Mapa 3D — Próximamente",
+        "subtitle": "React Three Fiber + múltiples pisos + entidades en tiempo real",
+        "activeFloor": "Piso activo: {{name}} ({{count}} entidades simuladas)"
+      },
+      "viewer2d": {
+        "hint": "Mapa 2D del campus · Haga clic en un bloque para ver detalles"
+      }
+    },
+    "reportPreview": { "total": "Total: {{total}}" },
+    "settingsFooter": { "back": "Volver", "saveDefault": "Guardar" },
+    "connect": {
+      "rosterRole": { "coordinator": "Coordinador" },
+      "shared": {
+        "loadingData": "Cargando datos...",
+        "pagination": "Mostrando {{from}} a {{to}} de {{total}} registros",
+        "noAttendanceRecords": "Sin registros de frecuencia aún.",
+        "present": "Presentes ({{pct}}%)",
+        "justified": "Faltas justificadas ({{pct}}%)",
+        "unjustified": "Faltas injustificadas ({{pct}}%)",
+        "noWeeklyLessons": "Ninguna clase registrada en la semana."
+      },
+      "statusBadge": {
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "calculated": "Calculado",
+        "inside": "Presente",
+        "outside": "Ausente"
+      },
+      "entityView": {
+        "subtitle": "Vista completa",
+        "loading": "Cargando detalles...",
+        "loadError": "No fue posible cargar los detalles. Inténtelo de nuevo.",
+        "noData": "Sin datos para mostrar.",
+        "noRecords": "Ningún registro.",
+        "viaClass": "vía {{name}}",
+        "kinds": {
+          "student": "Detalles del alumno",
+          "teacher": "Detalles del profesor",
+          "class": "Detalles de la clase",
+          "course": "Detalles del curso",
+          "person": "Detalles de la persona",
+          "contract": "Detalles del contrato",
+          "salary": "Detalles del salario",
+          "attendance": "Detalles de frecuencia",
+          "location": "Ubicación",
+          "grid-ticket": "Ticket",
+          "grid-user": "Usuario",
+          "grid-inventory": "Artículo de inventario"
+        },
+        "sections": {
+          "personalData": "Datos personales",
+          "currentClass": "Clase actual",
+          "activeCourses": "Cursos en curso",
+          "completedCourses": "Cursos completados",
+          "contracts": "Contratos",
+          "salaryHistory": "Historial de salarios",
+          "classHistory": "Clases (historial)",
+          "contact": "Contacto",
+          "responsibleClasses": "Clases a cargo",
+          "globalCourses": "Cursos (vínculo global)",
+          "info": "Información",
+          "classStudents": "Alumnos de la clase",
+          "courseDetails": "Detalles del curso",
+          "courseClasses": "Clases del curso",
+          "courseRoster": "Matrículas del curso",
+          "globalRegistration": "Registro global",
+          "connectStudentProfile": "Perfil Connect — Alumno",
+          "connectTeacherProfile": "Perfil Connect — Profesor",
+          "linkedCourses": "Cursos vinculados",
+          "contractDetails": "Contrato",
+          "linkedStudent": "Alumno vinculado",
+          "salaryRecord": "Registro de salario",
+          "attendanceSession": "Sesión de frecuencia",
+          "location": "Ubicación",
+          "ticket": "Ticket",
+          "gridUser": "Usuario Grid",
+          "inventoryItem": "Artículo de inventario"
+        },
+        "fields": {
+          "cpf": "CPF",
+          "email": "Correo",
+          "phone": "Celular",
+          "birthDate": "Nacimiento",
+          "registeredAt": "Registro",
+          "class": "Clase",
+          "course": "Curso",
+          "shift": "Turno",
+          "teacher": "Profesor",
+          "capacity": "Capacidad",
+          "startDate": "Inicio",
+          "endDate": "Fin",
+          "enrolledStudents": "Alumnos matriculados",
+          "name": "Nombre",
+          "rm": "Matrícula",
+          "area": "Área",
+          "workload": "Carga horaria",
+          "classesCount": "Clases",
+          "role": "Rol",
+          "specialty": "Especialidad",
+          "registration": "Matrícula",
+          "company": "Empresa",
+          "monthlyValue": "Valor mensual",
+          "reference": "Referencia",
+          "baseSalary": "Salario base",
+          "bonuses": "Bonificaciones",
+          "deductions": "Descuentos",
+          "netAmount": "Valor neto",
+          "calculatedAt": "Calculado en",
+          "date": "Fecha",
+          "subject": "Asignatura",
+          "lessonsPerDay": "Clases del día",
+          "presence": "Presencia",
+          "totalMarks": "Total de marcas",
+          "missedLessons": "Clases faltadas (día)",
+          "address": "Dirección",
+          "lastUpdate": "Última actualización",
+          "code": "Código",
+          "title": "Título",
+          "requester": "Solicitante",
+          "location": "Ubicación",
+          "priority": "Prioridad",
+          "assignee": "Responsable",
+          "openedAt": "Apertura",
+          "profile": "Perfil",
+          "category": "Categoría",
+          "qtyAvailable": "Cant. disponible",
+          "qtyMin": "Cant. mínima",
+          "supplier": "Proveedor",
+          "cost": "Costo",
+          "contractType": "Tipo",
+          "student": "Alumno",
+          "netSalary": "Valor neto",
+          "referenceMonth": "Referencia"
+        },
+        "student": {
+          "subtitle": "Alumno · Matrícula {{rm}}",
+          "noClass": "Sin clase vinculada.",
+          "noActiveCourses": "Ningún curso activo en el registro global.",
+          "noCompletedCourses": "Ningún curso completado registrado."
+        },
+        "teacher": {
+          "defaultSpecialty": "Profesor",
+          "noCourses": "Ningún curso vinculado."
+        },
+        "class": {
+          "noCourse": "Sin curso",
+          "noTeacher": "Sin profesor"
+        },
+        "course": {
+          "rosterSummary": "{{students}} alumno(s) · {{teachers}} profesor(es)"
+        },
+        "person": {
+          "classLine": "{{name}} · Clase {{className}}"
+        },
+        "contract": {
+          "title": "Contrato · {{type}}"
+        },
+        "grid": {
+          "roomBlock": "{{room}} / {{block}}"
+        }
+      },
+      "students": {
+        "alert": {
+          "saveError": "No fue posible guardar el alumno.",
+          "deleteError": "No fue posible eliminar el alumno."
+        },
+        "form": {
+          "namePlaceholder": "Ej: María Silva",
+          "rmPlaceholder": "Ej: RM20250130",
+          "cpfPlaceholder": "000.000.000-00",
+          "emailPlaceholder": "alumno@email.com",
+          "phonePlaceholder": "(11) 99999-9999",
+          "addressPlaceholder": "Calle, número, barrio, ciudad",
+          "guardianPlaceholder": "Nombre del responsable legal",
+          "notesPlaceholder": "Alergias, necesidades especiales, etc."
+        }
+      },
+      "teachers": {
+        "alert": {
+          "saveError": "No fue posible guardar el profesor.",
+          "deleteError": "No fue posible eliminar el profesor."
+        },
+        "form": {
+          "namePlaceholder": "Ej: João Santos",
+          "emailPlaceholder": "profesor@senai.edu.br",
+          "specialtyPlaceholder": "Ej: Automatización Industrial",
+          "cpfPlaceholder": "000.000.000-00",
+          "phonePlaceholder": "(11) 99999-9999"
+        }
+      },
+      "people": {
+        "alert": {
+          "saveError": "No fue posible guardar la persona."
+        },
+        "form": {
+          "namePlaceholder": "Ej: María Silva",
+          "emailPlaceholder": "persona@senai.edu.br",
+          "phonePlaceholder": "(11) 99999-9999",
+          "cpfPlaceholder": "000.000.000-00",
+          "registrationPlaceholder": "Ej: RM20250130",
+          "specialtyPlaceholder": "Ej: Automatización Industrial"
+        }
+      },
+      "courses": {
+        "alert": {
+          "saveError": "No fue posible guardar el curso."
+        },
+        "form": {
+          "namePlaceholder": "Ej: Automatización Industrial",
+          "areaPlaceholder": "Ej: Industria 4.0",
+          "workloadPlaceholder": "Ej: 120 horas",
+          "descriptionPlaceholder": "Describa el curso, plan de estudios y objetivos..."
+        }
+      },
+      "classes": {
+        "form": {
+          "namePlaceholder": "Ej: CLASE AUT25-02",
+          "semesterPlaceholder": "2025-1",
+          "capacityPlaceholder": "Ej: 30",
+          "descriptionPlaceholder": "Describa la clase, objetivos y observaciones...",
+          "periodHint": "Las clases deben estar dentro de este período"
+        }
+      }
+    },
+    "connectComponents": {
+      "charts": {
+        "noAttendanceRecords": "Sin registros de frecuencia aún.",
+        "present": "Presentes",
+        "presentShort": "Presentes",
+        "presentHint": "Alumnos con registro de presencia en el período.",
+        "justified": "Faltas justificadas",
+        "justifiedShort": "Faltas justif.",
+        "justifiedHint": "Ausencias con justificación aceptada.",
+        "unjustified": "Faltas injustificadas",
+        "unjustifiedShort": "Faltas injustif.",
+        "unjustifiedHint": "Ausencias sin justificación o pendientes.",
+        "generalPresence": "Presencia general",
+        "recordsInPeriod": "{{count}} registros en el período",
+        "calculatingAttendance": "Calculando frecuencia...",
+        "attendanceDistributionAria": "Distribución de frecuencia: {{rate}}% de presencia",
+        "loadingWeeklySessions": "Cargando clases de la semana...",
+        "sessionsTooltip": "{{name}}: {{count}} clases",
+        "distributingStudents": "Distribuyendo alumnos por curso...",
+        "noStudentsInCourses": "Ningún alumno matriculado en cursos activos."
+      }
+    },
+    "grid": {
+      "ticketControlPanel": {
+        "stages": {
+          "aberto": "Abierto",
+          "pendente": "Pendiente",
+          "em_atendimento": "En atención",
+          "aguardando_aprovacao": "Esperando aprobación",
+          "avaliacao": "Evaluación",
+          "aprovacao": "Aprobación"
+        }
+      },
+      "inventory": {
+        "categories": {
+          "informatica": "Informática",
+          "eletrica": "Eléctrica",
+          "climatizacao": "Climatización",
+          "hidraulica": "Hidráulica"
+        }
+      },
+      "users": {
+        "roles": {
+          "administrator": "Administrador"
+        }
+      }
+    },
+    "safe": {
+      "approvals": {
+        "approvedSuccess": "Solicitud aprobada.",
+        "denyConfirm": "¿Negar esta solicitud?",
+        "deniedSuccess": "Solicitud negada.",
+        "approve": "Aprobar",
+        "deny": "Negar"
+      },
+      "portaria": {
+        "confirmedSuccess": "Autorización confirmada.",
+        "denyConfirm": "¿Rechazar esta autorización en portería?",
+        "deniedSuccess": "Autorización rechazada.",
+        "confirm": "Confirmar",
+        "deny": "Rechazar"
+      },
+      "authorizations": {
+        "drawerTitle": "Nueva autorización",
+        "submitting": "Enviando...",
+        "createSubmit": "Crear solicitud",
+        "form": {
+          "registeredStudent": "Alumno registrado",
+          "manualEntry": "Ingresar manualmente",
+          "studentName": "Nombre del alumno",
+          "className": "Clase",
+          "typeEntry": "Entrada",
+          "typeExit": "Salida",
+          "date": "Fecha",
+          "time": "Horario",
+          "absences": "Faltas (salida)"
+        }
+      },
+      "students": {
+        "form": {
+          "registration": "Matrícula",
+          "name": "Nombre",
+          "class": "Clase"
+        },
+        "table": {
+          "registration": "Matrícula",
+          "name": "Nombre",
+          "class": "Clase"
+        }
+      }
+    },
+    "common": {
+      "loading": "Cargando...",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "back": "Volver",
+      "error": "Ocurrió un error. Inténtelo de nuevo."
+    },
+    "header": {
+      "expandMenu": "Expandir menú",
+      "collapseMenu": "Contraer menú"
+    }
+  }
+}

@@ -30,6 +30,7 @@ class ConnectClassResource extends JsonResource
             'course' => new ConnectCourseResource($this->whenLoaded('course')),
             'teacher' => new ConnectTeacherResource($this->whenLoaded('teacher')),
             'students_count' => $this->whenCounted('students'),
+            'attendance_sessions_count' => $this->whenCounted('attendanceSessions'),
             'weekly_patterns' => ConnectClassWeeklyPatternResource::collection($this->whenLoaded('weeklyPatterns')),
             'schedule_plan' => $this->when(isset($this->schedule_plan), fn () => $this->schedule_plan),
             'created_at' => $this->created_at?->toIso8601String(),

@@ -15,7 +15,20 @@
     "notifications": "Notifications",
     "accessDenied": "Access denied",
     "notFound": "Page not found",
-    "language": "Language"
+    "language": "Language",
+    "delete": "Delete",
+    "confirmTitle": "Confirm action",
+    "confirmDeleteTitle": "Confirm deletion",
+    "confirmAction": "Confirm"
+  },
+  "toast": {
+    "created": "Created successfully.",
+    "updated": "Updated successfully.",
+    "deleted": "Deleted successfully.",
+    "saved": "Saved successfully.",
+    "imported": "Import completed.",
+    "exported": "Export completed.",
+    "error": "Could not complete the operation."
   },
   "auth": {
     "loginTitle": "Sign in to your account",
@@ -164,7 +177,16 @@
       "subtitle": "Entry and exit requests (AQV).",
       "newRequest": "New request",
       "searchPlaceholder": "Search protocol or student...",
-      "empty": "No authorizations found."
+      "empty": "No authorizations found.",
+      "filters": {
+        "status": "Status",
+        "allStatuses": "All statuses",
+        "finalizado": "Completed (archive)",
+        "negado": "Denied",
+        "pendente_aqv": "Pending AQV",
+        "aguardando_professor": "Awaiting teacher",
+        "liberado_portaria": "Released to gate"
+      }
     },
     "approvals": {
       "title": "Approvals",
@@ -416,7 +438,8 @@
         "description": "Description"
       },
       "alert": {
-        "nameRequired": "Enter the course name."
+        "nameRequired": "Enter the course name.",
+        "deleteError": "Could not delete the course."
       }
     },
     "classes": {
@@ -453,7 +476,15 @@
         "teacher": "Teacher",
         "description": "Description",
         "active": "Active",
-        "inactive": "Inactive"
+        "inactive": "Inactive",
+        "finished": "Finished (archived)"
+      },
+      "filters": {
+        "status": "Status",
+        "allStatuses": "All statuses",
+        "activeOnly": "Active only",
+        "finishedOnly": "Finished (archive)",
+        "inactiveOnly": "Inactive only"
       },
       "weekly": {
         "title": "Weekly schedule",
@@ -465,7 +496,7 @@
       "generateSchedule": "Generate calendar automatically on save",
       "alert": {
         "nameRequired": "Enter the class name.",
-        "scheduleFieldsRequired": "To generate the calendar, enter semester, start date and end date.",
+        "scheduleFieldsRequired": "To generate the calendar, enter the class start and end dates.",
         "saveError": "Could not save the class.",
         "deleteError": "Could not delete the class."
       }
@@ -821,6 +852,16 @@
       "room": "Room",
       "block": "Block"
     },
+    "kanban": {
+      "confirmMove": {
+        "title": "Confirm move",
+        "message": "Move \"{{item}}\" from {{from}} to {{to}}?",
+        "confirm": "Yes, move",
+        "assign": "Assign responsible",
+        "noAssigneeTicket": "This ticket has no assigned technician. Would you like to assign one?",
+        "noAssigneeTask": "This task has no assignee. Would you like to assign one?"
+      }
+    },
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Overview of maintenance and infrastructure management.",
@@ -1166,6 +1207,42 @@
       "defaultActor": "Grid operator",
       "alert": {
         "required": "Enter requester and title."
+      }
+    },
+    "labels": {
+      "ticketStatus": {
+        "aberto": "Open",
+        "pendente": "Pending",
+        "em_atendimento": "In service",
+        "aguardando_aprovacao": "Awaiting approval",
+        "avaliacao_pendente": "Pending evaluation",
+        "concluido": "Completed"
+      },
+      "priority": {
+        "alta": "High",
+        "media": "Medium",
+        "baixa": "Low"
+      },
+      "inventoryStatus": {
+        "disponivel": "Available",
+        "baixo": "Low stock",
+        "reservado": "Reserved"
+      }
+    },
+    "workflow": {
+      "stepHints": {
+        "aberto": "Ticket registered. Assign a technician to continue.",
+        "pendente": "Technician assigned. Start field service.",
+        "em_atendimento": "Service in progress. Complete the linked task when finished.",
+        "aguardando_aprovacao": "Awaiting maintenance supervisor validation.",
+        "avaliacao_pendente": "Awaiting requester evaluation.",
+        "concluido": "Ticket completed and archived for reference."
+      },
+      "blocked": {
+        "lockedTask": "In-service tickets only advance when the linked task is completed.",
+        "needsAssigneeStart": "Assign a technician before starting service.",
+        "needsAssigneePending": "Assign a technician to move to Pending.",
+        "useApprovalButtons": "Use the approval and evaluation buttons to advance at this stage."
       }
     }
   }

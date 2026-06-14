@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from './ConnectDrawer'
 import {
   ConnectLoadingSpinner,
@@ -14,7 +15,7 @@ import type { ConnectAttendanceSession, ConnectSalaryRecord, ConnectStudentLocat
 import type { ConnectViewKind, StudentProfileData, TeacherProfileData, ClassProfileData, CourseProfileData, PersonProfileData, ContractProfileData } from '../../types/connectView'
 import { GridTicketAttachmentsPanel } from '../grid/GridTicketAttachmentsPanel'
 import type { GridInventoryItem, GridTicket, GridUser } from '../../types/grid'
-import { hubPersonKindLabel, personDisplayName } from '../../utils/connectPerson'
+import { courseRosterRoleLabel, hubPersonKindLabel, personDisplayName } from '../../utils/connectPerson'
 import { courseStatusLabel } from '../../utils/courseThemes'
 
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -39,9 +40,9 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   )
 }
 
-function MiniTable({ headers, rows }: { headers: string[]; rows: React.ReactNode[][] }) {
+function MiniTable({ headers, rows, emptyLabel }: { headers: string[]; rows: React.ReactNode[][]; emptyLabel: string }) {
   if (rows.length === 0) {
-    return <p className="text-sm text-hub-text-muted">Nenhum registro.</p>
+    return <p className="text-sm text-hub-text-muted">{emptyLabel}</p>
   }
   return (
     <div className="overflow-x-auto">
@@ -71,7 +72,15 @@ function MiniTable({ headers, rows }: { headers: string[]; rows: React.ReactNode
   )
 }
 
-function CourseList({ items, emptyLabel }: { items: { course: { name: string; area?: string }; status?: string; via_class?: string }[]; emptyLabel: string }) {
+function CourseList({
+  items,
+  emptyLabel,
+  viaClassLabel,
+}: {
+  items: { course: { name: string; area?: string }; status?: string; via_class?: string }[]
+  emptyLabel: string
+  viaClassLabel: (name: string) => string
+}) {
   if (items.length === 0) return <p className="text-sm text-hub-text-muted">{emptyLabel}</p>
   return (
     <ul className="space-y-2">
@@ -81,7 +90,7 @@ function CourseList({ items, emptyLabel }: { items: { course: { name: string; ar
             <p className="font-medium text-hub-navy">{row.course.name}</p>
             <p className="text-xs text-hub-text-muted">
               {row.course.area ?? '—'}
-              {row.via_class ? ` · via ${row.via_class}` : ''}
+              {row.via_class ? ` · ${viaClassLabel(row.via_class)}` : ''}
             </p>
           </div>
           {row.status && <StatusBadge status={row.status} />}
@@ -92,54 +101,68 @@ function CourseList({ items, emptyLabel }: { items: { course: { name: string; ar
 }
 
 function StudentProfileView({ data }: { data: StudentProfileData }) {
+  const { t } = useTranslation()
   const s = data.student
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4">
         <UserAvatar name={s.full_name} size="md" />
         <div>
           <h3 className="text-xl font-bold text-hub-navy">{s.full_name}</h3>
-          <p className="text-sm text-hub-text-muted">Aluno · RM {s.registration_number ?? '—'}</p>
+          <p className="text-sm text-hub-text-muted">
+            {t('connect.entityView.student.subtitle', { rm: s.registration_number ?? '—' })}
+          </p>
           <div className="mt-2">
             <StatusBadge status={s.status} />
           </div>
         </div>
       </div>
 
-      <DetailSection title="Dados pessoais">
+      <DetailSection title={t('connect.entityView.sections.personalData')}>
         <DetailGrid>
-          <DetailRow label="CPF" value={s.cpf} />
-          <DetailRow label="E-mail" value={s.email} />
-          <DetailRow label="Celular" value={s.phone} />
-          <DetailRow label="Nascimento" value={formatDate(s.birth_date)} />
-          <DetailRow label="Cadastro" value={formatDateTime(s.created_at)} />
+          <DetailRow label={f('cpf')} value={s.cpf} />
+          <DetailRow label={f('email')} value={s.email} />
+          <DetailRow label={f('phone')} value={s.phone} />
+          <DetailRow label={f('birthDate')} value={formatDate(s.birth_date)} />
+          <DetailRow label={f('registeredAt')} value={formatDateTime(s.created_at)} />
         </DetailGrid>
       </DetailSection>
 
-      <DetailSection title="Turma atual">
+      <DetailSection title={t('connect.entityView.sections.currentClass')}>
         {s.class ? (
           <DetailGrid>
-            <DetailRow label="Turma" value={s.class.name} />
-            <DetailRow label="Curso" value={s.class.course?.name ?? EMPTY} />
-            <DetailRow label="Turno" value={formatShift(s.class.shift)} />
-            <DetailRow label="Professor" value={s.class.teacher?.full_name ?? EMPTY} />
+            <DetailRow label={f('class')} value={s.class.name} />
+            <DetailRow label={f('course')} value={s.class.course?.name ?? EMPTY} />
+            <DetailRow label={f('shift')} value={formatShift(s.class.shift)} />
+            <DetailRow label={f('teacher')} value={s.class.teacher?.full_name ?? EMPTY} />
           </DetailGrid>
         ) : (
-          <p className="text-sm text-hub-text-muted">Sem turma vinculada.</p>
+          <p className="text-sm text-hub-text-muted">{t('connect.entityView.student.noClass')}</p>
         )}
       </DetailSection>
 
-      <DetailSection title="Cursos em andamento">
-        <CourseList items={data.courses_active} emptyLabel="Nenhum curso ativo no cadastro global." />
+      <DetailSection title={t('connect.entityView.sections.activeCourses')}>
+        <CourseList
+          items={data.courses_active}
+          emptyLabel={t('connect.entityView.student.noActiveCourses')}
+          viaClassLabel={(name) => t('connect.entityView.viaClass', { name })}
+        />
       </DetailSection>
 
-      <DetailSection title="Cursos concluídos">
-        <CourseList items={data.courses_completed} emptyLabel="Nenhum curso concluído registrado." />
+      <DetailSection title={t('connect.entityView.sections.completedCourses')}>
+        <CourseList
+          items={data.courses_completed}
+          emptyLabel={t('connect.entityView.student.noCompletedCourses')}
+          viaClassLabel={(name) => t('connect.entityView.viaClass', { name })}
+        />
       </DetailSection>
 
-      <DetailSection title="Contratos">
+      <DetailSection title={t('connect.entityView.sections.contracts')}>
         <MiniTable
-          headers={['Tipo', 'Empresa', 'Início', 'Status']}
+          headers={[f('contractType'), f('company'), f('startDate'), t('connect.table.status')]}
+          emptyLabel={t('connect.entityView.noRecords')}
           rows={data.contracts.map((c) => [
             c.contract_type,
             c.company_name ?? EMPTY,
@@ -149,9 +172,10 @@ function StudentProfileView({ data }: { data: StudentProfileData }) {
         />
       </DetailSection>
 
-      <DetailSection title="Histórico de salários">
+      <DetailSection title={t('connect.entityView.sections.salaryHistory')}>
         <MiniTable
-          headers={['Referência', 'Base', 'Líquido', 'Status']}
+          headers={[f('referenceMonth'), f('baseSalary'), f('netSalary'), t('connect.table.status')]}
+          emptyLabel={t('connect.entityView.noRecords')}
           rows={data.salaries.map((r) => [
             r.reference_month,
             `R$ ${r.base_amount.toFixed(2)}`,
@@ -161,14 +185,15 @@ function StudentProfileView({ data }: { data: StudentProfileData }) {
         />
       </DetailSection>
 
-      <DetailSection title="Turmas (histórico)">
+      <DetailSection title={t('connect.entityView.sections.classHistory')}>
         <MiniTable
-          headers={['Turma', 'Curso', 'Alunos', 'Status']}
-          rows={data.classes.map((t) => [
-            t.name,
-            t.course?.name ?? EMPTY,
-            String(t.students_count ?? 0),
-            <StatusBadge key={t.id} status={t.status} />,
+          headers={[f('class'), f('course'), t('connect.classes.table.students'), t('connect.table.status')]}
+          emptyLabel={t('connect.entityView.noRecords')}
+          rows={data.classes.map((cls) => [
+            cls.name,
+            cls.course?.name ?? EMPTY,
+            String(cls.students_count ?? 0),
+            <StatusBadge key={cls.id} status={cls.status} />,
           ])}
         />
       </DetailSection>
@@ -177,29 +202,33 @@ function StudentProfileView({ data }: { data: StudentProfileData }) {
 }
 
 function TeacherProfileView({ data }: { data: TeacherProfileData }) {
-  const t = data.teacher
+  const { t } = useTranslation()
+  const teacher = data.teacher
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4">
-        <UserAvatar name={t.full_name} size="md" />
+        <UserAvatar name={teacher.full_name} size="md" />
         <div>
-          <h3 className="text-xl font-bold text-hub-navy">{t.full_name}</h3>
-          <p className="text-sm text-hub-text-muted">{t.specialty ?? 'Professor'}</p>
+          <h3 className="text-xl font-bold text-hub-navy">{teacher.full_name}</h3>
+          <p className="text-sm text-hub-text-muted">{teacher.specialty ?? t('connect.entityView.teacher.defaultSpecialty')}</p>
           <div className="mt-2">
-            <StatusBadge status={t.status} />
+            <StatusBadge status={teacher.status} />
           </div>
         </div>
       </div>
-      <DetailSection title="Contato">
+      <DetailSection title={t('connect.entityView.sections.contact')}>
         <DetailGrid>
-          <DetailRow label="E-mail" value={t.email} />
-          <DetailRow label="Celular" value={t.phone} />
-          <DetailRow label="CPF" value={t.cpf} />
+          <DetailRow label={f('email')} value={teacher.email} />
+          <DetailRow label={f('phone')} value={teacher.phone} />
+          <DetailRow label={f('cpf')} value={teacher.cpf} />
         </DetailGrid>
       </DetailSection>
-      <DetailSection title="Turmas sob responsabilidade">
+      <DetailSection title={t('connect.entityView.sections.responsibleClasses')}>
         <MiniTable
-          headers={['Turma', 'Curso', 'Alunos', 'Status']}
+          headers={[f('class'), f('course'), t('connect.classes.table.students'), t('connect.table.status')]}
+          emptyLabel={t('connect.entityView.noRecords')}
           rows={data.classes.map((c) => [
             c.name,
             c.course?.name ?? EMPTY,
@@ -208,10 +237,11 @@ function TeacherProfileView({ data }: { data: TeacherProfileData }) {
           ])}
         />
       </DetailSection>
-      <DetailSection title="Cursos (vínculo global)">
+      <DetailSection title={t('connect.entityView.sections.globalCourses')}>
         <CourseList
           items={data.courses.map((r) => ({ course: r.course, status: r.status }))}
-          emptyLabel="Nenhum curso vinculado."
+          emptyLabel={t('connect.entityView.teacher.noCourses')}
+          viaClassLabel={(name) => t('connect.entityView.viaClass', { name })}
         />
       </DetailSection>
     </div>
@@ -219,7 +249,10 @@ function TeacherProfileView({ data }: { data: TeacherProfileData }) {
 }
 
 function ClassProfileView({ data }: { data: ClassProfileData }) {
+  const { t } = useTranslation()
   const c = data.class
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
     <div className="space-y-5">
       <div>
@@ -229,20 +262,21 @@ function ClassProfileView({ data }: { data: ClassProfileData }) {
           <StatusBadge status={c.status} />
         </div>
       </div>
-      <DetailSection title="Informações">
+      <DetailSection title={t('connect.entityView.sections.info')}>
         <DetailGrid>
-          <DetailRow label="Curso" value={c.course?.name ?? 'Sem curso'} />
-          <DetailRow label="Professor" value={c.teacher?.full_name ?? 'Sem professor'} />
-          <DetailRow label="Turno" value={formatShift(c.shift)} />
-          <DetailRow label="Capacidade" value={c.capacity} />
-          <DetailRow label="Início" value={formatDate(c.start_date)} />
-          <DetailRow label="Término" value={formatDate(c.end_date)} />
-          <DetailRow label="Alunos matriculados" value={c.students_count ?? data.students.length} />
+          <DetailRow label={f('course')} value={c.course?.name ?? t('connect.entityView.class.noCourse')} />
+          <DetailRow label={f('teacher')} value={c.teacher?.full_name ?? t('connect.entityView.class.noTeacher')} />
+          <DetailRow label={f('shift')} value={formatShift(c.shift)} />
+          <DetailRow label={f('capacity')} value={c.capacity} />
+          <DetailRow label={f('startDate')} value={formatDate(c.start_date)} />
+          <DetailRow label={f('endDate')} value={formatDate(c.end_date)} />
+          <DetailRow label={f('enrolledStudents')} value={c.students_count ?? data.students.length} />
         </DetailGrid>
       </DetailSection>
-      <DetailSection title="Alunos da turma">
+      <DetailSection title={t('connect.entityView.sections.classStudents')}>
         <MiniTable
-          headers={['Nome', 'RM', 'Status']}
+          headers={[f('name'), f('rm'), t('connect.table.status')]}
+          emptyLabel={t('connect.entityView.noRecords')}
           rows={data.students.map((s) => [
             s.full_name,
             s.registration_number ?? EMPTY,
@@ -255,44 +289,62 @@ function ClassProfileView({ data }: { data: ClassProfileData }) {
 }
 
 function CourseProfileView({ data }: { data: CourseProfileData }) {
+  const { t } = useTranslation()
   const c = data.course
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
     <div className="space-y-5">
       <div>
         <h3 className="text-xl font-bold text-hub-navy">{c.name}</h3>
-        <p className="text-sm text-hub-text-muted">{c.code} · {courseStatusLabel(c.status)}</p>
+        <p className="text-sm text-hub-text-muted">
+          {c.code} · {courseStatusLabel(c.status)}
+        </p>
       </div>
-      <DetailSection title="Detalhes do curso">
+      <DetailSection title={t('connect.entityView.sections.courseDetails')}>
         <DetailGrid>
-          <DetailRow label="Área" value={c.area} />
-          <DetailRow label="Carga horária" value={c.workload_hours ? `${c.workload_hours}h` : EMPTY} />
-          <DetailRow label="Turmas" value={c.classes_count ?? data.classes.length} />
+          <DetailRow label={f('area')} value={c.area} />
+          <DetailRow label={f('workload')} value={c.workload_hours ? `${c.workload_hours}h` : EMPTY} />
+          <DetailRow label={f('classesCount')} value={c.classes_count ?? data.classes.length} />
         </DetailGrid>
         {c.description && <p className="mt-3 text-sm leading-relaxed text-hub-text-muted">{c.description}</p>}
       </DetailSection>
-      <DetailSection title="Turmas do curso">
+      <DetailSection title={t('connect.entityView.sections.courseClasses')}>
         <MiniTable
-          headers={['Turma', 'Professor', 'Alunos', 'Status']}
-          rows={data.classes.map((t) => [
-            t.name,
-            t.teacher?.full_name ?? EMPTY,
-            String(t.students_count ?? 0),
-            <StatusBadge key={t.id} status={t.status} />,
+          headers={[f('class'), f('teacher'), t('connect.classes.table.students'), t('connect.table.status')]}
+          emptyLabel={t('connect.entityView.noRecords')}
+          rows={data.classes.map((cls) => [
+            cls.name,
+            cls.teacher?.full_name ?? EMPTY,
+            String(cls.students_count ?? 0),
+            <StatusBadge key={cls.id} status={cls.status} />,
           ])}
         />
       </DetailSection>
-      <DetailSection title="Matrículas no curso">
+      <DetailSection title={t('connect.entityView.sections.courseRoster')}>
         <p className="mb-2 text-xs font-medium text-hub-text-muted">
-          {data.roster.students.length} aluno(s) · {data.roster.teachers.length} professor(es)
+          {t('connect.entityView.course.rosterSummary', {
+            students: data.roster.students.length,
+            teachers: data.roster.teachers.length,
+          })}
         </p>
         <MiniTable
-          headers={['Nome', 'Papel', 'Status']}
+          headers={[f('name'), f('role'), t('connect.table.status')]}
+          emptyLabel={t('connect.entityView.noRecords')}
           rows={[
-            ...data.roster.students.map((p) => [personDisplayName(p), 'Aluno', <StatusBadge key={`s-${p.id}`} status={p.status} />]),
-            ...data.roster.teachers.map((p) => [personDisplayName(p), 'Professor', <StatusBadge key={`t-${p.id}`} status={p.status} />]),
+            ...data.roster.students.map((p) => [
+              personDisplayName(p),
+              courseRosterRoleLabel('student'),
+              <StatusBadge key={`s-${p.id}`} status={p.status} />,
+            ]),
+            ...data.roster.teachers.map((p) => [
+              personDisplayName(p),
+              courseRosterRoleLabel('teacher'),
+              <StatusBadge key={`t-${p.id}`} status={p.status} />,
+            ]),
             ...data.roster.coordinators.map((p) => [
               personDisplayName(p),
-              'Coordenador',
+              courseRosterRoleLabel('coordinator'),
               <StatusBadge key={`c-${p.id}`} status={p.status} />,
             ]),
           ]}
@@ -303,7 +355,10 @@ function CourseProfileView({ data }: { data: CourseProfileData }) {
 }
 
 function PersonProfileView({ data }: { data: PersonProfileData }) {
+  const { t } = useTranslation()
   const p = data.person
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4">
@@ -316,36 +371,42 @@ function PersonProfileView({ data }: { data: PersonProfileData }) {
           </div>
         </div>
       </div>
-      <DetailSection title="Cadastro global">
+      <DetailSection title={t('connect.entityView.sections.globalRegistration')}>
         <DetailGrid>
-          <DetailRow label="E-mail" value={p.email} />
-          <DetailRow label="Celular" value={p.phone} />
-          <DetailRow label="CPF" value={p.cpf} />
-          <DetailRow label="Matrícula" value={p.registration_number} />
-          <DetailRow label="Especialidade" value={p.specialty} />
+          <DetailRow label={f('email')} value={p.email} />
+          <DetailRow label={f('phone')} value={p.phone} />
+          <DetailRow label={f('cpf')} value={p.cpf} />
+          <DetailRow label={f('registration')} value={p.registration_number} />
+          <DetailRow label={f('specialty')} value={p.specialty} />
         </DetailGrid>
       </DetailSection>
       {data.connect_student && (
-        <DetailSection title="Perfil Connect — Aluno">
+        <DetailSection title={t('connect.entityView.sections.connectStudentProfile')}>
           <p className="text-sm">
-            {data.connect_student.full_name} · Turma {data.connect_student.class?.name ?? '—'}
+            {t('connect.entityView.person.classLine', {
+              name: data.connect_student.full_name,
+              className: data.connect_student.class?.name ?? '—',
+            })}
           </p>
         </DetailSection>
       )}
       {data.connect_teacher && (
-        <DetailSection title="Perfil Connect — Professor">
-          <p className="text-sm">{data.connect_teacher.full_name} · {data.connect_teacher.specialty ?? '—'}</p>
+        <DetailSection title={t('connect.entityView.sections.connectTeacherProfile')}>
+          <p className="text-sm">
+            {data.connect_teacher.full_name} · {data.connect_teacher.specialty ?? '—'}
+          </p>
         </DetailSection>
       )}
-      <DetailSection title="Cursos vinculados">
+      <DetailSection title={t('connect.entityView.sections.linkedCourses')}>
         <MiniTable
-          headers={['Curso', 'Papel', 'Status']}
-          rows={data.courses.map((c) => {
-            const course = (c as { name?: string; pivot?: { role?: string; status?: string } })
+          headers={[f('course'), f('role'), t('connect.table.status')]}
+          emptyLabel={t('connect.entityView.noRecords')}
+          rows={data.courses.map((course) => {
+            const row = course as { name?: string; pivot?: { role?: string; status?: string } }
             return [
-              course.name ?? '—',
-              course.pivot?.role ?? '—',
-              <StatusBadge key={c.id} status={course.pivot?.status ?? p.status} />,
+              row.name ?? '—',
+              row.pivot?.role ?? '—',
+              <StatusBadge key={course.id} status={row.pivot?.status ?? p.status} />,
             ]
           })}
         />
@@ -355,28 +416,35 @@ function PersonProfileView({ data }: { data: PersonProfileData }) {
 }
 
 function ContractProfileView({ data }: { data: ContractProfileData }) {
+  const { t, i18n } = useTranslation()
   const c = data.contract
   const s = c.student
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+  const brl = new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : i18n.language === 'es' ? 'es-ES' : 'pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-xl font-bold text-hub-navy">Contrato · {c.contract_type}</h3>
+        <h3 className="text-xl font-bold text-hub-navy">{t('connect.entityView.contract.title', { type: c.contract_type })}</h3>
         <StatusBadge status={c.status} />
       </div>
-      <DetailSection title="Contrato">
+      <DetailSection title={t('connect.entityView.sections.contractDetails')}>
         <DetailGrid>
-          <DetailRow label="Empresa" value={c.company_name} />
-          <DetailRow label="Início" value={formatDate(c.start_date)} />
-          <DetailRow label="Término" value={formatDate(c.end_date)} />
-          <DetailRow label="Valor mensal" value={`R$ ${c.monthly_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
+          <DetailRow label={f('company')} value={c.company_name} />
+          <DetailRow label={f('startDate')} value={formatDate(c.start_date)} />
+          <DetailRow label={f('endDate')} value={formatDate(c.end_date)} />
+          <DetailRow label={f('monthlyValue')} value={brl.format(c.monthly_value)} />
         </DetailGrid>
       </DetailSection>
       {s && (
-        <DetailSection title="Aluno vinculado">
+        <DetailSection title={t('connect.entityView.sections.linkedStudent')}>
           <DetailGrid>
-            <DetailRow label="Nome" value={s.full_name} />
-            <DetailRow label="Turma" value={s.class?.name ?? EMPTY} />
-            <DetailRow label="Curso" value={s.class?.course?.name ?? EMPTY} />
+            <DetailRow label={f('name')} value={s.full_name} />
+            <DetailRow label={f('class')} value={s.class?.name ?? EMPTY} />
+            <DetailRow label={f('course')} value={s.class?.course?.name ?? EMPTY} />
           </DetailGrid>
         </DetailSection>
       )}
@@ -385,22 +453,28 @@ function ContractProfileView({ data }: { data: ContractProfileData }) {
 }
 
 function SalarySnapshotView({ record }: { record: ConnectSalaryRecord }) {
-  const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+  const { t, i18n } = useTranslation()
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+  const brl = new Intl.NumberFormat(i18n.language === 'en' ? 'en-US' : i18n.language === 'es' ? 'es-ES' : 'pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+
   return (
     <div className="space-y-5">
-      <DetailSection title="Registro de salario">
+      <DetailSection title={t('connect.entityView.sections.salaryRecord')}>
         <DetailGrid>
-          <DetailRow label="Aluno" value={record.student?.full_name} />
-          <DetailRow label="Matricula" value={record.student?.registration_number} />
-          <DetailRow label="Turma" value={record.student?.class?.name} />
-          <DetailRow label="Curso" value={record.student?.class?.course?.name} />
-          <DetailRow label="Referencia" value={record.reference_month} />
-          <DetailRow label="Salario base" value={brl.format(record.base_amount)} />
-          <DetailRow label="Bonificacoes" value={brl.format(record.bonuses)} />
-          <DetailRow label="Descontos" value={brl.format(record.deductions)} />
-          <DetailRow label="Valor liquido" value={brl.format(record.net_amount)} />
-          <DetailRow label="Status" value={<StatusBadge status={record.status_label ?? record.status} />} />
-          <DetailRow label="Calculado em" value={record.calculated_at ? formatDateTime(record.calculated_at) : undefined} />
+          <DetailRow label={f('student')} value={record.student?.full_name} />
+          <DetailRow label={f('registration')} value={record.student?.registration_number} />
+          <DetailRow label={f('class')} value={record.student?.class?.name} />
+          <DetailRow label={f('course')} value={record.student?.class?.course?.name} />
+          <DetailRow label={f('referenceMonth')} value={record.reference_month} />
+          <DetailRow label={f('baseSalary')} value={brl.format(record.base_amount)} />
+          <DetailRow label={f('bonuses')} value={brl.format(record.bonuses)} />
+          <DetailRow label={f('deductions')} value={brl.format(record.deductions)} />
+          <DetailRow label={f('netAmount')} value={brl.format(record.net_amount)} />
+          <DetailRow label={t('connect.table.status')} value={<StatusBadge status={record.status_label ?? record.status} />} />
+          <DetailRow label={f('calculatedAt')} value={record.calculated_at ? formatDateTime(record.calculated_at) : undefined} />
         </DetailGrid>
       </DetailSection>
     </div>
@@ -408,21 +482,24 @@ function SalarySnapshotView({ record }: { record: ConnectSalaryRecord }) {
 }
 
 function AttendanceSnapshotView({ session }: { session: ConnectAttendanceSession }) {
+  const { t } = useTranslation()
   const stats = session.stats
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
     <div className="space-y-5">
-      <DetailSection title="Sessão de frequência">
+      <DetailSection title={t('connect.entityView.sections.attendanceSession')}>
         <DetailGrid>
-          <DetailRow label="Data" value={formatDate(session.session_date)} />
-          <DetailRow label="Turma" value={session.class?.name} />
-          <DetailRow label="Disciplina" value={session.subject} />
-          <DetailRow label="Aulas no dia" value={session.lessons_count ?? stats?.lessons_count} />
-          <DetailRow label="Professor" value={session.teacher?.full_name ?? session.class?.teacher?.full_name} />
+          <DetailRow label={f('date')} value={formatDate(session.session_date)} />
+          <DetailRow label={f('class')} value={session.class?.name} />
+          <DetailRow label={f('subject')} value={session.subject} />
+          <DetailRow label={f('lessonsPerDay')} value={session.lessons_count ?? stats?.lessons_count} />
+          <DetailRow label={f('teacher')} value={session.teacher?.full_name ?? session.class?.teacher?.full_name} />
           {stats && (
             <>
-              <DetailRow label="Presença" value={`${stats.presence_rate}%`} />
-              <DetailRow label="Total marcações" value={stats.total} />
-              <DetailRow label="Aulas faltadas (dia)" value={stats.missed_lessons_total ?? 0} />
+              <DetailRow label={f('presence')} value={`${stats.presence_rate}%`} />
+              <DetailRow label={f('totalMarks')} value={stats.total} />
+              <DetailRow label={f('missedLessons')} value={stats.missed_lessons_total ?? 0} />
             </>
           )}
         </DetailGrid>
@@ -432,14 +509,17 @@ function AttendanceSnapshotView({ session }: { session: ConnectAttendanceSession
 }
 
 function LocationSnapshotView({ loc }: { loc: ConnectStudentLocation }) {
+  const { t } = useTranslation()
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
     <div className="space-y-5">
-      <DetailSection title="Localização">
+      <DetailSection title={t('connect.entityView.sections.location')}>
         <DetailGrid>
-          <DetailRow label="Aluno" value={loc.student?.full_name} />
-          <DetailRow label="Status" value={<StatusBadge status={loc.status} />} />
-          <DetailRow label="Endereço" value={loc.address} />
-          <DetailRow label="Última atualização" value={formatDateTime(loc.last_seen_at)} />
+          <DetailRow label={f('student')} value={loc.student?.full_name} />
+          <DetailRow label={t('connect.table.status')} value={<StatusBadge status={loc.status} />} />
+          <DetailRow label={f('address')} value={loc.address} />
+          <DetailRow label={f('lastUpdate')} value={formatDateTime(loc.last_seen_at)} />
         </DetailGrid>
       </DetailSection>
     </div>
@@ -447,18 +527,24 @@ function LocationSnapshotView({ loc }: { loc: ConnectStudentLocation }) {
 }
 
 function GridTicketView({ ticket }: { ticket: GridTicket }) {
+  const { t } = useTranslation()
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
     <div className="space-y-4">
-      <DetailSection title="Chamado">
+      <DetailSection title={t('connect.entityView.sections.ticket')}>
         <DetailGrid>
-          <DetailRow label="Código" value={ticket.code} />
-          <DetailRow label="Título" value={ticket.title} />
-          <DetailRow label="Solicitante" value={ticket.requester} />
-          <DetailRow label="Local" value={`${ticket.room} / ${ticket.block}`} />
-          <DetailRow label="Prioridade" value={ticket.priority} />
-          <DetailRow label="Responsável" value={ticket.assignee} />
-          <DetailRow label="Abertura" value={formatDateTime(ticket.opened_at)} />
-          <DetailRow label="Status" value={ticket.status} />
+          <DetailRow label={f('code')} value={ticket.code} />
+          <DetailRow label={f('title')} value={ticket.title} />
+          <DetailRow label={f('requester')} value={ticket.requester} />
+          <DetailRow
+            label={f('location')}
+            value={t('connect.entityView.grid.roomBlock', { room: ticket.room, block: ticket.block })}
+          />
+          <DetailRow label={f('priority')} value={ticket.priority} />
+          <DetailRow label={f('assignee')} value={ticket.assignee} />
+          <DetailRow label={f('openedAt')} value={formatDateTime(ticket.opened_at)} />
+          <DetailRow label={t('connect.table.status')} value={ticket.status} />
         </DetailGrid>
         <p className="mt-3 text-sm text-hub-text-muted">{ticket.summary}</p>
       </DetailSection>
@@ -471,23 +557,29 @@ function GridTicketView({ ticket }: { ticket: GridTicket }) {
 }
 
 function GridUserView({ user }: { user: GridUser }) {
+  const { t } = useTranslation()
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
-    <DetailSection title="Usuário Grid">
+    <DetailSection title={t('connect.entityView.sections.gridUser')}>
       <DetailGrid>
-        <DetailRow label="Nome" value={user.name} />
-        <DetailRow label="E-mail" value={user.email} />
-        <DetailRow label="Perfil" value={user.role} />
-        <DetailRow label="Telefone" value={user.phone} />
-        <DetailRow label="CPF" value={user.cpf} />
-        <DetailRow label="Status" value={<StatusBadge status={user.status} />} />
+        <DetailRow label={f('name')} value={user.name} />
+        <DetailRow label={f('email')} value={user.email} />
+        <DetailRow label={f('profile')} value={user.role} />
+        <DetailRow label={f('phone')} value={user.phone} />
+        <DetailRow label={f('cpf')} value={user.cpf} />
+        <DetailRow label={t('connect.table.status')} value={<StatusBadge status={user.status} />} />
       </DetailGrid>
     </DetailSection>
   )
 }
 
 function GridInventoryView({ item }: { item: GridInventoryItem }) {
+  const { t } = useTranslation()
+  const f = (key: string) => t(`connect.entityView.fields.${key}`)
+
   return (
-    <DetailSection title="Item de estoque">
+    <DetailSection title={t('connect.entityView.sections.inventoryItem')}>
       {item.image_url ? (
         <div className="mb-4 flex justify-center">
           <img
@@ -499,33 +591,18 @@ function GridInventoryView({ item }: { item: GridInventoryItem }) {
         </div>
       ) : null}
       <DetailGrid>
-        <DetailRow label="Título" value={item.title} />
-        <DetailRow label="Categoria" value={item.category} />
-        <DetailRow label="Qtd. disponível" value={item.qty_available} />
-        <DetailRow label="Qtd. mínima" value={item.qty_min} />
-        <DetailRow label="Localização" value={item.location} />
-        <DetailRow label="Fornecedor" value={item.supplier} />
-        <DetailRow label="Custo" value={`R$ ${item.cost.toFixed(2)}`} />
-        <DetailRow label="Status" value={item.status} />
+        <DetailRow label={f('title')} value={item.title} />
+        <DetailRow label={f('category')} value={item.category} />
+        <DetailRow label={f('qtyAvailable')} value={item.qty_available} />
+        <DetailRow label={f('qtyMin')} value={item.qty_min} />
+        <DetailRow label={f('location')} value={item.location} />
+        <DetailRow label={f('supplier')} value={item.supplier} />
+        <DetailRow label={f('cost')} value={`R$ ${item.cost.toFixed(2)}`} />
+        <DetailRow label={t('connect.table.status')} value={item.status} />
       </DetailGrid>
       <p className="mt-3 text-sm text-hub-text-muted">{item.description}</p>
     </DetailSection>
   )
-}
-
-const KIND_LABELS: Record<ConnectViewKind, string> = {
-  student: 'Detalhes do aluno',
-  teacher: 'Detalhes do professor',
-  class: 'Detalhes da turma',
-  course: 'Detalhes do curso',
-  person: 'Detalhes da pessoa',
-  contract: 'Detalhes do contrato',
-  salary: 'Detalhes do salário',
-  attendance: 'Detalhes da frequência',
-  location: 'Localização',
-  'grid-ticket': 'Chamado',
-  'grid-user': 'Usuário',
-  'grid-inventory': 'Item de estoque',
 }
 
 export interface ConnectEntityViewDrawerProps {
@@ -537,6 +614,7 @@ export interface ConnectEntityViewDrawerProps {
 }
 
 export function ConnectEntityViewDrawer({ kind, entityId, open, onClose, snapshot }: ConnectEntityViewDrawerProps) {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [studentData, setStudentData] = useState<StudentProfileData | null>(null)
@@ -567,19 +645,19 @@ export function ConnectEntityViewDrawer({ kind, entityId, open, onClose, snapsho
         if (kind === 'person') setPersonData(await connectService.getPersonProfile(entityId))
         if (kind === 'contract') setContractData(await connectService.getContractProfile(entityId))
       } catch {
-        setError('Não foi possível carregar os detalhes. Tente novamente.')
+        setError(t('connect.entityView.loadError'))
       } finally {
         setLoading(false)
       }
     }
 
     void load()
-  }, [open, kind, entityId])
+  }, [open, kind, entityId, t])
 
   let body: React.ReactNode = null
 
   if (loading) {
-    body = <ConnectLoadingSpinner label="Carregando detalhes..." className="min-h-[240px]" />
+    body = <ConnectLoadingSpinner label={t('connect.entityView.loading')} className="min-h-[240px]" />
   } else if (error) {
     body = <p className="py-12 text-center text-sm text-hub-red">{error}</p>
   } else if (kind === 'student' && studentData) {
@@ -607,11 +685,17 @@ export function ConnectEntityViewDrawer({ kind, entityId, open, onClose, snapsho
   } else if (kind === 'grid-inventory' && snapshot) {
     body = <GridInventoryView item={snapshot as GridInventoryItem} />
   } else {
-    body = <p className="py-12 text-center text-sm text-hub-text-muted">Sem dados para exibir.</p>
+    body = <p className="py-12 text-center text-sm text-hub-text-muted">{t('connect.entityView.noData')}</p>
   }
 
   return (
-    <ConnectDrawer open={open} onClose={onClose} title={KIND_LABELS[kind]} subtitle="Visualização completa" width="2xl">
+    <ConnectDrawer
+      open={open}
+      onClose={onClose}
+      title={t(`connect.entityView.kinds.${kind}`)}
+      subtitle={t('connect.entityView.subtitle')}
+      width="2xl"
+    >
       {body}
     </ConnectDrawer>
   )

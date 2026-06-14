@@ -15,7 +15,20 @@
     "notifications": "Notificações",
     "accessDenied": "Acesso negado",
     "notFound": "Página não encontrada",
-    "language": "Idioma"
+    "language": "Idioma",
+    "delete": "Excluir",
+    "confirmTitle": "Confirmar ação",
+    "confirmDeleteTitle": "Confirmar exclusão",
+    "confirmAction": "Confirmar"
+  },
+  "toast": {
+    "created": "Criado com sucesso.",
+    "updated": "Atualizado com sucesso.",
+    "deleted": "Excluido com sucesso.",
+    "saved": "Salvo com sucesso.",
+    "imported": "Importacao concluida.",
+    "exported": "Exportacao concluida.",
+    "error": "Nao foi possivel concluir a operacao."
   },
   "auth": {
     "loginTitle": "Acesse sua conta",
@@ -164,7 +177,16 @@
       "subtitle": "Solicitacoes de entrada e saida (AQV).",
       "newRequest": "Nova solicitacao",
       "searchPlaceholder": "Buscar protocolo ou aluno...",
-      "empty": "Nenhuma autorizacao encontrada."
+      "empty": "Nenhuma autorizacao encontrada.",
+      "filters": {
+        "status": "Situação",
+        "allStatuses": "Todas as situações",
+        "finalizado": "Finalizadas (arquivo)",
+        "negado": "Negadas",
+        "pendente_aqv": "Pendentes AQV",
+        "aguardando_professor": "Aguardando professor",
+        "liberado_portaria": "Liberadas portaria"
+      }
     },
     "approvals": {
       "title": "Aprovacoes",
@@ -416,7 +438,8 @@
         "description": "Descrição"
       },
       "alert": {
-        "nameRequired": "Informe o nome do curso."
+        "nameRequired": "Informe o nome do curso.",
+        "deleteError": "Não foi possível excluir o curso."
       }
     },
     "classes": {
@@ -453,7 +476,15 @@
         "teacher": "Professor",
         "description": "Descrição",
         "active": "Ativa",
-        "inactive": "Inativa"
+        "inactive": "Inativa",
+        "finished": "Encerrada (arquivada)"
+      },
+      "filters": {
+        "status": "Situação",
+        "allStatuses": "Todas as situações",
+        "activeOnly": "Somente ativas",
+        "finishedOnly": "Encerradas (arquivo)",
+        "inactiveOnly": "Inativas"
       },
       "weekly": {
         "title": "Grade semanal",
@@ -465,7 +496,7 @@
       "generateSchedule": "Gerar calendário automaticamente ao salvar",
       "alert": {
         "nameRequired": "Informe o nome da turma.",
-        "scheduleFieldsRequired": "Para gerar o calendário, informe semestre, data de início e término.",
+        "scheduleFieldsRequired": "Para gerar o calendário, informe data de início e término da turma.",
         "saveError": "Não foi possível salvar a turma.",
         "deleteError": "Não foi possível excluir a turma."
       }
@@ -821,6 +852,16 @@
       "room": "Sala",
       "block": "Bloco"
     },
+    "kanban": {
+      "confirmMove": {
+        "title": "Confirmar movimentação",
+        "message": "Deseja mover \"{{item}}\" de {{from}} para {{to}}?",
+        "confirm": "Sim, mover",
+        "assign": "Atribuir responsável",
+        "noAssigneeTicket": "Este chamado não tem técnico responsável atribuído. Deseja atribuir?",
+        "noAssigneeTask": "Esta tarefa não tem responsável atribuído. Deseja atribuir?"
+      }
+    },
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Visão geral da gestão de manutenção e infraestrutura.",
@@ -1166,6 +1207,42 @@
       "defaultActor": "Operador Grid",
       "alert": {
         "required": "Informe solicitante e título."
+      }
+    },
+    "labels": {
+      "ticketStatus": {
+        "aberto": "Aberto",
+        "pendente": "Pendente",
+        "em_atendimento": "Em atendimento",
+        "aguardando_aprovacao": "Aguardando aprovação",
+        "avaliacao_pendente": "Avaliação pendente",
+        "concluido": "Finalizado"
+      },
+      "priority": {
+        "alta": "Alta",
+        "media": "Média",
+        "baixa": "Baixa"
+      },
+      "inventoryStatus": {
+        "disponivel": "Disponível",
+        "baixo": "Estoque baixo",
+        "reservado": "Reservado"
+      }
+    },
+    "workflow": {
+      "stepHints": {
+        "aberto": "Chamado registrado. Atribua um técnico para continuar.",
+        "pendente": "Técnico definido. Inicie o atendimento em campo.",
+        "em_atendimento": "Serviço em execução. Conclua a tarefa vinculada ao finalizar.",
+        "aguardando_aprovacao": "Aguardando validação do chefe de manutenção.",
+        "avaliacao_pendente": "Aguardando avaliação do solicitante.",
+        "concluido": "Chamado finalizado e arquivado para consulta."
+      },
+      "blocked": {
+        "lockedTask": "Chamado em atendimento só avança quando a tarefa vinculada for concluída.",
+        "needsAssigneeStart": "Atribua um técnico antes de iniciar o atendimento.",
+        "needsAssigneePending": "Atribua um técnico para mover para Pendentes.",
+        "useApprovalButtons": "Use os botões de aprovação e avaliação para avançar nesta etapa."
       }
     }
   }

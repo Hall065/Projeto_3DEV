@@ -21,8 +21,8 @@ import { UserAvatar } from '../../components/ui/UserAvatar'
 import { connectService } from '../../services/connectService'
 import type { HubPerson, HubPersonKind, PaginatedMeta } from '../../types/connect'
 import { personDisplayName } from '../../utils/connectPerson'
-import { parseApiError } from '../../utils/parseApiError'
-
+import { useCrudToast } from '../../hooks/useCrudToast'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
 const emptyForm = {
   kind: 'staff' as HubPersonKind,
   full_name: '',
@@ -36,6 +36,8 @@ const emptyForm = {
 
 export function PeoplePage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete } = useConfirmAction()
   const [people, setPeople] = useState<HubPerson[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
@@ -89,6 +91,7 @@ export function PeoplePage() {
   const handleSave = async () => {
     setSaving(true)
     try {
+      const wasEdit = !!editingId
       if (editingId) {
         await connectService.updatePerson(editingId, form)
       } else {
@@ -97,21 +100,23 @@ export function PeoplePage() {
       setDrawerOpen(false)
       setEditingId(null)
       setForm(emptyForm)
+      crudToast.notifySaved(wasEdit)
       load()
     } catch (error: unknown) {
-      window.alert(parseApiError(error, 'Nao foi possivel salvar a pessoa.'))
+      crudToast.notifyError(error, t('connect.people.alert.saveError'))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (person: HubPerson) => {
-    if (!window.confirm(t('connect.confirm.delete', { entity: `"${personDisplayName(person)}"` }))) return
+    if (!(await confirmDelete(`"${personDisplayName(person)}"`))) return
     try {
       await connectService.deletePerson(person.id)
+      crudToast.notifyDeleted()
       load()
     } catch (error: unknown) {
-      window.alert(parseApiError(error, t('connect.people.alert.deleteLinked')))
+      crudToast.notifyError(error, t('connect.people.alert.deleteError'))
     }
   }
 
@@ -262,7 +267,7 @@ export function PeoplePage() {
               className={inputClass}
               value={form.full_name}
               onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-              placeholder="Ex: Maria Silva"
+              placeholder={t('connect.people.form.placeholders.fullName')}
             />
           </FormField>
           <FormField label={t('connect.table.email')}>
@@ -271,7 +276,7 @@ export function PeoplePage() {
               className={inputClass}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="pessoa@senai.edu.br"
+              placeholder={t('connect.people.form.placeholders.email')}
             />
           </FormField>
           <FormField label={t('connect.students.form.phone')}>
@@ -279,18 +284,18 @@ export function PeoplePage() {
               className={inputClass}
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="(11) 99999-9999"
+              placeholder={t('connect.people.form.placeholders.phone')}
             />
           </FormField>
           <FormField label={t('connect.students.form.cpf')}>
-            <input className={inputClass} value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" />
+            <input className={inputClass} value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder={t('connect.people.form.placeholders.cpf')} />
           </FormField>
           <FormField label={t('connect.people.form.registration')}>
             <input
               className={inputClass}
               value={form.registration_number}
               onChange={(e) => setForm({ ...form, registration_number: e.target.value })}
-              placeholder="Ex: RM20250130"
+              placeholder={t('connect.people.form.placeholders.registration')}
             />
           </FormField>
           <FormField label={t('connect.people.form.specialty')}>
@@ -298,7 +303,7 @@ export function PeoplePage() {
               className={inputClass}
               value={form.specialty}
               onChange={(e) => setForm({ ...form, specialty: e.target.value })}
-              placeholder="Ex: Automação Industrial"
+              placeholder={t('connect.people.form.placeholders.specialty')}
             />
           </FormField>
         </div>

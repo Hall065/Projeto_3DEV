@@ -12,8 +12,9 @@ import {
   type WallpaperId,
 } from '../../constants/wallpapers'
 import { AppBrandMark } from '../brand/AppBrandMark'
-import { APP_BRAND_ASSETS, MODULE_BRAND_SLUGS } from '../../utils/appBrandAssets'
+import { getAppBrandName, MODULE_BRAND_SLUGS } from '../../utils/appBrandAssets'
 import { useAppearance } from '../../contexts/AppearanceContext'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { compressWallpaperFile } from '../../utils/wallpaperImage'
 import { navigateBack } from '../../utils/navigation'
 import { OutlineButton, PrimaryButton } from '../connect/ConnectShared'
@@ -80,6 +81,7 @@ const GROUP_LABEL_KEYS = {
 
 export function AppearanceSettings({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const {
@@ -98,7 +100,6 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
   const [draftCustomUrl, setDraftCustomUrl] = useState<string | null>(
     wallpaperId === CUSTOM_WALLPAPER_ID ? customImageUrl : null,
   )
-  const [savedMessage, setSavedMessage] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -149,7 +150,6 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
       const dataUrl = await compressWallpaperFile(file)
       setDraftId(CUSTOM_WALLPAPER_ID)
       setDraftCustomUrl(dataUrl)
-      setSavedMessage(null)
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : t('appearance.uploadError'))
     } finally {
@@ -165,11 +165,10 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
       } else if (draftId !== CUSTOM_WALLPAPER_ID) {
         setWallpaperId(draftId)
       }
-      setSavedMessage(t('appearance.saved'))
+      crudToast.notifySuccess(t('appearance.saved'))
       setUploadError(null)
-      window.setTimeout(() => setSavedMessage(null), 3000)
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : t('appearance.saveError'))
+      crudToast.notifyError(err, t('appearance.saveError'))
     }
   }
 
@@ -208,7 +207,7 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
         </div>
         <div className="flex items-center gap-2">
           {MODULE_BRAND_SLUGS.map((slug) => (
-            <AppBrandMark key={slug} slug={slug} name={APP_BRAND_ASSETS[slug].name} size="sm" />
+            <AppBrandMark key={slug} slug={slug} name={getAppBrandName(slug)} size="sm" />
           ))}
         </div>
       </div>
@@ -266,11 +265,10 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
                 <WallpaperPreviewCard
                   key={preset.id}
                   selected={draftId === preset.id}
-                  name={preset.name}
-                  description={preset.description}
+                  name={t(preset.nameKey)}
+                  description={t(preset.descriptionKey)}
                   onClick={() => {
                     setDraftId(preset.id)
-                    setSavedMessage(null)
                   }}
                 >
                   <PresetPreview
@@ -299,12 +297,6 @@ export function AppearanceSettings({ embedded = false }: { embedded?: boolean })
           </>
         )}
       </p>
-
-      {savedMessage && (
-        <p className="mt-3 text-sm font-medium text-emerald-700" role="status">
-          {savedMessage}
-        </p>
-      )}
 
       {embedded ? (
         dirty && (

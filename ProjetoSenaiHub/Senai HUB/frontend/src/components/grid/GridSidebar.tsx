@@ -1,5 +1,6 @@
 import { ChevronRight, Headphones, Shield, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 import { SidebarAppLogo } from '../layout/SidebarAppLogo'
 import { filterNavItems, gridNavItems } from '../../config/navPermissions'
@@ -13,6 +14,7 @@ interface GridSidebarProps {
 }
 
 export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: GridSidebarProps) {
+  const { t } = useTranslation()
   const isCollapsed = collapsed && !mobileOpen
   const { can } = usePermissions()
   const navLabel = useNavLabel('grid')
@@ -51,7 +53,7 @@ export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: Gr
             type="button"
             onClick={onMobileClose}
             className="rounded-lg p-2 hover:bg-white/10 lg:hidden"
-            aria-label="Fechar menu"
+            aria-label={t('header.closeMenu')}
           >
             <X className="h-5 w-5" />
           </button>
@@ -78,7 +80,7 @@ export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: Gr
         {!isCollapsed && (
           <div className="mb-4 flex items-start gap-2 text-xs leading-relaxed text-white/60">
             <Shield className="mt-0.5 h-4 w-4 shrink-0" />
-            <p>Menus exibidos conforme perfil de acesso.</p>
+            <p>{t('safe.sidebar.profileHint')}</p>
           </div>
         )}
         <div className="relative" ref={supportRef}>
@@ -92,7 +94,7 @@ export function GridSidebar({ collapsed, mobileOpen = false, onMobileClose }: Gr
             <Headphones className="h-5 w-5 shrink-0" />
             {!isCollapsed && (
               <>
-                <span className="flex-1 text-left">Suporte</span>
+                <span className="flex-1 text-left">{t('safe.sidebar.support')}</span>
                 <ChevronRight className={`h-4 w-4 ${supportOpen ? 'rotate-90' : ''}`} />
               </>
             )}

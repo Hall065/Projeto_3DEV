@@ -1,5 +1,6 @@
 import { ImageIcon, Package } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../connect/ConnectDrawer'
 import { ConnectDrawerHeroCard } from '../connect/ConnectDrawerHeroCard'
 import { ConnectLoadingSpinner } from '../connect/ConnectShared'
@@ -7,21 +8,22 @@ import { GridInventoryStatusBadge } from './GridBadges'
 import { GridInventoryThumb } from './GridInventoryThumb'
 import { gridService } from '../../services/gridService'
 import type { GridInventoryItemDetail } from '../../types/grid'
-import { parseApiError } from '../../utils/parseApiError'
 
-function formatDate(value?: string | null) {
+import { intlLocale, normalizeLocale } from '../../i18n'
+
+function formatDate(value: string | undefined | null, locale: string) {
   if (!value) return '—'
   try {
-    return new Date(value).toLocaleDateString('pt-BR')
+    return new Date(value).toLocaleDateString(locale)
   } catch {
     return value
   }
 }
 
-function formatDateTime(value?: string | null) {
+function formatDateTime(value: string | undefined | null, locale: string) {
   if (!value) return '—'
   try {
-    return new Date(value).toLocaleString('pt-BR')
+    return new Date(value).toLocaleString(locale)
   } catch {
     return value
   }
@@ -66,6 +68,8 @@ export function GridInventoryDetailDrawer({
   onSyncImage?: (id: number) => void
   syncingImage?: boolean
 }) {
+  const { t, i18n } = useTranslation()
+  const locale = intlLocale(normalizeLocale(i18n.language))
   const [tab, setTab] = useState<'overview' | 'reservations'>('overview')
   const [detail, setDetail] = useState<GridInventoryItemDetail | null>(null)
   const [loading, setLoading] = useState(false)
@@ -85,7 +89,7 @@ export function GridInventoryDetailDrawer({
     gridService
       .getInventoryItem(itemId)
       .then(setDetail)
-      .catch((err) => setError(parseApiError(err, 'Nao foi possivel carregar os detalhes do item.')))
+      .catch(() => setError(t('gridComponents.shared.loadItemError')))
       .finally(() => setLoading(false))
   }, [open, itemId])
 
@@ -93,8 +97,8 @@ export function GridInventoryDetailDrawer({
     <ConnectDrawer
       open={open}
       onClose={onClose}
-      title={detail?.title ?? 'Item de estoque'}
-      subtitle={detail?.category ? `${detail.category}${detail.sku ? ` · SKU ${detail.sku}` : ''}` : 'Carregando...'}
+      title={detail?.title ?? t('gridComponents.shared.stockItem')}
+      subtitle={detail?.category ? `${detail.category}${detail.sku ? ` · SKU ${detail.sku}` : ''}` : t('common.loading')}
       width="2xl"
       footer={
         itemId && onSyncImage ? (
@@ -105,13 +109,13 @@ export function GridInventoryDetailDrawer({
             className="inline-flex items-center gap-2 rounded-xl border border-hub-border px-4 py-2 text-sm font-medium text-hub-navy hover:bg-hub-bg disabled:opacity-50"
           >
             <ImageIcon className="h-4 w-4" />
-            {syncingImage ? 'Buscando...' : 'Buscar foto no Wikimedia'}
+            {syncingImage ? t('gridComponents.shared.syncingImage') : t('gridComponents.shared.syncImage')}
           </button>
         ) : undefined
       }
     >
       {loading ? (
-        <ConnectLoadingSpinner label="Carregando item..." className="min-h-[320px]" />
+        <ConnectLoadingSpinner label={t('gridComponents.shared.loadingItem')} className="min-h-[320px]" />
       ) : error ? (
         <p className="py-12 text-center text-sm text-red-600">{error}</p>
       ) : detail ? (
@@ -120,7 +124,7 @@ export function GridInventoryDetailDrawer({
             <GridInventoryThumb title={detail.title} imageUrl={detail.image_url} category={detail.category} size="lg" />
             <div className="min-w-0 flex-1 text-center sm:text-left">
               <h3 className="text-lg font-bold text-hub-navy">{detail.title}</h3>
-              <p className="mt-1 text-sm text-hub-text-muted">{detail.description || 'Sem descrição cadastrada.'}</p>
+              <p className="mt-1 text-sm text-hub-text-muted">{detail.description || t('gridComponents.shared.noDescription')}</p>
               <div className="mt-3">
                 <GridInventoryStatusBadge status={detail.status} />
               </div>
@@ -135,7 +139,7 @@ export function GridInventoryDetailDrawer({
                 tab === 'overview' ? 'border-hub-red text-hub-red' : 'border-transparent text-hub-text-muted hover:text-hub-navy'
               }`}
             >
-              Visão geral
+              {t('gridComponents.shared.overview')}
             </button>
             <button
               type="button"
@@ -144,50 +148,65 @@ export function GridInventoryDetailDrawer({
                 tab === 'reservations' ? 'border-hub-red text-hub-red' : 'border-transparent text-hub-text-muted hover:text-hub-navy'
               }`}
             >
-              Reservas ({detail.reservations?.length ?? 0})
+              {t('gridComponents.shared.reservations', { count: detail.reservations?.length ?? 0 })}
             </button>
           </div>
 
           {tab === 'overview' ? (
             <>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StockKpi label="Disponível" value={detail.qty_available} />
-                <StockKpi label="Em uso" value={detail.qty_in_use} hint="Tarefas em andamento" variant={detail.qty_in_use > 0 ? 'warn' : undefined} />
-                <StockKpi label="Comprometido" value={detail.qty_committed} hint="Reservado em chamados" />
-                <StockKpi label="Consumido" value={detail.qty_consumed} variant="muted" />
+                <StockKpi label={t('gridComponents.shared.available')} value={detail.qty_available} />
+                <StockKpi
+                  label={t('gridComponents.shared.inUse')}
+                  value={detail.qty_in_use}
+                  hint={t('gridComponents.shared.inUseHint')}
+                  variant={detail.qty_in_use > 0 ? 'warn' : undefined}
+                />
+                <StockKpi
+                  label={t('gridComponents.shared.committed')}
+                  value={detail.qty_committed}
+                  hint={t('gridComponents.shared.committedHint')}
+                />
+                <StockKpi label={t('gridComponents.shared.consumedQty')} value={detail.qty_consumed} variant="muted" />
               </div>
 
               <dl className="surface-inset rounded-2xl border border-hub-border/50 px-4">
-                <DetailRow label="Quantidade total (estoque)" value={detail.qty_total} />
-                <DetailRow label="Quantidade mínima" value={detail.qty_min} />
-                <DetailRow label="Reservado" value={detail.qty_reserved ?? detail.qty_committed} />
-                <DetailRow label="Localização" value={detail.location || '—'} />
-                <DetailRow label="Fornecedor / distribuidora" value={detail.supplier || '—'} />
-                <DetailRow label="Custo unitário" value={`R$ ${detail.cost.toFixed(2)}`} />
-                <DetailRow label="Valor em estoque (disp.)" value={`R$ ${(detail.stock_value ?? detail.cost * detail.qty_available).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} />
-                <DetailRow label="Data da compra" value={formatDate(detail.purchased_at)} />
-                <DetailRow label="Cadastrado em" value={formatDateTime(detail.created_at)} />
-                <DetailRow label="Última atualização" value={formatDateTime(detail.updated_at)} />
+                <DetailRow label={t('gridComponents.shared.totalQty')} value={detail.qty_total} />
+                <DetailRow label={t('gridComponents.shared.minQty')} value={detail.qty_min} />
+                <DetailRow label={t('gridComponents.shared.reserved')} value={detail.qty_reserved ?? detail.qty_committed} />
+                <DetailRow label={t('gridComponents.shared.location')} value={detail.location || '—'} />
+                <DetailRow label={t('gridComponents.shared.supplier')} value={detail.supplier || '—'} />
+                <DetailRow label={t('gridComponents.shared.unitCost')} value={`R$ ${detail.cost.toFixed(2)}`} />
+                <DetailRow
+                  label={t('gridComponents.shared.stockValue')}
+                  value={`R$ ${(detail.stock_value ?? detail.cost * detail.qty_available).toLocaleString(locale, { minimumFractionDigits: 2 })}`}
+                />
+                <DetailRow label={t('gridComponents.shared.purchaseDate')} value={formatDate(detail.purchased_at, locale)} />
+                <DetailRow label={t('gridComponents.shared.registeredAt')} value={formatDateTime(detail.created_at, locale)} />
+                <DetailRow label={t('gridComponents.shared.lastUpdate')} value={formatDateTime(detail.updated_at, locale)} />
               </dl>
             </>
           ) : (
             <div className="rounded-2xl border border-hub-border/50">
               {(detail.reservations?.length ?? 0) === 0 ? (
-                <p className="px-4 py-10 text-center text-sm text-hub-text-muted">Nenhuma reserva ou consumo registrado.</p>
+                <p className="px-4 py-10 text-center text-sm text-hub-text-muted">{t('gridComponents.shared.noReservations')}</p>
               ) : (
                 <ul className="divide-y divide-hub-border/40">
                   {detail.reservations?.map((r) => (
                     <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
                       <div>
                         <p className="font-medium text-hub-navy">
-                          {r.quantity} un. · {r.status === 'consumed' ? 'Consumido' : 'Reservado'}
+                          {t('gridComponents.shared.units', {
+                            count: r.quantity,
+                            status: r.status === 'consumed' ? t('gridComponents.shared.consumed') : t('gridComponents.shared.reserved'),
+                          })}
                         </p>
                         <p className="text-xs text-hub-text-muted">
-                          {r.task_code ? `Tarefa ${r.task_code}` : 'Tarefa'}
-                          {r.ticket_code ? ` · Chamado ${r.ticket_code}` : ''}
+                          {r.task_code ? `${t('gridComponents.shared.task')} ${r.task_code}` : t('gridComponents.shared.task')}
+                          {r.ticket_code ? ` · ${t('gridComponents.shared.ticket')} ${r.ticket_code}` : ''}
                         </p>
                       </div>
-                      <span className="text-xs text-hub-text-muted">{formatDateTime(r.created_at)}</span>
+                      <span className="text-xs text-hub-text-muted">{formatDateTime(r.created_at, locale)}</span>
                     </li>
                   ))}
                 </ul>
@@ -197,7 +216,7 @@ export function GridInventoryDetailDrawer({
         </div>
       ) : (
         <p className="flex items-center justify-center gap-2 py-12 text-sm text-hub-text-muted">
-          <Package className="h-5 w-5" /> Selecione um item
+          <Package className="h-5 w-5" /> {t('gridComponents.shared.selectItem')}
         </p>
       )}
     </ConnectDrawer>

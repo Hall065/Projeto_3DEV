@@ -1,4 +1,5 @@
 import { ChevronsLeft, ChevronsRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export const SIDEBAR_WIDTH_EXPANDED = 280
 export const SIDEBAR_WIDTH_COLLAPSED = 88
@@ -18,6 +19,7 @@ export function SidebarRailToggle({
   expandedWidth?: number
   collapsedWidth?: number
 }) {
+  const { t } = useTranslation()
   const seamLeft = collapsed ? collapsedWidth : expandedWidth
   // Centraliza na divisória, levemente para o painel principal e abaixo da área da logo.
   const toggleLeft = seamLeft + 2
@@ -33,7 +35,7 @@ export function SidebarRailToggle({
         type="button"
         onClick={onClick}
         className="pointer-events-auto flex h-10 w-10 cursor-pointer touch-manipulation items-center justify-center rounded-full border-0 bg-transparent p-0 transition active:scale-95"
-        aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+        aria-label={collapsed ? t('header.expandMenu') : t('header.collapseMenu')}
       >
         <span className="sidebar-rail-toggle-face flex h-8 w-8 items-center justify-center rounded-full border ring-2 ring-[var(--tw-ring-color)] transition">
           {collapsed ? (

@@ -6,6 +6,8 @@ import type {
   SpreadsheetTemplate,
 } from '../types/spreadsheet'
 
+import i18n from '../i18n'
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
 
 function authHeaders(): HeadersInit {
@@ -33,7 +35,7 @@ async function downloadAuthenticated(path: string, fallbackName: string) {
   const response = await fetch(`${base}${path}`, { headers: authHeaders() })
 
   if (!response.ok) {
-    let message = 'Não foi possível baixar o arquivo.'
+    let message = i18n.t('spreadsheet.downloadError')
     try {
       const body = await response.json()
       const errors = body.errors as Record<string, string[]> | undefined

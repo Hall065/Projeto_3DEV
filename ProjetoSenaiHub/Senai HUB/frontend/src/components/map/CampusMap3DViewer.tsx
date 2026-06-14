@@ -1,5 +1,6 @@
-import { Maximize2, Minimize2, RotateCcw, X } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
@@ -9,6 +10,7 @@ import type { CampusPersonLocation } from '../../types/campusPeople'
 import { CAMPUS_PERSON_ROLE_COLORS } from '../../types/campusPeople'
 import type { CampusTicketMarker } from '../../types/campusTickets'
 import { ticketMarkerColor } from '../../utils/campusTicketMarkers'
+import i18n from '../../i18n'
 import { CampusMapBlockPanel } from './CampusMapBlockPanel'
 import { CampusMapPeopleLegend, CampusMapPeoplePanel } from './CampusMapPeoplePanel'
 import { CampusMapTicketsLegend, CampusMapTicketsPanel } from './CampusMapTicketsPanel'
@@ -192,6 +194,7 @@ export function CampusMap3DViewer({
   showPanel = true,
   showToolbar = true,
 }: CampusMap3DViewerProps) {
+  const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasHostRef = useRef<HTMLDivElement>(null)
   const blocksRef = useRef<BlockGroup[]>([])
@@ -334,6 +337,11 @@ export function CampusMap3DViewer({
     if (!container || !host) return
 
     let disposed = false
+    let visible = true
+
+    const setSelectedBlockRef = (blockId: CampusBlockId | null) => setSelectedBlock(blockId)
+    const setSelectedPersonRef = (personId: string | null) => setSelectedPerson(personId)
+    const setSelectedTicketRef = (ticketId: string | null) => setSelectedTicket(ticketId)
 
     const scene = new THREE.Scene()
     scene.background = new THREE.Color(0xe8edf5)
@@ -371,6 +379,18 @@ export function CampusMap3DViewer({
 
     const loader = new GLTFLoader()
     let meshTargets: MeshOpacityTarget[] = []
+    const MODEL_LOAD_TIMEOUT_MS = 12_000
+
+    const loadModel = (url: string) =>
+      Promise.race([
+        loader.loadAsync(url),
+        new Promise<never>((_, reject) => {
+          window.setTimeout(
+            () => reject(new Error(i18n.t('mapComponents.viewer3d.modelTimeout', { url }))),
+            MODEL_LOAD_TIMEOUT_MS,
+          )
+        }),
+      ])
 
     const resize = () => {
       if (disposed) return
@@ -388,9 +408,18 @@ export function CampusMap3DViewer({
     resizeObserver.observe(container)
     requestAnimationFrame(resize)
 
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry?.isIntersecting ?? true
+      },
+      { threshold: 0.05 },
+    )
+    visibilityObserver.observe(container)
+
     const animate = () => {
       if (disposed) return
       animationRef.current = requestAnimationFrame(animate)
+      if (!visible || document.hidden) return
       controls.update()
       if (meshTargets.length > 0) {
         updateProximityOpacity(
@@ -458,17 +487,17 @@ export function CampusMap3DViewer({
         const ticket = ticketMarkersRef.current.find((entry) => entry.id === markerId)
 
         if (person) {
-          setSelectedPerson(markerId)
-          setSelectedTicket(null)
-          setSelectedBlock(person.blockId)
+          setSelectedPersonRef(markerId)
+          setSelectedTicketRef(null)
+          setSelectedBlockRef(person.blockId)
           focusBlock(person.blockId)
           return
         }
 
         if (ticket) {
-          setSelectedTicket(markerId)
-          setSelectedPerson(null)
-          setSelectedBlock(ticket.blockId)
+          setSelectedTicketRef(markerId)
+          setSelectedPersonRef(null)
+          setSelectedBlockRef(ticket.blockId)
           focusBlock(ticket.blockId)
           return
         }
@@ -477,14 +506,14 @@ export function CampusMap3DViewer({
       const blockId = pickBlockAt(event.clientX, event.clientY)
 
       if (blockId) {
-        setSelectedPerson(null)
-        setSelectedTicket(null)
-        setSelectedBlock(blockId)
+        setSelectedPersonRef(null)
+        setSelectedTicketRef(null)
+        setSelectedBlockRef(blockId)
         focusBlock(blockId)
       } else {
-        setSelectedPerson(null)
-        setSelectedTicket(null)
-        setSelectedBlock(null)
+        setSelectedPersonRef(null)
+        setSelectedTicketRef(null)
+        setSelectedBlockRef(null)
       }
     }
 
@@ -498,7 +527,7 @@ export function CampusMap3DViewer({
 
       for (const block of CAMPUS_BLOCKS) {
         try {
-          const gltf = await loader.loadAsync(block.modelFile)
+          const gltf = await loadModel(block.modelFile)
           if (disposed) return
 
           const group = new THREE.Group()
@@ -518,14 +547,14 @@ export function CampusMap3DViewer({
       if (disposed) return
 
       if (loaded.length === 0) {
-        setLoadError('Nao foi possivel carregar os modelos 3D do campus.')
+        setLoadError(i18n.t('mapComponents.viewer3d.loadModelsError'))
         setLoading(false)
         return
       }
 
       const box = new THREE.Box3().setFromObject(campusRoot)
       if (box.isEmpty()) {
-        setLoadError('Os modelos 3D foram carregados, mas estao vazios.')
+        setLoadError(i18n.t('mapComponents.viewer3d.emptyModelsError'))
         setLoading(false)
         return
       }
@@ -551,7 +580,7 @@ export function CampusMap3DViewer({
       requestAnimationFrame(resize)
 
       if (errors.length > 0) {
-        setLoadError(`Modelos ausentes: ${errors.join(', ')}`)
+        setLoadError(i18n.t('mapComponents.viewer3d.missingModels', { names: errors.join(', ') }))
       }
 
       setLoadedBlocks(loaded)
@@ -565,6 +594,7 @@ export function CampusMap3DViewer({
       renderer.domElement.removeEventListener('pointermove', onPointerMove)
       renderer.domElement.removeEventListener('pointerup', onPointerUp)
       resizeObserver.disconnect()
+      visibilityObserver.disconnect()
       controls.dispose()
       renderer.dispose()
       if (host.contains(renderer.domElement)) {
@@ -583,7 +613,7 @@ export function CampusMap3DViewer({
       cameraRef.current = null
       controlsRef.current = null
     }
-  }, [focusBlock, setSelectedBlock, setSelectedPerson, setSelectedTicket, syncMapMarkers])
+  }, [focusBlock, syncMapMarkers])
 
   return (
     <div
@@ -595,13 +625,13 @@ export function CampusMap3DViewer({
 
       {loading && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#e8edf5] text-sm text-hub-text-muted">
-          Carregando mapa 3D...
+          {t('mapComponents.viewer3d.loading')}
         </div>
       )}
 
       {!loading && loadedBlocks.length === 0 && !loadError && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#e8edf5] px-6 text-center text-sm text-hub-text-muted">
-          Nenhum bloco do campus foi carregado.
+          {t('mapComponents.viewer3d.noBlocksLoaded')}
         </div>
       )}
 
@@ -617,10 +647,10 @@ export function CampusMap3DViewer({
             type="button"
             onClick={handleResetView}
             className="glass-panel-solid inline-flex items-center gap-1 rounded-lg border border-hub-border/60 px-2.5 py-1.5 text-xs font-medium text-hub-navy shadow-sm transition hover:border-hub-red/40"
-            title="Restaurar visao do campus"
+            title={t('mapComponents.viewer3d.resetViewTitle')}
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Campus
+            {t('mapComponents.viewer3d.campus')}
           </button>
         </div>
       )}
@@ -628,8 +658,8 @@ export function CampusMap3DViewer({
       {!loading && loadedBlocks.length > 0 && (
         <div className="pointer-events-none absolute left-3 top-3 z-10 max-w-[220px] rounded-lg bg-white/80 px-2 py-1 text-[11px] text-hub-text-muted shadow-sm">
           {people || ticketMarkers
-            ? 'Arraste para navegar · Clique no marcador ou bloco'
-            : 'Arraste para rotacionar · Scroll para aproximar · Clique no bloco'}
+            ? t('mapComponents.viewer3d.hintMarkers')
+            : t('mapComponents.viewer3d.hintBlocks')}
         </div>
       )}
 
@@ -656,110 +686,5 @@ export function CampusMap3DViewer({
         <CampusMapBlockPanel stats={blockStats} selectedBlockId={activeBlockId ?? null} compact={compact} />
       ) : null}
     </div>
-  )
-}
-
-interface CampusMapContainerProps {
-  blockStats?: Record<CampusBlockId, CampusBlockStats>
-  people?: CampusPersonLocation[]
-  ticketMarkers?: CampusTicketMarker[]
-  highlightPersonId?: string | null
-  className?: string
-  minHeight?: string
-  compact?: boolean
-}
-
-export function CampusMapContainer({
-  blockStats,
-  people,
-  ticketMarkers,
-  highlightPersonId = null,
-  className = '',
-  minHeight = '360px',
-  compact = false,
-}: CampusMapContainerProps) {
-  const [selectedBlockId, setSelectedBlockId] = useState<CampusBlockId | null>(null)
-  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
-  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
-  const [fullscreen, setFullscreen] = useState(false)
-
-  useEffect(() => {
-    if (!highlightPersonId || !people?.length) return
-    const person = people.find((entry) => entry.id === highlightPersonId)
-    if (!person) return
-    setSelectedPersonId(person.id)
-    setSelectedBlockId(person.blockId)
-  }, [highlightPersonId, people])
-
-  useEffect(() => {
-    if (!fullscreen) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setFullscreen(false)
-    }
-    document.body.style.overflow = 'hidden'
-    window.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', onKeyDown)
-    }
-  }, [fullscreen])
-
-  const viewer = (
-    <CampusMap3DViewer
-      blockStats={blockStats}
-      people={people}
-      ticketMarkers={ticketMarkers}
-      selectedBlockId={selectedBlockId}
-      selectedPersonId={selectedPersonId}
-      selectedTicketId={selectedTicketId}
-      onSelectBlock={setSelectedBlockId}
-      onSelectPerson={setSelectedPersonId}
-      onSelectTicket={setSelectedTicketId}
-      minHeight={fullscreen ? '100%' : '100%'}
-      compact={compact}
-      className={fullscreen ? 'h-full rounded-none border-0' : 'h-full'}
-    />
-  )
-
-  return (
-    <>
-      <div className={`relative w-full ${className}`} style={{ height: minHeight, minHeight }}>
-        {!fullscreen && (
-          <>
-            {viewer}
-            <button
-              type="button"
-              onClick={() => setFullscreen(true)}
-              className="absolute bottom-3 right-3 z-30 inline-flex items-center gap-1.5 rounded-lg bg-hub-navy px-3 py-2 text-xs font-semibold text-white shadow-lg transition hover:bg-hub-navy/90"
-              title="Maximizar mapa"
-            >
-              <Maximize2 className="h-4 w-4" />
-              Maximizar
-            </button>
-          </>
-        )}
-      </div>
-
-      {fullscreen && (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-hub-bg">
-          <div className="flex items-center justify-between border-b border-hub-border/60 px-4 py-3">
-            <div>
-              <h2 className="text-lg font-bold text-hub-navy">Mapa 3D do campus SENAI</h2>
-              <p className="text-sm text-hub-text-muted">Visualizacao ampliada para navegacao detalhada</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setFullscreen(false)}
-              className="inline-flex items-center gap-2 rounded-lg border border-hub-border/60 px-3 py-2 text-sm font-medium text-hub-navy transition hover:border-hub-red/40 hover:text-hub-red"
-            >
-              <Minimize2 className="h-4 w-4" />
-              Fechar
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="relative min-h-0 flex-1 p-3 sm:p-4">{viewer}</div>
-        </div>
-      )}
-    </>
   )
 }

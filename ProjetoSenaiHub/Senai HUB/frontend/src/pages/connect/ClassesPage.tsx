@@ -1,7 +1,7 @@
 import { Eye, Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
@@ -31,8 +31,9 @@ import type {
   PaginatedMeta,
 } from '../../types/connect'
 import { optionalForeignIdOrNull, slugClassCode } from '../../utils/connectForm'
-import { parseApiError } from '../../utils/parseApiError'
-
+import { weeklyPatternsForShift } from '../../utils/connectScheduleDefaults'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 const DAY_VALUES = [1, 2, 3, 4, 5, 6, 0]
 
 const emptyForm = {
@@ -50,13 +51,17 @@ const emptyForm = {
 
 export function ClassesPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete } = useConfirmAction()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [classes, setClasses] = useState<ConnectClass[]>([])
   const [courses, setCourses] = useState<ConnectCourse[]>([])
   const [teachers, setTeachers] = useState<ConnectTeacher[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [viewId, setViewId] = useState<number | null>(null)
@@ -74,10 +79,15 @@ export function ClassesPage() {
     subject: t('connect.classes.defaultSubject'),
   })
 
+  const defaultPatternsForShift = (shift: string) =>
+    weeklyPatternsForShift(shift, t('connect.classes.defaultSubject'))
+
   const load = () => {
     setLoading(true)
+    const params: Record<string, string | number> = { page, per_page: 10, search }
+    if (statusFilter) params.status = statusFilter
     connectService
-      .getClasses({ page, per_page: 10, search })
+      .getClasses(params)
       .then((res) => {
         setClasses(res.data)
         setMeta(res.meta)
@@ -86,8 +96,17 @@ export function ClassesPage() {
   }
 
   useEffect(() => {
+    const status = searchParams.get('status')
+    if (status === 'active' || status === 'inactive' || status === 'finished') {
+      setStatusFilter(status)
+    }
+    const q = searchParams.get('search')
+    if (q) setSearch(q)
+  }, [searchParams])
+
+  useEffect(() => {
     load()
-  }, [page, search])
+  }, [page, search, statusFilter])
 
   useEffect(() => {
     connectService.getCourses({ per_page: 50 }).then((r) => setCourses(r.data))
@@ -97,9 +116,9 @@ export function ClassesPage() {
   const openCreate = () => {
     setEditingId(null)
     setForm(emptyForm)
-    setWeeklyPatterns([])
+    setWeeklyPatterns(defaultPatternsForShift(emptyForm.shift))
     setSchedulePlan(null)
-    setGenerateSchedule(false)
+    setGenerateSchedule(true)
     setDrawerOpen(true)
   }
 
@@ -125,14 +144,20 @@ export function ClassesPage() {
     setDrawerOpen(true)
   }
 
+  useEffect(() => {
+    if (!drawerOpen || editingId !== null) return
+    setWeeklyPatterns(defaultPatternsForShift(form.shift))
+  }, [form.shift, drawerOpen, editingId, t])
+
   const handleSave = async () => {
     if (!form.name.trim()) {
-      window.alert(t('connect.classes.alert.nameRequired'))
+      crudToast.notifyWarning(t('connect.classes.alert.nameRequired'))
       return
     }
 
-    if (generateSchedule && (!form.semester.trim() || !form.start_date || !form.end_date)) {
-      window.alert(t('connect.classes.alert.scheduleFieldsRequired'))
+    const wantsSchedule = generateSchedule || weeklyPatterns.length > 0
+    if (wantsSchedule && (!form.start_date || !form.end_date)) {
+      crudToast.notifyWarning(t('connect.classes.alert.scheduleFieldsRequired'))
       return
     }
 
@@ -147,9 +172,10 @@ export function ClassesPage() {
       capacity: Number(form.capacity) || 30,
       status: form.status,
       code: slugClassCode(form.name),
-      weekly_patterns: weeklyPatterns,
-      generate_schedule: generateSchedule,
+      weekly_patterns: weeklyPatterns.length > 0 ? weeklyPatterns : defaultPatternsForShift(form.shift),
+      generate_schedule: generateSchedule || weeklyPatterns.length > 0,
     }
+    const wasEdit = !!editingId
     try {
       if (editingId) {
         await connectService.updateClass(editingId, payload)
@@ -157,21 +183,23 @@ export function ClassesPage() {
         await connectService.createClass(payload)
       }
     } catch (error: unknown) {
-      window.alert(parseApiError(error, t('connect.classes.alert.saveError')))
+      crudToast.notifyError(error, t('connect.classes.alert.saveError'))
       return
     }
     setDrawerOpen(false)
     setEditingId(null)
+    crudToast.notifySaved(wasEdit)
     load()
   }
 
   const handleDelete = async (turma: ConnectClass) => {
-    if (!window.confirm(t('connect.confirm.delete', { entity: `a turma "${turma.name}"` }))) return
+    if (!(await confirmDelete(`a turma "${turma.name}"`))) return
     try {
       await connectService.deleteClass(turma.id)
+      crudToast.notifyDeleted()
       load()
     } catch (error: unknown) {
-      window.alert(parseApiError(error, t('connect.classes.alert.deleteError')))
+      crudToast.notifyError(error, t('connect.classes.alert.deleteError'))
     }
   }
 
@@ -194,8 +222,25 @@ export function ClassesPage() {
             className={`${inputClass} max-w-xs`}
             placeholder={t('connect.classes.searchPlaceholder')}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setPage(1)
+              setSearch(e.target.value)
+            }}
           />
+          <select
+            className={`${selectClass} max-w-xs`}
+            value={statusFilter}
+            onChange={(e) => {
+              setPage(1)
+              setStatusFilter(e.target.value)
+            }}
+            aria-label={t('connect.classes.filters.status')}
+          >
+            <option value="">{t('connect.classes.filters.allStatuses')}</option>
+            <option value="active">{t('connect.classes.filters.activeOnly')}</option>
+            <option value="finished">{t('connect.classes.filters.finishedOnly')}</option>
+            <option value="inactive">{t('connect.classes.filters.inactiveOnly')}</option>
+          </select>
         </div>
         {loading ? (
           <ConnectLoadingSpinner label={t('connect.classes.loading')} className="min-h-[280px]" />
@@ -287,7 +332,7 @@ export function ClassesPage() {
               className={inputClass}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Ex: TURMA AUT25-02"
+              placeholder={t('connect.classes.form.placeholders.name')}
             />
           </FormField>
           <FormField label={t('connect.classes.form.period')}>
@@ -302,7 +347,7 @@ export function ClassesPage() {
               className={inputClass}
               value={form.semester}
               onChange={(e) => setForm({ ...form, semester: e.target.value })}
-              placeholder="2025-1"
+              placeholder={t('connect.classes.form.placeholders.semester')}
             />
           </FormField>
           <FormField label={t('connect.classes.form.startDate')} hint="Obrigatorio para gerar calendario">
@@ -315,6 +360,7 @@ export function ClassesPage() {
             <select className={selectClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
               <option value="active">{t('connect.classes.form.active')}</option>
               <option value="inactive">{t('connect.classes.form.inactive')}</option>
+              <option value="finished">{t('connect.classes.form.finished')}</option>
             </select>
           </FormField>
           <FormField label={t('connect.classes.form.capacity')} hint={t('connect.students.form.optional')}>
@@ -323,7 +369,7 @@ export function ClassesPage() {
               className={inputClass}
               value={form.capacity}
               onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-              placeholder="Ex: 30"
+              placeholder={t('connect.classes.form.placeholders.capacity')}
               min={1}
             />
           </FormField>
@@ -348,7 +394,7 @@ export function ClassesPage() {
             </select>
           </FormField>
           <FormField label={t('connect.classes.form.description')}>
-            <textarea className={`${inputClass} min-h-[80px] py-2 sm:col-span-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Descreva a turma, objetivos e observações..." />
+            <textarea className={`${inputClass} min-h-[80px] py-2 sm:col-span-2`} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t('connect.classes.form.placeholders.description')} />
           </FormField>
         </div>
         <FormField label={t('connect.classes.weekly.title')}>

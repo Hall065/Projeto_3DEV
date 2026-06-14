@@ -101,4 +101,29 @@ class CourseController extends Controller
             'message' => 'Curso atualizado com sucesso.',
         ]);
     }
+
+    public function destroy(ConnectCourse $course): JsonResponse
+    {
+        if ($course->classes()->exists()) {
+            return response()->json([
+                'message' => 'Não é possível excluir um curso com turmas vinculadas. Remova ou encerre as turmas antes.',
+            ], 422);
+        }
+
+        $name = $course->name;
+        $course->people()->detach();
+        $course->delete();
+
+        ConnectActivity::query()->create([
+            'title' => 'Curso excluído',
+            'description' => "Curso {$name} removido do catálogo.",
+            'type' => 'delete',
+            'entity_type' => 'course',
+            'entity_id' => null,
+            'performed_by' => request()->user()?->name ?? 'Sistema',
+            'occurred_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Curso excluído com sucesso.']);
+    }
 }
