@@ -44,3 +44,11 @@ export const supabaseAuthStorage = {
     await storage.removeItem(key);
   },
 };
+
+export async function clearSupabaseAuthStorage(storageKey: string) {
+  await Promise.all([
+    supabaseAuthStorage.removeItem(storageKey),
+    supabaseAuthStorage.removeItem(`${storageKey}-user`),
+    supabaseAuthStorage.removeItem(`${storageKey}-code-verifier`),
+  ]);
+}

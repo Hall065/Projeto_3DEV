@@ -1,6 +1,13 @@
 export type ChamadoPrioridade = 'baixa' | 'media' | 'alta' | 'urgente';
-export type ChamadoStatus = 'aberto' | 'aguardando' | 'em_andamento' | 'concluido' | 'concluida';
-export type TarefaStatus = 'a_fazer' | 'em_andamento' | 'concluida' | 'concluido';
+export type ChamadoStatus =
+  | 'aberto'
+  | 'aguardando'
+  | 'em_andamento'
+  | 'em_atendimento'
+  | 'concluido'
+  | 'concluida'
+  | 'cancelado';
+export type TarefaStatus = 'a_fazer' | 'em_andamento' | 'concluida' | 'concluido' | 'cancelado';
 
 export interface Chamado {
   id: string;
@@ -16,8 +23,22 @@ export interface Chamado {
   aberto_por?: string | null;
   responsavel_id?: string | null;
   item_atribuido_id?: string | null;
+  resumo?: string | null;
+  sala_texto?: string | null;
+  bloco_texto?: string | null;
   criado_em?: string;
   concluido_em?: string | null;
+  iniciado_em?: string | null;
+  resumo_resolucao?: string | null;
+  descricao_corrigida?: string | null;
+  consideracoes?: string | null;
+  avaliacao_nota?: number | null;
+  avaliacao_observacao?: string | null;
+  avaliado_por?: string | null;
+  avaliado_em?: string | null;
+  aprovado_por?: string | null;
+  aprovado_em?: string | null;
+  observacoes_aprovacao?: string | null;
   // Campos auxiliares para UI
   solicitante_nome?: string;
   responsavel_nome?: string;
@@ -45,22 +66,35 @@ export interface ChamadoAnexo {
 export interface Tarefa {
   id: string;
   chamado_id: string;
+  codigo?: string | null;
+  aberto_por?: string | null;
   responsavel_id?: string | null;
   item_id?: string | null;
   status: TarefaStatus;
+  coluna?: string | null;
+  status_label?: string | null;
   inicio_reparo?: string | null;
   fim_reparo?: string | null;
   data_inicio_reparo?: string | null;
   data_termino_reparo?: string | null;
+  aberto_em?: string | null;
+  concluido_em?: string | null;
   observacoes?: string | null;
   observacao?: string | null;
   criado_em?: string;
+  created_at?: string;
+  items?: unknown[];
+  inventory_items?: unknown[];
   // Campos auxiliares para UI
   chamado_codigo?: string;
+  chamado_status?: ChamadoStatus;
   titulo: string;
   descricao?: string;
   prioridade?: ChamadoPrioridade;
   responsavel_nome?: string;
+  sala_nome?: string;
+  bloco_nome?: string;
+  item_nome?: string;
 }
 
 export interface ItemEstoque {

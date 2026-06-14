@@ -636,6 +636,7 @@ create table if not exists connect.empresas (
   cnpj text unique,
   email public.citext,
   telefone text,
+  endereco text,
   responsavel_nome text,
   status text not null default 'ativa',
   criado_em timestamptz not null default now(),

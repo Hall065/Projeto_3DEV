@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { isEmpresaRole } from '@/lib/permissions';
 import { resolveEmpresaForSession } from '@/services/empresa.service';
 import { useAuthStore } from '@/stores/auth.store';
 import type { Empresa } from '@/types/connect.types';
 
 export function useEmpresaContext() {
   const session = useAuthStore((state) => state.session);
-  const isEmpresa = session?.perfil?.tipo === 'empresa';
+  const isEmpresa = isEmpresaRole(session?.perfil?.tipo);
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [loading, setLoading] = useState(isEmpresa);
 

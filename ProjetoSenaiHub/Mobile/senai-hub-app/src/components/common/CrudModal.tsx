@@ -110,7 +110,11 @@ export function CrudModal({
   const handleSubmit = async () => {
     const missing = fields.find((field) => field.required && !values[field.name]?.trim());
     if (missing) {
-      setError(`Preencha o campo ${missing.label}.`);
+      setError(
+        missing.options
+          ? `Selecione uma opcao no campo ${missing.label}.`
+          : `Preencha o campo ${missing.label}.`
+      );
       return;
     }
     const incomplete = fields.find((field) => !isMaskedValueComplete(field, values[field.name] ?? ''));
@@ -170,9 +174,11 @@ export function CrudModal({
               const mask = resolveInputMask(field);
               const fieldValue = values[field.name] ?? '';
               const selectOptions = field.options
-                ? field.required
-                  ? field.options
-                  : [{ value: '', label: field.emptyOptionLabel ?? 'Sem vinculo' }, ...field.options]
+                ? field.emptyOptionLabel
+                  ? [{ value: '', label: field.emptyOptionLabel }, ...field.options]
+                  : field.required
+                    ? field.options
+                    : [{ value: '', label: 'Sem vinculo' }, ...field.options]
                 : [];
               const selectedOption = selectOptions.find((option) => option.value === fieldValue);
               const query = selectQueries[field.name] ?? '';

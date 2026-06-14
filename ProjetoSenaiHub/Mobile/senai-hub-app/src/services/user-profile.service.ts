@@ -62,6 +62,7 @@ export async function createAuthUserProfile(input: CreateUserProfileInput): Prom
       'content-type': 'application/json',
     },
     body: JSON.stringify({
+      action: 'create',
       email,
       password: nullIfEmpty(input.senha) ?? DEFAULT_TEMPORARY_PASSWORD,
       nome,
@@ -89,4 +90,37 @@ export async function createAuthUserProfile(input: CreateUserProfileInput): Prom
   }
 
   return data.userId;
+}
+
+export async function deleteAuthUserProfile(userId: string): Promise<void> {
+  const normalizedUserId = userId.trim();
+  if (!normalizedUserId) return;
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) {
+    throw new Error('Entre novamente com uma conta administradora para reverter o cadastro do usuario.');
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/create-user-profile`, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseAnonKey,
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'delete',
+      user_id: normalizedUserId,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await getFunctionErrorMessage(response));
+  }
+
+  const data = (await response.json()) as CreateUserProfileResponse;
+  if (data.error) {
+    throw new Error(data.error);
+  }
 }

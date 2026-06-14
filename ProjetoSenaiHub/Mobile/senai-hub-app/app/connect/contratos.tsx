@@ -27,6 +27,7 @@ function getFields(options: Partial<ContratoOptions>): CrudField[] {
   return [
     { name: 'aluno_id', label: 'Aluno', required: true, options: options.alunos ?? [] },
     { name: 'empresa_id', label: 'Empresa', options: options.empresas ?? [], emptyOptionLabel: 'Sem empresa' },
+    { name: 'monthly_value', label: 'Bolsa mensal', placeholder: '1518,00', keyboardType: 'decimal-pad', mask: 'currency' },
     { name: 'carteira_trabalho', label: 'Carteira de trabalho' },
     { name: 'conta_bancaria', label: 'Conta bancária' },
     { name: 'carga_horaria', label: 'Carga horária', placeholder: '4h, 6h ou 8h', required: true },
@@ -42,6 +43,7 @@ function formValues(contrato: ContratoAluno): Record<string, string> {
   return {
     aluno_id: contrato.aluno_id ?? '',
     empresa_id: contrato.empresa_id ?? '',
+    monthly_value: contrato.monthly_value ? String(contrato.monthly_value) : '',
     carteira_trabalho: contrato.carteira_trabalho ?? '',
     conta_bancaria: contrato.conta_bancaria ?? '',
     carga_horaria: contrato.carga_horaria ?? '6h',

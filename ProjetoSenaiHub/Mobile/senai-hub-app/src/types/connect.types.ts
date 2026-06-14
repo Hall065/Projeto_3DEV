@@ -11,6 +11,7 @@ export interface Aluno {
   nome: string;
   email_pessoal?: string | null;
   email_institucional?: string | null;
+  empresa_id?: string | null;
   empresa_nome?: string | null;
   data_nascimento?: string | null;
   nome_responsavel?: string | null;
@@ -94,6 +95,7 @@ export interface Empresa {
   cnpj?: string | null;
   email?: string | null;
   telefone?: string | null;
+  endereco?: string | null;
   responsavel_nome?: string | null;
   status?: string | null;
   usuario_id?: string | null;
@@ -105,6 +107,9 @@ export interface ContratoAluno {
   aluno_id: string;
   empresa_id?: string | null;
   empresa_nome?: string | null;
+  empresa_cnpj?: string | null;
+  empresa_endereco?: string | null;
+  monthly_value?: number | null;
   carga_horaria?: string | null;
   carteira_trabalho?: string | null;
   conta_bancaria?: string | null;
@@ -116,6 +121,8 @@ export interface ContratoAluno {
   data_fim?: string | null;
   status?: string | null;
   aluno_nome?: string | null;
+  aluno_cpf?: string | null;
+  aluno_rm?: string | null;
   arquivo_url?: string;
 }
 
@@ -132,6 +139,8 @@ export interface SalarioAluno {
   carga_diaria_horas?: number | null;
   dias_uteis_mes?: number | null;
   outros_descontos?: number | null;
+  deductions?: number | null;
+  bonuses?: number | null;
   salario_final?: number | null;
   valor_dia?: number | null;
   desconto?: number | null;
@@ -140,6 +149,50 @@ export interface SalarioAluno {
   faltas_injustificadas?: number | null;
   aluno_nome?: string | null;
   empresa_nome?: string | null;
+  status?: string | null;
+  calculado_em?: string | null;
+}
+
+export interface SalaryAttendanceSummary {
+  total_days: number;
+  present_days: number;
+  justified_absences: number;
+  unjustified_absences: number;
+  rate: number;
+}
+
+export interface SalaryPreviewData {
+  student: {
+    id: string;
+    full_name: string;
+    registration_number?: string | null;
+    class_name?: string | null;
+    course_name?: string | null;
+  };
+  reference_month: string;
+  attendance: SalaryAttendanceSummary;
+  daily_rate: number;
+  contract: {
+    id: string;
+    company_id?: string | null;
+    company_name: string;
+    monthly_value: number;
+    status: string;
+  } | null;
+  amounts: {
+    base: number;
+    bonuses: number;
+    deductions: number;
+    net: number;
+    absence_deduction: number;
+    other_deductions: number;
+  };
+  breakdown: {
+    label: string;
+    value: number;
+    type: 'base' | 'bonus' | 'deduction' | 'net';
+  }[];
+  work_days: number;
 }
 
 export interface LocalizacaoAluno {

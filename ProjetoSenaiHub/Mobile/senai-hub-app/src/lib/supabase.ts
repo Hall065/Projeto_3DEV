@@ -1,7 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabaseAuthStorage } from '@/lib/supabase-auth-storage';
-import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from '@/lib/supabase-config';
+import {
+  isSupabaseConfigured,
+  supabaseAnonKey,
+  supabaseAuthStorageKey,
+  supabaseUrl,
+} from '@/lib/supabase-config';
 
 if (!isSupabaseConfigured) {
   console.warn(
@@ -12,6 +16,7 @@ if (!isSupabaseConfigured) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: supabaseAuthStorage,
+    storageKey: supabaseAuthStorageKey,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
@@ -19,13 +24,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   db: {
     schema: 'hub',
   },
-});
-
-// Listener global de sessão inválida
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
-    await AsyncStorage.clear();
-  }
 });
 
 export { isSupabaseConfigured } from '@/lib/supabase-config';

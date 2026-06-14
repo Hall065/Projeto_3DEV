@@ -22,6 +22,7 @@ import type { Aluno } from '@/types/connect.types';
 const alunoOptionLoaders = {
   cursos: connectService.listCursoOptions,
   turmas: connectService.listTurmaOptions,
+  empresas: connectService.listActiveEmpresaOptions,
 };
 
 type AlunoOptionKey = keyof typeof alunoOptionLoaders;
@@ -41,7 +42,14 @@ function getFields(options: Partial<AlunoOptions>): CrudField[] {
   { name: 'turma_id', label: 'Turma', options: options.turmas ?? [], emptyOptionLabel: 'Sem turma' },
   { name: 'data_nascimento', label: 'Data de nascimento', placeholder: 'DD/MM/AAAA', mask: 'date' },
   { name: 'nome_responsavel', label: 'Responsável' },
-  { name: 'empresa_nome', label: 'Nome da Empresa' },
+  {
+    name: 'empresa_id',
+    label: 'Empresa',
+    required: true,
+    options: options.empresas ?? [],
+    emptyOptionLabel: 'Selecione uma empresa',
+    placeholder: 'Selecione uma empresa',
+  },
   { name: 'status', label: 'Status', required: true, options: USER_STATUS_OPTIONS },
   ];
 }
@@ -72,7 +80,7 @@ function formValues(aluno: Aluno): Record<string, string> {
     turma_id: aluno.turma_id ?? '',
     data_nascimento: aluno.data_nascimento ?? '',
     nome_responsavel: aluno.nome_responsavel ?? '',
-    empresa_nome: aluno.empresa_nome ?? '',
+    empresa_id: aluno.empresa_id ?? '',
     status: aluno.status ?? 'ativo',
   };
 }

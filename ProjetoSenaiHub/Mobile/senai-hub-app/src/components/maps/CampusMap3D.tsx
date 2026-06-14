@@ -25,6 +25,13 @@ import {
   type CampusPersonLocation,
 } from '@/types/campusPeople';
 import {
+  CAMPUS_TICKET_KIND_LABELS,
+  CAMPUS_TICKET_STATUS_COLORS,
+  CAMPUS_TICKET_STATUS_LABELS,
+  type CampusTicketMarker,
+} from '@/types/campusTickets';
+import { ticketMarkerColor } from '@/utils/campusTicketMarkers';
+import {
   buildBlockPinMarkers,
   disposePinMarkerGroup,
   type PinMarkerBlock,
@@ -101,6 +108,16 @@ function applyDefaultCampusView(orbit: OrbitState, center: THREE.Vector3, distan
   orbit.distance = distance;
   orbit.yaw = DEFAULT_CAMERA_YAW;
   orbit.pitch = DEFAULT_CAMERA_PITCH;
+}
+
+function applyRendererViewport(
+  renderer: Renderer,
+  width: number,
+  height: number
+) {
+  renderer.setSize(width, height, false);
+  renderer.setViewport(0, 0, width, height);
+  renderer.setScissorTest(false);
 }
 
 function prepareMaterials(object: THREE.Object3D) {
@@ -246,11 +263,14 @@ function distanceBetweenTouches(event: GestureResponderEvent) {
 }
 
 interface CampusMap3DViewerProps {
-  people: CampusPersonLocation[];
+  people?: CampusPersonLocation[];
+  ticketMarkers?: CampusTicketMarker[];
   selectedBlockId: CampusBlockId | null;
   selectedPersonId: string | null;
+  selectedTicketId?: string | null;
   onSelectBlock: (blockId: CampusBlockId | null) => void;
   onSelectPerson: (personId: string | null) => void;
+  onSelectTicket?: (ticketId: string | null) => void;
   onFatalError?: (message: string) => void;
   viewerHeight?: ViewStyle['height'];
   minHeight?: number;
@@ -260,11 +280,14 @@ interface CampusMap3DViewerProps {
 }
 
 export function CampusMap3DViewer({
-  people,
+  people = [],
+  ticketMarkers = [],
   selectedBlockId,
   selectedPersonId,
+  selectedTicketId = null,
   onSelectBlock,
   onSelectPerson,
+  onSelectTicket,
   onFatalError,
   viewerHeight = 380,
   minHeight = 360,
@@ -278,8 +301,10 @@ export function CampusMap3DViewer({
   const blocksRef = useRef<BlockGroup[]>([]);
   const meshTargetsRef = useRef<MeshOpacityTarget[]>([]);
   const peopleRef = useRef(people);
+  const ticketMarkersRef = useRef(ticketMarkers);
   const selectedBlockRef = useRef<CampusBlockId | null>(selectedBlockId);
   const selectedPersonRef = useRef<string | null>(selectedPersonId);
+  const selectedTicketRef = useRef<string | null>(selectedTicketId);
   const markersGroupRef = useRef<THREE.Group | null>(null);
   const mapReadyRef = useRef(false);
   const markerRadiusRef = useRef(10);
@@ -289,7 +314,8 @@ export function CampusMap3DViewer({
   const raycasterRef = useRef(new THREE.Raycaster());
   const pointerRef = useRef(new THREE.Vector2());
   const animationRef = useRef<number | null>(null);
-  const viewportRef = useRef({ width: 1, height: 1 });
+  const viewportRef = useRef({ width: 0, height: 0 });
+  const renderBufferRef = useRef({ width: 1, height: 1 });
   const disposedRef = useRef(false);
   const touchRef = useRef<TouchState>({
     startX: 0,
@@ -317,17 +343,28 @@ export function CampusMap3DViewer({
     () => people.find((person) => person.id === selectedPersonId) ?? null,
     [people, selectedPersonId]
   );
+  const selectedTicket = useMemo(
+    () => ticketMarkers.find((marker) => marker.id === selectedTicketId) ?? null,
+    [selectedTicketId, ticketMarkers]
+  );
   const selectedBlockPeople = useMemo(
     () => (selectedBlockId ? people.filter((person) => person.blockId === selectedBlockId) : []),
     [people, selectedBlockId]
+  );
+  const selectedBlockTickets = useMemo(
+    () => (selectedBlockId ? ticketMarkers.filter((marker) => marker.blockId === selectedBlockId) : []),
+    [selectedBlockId, ticketMarkers]
   );
 
   const applySelectedMarkerScale = useCallback(() => {
     const markers = markersGroupRef.current;
     if (!markers) return;
 
-    markers.children.forEach((marker) => {
-      const isSelected = marker.userData.markerId === selectedPersonRef.current;
+    markers.traverse((marker) => {
+      if (!marker.userData.markerId) return;
+      const isSelected =
+        marker.userData.markerId === selectedPersonRef.current ||
+        marker.userData.markerId === selectedTicketRef.current;
       marker.scale.setScalar(isSelected ? 1.32 : 1);
     });
   }, []);
@@ -342,14 +379,33 @@ export function CampusMap3DViewer({
       markersGroupRef.current = null;
     }
 
-    if (peopleRef.current.length === 0) return;
+    const markerRoot = new THREE.Group();
+    markerRoot.name = 'campus-map-markers';
 
-    markersGroupRef.current = buildBlockPinMarkers(
-      peopleRef.current,
-      blocksRef.current as PinMarkerBlock[],
-      markerRadiusRef.current,
-      (person) => CAMPUS_PERSON_ROLE_COLORS[person.role]
-    );
+    if (peopleRef.current.length > 0) {
+      markerRoot.add(
+        buildBlockPinMarkers(
+          peopleRef.current,
+          blocksRef.current as PinMarkerBlock[],
+          markerRadiusRef.current,
+          (person) => CAMPUS_PERSON_ROLE_COLORS[person.role]
+        )
+      );
+    }
+
+    if (ticketMarkersRef.current.length > 0) {
+      markerRoot.add(
+        buildBlockPinMarkers(
+          ticketMarkersRef.current,
+          blocksRef.current as PinMarkerBlock[],
+          markerRadiusRef.current,
+          ticketMarkerColor
+        )
+      );
+    }
+
+    if (markerRoot.children.length === 0) return;
+    markersGroupRef.current = markerRoot;
     scene.add(markersGroupRef.current);
     applySelectedMarkerScale();
   }, [applySelectedMarkerScale]);
@@ -382,8 +438,9 @@ export function CampusMap3DViewer({
   const handleResetView = useCallback(() => {
     onSelectBlock(null);
     onSelectPerson(null);
+    onSelectTicket?.(null);
     focusBlock(null);
-  }, [focusBlock, onSelectBlock, onSelectPerson]);
+  }, [focusBlock, onSelectBlock, onSelectPerson, onSelectTicket]);
 
   const pickAt = useCallback(
     (x: number, y: number) => {
@@ -400,10 +457,19 @@ export function CampusMap3DViewer({
         const markerId = markerIntersects.length > 0 ? findMarkerId(markerIntersects[0].object) : null;
         if (markerId) {
           const person = peopleRef.current.find((entry) => entry.id === markerId);
+          const ticket = ticketMarkersRef.current.find((entry) => entry.id === markerId);
           if (person) {
             onSelectPerson(person.id);
+            onSelectTicket?.(null);
             onSelectBlock(person.blockId);
             focusBlock(person.blockId);
+            return;
+          }
+          if (ticket) {
+            onSelectPerson(null);
+            onSelectTicket?.(ticket.id);
+            onSelectBlock(ticket.blockId);
+            focusBlock(ticket.blockId);
             return;
           }
         }
@@ -416,10 +482,11 @@ export function CampusMap3DViewer({
       const blockId = blockIntersects.length > 0 ? findBlockId(blockIntersects[0].object) : null;
 
       onSelectPerson(null);
+      onSelectTicket?.(null);
       onSelectBlock(blockId);
       if (blockId) focusBlock(blockId);
     },
-    [focusBlock, onSelectBlock, onSelectPerson]
+    [focusBlock, onSelectBlock, onSelectPerson, onSelectTicket]
   );
 
   const panResponder = useMemo(
@@ -489,7 +556,13 @@ export function CampusMap3DViewer({
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
     }
-    renderer?.setSize(width, height, false);
+    if (renderer) {
+      const renderSize =
+        Platform.OS === 'web'
+          ? { width, height }
+          : renderBufferRef.current;
+      applyRendererViewport(renderer, renderSize.width, renderSize.height);
+    }
   }, []);
 
   const setFatalError = useCallback(
@@ -512,21 +585,41 @@ export function CampusMap3DViewer({
         scene.background = new THREE.Color(0xe8edf5);
         sceneRef.current = scene;
 
-        const width = viewportRef.current.width || gl.drawingBufferWidth;
-        const height = viewportRef.current.height || gl.drawingBufferHeight;
+        renderBufferRef.current = {
+          width: gl.drawingBufferWidth,
+          height: gl.drawingBufferHeight,
+        };
+        const layoutWidth = viewportRef.current.width;
+        const layoutHeight = viewportRef.current.height;
+        const cameraWidth = layoutWidth > 0 ? layoutWidth : gl.drawingBufferWidth;
+        const cameraHeight = layoutHeight > 0 ? layoutHeight : gl.drawingBufferHeight;
+        const renderWidth =
+          Platform.OS === 'web' && layoutWidth > 0
+            ? layoutWidth
+            : gl.drawingBufferWidth;
+        const renderHeight =
+          Platform.OS === 'web' && layoutHeight > 0
+            ? layoutHeight
+            : gl.drawingBufferHeight;
 
-        const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 5000);
+        const camera = new THREE.PerspectiveCamera(
+          50,
+          cameraWidth / cameraHeight,
+          0.1,
+          5000
+        );
         cameraRef.current = camera;
 
         const renderer = new Renderer({
           gl,
           antialias: true,
           clearColor: 0xe8edf5,
-          width,
-          height,
+          width: renderWidth,
+          height: renderHeight,
         });
         renderer.setPixelRatio(1);
-        renderer.setSize(width, height, false);
+        applyRendererViewport(renderer, renderWidth, renderHeight);
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.sortObjects = true;
         rendererRef.current = renderer;
@@ -550,6 +643,18 @@ export function CampusMap3DViewer({
           if (disposedRef.current) return;
           animationRef.current = requestAnimationFrame(animate);
           if (cameraRef.current && rendererRef.current && sceneRef.current) {
+            const bufferWidth = gl.drawingBufferWidth;
+            const bufferHeight = gl.drawingBufferHeight;
+            if (
+              renderBufferRef.current.width !== bufferWidth ||
+              renderBufferRef.current.height !== bufferHeight
+            ) {
+              renderBufferRef.current = { width: bufferWidth, height: bufferHeight };
+              applyRendererViewport(rendererRef.current, bufferWidth, bufferHeight);
+            } else if (Platform.OS !== 'web') {
+              rendererRef.current.setViewport(0, 0, bufferWidth, bufferHeight);
+            }
+            gl.viewport(0, 0, bufferWidth, bufferHeight);
             applyCameraOrbit(cameraRef.current, orbitRef.current);
             if (meshTargetsRef.current.length > 0) {
               updateProximityOpacity(
@@ -640,17 +745,24 @@ export function CampusMap3DViewer({
 
   useEffect(() => {
     peopleRef.current = people;
+    ticketMarkersRef.current = ticketMarkers;
     syncMapMarkers();
-  }, [people, syncMapMarkers]);
+  }, [people, syncMapMarkers, ticketMarkers]);
 
   useEffect(() => {
     selectedBlockRef.current = selectedBlockId;
-  }, [selectedBlockId]);
+    focusBlock(selectedBlockId);
+  }, [focusBlock, selectedBlockId]);
 
   useEffect(() => {
     selectedPersonRef.current = selectedPersonId;
     applySelectedMarkerScale();
   }, [applySelectedMarkerScale, selectedPersonId]);
+
+  useEffect(() => {
+    selectedTicketRef.current = selectedTicketId;
+    applySelectedMarkerScale();
+  }, [applySelectedMarkerScale, selectedTicketId]);
 
   useEffect(
     () => () => {
@@ -717,21 +829,38 @@ export function CampusMap3DViewer({
 
           {showPanel ? (
             <View style={[styles.legend, compact && styles.legendCompact]}>
-              {Object.entries(CAMPUS_PERSON_ROLE_LABELS).map(([role, label]) => (
-                <View key={role} style={styles.legendItem}>
-                  <View
-                    style={[
-                      styles.legendDot,
-                      { backgroundColor: CAMPUS_PERSON_ROLE_COLORS[role as keyof typeof CAMPUS_PERSON_ROLE_COLORS] },
-                    ]}
-                  />
-                  <Text style={styles.legendText}>{label}</Text>
-                </View>
-              ))}
+              {ticketMarkers.length > 0
+                ? Object.entries(CAMPUS_TICKET_STATUS_LABELS).map(([status, label]) => (
+                    <View key={status} style={styles.legendItem}>
+                      <View
+                        style={[
+                          styles.legendDot,
+                          {
+                            backgroundColor:
+                              CAMPUS_TICKET_STATUS_COLORS[
+                                status as keyof typeof CAMPUS_TICKET_STATUS_COLORS
+                              ],
+                          },
+                        ]}
+                      />
+                      <Text style={styles.legendText}>{label}</Text>
+                    </View>
+                  ))
+                : Object.entries(CAMPUS_PERSON_ROLE_LABELS).map(([role, label]) => (
+                    <View key={role} style={styles.legendItem}>
+                      <View
+                        style={[
+                          styles.legendDot,
+                          { backgroundColor: CAMPUS_PERSON_ROLE_COLORS[role as keyof typeof CAMPUS_PERSON_ROLE_COLORS] },
+                        ]}
+                      />
+                      <Text style={styles.legendText}>{label}</Text>
+                    </View>
+                  ))}
             </View>
           ) : null}
 
-          {showPanel && (selectedPerson || selectedBlockId) ? (
+          {showPanel && (selectedPerson || selectedTicket || selectedBlockId) ? (
             <View style={styles.selectionPanel}>
               {selectedPerson ? (
                 <>
@@ -743,11 +872,29 @@ export function CampusMap3DViewer({
                     {[selectedPerson.room, selectedPerson.detail].filter(Boolean).join(' - ')}
                   </Text>
                 </>
+              ) : selectedTicket ? (
+                <>
+                  <Text numberOfLines={1} style={styles.selectionTitle}>
+                    {selectedTicket.code} - {selectedTicket.title}
+                  </Text>
+                  <Text numberOfLines={1} style={styles.selectionText}>
+                    {CAMPUS_TICKET_KIND_LABELS[selectedTicket.kind]} - {CAMPUS_BLOCK_BY_ID[selectedTicket.blockId].name}
+                  </Text>
+                  <Text numberOfLines={2} style={styles.selectionMuted}>
+                    {[
+                      selectedTicket.room ? `Sala ${selectedTicket.room}` : null,
+                      CAMPUS_TICKET_STATUS_LABELS[selectedTicket.status],
+                      selectedTicket.assignee ?? 'Sem responsavel',
+                    ].filter(Boolean).join(' - ')}
+                  </Text>
+                </>
               ) : selectedBlockId ? (
                 <>
                   <Text numberOfLines={1} style={styles.selectionTitle}>{CAMPUS_BLOCK_BY_ID[selectedBlockId].name}</Text>
                   <Text numberOfLines={1} style={styles.selectionText}>
-                    {selectedBlockPeople.length} pessoa(s) mapeada(s)
+                    {ticketMarkers.length > 0
+                      ? `${selectedBlockTickets.length} atendimento(s) mapeado(s)`
+                      : `${selectedBlockPeople.length} pessoa(s) mapeada(s)`}
                   </Text>
                 </>
               ) : null}
@@ -760,24 +907,33 @@ export function CampusMap3DViewer({
 }
 
 interface CampusMap3DContainerProps {
-  people: CampusPersonLocation[];
+  people?: CampusPersonLocation[];
+  ticketMarkers?: CampusTicketMarker[];
   highlightPersonId?: string | null;
+  highlightTicketId?: string | null;
   onSelectPerson?: (personId: string | null) => void;
+  onSelectTicket?: (ticketId: string | null) => void;
+  moduleLabel?: string;
   minHeight?: number;
   compact?: boolean;
   fallback?: ReactNode;
 }
 
 export function CampusMap3DContainer({
-  people,
+  people = [],
+  ticketMarkers = [],
   highlightPersonId = null,
+  highlightTicketId = null,
   onSelectPerson,
+  onSelectTicket,
+  moduleLabel = 'SENAI Connect',
   minHeight = 380,
   compact = false,
   fallback,
 }: CampusMap3DContainerProps) {
   const [selectedBlockId, setSelectedBlockId] = useState<CampusBlockId | null>(null);
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [fatalError, setFatalError] = useState<string | null>(null);
 
@@ -789,21 +945,43 @@ export function CampusMap3DContainer({
     setSelectedBlockId(person.blockId);
   }, [highlightPersonId, people]);
 
+  useEffect(() => {
+    if (!highlightTicketId || !ticketMarkers.length) return;
+    const marker = ticketMarkers.find((entry) => entry.id === highlightTicketId);
+    if (!marker) return;
+    setSelectedTicketId(marker.id);
+    setSelectedPersonId(null);
+    setSelectedBlockId(marker.blockId);
+  }, [highlightTicketId, ticketMarkers]);
+
   const handleSelectPerson = useCallback(
     (personId: string | null) => {
       setSelectedPersonId(personId);
+      if (personId) setSelectedTicketId(null);
       onSelectPerson?.(personId);
     },
     [onSelectPerson]
   );
 
+  const handleSelectTicket = useCallback(
+    (ticketId: string | null) => {
+      setSelectedTicketId(ticketId);
+      if (ticketId) setSelectedPersonId(null);
+      onSelectTicket?.(ticketId);
+    },
+    [onSelectTicket]
+  );
+
   const renderViewer = (expanded: boolean) => (
     <CampusMap3DViewer
       people={people}
+      ticketMarkers={ticketMarkers}
       selectedBlockId={selectedBlockId}
       selectedPersonId={selectedPersonId}
+      selectedTicketId={selectedTicketId}
       onSelectBlock={setSelectedBlockId}
       onSelectPerson={handleSelectPerson}
+      onSelectTicket={handleSelectTicket}
       onFatalError={setFatalError}
       viewerHeight={expanded ? '100%' : minHeight}
       minHeight={expanded ? 1 : minHeight}
@@ -843,7 +1021,7 @@ export function CampusMap3DContainer({
           <View style={styles.modalHeader}>
             <View style={styles.modalTitleWrap}>
               <Text style={styles.modalTitle}>Mapa 3D do campus SENAI</Text>
-              <Text style={styles.modalSubtitle}>SENAI Connect</Text>
+              <Text style={styles.modalSubtitle}>{moduleLabel}</Text>
             </View>
             <Pressable accessibilityRole="button" onPress={() => setFullscreen(false)} style={styles.closeButton}>
               <Minimize2 size={17} color={colors.navy} />

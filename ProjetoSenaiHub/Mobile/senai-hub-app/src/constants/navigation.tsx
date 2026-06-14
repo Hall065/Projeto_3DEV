@@ -47,7 +47,7 @@ export const GRID_DRAWER_ITEMS: DrawerMenuItem[] = [
   { label: 'Tarefas', route: ROUTES.grid.tarefas, icon: <ClipboardList />, section: 'Operação' },
   { label: 'Relatórios', route: ROUTES.grid.relatorios, icon: <BarChart3 />, section: 'Operação' },
   { label: 'Estoque', route: ROUTES.grid.estoque, icon: <Package />, section: 'Recursos' },
-  { label: 'Mapa de tarefas', route: ROUTES.grid.mapaTarefas, icon: <Map />, section: 'Recursos' },
+  { label: 'Localizacao de chamados', route: ROUTES.grid.mapaTarefas, icon: <Map />, section: 'Recursos' },
   { label: 'Usuários', route: ROUTES.grid.usuarios, icon: <Users />, section: 'Administração' },
 ];
 

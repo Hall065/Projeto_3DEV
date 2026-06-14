@@ -4,7 +4,7 @@ import * as Sharing from 'expo-sharing';
 import * as XLSX from 'xlsx';
 import { Platform } from 'react-native';
 
-type ExportRow = Record<string, string | number | boolean | null | undefined>;
+export type ExportRow = Record<string, string | number | boolean | null | undefined>;
 
 function sanitizeFileName(name: string) {
   return name
@@ -19,6 +19,15 @@ function formatCell(value: unknown) {
   if (value == null) return '';
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   return String(value);
+}
+
+function escapeHtml(value: unknown) {
+  return formatCell(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function gerarHTMLRelatorio(dados: ExportRow[], titulo: string) {
@@ -41,18 +50,18 @@ function gerarHTMLRelatorio(dados: ExportRow[], titulo: string) {
         </style>
       </head>
       <body>
-        <h1>${titulo}</h1>
+        <h1>${escapeHtml(titulo)}</h1>
         <p>Gerado em ${new Date().toLocaleString('pt-BR')}</p>
         <table>
           <thead>
-            <tr>${tableColumns.map((column) => `<th>${column}</th>`).join('')}</tr>
+            <tr>${tableColumns.map((column) => `<th>${escapeHtml(column)}</th>`).join('')}</tr>
           </thead>
           <tbody>
             ${rows
               .map(
                 (row) =>
                   `<tr>${tableColumns
-                    .map((column) => `<td>${formatCell(row[column])}</td>`)
+                    .map((column) => `<td>${escapeHtml(row[column])}</td>`)
                     .join('')}</tr>`
               )
               .join('')}

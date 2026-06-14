@@ -18,6 +18,15 @@ export const supabaseAnonKey = trimEnv(
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
+export const supabaseAuthStorageKey = (() => {
+  try {
+    const projectRef = new URL(supabaseUrl).hostname.split('.')[0];
+    return `sb-${projectRef}-auth-token`;
+  } catch {
+    return 'senai-hub-supabase-auth-token';
+  }
+})();
+
 /** Apenas para diagnóstico em dev (não expõe a chave inteira). */
 export function getSupabaseKeyHint(): string {
   if (!supabaseAnonKey) return 'não configurada';

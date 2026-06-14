@@ -7,6 +7,7 @@ import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { USER_ROLE_OPTIONS, USER_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { isMaintenanceRole } from '@/lib/permissions';
 import { gridService } from '@/services/grid.service';
 import { useAuthStore } from '@/stores/auth.store';
@@ -52,6 +53,7 @@ function formValues(usuario: HubUsuario): Record<string, string> {
 }
 
 export default function UsuariosGridScreen() {
+  const theme = useThemeColors();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<HubUsuario | null>(null);
   const [search, setSearch] = useState('');
@@ -97,7 +99,9 @@ export default function UsuariosGridScreen() {
 
         <SurfaceCard title="Equipe cadastrada" subtitle="Usuários internos e níveis de acesso">
           {error ? <FeedbackMessage variant="danger" message={error} /> : null}
-          {filtered.length === 0 ? <Text style={styles.empty}>Nenhum usuário encontrado.</Text> : null}
+          {filtered.length === 0 ? (
+            <Text style={[styles.empty, { color: theme.textMuted }]}>Nenhum usuário encontrado.</Text>
+          ) : null}
           {filtered.map((usuario) => (
             <ListRow
               key={usuario.id}
@@ -140,6 +144,6 @@ export default function UsuariosGridScreen() {
 const styles = StyleSheet.create({
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
   metric: { width: '48%' },
-  empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
+  empty: { fontSize: 12, fontWeight: '700' },
   error: { color: colors.red, fontSize: 12, fontWeight: '700', marginBottom: 8 },
 });

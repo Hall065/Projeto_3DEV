@@ -40,7 +40,10 @@ serve(async (req) => {
     .eq('id', callerData.user.id)
     .maybeSingle();
 
+  const body = await req.json();
   const {
+    action = 'create',
+    user_id,
     email,
     password,
     senha,
@@ -52,7 +55,7 @@ serve(async (req) => {
     cpf,
     status = 'ativo',
     allow_password_update = false,
-  } = await req.json();
+  } = body;
 
   const normalizedEmail = String(email ?? '').trim().toLowerCase();
   const initialPassword = String(password ?? senha ?? '').trim();
@@ -67,6 +70,58 @@ serve(async (req) => {
     callerProfile?.status === 'ativo' &&
     ['gerente_manutencao', 'grid_chefe'].includes(callerRole) &&
     ['manutencao', 'grid_funcionario'].includes(tipoUsuario);
+
+  if (action === 'delete') {
+    if (callerProfileError || !canCreateUsers) {
+      return new Response(
+        JSON.stringify({ error: 'Sem permissao para reverter cadastros de usuarios.' }),
+        { status: 403, headers }
+      );
+    }
+
+    const targetUserId = String(user_id ?? '').trim();
+    if (!targetUserId || targetUserId === callerData.user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Usuario de reversao invalido.' }),
+        { status: 400, headers }
+      );
+    }
+
+    const { data: targetProfile, error: targetProfileError } = await supabase
+      .schema('hub')
+      .from('usuarios')
+      .select('id, tipo_usuario')
+      .eq('id', targetUserId)
+      .maybeSingle();
+
+    if (targetProfileError) {
+      return new Response(JSON.stringify({ error: targetProfileError.message }), { status: 400, headers });
+    }
+
+    if (targetProfile && !['aluno', 'connect_aluno'].includes(String(targetProfile.tipo_usuario ?? ''))) {
+      return new Response(
+        JSON.stringify({ error: 'A reversao automatica so pode remover usuarios de aluno.' }),
+        { status: 400, headers }
+      );
+    }
+
+    const { error: deleteProfileError } = await supabase
+      .schema('hub')
+      .from('usuarios')
+      .delete()
+      .eq('id', targetUserId);
+
+    if (deleteProfileError) {
+      return new Response(JSON.stringify({ error: deleteProfileError.message }), { status: 400, headers });
+    }
+
+    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(targetUserId);
+    if (deleteAuthError && !deleteAuthError.message.toLowerCase().includes('not found')) {
+      return new Response(JSON.stringify({ error: deleteAuthError.message }), { status: 400, headers });
+    }
+
+    return new Response(JSON.stringify({ userId: targetUserId }), { headers });
+  }
 
   if (callerProfileError || (!canCreateUsers && !canCreateMaintenanceUser)) {
     return new Response(

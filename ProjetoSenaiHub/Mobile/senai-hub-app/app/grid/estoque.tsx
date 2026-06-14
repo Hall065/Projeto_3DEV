@@ -8,6 +8,7 @@ import { colors, gridTheme } from '@/constants/colors';
 import { ESTOQUE_STATUS_OPTIONS } from '@/constants/form-options';
 import { useCrudResource } from '@/hooks/useCrudResource';
 import { useSelectOptions } from '@/hooks/useSelectOptions';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { gridService } from '@/services/grid.service';
 import type { ItemEstoque } from '@/types/grid.types';
 
@@ -52,6 +53,7 @@ function formValues(item: ItemEstoque): Record<string, string> {
 }
 
 export default function EstoqueScreen() {
+  const theme = useThemeColors();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ItemEstoque | null>(null);
   const [search, setSearch] = useState('');
@@ -94,7 +96,9 @@ export default function EstoqueScreen() {
 
         <SurfaceCard title="Itens cadastrados" subtitle="Lista de materiais de manutenção">
           {error || optionsError ? <FeedbackMessage variant="danger" message={error ?? optionsError ?? ''} /> : null}
-          {filtered.length === 0 ? <Text style={styles.empty}>Nenhum item encontrado.</Text> : null}
+          {filtered.length === 0 ? (
+            <Text style={[styles.empty, { color: theme.textMuted }]}>Nenhum item encontrado.</Text>
+          ) : null}
           {filtered.map((item) => (
             <ListRow
               key={item.id}
@@ -136,6 +140,6 @@ export default function EstoqueScreen() {
 const styles = StyleSheet.create({
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
   metric: { width: '48%' },
-  empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
+  empty: { fontSize: 12, fontWeight: '700' },
   error: { color: colors.red, fontSize: 12, fontWeight: '700', marginBottom: 8 },
 });

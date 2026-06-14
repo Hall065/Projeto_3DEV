@@ -22,6 +22,7 @@ const companyFields: CrudField[] = [
 
 const companyExtraFields: CrudField[] = [
   { name: 'telefone', label: 'Telefone', placeholder: '(19) 99999-9999', mask: 'phone' },
+  { name: 'endereco', label: 'Endereco da empresa' },
   { name: 'responsavel_nome', label: 'Responsavel' },
   { name: 'status', label: 'Status', required: true, options: EMPRESA_STATUS_OPTIONS },
 ];
@@ -54,6 +55,7 @@ function formValues(empresa: Empresa): Record<string, string> {
     cnpj: empresa.cnpj ?? '',
     email: empresa.email ?? '',
     telefone: empresa.telefone ?? '',
+    endereco: empresa.endereco ?? '',
     responsavel_nome: empresa.responsavel_nome ?? '',
     status: empresa.status ?? 'ativa',
     senha_acesso: '',

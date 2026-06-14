@@ -15,12 +15,14 @@ import {
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, gridTheme } from '@/constants/colors';
 import { ROUTES } from '@/constants/routes';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { gridService } from '@/services/grid.service';
 import type { Chamado, ItemEstoque, Tarefa } from '@/types/grid.types';
 import { buildDateTrend, countByStatus, topGroups } from '@/utils/dashboardAnalytics';
 
 export default function GridDashboard() {
   const router = useRouter();
+  const theme = useThemeColors();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({
     chamadosAbertos: 0,
@@ -94,17 +96,17 @@ export default function GridDashboard() {
       description="Resumo operacional da manutenção e infraestrutura."
       isLoading={loading}
     >
-      <SurfaceCard tone="dark" title="Operação de infraestrutura" subtitle="Prioridades e chamados em tempo real">
+      <SurfaceCard title="Operação de infraestrutura" subtitle="Prioridades e chamados em tempo real">
         <View style={styles.heroContent}>
-          <RingMetric value={metrics.chamadosAbertos} label="chamados abertos" accent={gridTheme.accent} tone="dark" />
+          <RingMetric value={metrics.chamadosAbertos} label="chamados abertos" accent={gridTheme.accent} />
           <View style={styles.heroBody}>
-            <Text style={styles.heroTitle}>Fila operacional organizada</Text>
-            <Text style={styles.heroText}>
+            <Text style={[styles.heroTitle, { color: theme.text }]}>Fila operacional organizada</Text>
+            <Text style={[styles.heroText, { color: theme.textMuted }]}>
               Chamados, tarefas e estoque aparecem juntos para facilitar a tomada de decisão.
             </Text>
             <View style={styles.heroPills}>
-              <Pill label={`${metrics.chamadosEmAndamento} em andamento`} variant="warning" tone="dark" />
-              <Pill label={`${itensCriticos.length} itens críticos`} variant="danger" tone="dark" />
+              <Pill label={`${metrics.chamadosEmAndamento} em andamento`} variant="warning" />
+              <Pill label={`${itensCriticos.length} itens críticos`} variant="danger" />
             </View>
           </View>
         </View>
@@ -156,7 +158,9 @@ export default function GridDashboard() {
       </SurfaceCard>
 
       <SurfaceCard title="Chamados recentes" subtitle="Últimas solicitações registradas">
-        {chamados.length === 0 ? <Text style={styles.emptyDark}>Nenhum dado cadastrado ainda.</Text> : null}
+        {chamados.length === 0 ? (
+          <Text style={[styles.empty, { color: theme.textMuted }]}>Nenhum dado cadastrado ainda.</Text>
+        ) : null}
         {chamados.slice(0, 5).map((chamado) => (
           <ListRow
             key={chamado.id}
@@ -225,7 +229,9 @@ export default function GridDashboard() {
       </ChartCard>
 
       <SurfaceCard title="Itens com estoque baixo" subtitle="Peças que exigem reposição">
-        {itensCriticos.length === 0 ? <Text style={styles.emptyDark}>Nenhum dado cadastrado ainda.</Text> : null}
+        {itensCriticos.length === 0 ? (
+          <Text style={[styles.empty, { color: theme.textMuted }]}>Nenhum dado cadastrado ainda.</Text>
+        ) : null}
         {itensCriticos.slice(0, 5).map((item) => (
           <ListRow
             key={item.id}
@@ -249,8 +255,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   heroBody: { flex: 1, minWidth: 0 },
-  heroTitle: { color: colors.white, fontSize: 16, fontWeight: '900' },
-  heroText: { color: colors.mutedText, fontSize: 12, lineHeight: 17, marginTop: 5 },
+  heroTitle: { fontSize: 16, fontWeight: '900' },
+  heroText: { fontSize: 12, lineHeight: 17, marginTop: 5 },
   heroPills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -270,5 +276,5 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   quickButton: { width: '48%' },
-  emptyDark: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
+  empty: { fontSize: 12, fontWeight: '700' },
 });

@@ -1,27 +1,46 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
+import { clearSupabaseAuthStorage } from '@/lib/supabase-auth-storage';
+import { supabaseAuthStorageKey } from '@/lib/supabase-config';
 import { fetchUserProfile, fetchUserApplications } from '@/services/hub.service';
 import type { AuthSession } from '@/types/auth.types';
 import { mapAuthErrorMessage } from '@/lib/auth-errors';
 
-// Opção 4 — Inicializar sessão com tratamento de erro
+function isInvalidRefreshTokenError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const record = error as { code?: string; message?: string };
+  const message = record.message?.toLowerCase() ?? '';
+  return (
+    record.code === 'refresh_token_not_found' ||
+    record.code === 'refresh_token_already_used' ||
+    message.includes('invalid refresh token') ||
+    message.includes('refresh token not found')
+  );
+}
+
+async function clearLocalAuthSession() {
+  await clearSupabaseAuthStorage(supabaseAuthStorageKey);
+}
+
+// Inicializa a sessão e descarta tokens locais revogados ou antigos.
 export async function initializeAuth() {
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error) {
-      console.log('Sessão inválida, limpando cache...');
-      await AsyncStorage.clear();
-      await supabase.auth.signOut();
+      await clearLocalAuthSession();
+      if (!isInvalidRefreshTokenError(error)) {
+        console.warn('[AuthService] Sessão local inválida:', error.message);
+      }
       return null;
     }
 
     return session;
 
   } catch (err) {
-    console.error('[AuthService] Erro ao inicializar auth:', err);
-    await AsyncStorage.clear();
-    await supabase.auth.signOut();
+    await clearLocalAuthSession();
+    if (!isInvalidRefreshTokenError(err)) {
+      console.warn('[AuthService] Erro ao inicializar auth:', err);
+    }
     return null;
   }
 }
@@ -138,8 +157,8 @@ export async function updatePassword(password: string): Promise<{ error: string 
 
 // Logout
 export async function logout() {
-  await AsyncStorage.clear();
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
+  if (error) await clearLocalAuthSession();
 }
 
 export async function getCurrentSession(): Promise<AuthSession | null> {

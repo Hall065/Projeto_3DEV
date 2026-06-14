@@ -202,11 +202,15 @@ async function hydrateTarefas(rows: Row[]) {
       'hub'
     )
   );
+  const itens = indexById(
+    await selectRowsByIds('itens_estoque', uniqueIds(rows.map((row) => row.item_id)), 'id,titulo,status,quantidade_disponivel')
+  );
 
   return rows.map((row) => ({
     ...row,
     chamado: row.chamado ?? chamados.get(row.chamado_id),
     responsavel: row.responsavel ?? usuarios.get(row.responsavel_id),
+    item: row.item ?? itens.get(row.item_id),
   }));
 }
 
@@ -271,11 +275,19 @@ function makeCodigo() {
   return `FCH-${String(Date.now()).slice(-6)}`;
 }
 
+function taskStatusLabel(status: TarefaStatus) {
+  if (status === 'em_andamento') return 'Em andamento';
+  if (status === 'concluida' || status === 'concluido') return 'Concluida';
+  if (status === 'cancelado') return 'Cancelada';
+  return 'A fazer';
+}
+
 function mapChamado(row: Row): Chamado {
   const categoria = relation(row, 'categoria') ?? relation(row, 'categorias_chamado') ?? {};
   const bloco = relation(row, 'bloco') ?? relation(row, 'blocos') ?? {};
   const sala = relation(row, 'sala') ?? relation(row, 'salas') ?? {};
   const solicitante = relation(row, 'solicitante') ?? relation(row, 'usuarios') ?? {};
+  const responsavel = relation(row, 'responsavel') ?? {};
   const anexos = ((row.anexos ?? []) as Row[]).map((anexo) => {
     const arquivo = relation(anexo, 'arquivo') ?? {};
     return {
@@ -294,21 +306,39 @@ function mapChamado(row: Row): Chamado {
     codigo: row.codigo,
     titulo: row.titulo,
     descricao: row.descricao,
+    resumo: row.resumo,
     sala_id: row.sala_id,
-    sala_nome: sala.nome,
+    sala_texto: row.sala_texto,
+    sala_nome: row.sala_texto ?? sala.nome,
     bloco_id: row.bloco_id,
-    bloco_nome: bloco.nome,
+    bloco_texto: row.bloco_texto,
+    bloco_nome: row.bloco_texto ?? bloco.nome,
     categoria_id: row.categoria_id,
     categoria_nome: categoria.nome,
     prioridade: row.prioridade ?? 'media',
     status: row.status ?? 'aberto',
     solicitante_id: row.solicitante_id ?? row.aberto_por,
     aberto_por: row.aberto_por,
-    solicitante_nome: solicitante.nome,
+    solicitante_nome: row.solicitante_nome ?? solicitante.nome,
     responsavel_id: row.responsavel_id,
+    responsavel_nome: row.responsavel_nome ?? responsavel.nome,
+    item_atribuido_id: row.item_atribuido_id,
+    criado_em: row.criado_em,
     created_at: row.created_at ?? row.criado_em,
     data_abertura: row.data_abertura,
     data_fechamento: row.data_fechamento,
+    iniciado_em: row.iniciado_em,
+    concluido_em: row.concluido_em,
+    resumo_resolucao: row.resumo_resolucao,
+    descricao_corrigida: row.descricao_corrigida,
+    consideracoes: row.consideracoes,
+    avaliacao_nota: row.avaliacao_nota,
+    avaliacao_observacao: row.avaliacao_observacao,
+    avaliado_por: row.avaliado_por,
+    avaliado_em: row.avaliado_em,
+    aprovado_por: row.aprovado_por,
+    aprovado_em: row.aprovado_em,
+    observacoes_aprovacao: row.observacoes_aprovacao,
     anexos,
     imagem_url: abertura?.url ?? null,
     evidencia_url: evidencia?.url ?? null,
@@ -318,19 +348,40 @@ function mapChamado(row: Row): Chamado {
 function mapTarefa(row: Row): Tarefa {
   const chamado = relation(row, 'chamado') ?? relation(row, 'chamados') ?? {};
   const responsavel = relation(row, 'responsavel') ?? relation(row, 'usuarios') ?? {};
+  const item = relation(row, 'item') ?? relation(row, 'itens_estoque') ?? {};
+  const chamadoSala = relation(chamado, 'sala') ?? {};
+  const chamadoBloco = relation(chamado, 'bloco') ?? {};
   return {
     id: row.id,
     chamado_id: row.chamado_id,
+    codigo: row.codigo,
+    aberto_por: row.aberto_por,
     chamado_codigo: chamado.codigo,
+    chamado_status: chamado.status,
     titulo: row.titulo ?? chamado.titulo ?? 'Tarefa sem chamado',
     descricao: row.descricao ?? chamado.descricao ?? row.observacao,
     status: row.status ?? 'a_fazer',
+    coluna: row.coluna ?? row.status ?? 'a_fazer',
+    status_label: row.status_label,
     prioridade: row.prioridade ?? chamado.prioridade ?? 'media',
     responsavel_id: row.responsavel_id,
-    responsavel_nome: responsavel.nome,
+    responsavel_nome: responsavel.nome ?? chamado.responsavel_nome,
+    item_id: row.item_id,
+    item_nome: item.titulo,
+    sala_nome: row.sala_texto ?? chamado.sala_texto ?? chamadoSala.nome,
+    bloco_nome: row.bloco_texto ?? chamado.bloco_texto ?? chamadoBloco.nome,
     observacao: row.observacao ?? row.observacoes,
+    observacoes: row.observacoes ?? row.observacao,
+    inicio_reparo: row.inicio_reparo,
+    fim_reparo: row.fim_reparo,
     data_inicio_reparo: row.data_inicio_reparo,
     data_termino_reparo: row.data_termino_reparo,
+    aberto_em: row.aberto_em,
+    concluido_em: row.concluido_em,
+    criado_em: row.criado_em,
+    created_at: row.created_at ?? row.criado_em,
+    items: Array.isArray(row.items) ? row.items : [],
+    inventory_items: Array.isArray(row.inventory_items) ? row.inventory_items : [],
   };
 }
 
@@ -522,23 +573,32 @@ export const gridService = {
 
   async createChamado(values: FormValues, userId?: string | null) {
     const actorId = await getAuthenticatedUserId('abrir chamado');
+    const responsavelId = uuidOrNull(values.responsavel_id, 'responsavel');
+    const initialStatus = nullIfEmpty(values.status)
+      ? normalizeStatus(values.status, 'aberto')
+      : responsavelId
+        ? 'aguardando'
+        : 'aberto';
     const chamado = await insertWithFallback('chamados', [
       {
         codigo: nullIfEmpty(values.codigo) ?? makeCodigo(),
         aberto_por: uuidOrNull(actorId ?? values.aberto_por, 'solicitante'),
+        solicitante_id: uuidOrNull(actorId ?? values.solicitante_id, 'solicitante'),
         categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao) ?? '',
+        resumo: nullIfEmpty(values.resumo ?? values.descricao),
         bloco_id: uuidOrNull(values.bloco_id, 'bloco'),
         sala_id: uuidOrNull(values.sala_id, 'sala'),
         prioridade: normalizeStatus(values.prioridade, 'media') as ChamadoPrioridade,
-        status: normalizeStatus(values.status, 'aberto') as ChamadoStatus,
+        status: initialStatus as ChamadoStatus,
+        responsavel_id: responsavelId,
       },
       {
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao) ?? '',
         prioridade: normalizeStatus(values.prioridade, 'media'),
-        status: normalizeStatus(values.status, 'aberto'),
+        status: initialStatus,
         solicitante_id: uuidOrNull(actorId ?? values.solicitante_id, 'solicitante'),
       },
     ]);
@@ -556,25 +616,80 @@ export const gridService = {
 
     const chamado = await updateWithFallback('chamados', id, [
       {
+        categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
+        titulo: nullIfEmpty(values.titulo),
+        descricao: nullIfEmpty(values.descricao) ?? '',
+        resumo: nullIfEmpty(values.resumo ?? values.descricao),
+        bloco_id: uuidOrNull(values.bloco_id, 'bloco'),
+        sala_id: uuidOrNull(values.sala_id, 'sala'),
+        prioridade: normalizeStatus(values.prioridade, 'media') as ChamadoPrioridade,
+        status: normalizeStatus(values.status, 'aberto') as ChamadoStatus,
+        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
+        resumo_resolucao: nullIfEmpty(values.resumo_resolucao),
+        consideracoes: nullIfEmpty(values.consideracoes),
+      },
+      {
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao) ?? '',
         prioridade: normalizeStatus(values.prioridade, 'media'),
         status: normalizeStatus(values.status, 'aberto'),
       },
-      {
-        codigo: nullIfEmpty(values.codigo),
-        categoria_id: uuidOrNull(values.categoria_id, 'categoria'),
-        titulo: nullIfEmpty(values.titulo),
-        descricao: nullIfEmpty(values.descricao) ?? '',
-        bloco_id: uuidOrNull(values.bloco_id, 'bloco'),
-        sala_id: uuidOrNull(values.sala_id, 'sala'),
-        prioridade: normalizeStatus(values.prioridade, 'media') as ChamadoPrioridade,
-        status: normalizeStatus(values.status, 'aberto') as ChamadoStatus,
-      },
     ]);
     await attachChamadoImage(id, values.anexo_uri, actorId, 'abertura');
     await attachChamadoImage(id, values.evidencia_uri, actorId, 'evidencia_conclusao');
     return chamado;
+  },
+
+  async assignChamado(id: string, responsavelId: string) {
+    await getAuthenticatedUserId('atribuir chamado');
+    const normalizedId = uuidOrNull(responsavelId, 'responsavel');
+    if (!normalizedId) throw new Error('Selecione um responsavel para o chamado.');
+
+    return updateWithFallback('chamados', id, [
+      {
+        responsavel_id: normalizedId,
+        status: 'aguardando',
+      },
+      {
+        responsavel_id: normalizedId,
+      },
+    ]);
+  },
+
+  async startChamado(id: string) {
+    await getAuthenticatedUserId('iniciar atendimento');
+    const rows = await hydrateChamados(await selectRowsByIds('chamados', [id], '*'));
+    const chamado = rows[0] as Row | undefined;
+    if (!chamado) throw new Error('Chamado nao encontrado.');
+    if (!chamado.responsavel_id) {
+      throw new Error('Atribua um responsavel antes de iniciar o atendimento.');
+    }
+
+    const tarefas = (await selectRows('tarefas')).filter((row) => row.chamado_id === id);
+    const tarefa = tarefas[0];
+    if (tarefa) {
+      await gridService.moveTarefaStatus(tarefa.id, 'em_andamento', tarefa.observacao ?? tarefa.observacoes);
+    } else {
+      await gridService.createTarefa({
+        chamado_id: id,
+        titulo: chamado.titulo,
+        descricao: chamado.descricao,
+        responsavel_id: chamado.responsavel_id,
+        prioridade: chamado.prioridade ?? 'media',
+        status: 'em_andamento',
+      });
+    }
+
+    const startedAt = new Date().toISOString();
+    return updateWithFallback('chamados', id, [
+      {
+        status: 'em_andamento',
+        iniciado_em: chamado.iniciado_em ?? startedAt,
+      },
+      {
+        status: 'em_andamento',
+      },
+    ]);
   },
 
   deleteChamado: (id: string) => deleteRow('chamados', id),
@@ -587,6 +702,7 @@ export const gridService = {
   async createTarefa(values: FormValues, userId?: string | null) {
     const actorId = await getAuthenticatedUserId('criar tarefa');
     let chamadoId = uuidOrNull(values.chamado_id, 'chamado');
+    const responsavelId = uuidOrNull(values.responsavel_id, 'responsavel');
     if (!chamadoId) {
       const chamado = await gridService.createChamado(
         {
@@ -601,17 +717,24 @@ export const gridService = {
       chamadoId = chamado.id;
     }
 
-    return insertWithFallback('tarefas', [
+    const status = normalizeStatus(values.status, 'a_fazer') as TarefaStatus;
+    const tarefa = await insertWithFallback('tarefas', [
       {
         chamado_id: chamadoId,
-        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
+        titulo: nullIfEmpty(values.titulo),
+        descricao: nullIfEmpty(values.descricao),
+        prioridade: normalizeStatus(values.prioridade, 'media'),
+        responsavel_id: responsavelId,
         atribuido_por: uuidOrNull(actorId ?? values.atribuido_por, 'usuario'),
-        status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
+        item_id: uuidOrNull(values.item_id, 'item de estoque'),
+        status,
+        coluna: status,
+        status_label: taskStatusLabel(status),
         observacao: nullIfEmpty(values.observacao ?? values.descricao),
       },
       {
         chamado_id: chamadoId,
-        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
+        responsavel_id: responsavelId,
         atribuido_por: uuidOrNull(actorId ?? values.atribuido_por, 'usuario'),
         status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
         observacoes: nullIfEmpty(values.observacao ?? values.descricao),
@@ -621,49 +744,117 @@ export const gridService = {
         titulo: nullIfEmpty(values.titulo),
         descricao: nullIfEmpty(values.descricao),
         prioridade: normalizeStatus(values.prioridade, 'media'),
-        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
+        responsavel_id: responsavelId,
         status: normalizeStatus(values.status, 'a_fazer'),
       },
     ]);
+
+    if (responsavelId && chamadoId) {
+      await updateWithFallback('chamados', chamadoId, [
+        {
+          responsavel_id: responsavelId,
+          status: status === 'em_andamento' ? 'em_andamento' : 'aguardando',
+        },
+        {
+          responsavel_id: responsavelId,
+        },
+      ]);
+    }
+
+    return tarefa;
   },
 
   updateTarefa(id: string, values: FormValues) {
+    const status = normalizeStatus(values.status, 'a_fazer') as TarefaStatus;
+    const fullPayload: Row = {
+      status,
+      coluna: status,
+      status_label: taskStatusLabel(status),
+      observacao: nullIfEmpty(values.observacao ?? values.descricao),
+    };
+    if ('titulo' in values) fullPayload.titulo = nullIfEmpty(values.titulo);
+    if ('descricao' in values) fullPayload.descricao = nullIfEmpty(values.descricao);
+    if ('prioridade' in values) fullPayload.prioridade = normalizeStatus(values.prioridade, 'media');
+    if ('responsavel_id' in values) fullPayload.responsavel_id = uuidOrNull(values.responsavel_id, 'responsavel');
+    if ('item_id' in values) fullPayload.item_id = uuidOrNull(values.item_id, 'item de estoque');
+
     return updateWithFallback('tarefas', id, [
+      fullPayload,
       {
-        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
-        status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
-        observacao: nullIfEmpty(values.observacao ?? values.descricao),
-      },
-      {
-        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
-        status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
+        ...('responsavel_id' in values
+          ? { responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel') }
+          : {}),
+        status,
         observacoes: nullIfEmpty(values.observacao ?? values.descricao),
       },
       {
-        titulo: nullIfEmpty(values.titulo),
-        descricao: nullIfEmpty(values.descricao),
-        prioridade: normalizeStatus(values.prioridade, 'media'),
-        responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel'),
-        status: normalizeStatus(values.status, 'a_fazer'),
+        ...('titulo' in values ? { titulo: nullIfEmpty(values.titulo) } : {}),
+        ...('descricao' in values ? { descricao: nullIfEmpty(values.descricao) } : {}),
+        ...('prioridade' in values ? { prioridade: normalizeStatus(values.prioridade, 'media') } : {}),
+        ...('responsavel_id' in values
+          ? { responsavel_id: uuidOrNull(values.responsavel_id, 'responsavel') }
+          : {}),
+        status,
       },
     ]);
   },
 
   updateTarefaStatus(id: string, values: FormValues) {
-    return updateWithFallback('tarefas', id, [
+    return gridService.moveTarefaStatus(
+      id,
+      normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
+      values.observacao ?? values.descricao
+    );
+  },
+
+  async moveTarefaStatus(id: string, status: TarefaStatus, observacao?: string | null) {
+    await getAuthenticatedUserId('atualizar o andamento da tarefa');
+    const rows = await selectRowsByIds('tarefas', [id], '*');
+    const tarefa = rows[0];
+    if (!tarefa) throw new Error('Tarefa nao encontrada.');
+
+    const now = new Date().toISOString();
+    const isDone = status === 'concluida' || status === 'concluido';
+    const payload: Row = {
+      status,
+      coluna: status,
+      status_label: taskStatusLabel(status),
+      observacao: nullIfEmpty(observacao) ?? tarefa.observacao ?? tarefa.observacoes,
+      inicio_reparo:
+        status === 'em_andamento'
+          ? tarefa.inicio_reparo ?? tarefa.data_inicio_reparo ?? now
+          : status === 'a_fazer'
+            ? null
+            : tarefa.inicio_reparo,
+      fim_reparo: isDone ? tarefa.fim_reparo ?? tarefa.data_termino_reparo ?? now : null,
+      concluido_em: isDone ? tarefa.concluido_em ?? now : null,
+    };
+
+    const updated = await updateWithFallback('tarefas', id, [
+      payload,
       {
-        status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
-        observacao: nullIfEmpty(values.observacao ?? values.descricao),
+        status,
+        observacao: payload.observacao,
       },
       {
-        status: normalizeStatus(values.status, 'a_fazer') as TarefaStatus,
-        observacoes: nullIfEmpty(values.observacao ?? values.descricao),
-      },
-      {
-        status: normalizeStatus(values.status, 'a_fazer'),
-        descricao: nullIfEmpty(values.descricao ?? values.observacao),
+        status,
+        observacoes: payload.observacao,
       },
     ]);
+
+    if (status === 'em_andamento' && tarefa.chamado_id) {
+      await updateWithFallback('chamados', tarefa.chamado_id, [
+        {
+          status: 'em_andamento',
+          iniciado_em: now,
+        },
+        {
+          status: 'em_andamento',
+        },
+      ]);
+    }
+
+    return updated;
   },
 
   deleteTarefa: (id: string) => deleteRow('tarefas', id),
@@ -768,6 +959,41 @@ export const gridService = {
       label: `${chamado.codigo ?? 'CH'} - ${chamado.titulo}`,
       description: chamado.status,
     }));
+  },
+
+  async listOpenChamadoOptions() {
+    const [chamados, tarefas] = await Promise.all([
+      gridService.listChamados(),
+      gridService.listTarefas(),
+    ]);
+    const chamadosComTarefa = new Set(
+      tarefas
+        .filter((tarefa) => tarefa.status !== 'cancelado')
+        .map((tarefa) => tarefa.chamado_id)
+    );
+
+    return chamados
+      .filter(
+        (chamado) =>
+          !['concluido', 'concluida', 'cancelado'].includes(chamado.status) &&
+          !chamadosComTarefa.has(chamado.id)
+      )
+      .map((chamado) => ({
+        value: chamado.id,
+        label: `${chamado.codigo ?? 'CH'} - ${chamado.titulo}`,
+        description: `${chamado.responsavel_nome ?? 'Sem responsavel'} - ${chamado.status}`,
+      }));
+  },
+
+  async listEstoqueOptions() {
+    const itens = await gridService.listEstoque();
+    return itens
+      .filter((item) => item.quantidade_disponivel > 0)
+      .map((item) => ({
+        value: item.id,
+        label: item.titulo,
+        description: `${item.quantidade_disponivel} ${item.unidade} disponivel(is)`,
+      }));
   },
 
   async listBlocoOptions() {

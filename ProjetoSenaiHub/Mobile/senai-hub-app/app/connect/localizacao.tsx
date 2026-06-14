@@ -184,6 +184,7 @@ export default function LocalizacaoScreen() {
             people={campusPeople}
             highlightPersonId={selectedAlunoId ? `student-${selectedAlunoId}` : null}
             onSelectPerson={handleMapPersonSelect}
+            minHeight={520}
             fallback={(
               <CampusMap25D
                 locations={localizacoes}

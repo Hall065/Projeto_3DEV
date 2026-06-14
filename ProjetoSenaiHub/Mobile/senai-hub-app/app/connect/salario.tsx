@@ -1,215 +1,590 @@
-import { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Calculator, DollarSign, Percent, WalletCards } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import {
+  Calculator,
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
+  Download,
+  MinusCircle,
+  PlusCircle,
+  RefreshCw,
+  TrendingDown,
+  Users,
+  Wallet,
+} from 'lucide-react-native';
 import { ExportModal } from '@/components/common/ExportModal';
-import { CrudModal, type CrudField, type CrudOption } from '@/components/common/CrudModal';
-import { AnimatedPressable, AppButton, FeedbackMessage, ListRow, MetricTile, ProgressBar, SurfaceCard } from '@/components/common/VisualPrimitives';
+import { MetricGrid } from '@/components/common/MetricGrid';
+import {
+  AnimatedPressable,
+  AppButton,
+  FeedbackMessage,
+  ListRow,
+  MetricTile,
+  Pill,
+  SearchField,
+  SurfaceCard,
+} from '@/components/common/VisualPrimitives';
 import { ModuleScreen } from '@/components/screens/ModuleScreen';
 import { colors, connectTheme } from '@/constants/colors';
-import { TIPO_PAGAMENTO_OPTIONS } from '@/constants/form-options';
-import { useCrudResource } from '@/hooks/useCrudResource';
+import { useConfirmDialog } from '@/hooks/useConfirmDialog';
 import { useEmpresaContext } from '@/hooks/useEmpresaContext';
-import { useSelectOptions } from '@/hooks/useSelectOptions';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { canManageConnectData } from '@/lib/permissions';
-import { listSalariosByEmpresaId } from '@/services/empresa.service';
 import { connectService } from '@/services/connect.service';
+import { listSalariosByEmpresaId } from '@/services/empresa.service';
 import { exportService } from '@/services/export.service';
 import { useAuthStore } from '@/stores/auth.store';
-import type { SalarioAluno } from '@/types/connect.types';
+import type { Aluno, SalarioAluno, SalaryPreviewData } from '@/types/connect.types';
+import {
+  formatCurrency,
+  formatCurrencyInput,
+  normalizeDecimalInput,
+} from '@/utils/formatters';
 
-const salarioOptionLoaders = {
-  alunos: connectService.listAlunoOptions,
-  empresas: connectService.listEmpresaOptions,
-  contratos: connectService.listContratoOptions,
-};
+type StatusFilter = 'all' | 'calculado' | 'pago' | 'pendente';
 
-type SalarioOptionKey = keyof typeof salarioOptionLoaders;
-type SalarioOptions = Record<SalarioOptionKey, CrudOption[]>;
-
-function getFields(options: Partial<SalarioOptions>): CrudField[] {
-  return [
-    { name: 'aluno_id', label: 'Aluno', required: true, options: options.alunos ?? [] },
-    { name: 'empresa_id', label: 'Empresa', options: options.empresas ?? [], emptyOptionLabel: 'Sem empresa' },
-    { name: 'contrato_id', label: 'Contrato', options: options.contratos ?? [], emptyOptionLabel: 'Sem contrato' },
-    { name: 'tipo_pagamento', label: 'Tipo de pagamento', required: true, options: TIPO_PAGAMENTO_OPTIONS },
-    { name: 'salario_base', label: 'Salário base', placeholder: '1200,00', keyboardType: 'decimal-pad', mask: 'currency', required: true },
-    { name: 'valor_hora', label: 'Valor hora', placeholder: '12,50', keyboardType: 'decimal-pad', mask: 'currency' },
-    { name: 'carga_diaria_horas', label: 'Carga diária', placeholder: '6', keyboardType: 'decimal-pad', mask: 'decimal' },
-    { name: 'dias_uteis_mes', label: 'Dias úteis do mês', placeholder: '22', keyboardType: 'numeric', mask: 'integer' },
-    { name: 'mes_referencia', label: 'Mês de referência', placeholder: 'MM/AAAA', mask: 'month', required: true },
-  ];
+function parseMoney(value: string) {
+  const parsed = Number(normalizeDecimalInput(value));
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
 }
 
-function formValues(salario: SalarioAluno): Record<string, string> {
-  return {
-    aluno_id: salario.aluno_id ?? '',
-    empresa_id: salario.empresa_id ?? '',
-    contrato_id: salario.contrato_id ?? '',
-    tipo_pagamento: salario.tipo_pagamento ?? 'mensal',
-    salario_base: String(salario.salario_base ?? 0),
-    valor_hora: salario.valor_hora ? String(salario.valor_hora) : '',
-    carga_diaria_horas: salario.carga_diaria_horas ? String(salario.carga_diaria_horas) : '6',
-    dias_uteis_mes: salario.dias_uteis_mes ? String(salario.dias_uteis_mes) : '22',
-    mes_referencia: salario.mes_referencia ?? new Date().toISOString().slice(0, 7),
-  };
+function addMonths(value: string, amount: number) {
+  const [year, month] = value.split('-').map(Number);
+  const date = new Date(year, month - 1 + amount, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function formatMonthLabel(value: string) {
+  const [year, month] = value.split('-').map(Number);
+  if (!year || !month) return value;
+  const label = new Intl.DateTimeFormat('pt-BR', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(year, month - 1, 1));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function normalizedStatus(value?: string | null) {
+  const status = String(value ?? 'calculado').toLowerCase();
+  if (['paid', 'pago'].includes(status)) return 'pago';
+  if (['pending', 'pendente'].includes(status)) return 'pendente';
+  return 'calculado';
 }
 
 export default function SalarioScreen() {
+  const theme = useThemeColors();
+  const { confirm } = useConfirmDialog();
   const session = useAuthStore((state) => state.session);
   const { isEmpresa, empresa, empresaId, loading: empresaLoading } = useEmpresaContext();
   const canManage = canManageConnectData(session?.perfil?.tipo);
-  const [modalOpen, setModalOpen] = useState(false);
+
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [records, setRecords] = useState<SalarioAluno[]>([]);
+  const [students, setStudents] = useState<Aluno[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingStudents, setLoadingStudents] = useState(canManage);
+  const [previewing, setPreviewing] = useState(false);
+  const [calculating, setCalculating] = useState(false);
+  const [batching, setBatching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
-  const [editing, setEditing] = useState<SalarioAluno | null>(null);
-  const [alunoFilter, setAlunoFilter] = useState('all');
-  const { options, error: optionsError } = useSelectOptions(salarioOptionLoaders);
-  const fields = getFields(options);
 
-  const loadSalarios = useCallback(async () => {
-    if (isEmpresa && empresaId) return listSalariosByEmpresaId(empresaId);
-    return connectService.listSalarios();
-  }, [empresaId, isEmpresa]);
+  const [selectedStudent, setSelectedStudent] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [recordSearch, setRecordSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [bonuses, setBonuses] = useState('0');
+  const [deductions, setDeductions] = useState('0');
+  const [useAutoDeductions, setUseAutoDeductions] = useState(true);
+  const [preview, setPreview] = useState<SalaryPreviewData | null>(null);
 
-  const { items, loading, submitting, error, createItem, updateItem, deleteItem } =
-    useCrudResource<SalarioAluno, Record<string, string>>({
-      load: loadSalarios,
-      create: connectService.createSalario,
-      update: connectService.updateSalario,
-      remove: connectService.deleteSalario,
+  const loadRecords = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data =
+        isEmpresa && empresaId
+          ? await listSalariosByEmpresaId(empresaId)
+          : await connectService.listSalarios(month);
+      setRecords(
+        data
+          .filter((record) => record.mes_referencia?.slice(0, 7) === month)
+          .sort((a, b) =>
+            (a.aluno_nome ?? '').localeCompare(b.aluno_nome ?? '', 'pt-BR', {
+              sensitivity: 'base',
+            })
+          )
+      );
+    } catch (err) {
+      setRecords([]);
+      setError(err instanceof Error ? err.message : 'Nao foi possivel carregar os salarios.');
+    } finally {
+      setLoading(false);
+    }
+  }, [empresaId, isEmpresa, month]);
+
+  useEffect(() => {
+    void loadRecords();
+  }, [loadRecords]);
+
+  useEffect(() => {
+    let active = true;
+    if (!canManage) {
+      setStudents([]);
+      setLoadingStudents(false);
+      return;
+    }
+
+    setLoadingStudents(true);
+    connectService
+      .listAlunos()
+      .then((data) => {
+        if (!active) return;
+        setStudents(
+          data
+            .filter((student) => student.status === 'ativo')
+            .sort((a, b) =>
+              a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+            )
+        );
+      })
+      .catch((err) => {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Nao foi possivel carregar os alunos.');
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingStudents(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [canManage]);
+
+  const selectedStudentData = students.find((student) => student.id === selectedStudent);
+  const visibleStudents = useMemo(() => {
+    const query = studentSearch.trim().toLocaleLowerCase('pt-BR');
+    if (!query) return students;
+    return students.filter((student) =>
+      `${student.nome} ${student.rm ?? ''} ${student.turma_nome ?? ''}`
+        .toLocaleLowerCase('pt-BR')
+        .includes(query)
+    );
+  }, [studentSearch, students]);
+
+  const filteredRecords = useMemo(() => {
+    const query = recordSearch.trim().toLocaleLowerCase('pt-BR');
+    return records.filter((record) => {
+      const matchesSearch =
+        !query ||
+        `${record.aluno_nome ?? ''} ${record.empresa_nome ?? ''}`
+          .toLocaleLowerCase('pt-BR')
+          .includes(query);
+      const matchesStatus =
+        statusFilter === 'all' || normalizedStatus(record.status) === statusFilter;
+      return matchesSearch && matchesStatus;
     });
+  }, [recordSearch, records, statusFilter]);
 
-  const alunoOptions = useMemo(() => {
-    const unique = new Map<string, string>();
-    items.forEach((item) => {
-      if (item.aluno_id) unique.set(item.aluno_id, item.aluno_nome ?? item.aluno_id);
+  const summary = useMemo(
+    () =>
+      filteredRecords.reduce(
+        (total, record) => ({
+          base: total.base + record.salario_base,
+          deductions:
+            total.deductions + (record.deductions ?? record.outros_descontos ?? record.desconto ?? 0),
+          bonuses: total.bonuses + (record.bonuses ?? 0),
+          net: total.net + (record.salario_final ?? record.salario_base),
+        }),
+        { base: 0, deductions: 0, bonuses: 0, net: 0 }
+      ),
+    [filteredRecords]
+  );
+
+  const clearPreview = () => {
+    setPreview(null);
+    setSuccess(null);
+  };
+
+  const changeMonth = (nextMonth: string) => {
+    setMonth(nextMonth);
+    clearPreview();
+  };
+
+  const salaryInput = () => ({
+    alunoId: selectedStudent,
+    mesReferencia: month,
+    bonuses: parseMoney(bonuses),
+    deductions: useAutoDeductions ? undefined : parseMoney(deductions),
+  });
+
+  const handlePreview = async () => {
+    if (!selectedStudent) {
+      setError('Selecione um aprendiz para simular o calculo.');
+      return;
+    }
+
+    setPreviewing(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const data = await connectService.previewSalary(salaryInput());
+      setPreview(data);
+      if (useAutoDeductions) {
+        setDeductions(formatCurrencyInput(String(data.amounts.deductions)));
+      }
+    } catch (err) {
+      setPreview(null);
+      setError(err instanceof Error ? err.message : 'Nao foi possivel simular o salario.');
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
+  const handleCalculate = async () => {
+    if (!preview) return;
+    const confirmed = await confirm({
+      title: 'Confirmar calculo salarial',
+      message: `Salvar ${formatCurrency(preview.amounts.net)} para ${preview.student.full_name} em ${formatMonthLabel(month)}?`,
+      confirmLabel: 'Salvar calculo',
     });
-    return Array.from(unique.entries()).map(([value, label]) => ({ value, label }));
-  }, [items]);
+    if (!confirmed) return;
 
-  const filteredItems = items.filter((item) => alunoFilter === 'all' || item.aluno_id === alunoFilter);
-  const totalBase = filteredItems.reduce((sum, item) => sum + item.salario_base, 0);
-  const totalFinal = filteredItems.reduce((sum, item) => sum + (item.salario_final ?? item.salario_base), 0);
-  const averageBase = filteredItems.length ? totalBase / filteredItems.length : 0;
+    setCalculating(true);
+    setError(null);
+    try {
+      const result = await connectService.calculateSalary(salaryInput());
+      setPreview(result.preview);
+      setSuccess(
+        result.updated
+          ? 'Calculo salarial atualizado com sucesso.'
+          : 'Calculo salarial salvo com sucesso.'
+      );
+      await loadRecords();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nao foi possivel salvar o calculo.');
+    } finally {
+      setCalculating(false);
+    }
+  };
+
+  const handleBatch = async () => {
+    const confirmed = await confirm({
+      title: 'Calcular todos os aprendizes',
+      message: `Gerar ou atualizar os calculos de ${formatMonthLabel(month)} usando faltas injustificadas e contratos ativos?`,
+      confirmLabel: 'Calcular todos',
+    });
+    if (!confirmed) return;
+
+    setBatching(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const result = await connectService.calculateSalaryBatch(month);
+      setSuccess(`${result.processed} calculo(s) processado(s).`);
+      if (result.errors.length > 0) {
+        setError(`${result.errors.length} aluno(s) nao puderam ser calculados.`);
+      }
+      await loadRecords();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Nao foi possivel calcular em lote.');
+    } finally {
+      setBatching(false);
+    }
+  };
+
+  const recalculate = (record: SalarioAluno) => {
+    setSelectedStudent(record.aluno_id);
+    changeMonth(record.mes_referencia?.slice(0, 7) ?? month);
+    setBonuses(formatCurrencyInput(String(record.bonuses ?? 0)));
+    setDeductions(
+      formatCurrencyInput(
+        String(record.deductions ?? record.outros_descontos ?? record.desconto ?? 0)
+      )
+    );
+    setUseAutoDeductions(false);
+    setPreview(null);
+    setSuccess('Valores carregados no simulador para recalculo.');
+  };
+
   const screenLoading = loading || (isEmpresa && empresaLoading);
 
   return (
     <>
       <ModuleScreen
         kicker="SENAI Connect"
-        title={isEmpresa ? 'Cálculo salarial' : 'Salário'}
+        title="Calculo salarial"
         description={
           isEmpresa
             ? `Bolsas e descontos dos aprendizes de ${empresa?.nome ?? 'sua empresa'}.`
-            : 'Cálculo mensal com base em faltas injustificadas.'
+            : 'Simule, confira e salve o fechamento mensal dos aprendizes.'
         }
         isLoading={screenLoading}
-        actionLabel={canManage ? '+ Novo cálculo' : undefined}
-        onActionPress={
-          canManage
-            ? () => {
-                setEditing(null);
-                setModalOpen(true);
-              }
-            : undefined
-        }
       >
-        {isEmpresa && !empresa && !screenLoading ? (
-          <FeedbackMessage
-            variant="warning"
-            message="Não foi possível identificar a empresa vinculada ao seu usuário."
+        <MonthSelector
+          month={month}
+          onPrevious={() => changeMonth(addMonths(month, -1))}
+          onNext={() => changeMonth(addMonths(month, 1))}
+        />
+
+        {error ? <FeedbackMessage variant="danger" message={error} /> : null}
+        {success ? <FeedbackMessage variant="success" message={success} /> : null}
+
+        <MetricGrid>
+          <MetricTile
+            label="Registros"
+            value={filteredRecords.length}
+            accent={colors.blue}
+            icon={<Users size={16} color={colors.blue} />}
           />
-        ) : null}
+          <MetricTile
+            label="Folha base"
+            value={formatCurrency(summary.base)}
+            accent={connectTheme.accent}
+            icon={<Wallet size={16} color={connectTheme.accent} />}
+          />
+          <MetricTile
+            label="Total liquido"
+            value={formatCurrency(summary.net)}
+            accent={colors.green}
+            icon={<CircleDollarSign size={16} color={colors.green} />}
+          />
+          <MetricTile
+            label="Descontos"
+            value={formatCurrency(summary.deductions)}
+            accent={colors.orange}
+            icon={<TrendingDown size={16} color={colors.orange} />}
+          />
+        </MetricGrid>
 
-        <View style={styles.metricGrid}>
-          <MetricTile label="Bolsa média" value={`R$ ${Math.round(averageBase).toLocaleString('pt-BR')}`} accent={connectTheme.accent} icon={<WalletCards size={16} color={connectTheme.accent} />} style={styles.metric} />
-          <MetricTile label="Registros" value={filteredItems.length} accent={colors.red} icon={<Percent size={16} color={colors.red} />} style={styles.metric} />
-          <MetricTile label="Total final" value={`R$ ${Math.round(totalFinal).toLocaleString('pt-BR')}`} accent={colors.green} icon={<DollarSign size={16} color={colors.green} />} style={styles.metric} />
-          <MetricTile label="Meses" value={new Set(filteredItems.map((i) => i.mes_referencia)).size} accent={colors.orange} icon={<Calculator size={16} color={colors.orange} />} style={styles.metric} />
-        </View>
+        {canManage ? (
+          <SurfaceCard
+            title="Simulador"
+            subtitle="Selecione o aprendiz e confira a previa antes de salvar"
+          >
+            <Text style={[styles.label, { color: theme.text }]}>Aprendiz</Text>
+            <SearchField
+              placeholder="Buscar por nome, RM ou turma..."
+              value={studentSearch}
+              onChangeText={setStudentSearch}
+            />
+            {loadingStudents ? (
+              <View style={styles.inlineLoading}>
+                <ActivityIndicator color={connectTheme.accent} />
+                <Text style={[styles.helperText, { color: theme.textMuted }]}>
+                  Carregando aprendizes...
+                </Text>
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.studentOptions}
+              >
+                {visibleStudents.slice(0, 30).map((student) => (
+                  <StudentChip
+                    key={student.id}
+                    student={student}
+                    active={student.id === selectedStudent}
+                    onPress={() => {
+                      setSelectedStudent(student.id);
+                      clearPreview();
+                    }}
+                  />
+                ))}
+              </ScrollView>
+            )}
 
-        {alunoOptions.length > 0 ? (
-          <SurfaceCard title="Filtrar por aprendiz" subtitle="Alunos com cálculo salarial na empresa">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-              <FilterChip label="Todos" active={alunoFilter === 'all'} onPress={() => setAlunoFilter('all')} />
-              {alunoOptions.map((option) => (
-                <FilterChip
-                  key={option.value}
-                  label={option.label}
-                  active={alunoFilter === option.value}
-                  onPress={() => setAlunoFilter(option.value)}
-                />
-              ))}
-            </ScrollView>
+            {selectedStudentData ? (
+              <View
+                style={[
+                  styles.studentInfo,
+                  { backgroundColor: theme.surfaceSoft, borderColor: theme.line },
+                ]}
+              >
+                <Text style={[styles.studentInfoName, { color: theme.text }]}>
+                  {selectedStudentData.nome}
+                </Text>
+                <Text style={[styles.helperText, { color: theme.textMuted }]}>
+                  {selectedStudentData.turma_nome ?? 'Turma nao informada'} ·{' '}
+                  {selectedStudentData.curso_nome ?? 'Curso nao informado'} · RM{' '}
+                  {selectedStudentData.rm ?? 'nao informado'}
+                </Text>
+              </View>
+            ) : null}
+
+            <View style={styles.inputGrid}>
+              <MoneyField
+                label="Bonificacoes"
+                value={bonuses}
+                onChange={(value) => {
+                  setBonuses(value);
+                  clearPreview();
+                }}
+              />
+              <MoneyField
+                label="Descontos"
+                value={deductions}
+                disabled={useAutoDeductions}
+                onChange={(value) => {
+                  setDeductions(value);
+                  clearPreview();
+                }}
+              />
+            </View>
+
+            <View
+              style={[
+                styles.switchRow,
+                { backgroundColor: theme.surfaceSoft, borderColor: theme.line },
+              ]}
+            >
+              <View style={styles.switchText}>
+                <Text style={[styles.switchLabel, { color: theme.text }]}>
+                  Desconto automatico por faltas
+                </Text>
+                <Text style={[styles.helperText, { color: theme.textMuted }]}>
+                  Usa as faltas injustificadas registradas no mes
+                </Text>
+              </View>
+              <Switch
+                value={useAutoDeductions}
+                onValueChange={(value) => {
+                  setUseAutoDeductions(value);
+                  clearPreview();
+                }}
+                trackColor={{ false: theme.line, true: '#F5A3AA' }}
+                thumbColor={useAutoDeductions ? connectTheme.accent : theme.textMuted}
+              />
+            </View>
+
+            <View style={styles.simulatorActions}>
+              <AppButton
+                label={previewing ? 'Simulando...' : 'Simular'}
+                variant="secondary"
+                accent={connectTheme.accent}
+                icon={<Calculator size={16} color={connectTheme.accent} />}
+                onPress={handlePreview}
+                loading={previewing}
+                disabled={!selectedStudent}
+                wrapperStyle={styles.action}
+              />
+              <AppButton
+                label={calculating ? 'Salvando...' : 'Confirmar calculo'}
+                accent={connectTheme.accent}
+                onPress={handleCalculate}
+                loading={calculating}
+                disabled={!preview}
+                wrapperStyle={styles.action}
+              />
+            </View>
           </SurfaceCard>
         ) : null}
 
-        <SurfaceCard title="Cálculo do salário" subtitle={isEmpresa ? 'Somente leitura' : 'Dados carregados do Supabase'}>
-          <View style={styles.salaryBox}>
-            <Text style={styles.salaryLabel}>Total de bolsas base</Text>
-            <Text style={styles.salaryValue}>R$ {Math.round(totalBase).toLocaleString('pt-BR')}</Text>
-            <ProgressBar value={filteredItems.length ? 85 : 0} accent={colors.green} />
+        {canManage ? <SalaryPreview preview={preview} /> : null}
+
+        <SurfaceCard
+          title="Calculos do mes"
+          subtitle={`${filteredRecords.length} fechamento(s) em ${formatMonthLabel(month)}`}
+        >
+          <SearchField
+            placeholder="Buscar aprendiz ou empresa..."
+            value={recordSearch}
+            onChangeText={setRecordSearch}
+          />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filters}
+          >
+            {(
+              [
+                ['all', 'Todos'],
+                ['calculado', 'Calculados'],
+                ['pendente', 'Pendentes'],
+                ['pago', 'Pagos'],
+              ] as [StatusFilter, string][]
+            ).map(([value, label]) => (
+              <FilterChip
+                key={value}
+                label={label}
+                active={statusFilter === value}
+                onPress={() => setStatusFilter(value)}
+              />
+            ))}
+          </ScrollView>
+
+          <View style={styles.listActions}>
+            {canManage ? (
+              <AppButton
+                label={batching ? 'Calculando...' : 'Calcular todos'}
+                variant="secondary"
+                accent={colors.blue}
+                icon={<RefreshCw size={16} color={colors.blue} />}
+                onPress={handleBatch}
+                loading={batching}
+                wrapperStyle={styles.listAction}
+              />
+            ) : null}
             <AppButton
-              label="Exportar PDF ou Excel"
+              label="Exportar"
               variant="secondary"
               accent={connectTheme.accent}
+              icon={<Download size={16} color={connectTheme.accent} />}
               onPress={() => setExportOpen(true)}
+              wrapperStyle={styles.listAction}
             />
           </View>
-        </SurfaceCard>
 
-        <SurfaceCard title="Alunos calculados" subtitle="Fechamento mensal por status">
-          {error || optionsError ? <FeedbackMessage variant="danger" message={error ?? optionsError ?? ''} /> : null}
-          {filteredItems.length === 0 ? <Text style={styles.empty}>Nenhum cálculo encontrado.</Text> : null}
-          {filteredItems.map((salario) => (
+          {filteredRecords.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Wallet size={34} color={theme.textSubtle} />
+              <Text style={[styles.emptyTitle, { color: theme.text }]}>
+                Nenhum calculo neste mes
+              </Text>
+              <Text style={[styles.helperText, { color: theme.textMuted }]}>
+                Use o simulador ou o calculo em lote para gerar os fechamentos.
+              </Text>
+            </View>
+          ) : null}
+
+          {filteredRecords.map((record) => (
             <ListRow
-              key={salario.id}
-              title={salario.aluno_nome ?? salario.aluno_id ?? 'Aluno não vinculado'}
-              subtitle={`${salario.mes_referencia} • ${salario.tipo_pagamento ?? 'mensal'}`}
-              badge={salario.salario_final ? `R$ ${Math.round(salario.salario_final).toLocaleString('pt-BR')}` : 'Registrado'}
-              badgeVariant="success"
-              meta={`Base R$ ${salario.salario_base.toLocaleString('pt-BR')}`}
-              initials="SL"
+              key={record.id}
+              title={record.aluno_nome ?? 'Aluno nao vinculado'}
+              subtitle={`${record.empresa_nome ?? 'Sem empresa'} · Base ${formatCurrency(record.salario_base)}`}
+              badge={formatCurrency(record.salario_final ?? record.salario_base)}
+              badgeVariant={normalizedStatus(record.status) === 'pago' ? 'info' : 'success'}
+              meta={`${record.faltas_injustificadas ?? 0} FI · ${record.frequencia_percentual ?? 0}%`}
+              initials={(record.aluno_nome ?? 'SL').slice(0, 2).toUpperCase()}
               accent={colors.green}
-              onEdit={
-                canManage
-                  ? () => {
-                      setEditing(salario);
-                      setModalOpen(true);
-                    }
-                  : undefined
-              }
-              onDelete={canManage ? () => deleteItem(salario.id, salario.aluno_nome ?? 'salário') : undefined}
+              onEdit={canManage ? () => recalculate(record) : undefined}
             />
           ))}
         </SurfaceCard>
       </ModuleScreen>
 
-      {canManage ? (
-        <CrudModal
-          visible={modalOpen}
-          title={editing ? 'Editar salário' : 'Novo salário'}
-          fields={fields}
-          initialValues={editing ? formValues(editing) : { tipo_pagamento: 'mensal', carga_diaria_horas: '6', dias_uteis_mes: '22', mes_referencia: new Date().toISOString().slice(0, 7) }}
-          isSubmitting={submitting}
-          submitLabel={editing ? 'Salvar alterações' : 'Salvar cálculo'}
-          onClose={() => setModalOpen(false)}
-          onSubmit={async (values) => {
-            if (editing) await updateItem(editing.id, values);
-            else await createItem(values);
-            setModalOpen(false);
-          }}
-        />
-      ) : null}
       <ExportModal
         visible={exportOpen}
         title="Exportar salarios"
         onClose={() => setExportOpen(false)}
         onPDF={async () => {
-          await exportService.exportarPDF(toRows(filteredItems), 'Relatorio de salarios');
+          await exportService.exportarPDF(toRows(filteredRecords), 'Relatorio de salarios');
           setExportOpen(false);
         }}
         onExcel={async () => {
-          await exportService.exportarExcel(toRows(filteredItems), 'relatorio-salarios');
+          await exportService.exportarExcel(toRows(filteredRecords), 'relatorio-salarios');
           setExportOpen(false);
         }}
       />
@@ -217,10 +592,292 @@ export default function SalarioScreen() {
   );
 }
 
-function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+function MonthSelector({
+  month,
+  onPrevious,
+  onNext,
+}: {
+  month: string;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  const theme = useThemeColors();
   return (
-    <AnimatedPressable onPress={onPress} style={[styles.filterChip, active ? styles.filterChipActive : null]}>
-      <Text style={[styles.filterChipText, active ? styles.filterChipTextActive : null]}>{label}</Text>
+    <View
+      style={[
+        styles.monthSelector,
+        { backgroundColor: theme.surface, borderColor: theme.line },
+      ]}
+    >
+      <AnimatedPressable
+        accessibilityRole="button"
+        accessibilityLabel="Mes anterior"
+        onPress={onPrevious}
+        style={styles.monthButton}
+      >
+        <ChevronLeft size={20} color={theme.text} />
+      </AnimatedPressable>
+      <View style={styles.monthValue}>
+        <Text style={[styles.monthLabel, { color: theme.textMuted }]}>Referencia</Text>
+        <Text style={[styles.monthText, { color: theme.text }]}>
+          {formatMonthLabel(month)}
+        </Text>
+      </View>
+      <AnimatedPressable
+        accessibilityRole="button"
+        accessibilityLabel="Proximo mes"
+        onPress={onNext}
+        style={styles.monthButton}
+      >
+        <ChevronRight size={20} color={theme.text} />
+      </AnimatedPressable>
+    </View>
+  );
+}
+
+function StudentChip({
+  student,
+  active,
+  onPress,
+}: {
+  student: Aluno;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const theme = useThemeColors();
+  return (
+    <AnimatedPressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={[
+        styles.studentChip,
+        {
+          backgroundColor: active ? connectTheme.accent : theme.surfaceSoft,
+          borderColor: active ? connectTheme.accent : theme.line,
+        },
+      ]}
+    >
+      <Text
+        numberOfLines={1}
+        style={[styles.studentChipName, { color: active ? colors.white : theme.text }]}
+      >
+        {student.nome}
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={[
+          styles.studentChipMeta,
+          { color: active ? 'rgba(255,255,255,0.82)' : theme.textMuted },
+        ]}
+      >
+        RM {student.rm ?? 'nao informado'}
+      </Text>
+    </AnimatedPressable>
+  );
+}
+
+function MoneyField({
+  label,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}) {
+  const theme = useThemeColors();
+  return (
+    <View style={styles.moneyField}>
+      <Text style={[styles.label, { color: theme.text }]}>{label}</Text>
+      <View
+        style={[
+          styles.moneyInput,
+          {
+            backgroundColor: disabled ? theme.surfaceSoft : theme.input,
+            borderColor: theme.line,
+            opacity: disabled ? 0.68 : 1,
+          },
+        ]}
+      >
+        <Text style={[styles.currencyPrefix, { color: theme.textMuted }]}>R$</Text>
+        <TextInput
+          value={value}
+          editable={!disabled}
+          keyboardType="decimal-pad"
+          onChangeText={(text) => onChange(formatCurrencyInput(text))}
+          style={[styles.moneyInputText, { color: theme.text }]}
+          placeholder="0,00"
+          placeholderTextColor={theme.textSubtle}
+        />
+      </View>
+    </View>
+  );
+}
+
+function SalaryPreview({ preview }: { preview: SalaryPreviewData | null }) {
+  const theme = useThemeColors();
+
+  if (!preview) {
+    return (
+      <SurfaceCard title="Previa do calculo" subtitle="Confira os valores antes de salvar">
+        <View style={styles.previewEmpty}>
+          <Calculator size={38} color={theme.textSubtle} />
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>
+            Selecione um aprendiz e toque em Simular
+          </Text>
+          <Text style={[styles.helperText, { color: theme.textMuted }]}>
+            O calculo considera contrato, frequencia, bonus e descontos.
+          </Text>
+        </View>
+      </SurfaceCard>
+    );
+  }
+
+  const total = Math.max(preview.attendance.total_days, 1);
+  const presentWidth = `${(preview.attendance.present_days / total) * 100}%` as const;
+  const justifiedWidth = `${(preview.attendance.justified_absences / total) * 100}%` as const;
+  const absentWidth = `${(preview.attendance.unjustified_absences / total) * 100}%` as const;
+
+  return (
+    <SurfaceCard
+      title={preview.student.full_name}
+      subtitle={`${formatMonthLabel(preview.reference_month)} · ${
+        preview.contract?.company_name ?? 'Sem contrato ativo'
+      }`}
+    >
+      <Text style={[styles.netLabel, { color: theme.textMuted }]}>Valor liquido</Text>
+      <Text style={styles.netValue}>{formatCurrency(preview.amounts.net)}</Text>
+
+      <View style={[styles.attendanceTrack, { backgroundColor: theme.surfaceSoft }]}>
+        <View style={{ width: presentWidth, backgroundColor: colors.green }} />
+        <View style={{ width: justifiedWidth, backgroundColor: colors.orange }} />
+        <View style={{ width: absentWidth, backgroundColor: colors.red }} />
+      </View>
+      <View style={styles.attendanceLegend}>
+        <Pill label={`${preview.attendance.present_days} presentes`} variant="success" />
+        <Pill
+          label={`${preview.attendance.justified_absences} justificadas`}
+          variant="warning"
+        />
+        <Pill
+          label={`${preview.attendance.unjustified_absences} injustificadas`}
+          variant="danger"
+        />
+        <Pill label={`${preview.attendance.rate}% frequencia`} variant="info" />
+      </View>
+
+      <View style={styles.previewMetrics}>
+        <PreviewMetric
+          label="Valor por dia"
+          value={formatCurrency(preview.daily_rate)}
+        />
+        <PreviewMetric
+          label="Base do contrato"
+          value={formatCurrency(preview.amounts.base)}
+        />
+        <PreviewMetric
+          label="Desconto por faltas"
+          value={formatCurrency(preview.amounts.absence_deduction)}
+          danger
+        />
+      </View>
+
+      <View style={[styles.breakdown, { borderColor: theme.line }]}>
+        {preview.breakdown.map((line) => (
+          <View key={line.label} style={styles.breakdownRow}>
+            <View style={styles.breakdownLabel}>
+              {line.type === 'bonus' ? (
+                <PlusCircle size={15} color={colors.green} />
+              ) : line.type === 'deduction' ? (
+                <MinusCircle size={15} color={colors.red} />
+              ) : line.type === 'net' ? (
+                <CircleDollarSign size={15} color={colors.green} />
+              ) : (
+                <Wallet size={15} color={colors.blue} />
+              )}
+              <Text style={[styles.breakdownText, { color: theme.textMuted }]}>
+                {line.label}
+              </Text>
+            </View>
+            <Text
+              style={[
+                styles.breakdownValue,
+                {
+                  color:
+                    line.type === 'net'
+                      ? colors.green
+                      : line.value < 0
+                        ? colors.red
+                        : theme.text,
+                },
+              ]}
+            >
+              {formatCurrency(Math.abs(line.value))}
+              {line.value < 0 ? ' (-)' : ''}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </SurfaceCard>
+  );
+}
+
+function PreviewMetric({
+  label,
+  value,
+  danger,
+}: {
+  label: string;
+  value: string;
+  danger?: boolean;
+}) {
+  const theme = useThemeColors();
+  return (
+    <View style={[styles.previewMetric, { backgroundColor: theme.surfaceSoft }]}>
+      <Text style={[styles.previewMetricLabel, { color: theme.textMuted }]}>{label}</Text>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={[styles.previewMetricValue, { color: danger ? colors.red : theme.text }]}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function FilterChip({
+  label,
+  active,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const theme = useThemeColors();
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      style={[
+        styles.filterChip,
+        {
+          backgroundColor: active ? connectTheme.accent : theme.surfaceSoft,
+          borderColor: active ? connectTheme.accent : theme.line,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.filterChipText,
+          { color: active ? colors.white : theme.textMuted },
+        ]}
+      >
+        {label}
+      </Text>
     </AnimatedPressable>
   );
 }
@@ -231,33 +888,132 @@ function toRows(items: SalarioAluno[]) {
     empresa: item.empresa_nome,
     mes: item.mes_referencia,
     salario_base: item.salario_base,
-    valor_dia: item.valor_dia,
-    desconto: item.desconto,
+    bonificacoes: item.bonuses,
+    descontos: item.deductions ?? item.outros_descontos ?? item.desconto,
     salario_final: item.salario_final,
+    frequencia: item.frequencia_percentual,
     faltas_injustificadas: item.faltas_injustificadas,
+    status: item.status,
   }));
 }
 
 const styles = StyleSheet.create({
-  metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
-  metric: { width: '48%' },
-  filterRow: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
-  filterChip: {
-    borderRadius: 999,
+  monthSelector: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.panelSoft,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  monthButton: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthValue: { flex: 1, minWidth: 0, alignItems: 'center' },
+  monthLabel: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
+  monthText: { marginTop: 2, fontSize: 14, fontWeight: '900', textTransform: 'capitalize' },
+  label: { marginBottom: 6, fontSize: 11, fontWeight: '900' },
+  studentOptions: { gap: 8, paddingVertical: 4, paddingRight: 4 },
+  studentChip: {
+    width: 170,
+    minHeight: 54,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  studentChipName: { fontSize: 12, fontWeight: '900' },
+  studentChipMeta: { marginTop: 3, fontSize: 9, fontWeight: '700' },
+  studentInfo: { marginTop: 10, borderWidth: 1, borderRadius: 8, padding: 11 },
+  studentInfoName: { fontSize: 13, fontWeight: '900' },
+  helperText: { fontSize: 10, lineHeight: 15, fontWeight: '600' },
+  inlineLoading: {
+    minHeight: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  inputGrid: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  moneyField: { flex: 1, minWidth: 0 },
+  moneyInput: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+  },
+  currencyPrefix: { fontSize: 11, fontWeight: '900' },
+  moneyInputText: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 7,
+    paddingVertical: 10,
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  switchRow: {
+    minHeight: 58,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginTop: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  filterChipActive: {
-    borderColor: connectTheme.accent,
-    backgroundColor: 'rgba(227,6,19,0.08)',
+  switchText: { flex: 1, minWidth: 0 },
+  switchLabel: { fontSize: 11, fontWeight: '900' },
+  simulatorActions: { flexDirection: 'row', gap: 9, marginTop: 12 },
+  action: { flex: 1 },
+  previewEmpty: {
+    minHeight: 180,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
   },
-  filterChipText: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
-  filterChipTextActive: { color: connectTheme.accent },
-  salaryBox: { borderRadius: 8, backgroundColor: colors.panelSoft, padding: 14, gap: 8 },
-  salaryLabel: { color: colors.grayText, fontSize: 12, fontWeight: '800' },
-  salaryValue: { color: colors.green, fontSize: 25, fontWeight: '900' },
-  empty: { color: colors.grayText, fontSize: 12, fontWeight: '700' },
+  emptyTitle: { textAlign: 'center', fontSize: 13, fontWeight: '900' },
+  netLabel: { fontSize: 10, fontWeight: '800' },
+  netValue: { color: colors.green, fontSize: 28, fontWeight: '900', marginTop: 2 },
+  attendanceTrack: {
+    height: 10,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    borderRadius: 5,
+    marginTop: 14,
+  },
+  attendanceLegend: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 9 },
+  previewMetrics: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  previewMetric: { flex: 1, minWidth: 0, borderRadius: 8, padding: 9 },
+  previewMetricLabel: { fontSize: 9, fontWeight: '700' },
+  previewMetricValue: { marginTop: 4, fontSize: 12, fontWeight: '900' },
+  breakdown: { gap: 10, borderWidth: 1, borderRadius: 8, marginTop: 14, padding: 12 },
+  breakdownRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  breakdownLabel: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 7 },
+  breakdownText: { flex: 1, fontSize: 10, fontWeight: '700' },
+  breakdownValue: { fontSize: 11, fontWeight: '900' },
+  filters: { gap: 7, marginTop: 10, marginBottom: 10 },
+  filterChip: {
+    minHeight: 36,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  filterChipText: { fontSize: 10, fontWeight: '900' },
+  listActions: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  listAction: { flex: 1 },
+  emptyState: {
+    minHeight: 170,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingHorizontal: 20,
+  },
 });
