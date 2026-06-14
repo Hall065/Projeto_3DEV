@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ChatbotPortal } from '@/components/chatbot';
 import { LoadingState } from '@/components/common/VisualPrimitives';
 import { ConfirmDialogProvider } from '@/hooks/useConfirmDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -47,23 +48,26 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ConfirmDialogProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              animation: 'fade_from_bottom',
-              contentStyle: { backgroundColor: theme.appBackground },
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="login" />
-            <Stack.Screen name="recuperar-senha" />
-            <Stack.Screen name="redefinir-senha" />
-            <Stack.Screen name="hub" />
-            <Stack.Screen name="connect" />
-            <Stack.Screen name="grid" />
-            <Stack.Screen name="aluno" />
-            <Stack.Screen name="perfil" />
-          </Stack>
+          <View style={{ flex: 1, position: 'relative' }}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                animation: 'fade_from_bottom',
+                contentStyle: { backgroundColor: theme.appBackground },
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="login" />
+              <Stack.Screen name="recuperar-senha" />
+              <Stack.Screen name="redefinir-senha" />
+              <Stack.Screen name="hub" />
+              <Stack.Screen name="connect" />
+              <Stack.Screen name="grid" />
+              <Stack.Screen name="aluno" />
+              <Stack.Screen name="perfil" />
+            </Stack>
+            <ChatbotPortal />
+          </View>
           <StatusBar style="light" />
         </ConfirmDialogProvider>
       </SafeAreaProvider>

@@ -17,6 +17,7 @@ module.exports = () => ({
       azureTranslatorRegion:
         process.env.EXPO_PUBLIC_AZURE_REGION ??
         process.env.AZURE_TRANSLATOR_REGION,
+      chatbotApiUrl: process.env.EXPO_PUBLIC_CHATBOT_API_URL,
     },
   },
 });
