@@ -16,7 +16,9 @@ import type { HubUsuario } from '@/types/auth.types';
 const schema = 'grid';
 type Row = Record<string, any>;
 type FormValues = Record<string, string>;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// PostgreSQL aceita UUIDs semeados sem bits RFC de versao/variante,
+// como 30000000-0000-0000-0000-000000000001, usados no SQL do projeto.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function nullIfEmpty(value?: string | null) {
   const normalized = value?.trim();
@@ -409,7 +411,13 @@ function mapItem(row: Row): ItemEstoque {
 }
 
 function mapCategoria(row: Row): GridCategoria {
-  return { id: row.id, nome: row.nome, descricao: row.descricao, status: row.status };
+  return {
+    id: row.id,
+    nome: row.nome,
+    descricao: row.descricao,
+    ativo: row.ativo,
+    status: row.status,
+  };
 }
 
 function mapFornecedor(row: Row): GridFornecedor {
@@ -918,11 +926,20 @@ export const gridService = {
 
   async listCategoriaOptions() {
     const categorias = await gridService.listCategoriasEstoque();
-    return categorias.map((categoria) => ({
-      value: categoria.id,
-      label: categoria.nome,
-      description: categoria.status ?? undefined,
-    }));
+    return categorias
+      .filter(
+        (categoria) =>
+          categoria.ativo !== false &&
+          !['inativo', 'inativa', 'inactive'].includes(
+            normalizeStatus(categoria.status, 'ativo')
+          )
+      )
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+      .map((categoria) => ({
+        value: categoria.id,
+        label: categoria.nome,
+        description: categoria.status ?? undefined,
+      }));
   },
 
   async listFornecedorOptions() {

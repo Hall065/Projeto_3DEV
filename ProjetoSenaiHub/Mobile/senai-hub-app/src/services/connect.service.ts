@@ -18,7 +18,8 @@ import type {
 const schema = 'connect';
 type FormValues = Record<string, string>;
 type Row = Record<string, any>;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// O banco do projeto possui UUIDs semeados sem bits RFC de versao/variante.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function nullIfEmpty(value?: string | null) {
   const normalized = value?.trim();

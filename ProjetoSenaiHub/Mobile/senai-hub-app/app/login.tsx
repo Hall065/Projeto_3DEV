@@ -17,7 +17,7 @@ import { Eye, EyeOff, Lock, Mail } from 'lucide-react-native';
 import { AnimatedPressable, AppButton, FeedbackMessage } from '@/components/common/VisualPrimitives';
 import { DEV_TEST_ACCOUNT } from '@/constants/dev-test-account';
 import { colors } from '@/constants/colors';
-import { getSupabaseKeyHint, isSupabaseConfigured } from '@/lib/supabase-config';
+import { isSupabaseConfigured } from '@/lib/supabase-config';
 import { getPostLoginRoute as resolvePostLoginRoute } from '@/lib/permissions';
 import { useI18n } from '@/hooks/useI18n';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -110,10 +110,6 @@ export default function LoginScreen() {
               message="Supabase não configurado. Verifique o .env e reinicie o Expo com -c."
             />
           ) : null}
-          {__DEV__ && isSupabaseConfigured ? (
-            <FeedbackMessage variant="info" message={`API: ${getSupabaseKeyHint()}`} />
-          ) : null}
-
           <Controller
             control={control}
             name="email"
