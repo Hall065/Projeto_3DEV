@@ -19,8 +19,7 @@ import {
 import { SafeStatusBadge } from '../../components/safe/SafeStatusBadge'
 import { safeService } from '../../services/safeService'
 import type { PaginatedMeta, SafeAuthorization, SafeAuthorizationType, SafeStudent } from '../../types/safe'
-import { parseApiError } from '../../utils/parseApiError'
-
+import { useCrudToast } from '../../hooks/useCrudToast'
 const emptyForm = {
   safe_student_id: '',
   student_name: '',
@@ -35,12 +34,14 @@ const emptyForm = {
 
 export function SafeAuthorizationsPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const navigate = useNavigate()
   const [items, setItems] = useState<SafeAuthorization[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [students, setStudents] = useState<SafeStudent[]>([])
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -48,8 +49,10 @@ export function SafeAuthorizationsPage() {
 
   const load = () => {
     setLoading(true)
+    const params: Record<string, string | number> = { page, search, per_page: 10 }
+    if (statusFilter) params.status = statusFilter
     safeService
-      .getAuthorizations({ page, search, per_page: 10 })
+      .getAuthorizations(params)
       .then((res) => {
         setItems(res.data)
         setMeta(res.meta)
@@ -59,7 +62,7 @@ export function SafeAuthorizationsPage() {
 
   useEffect(() => {
     load()
-  }, [page, search])
+  }, [page, search, statusFilter])
 
   useEffect(() => {
     safeService.getStudents({ per_page: 100, active: true }).then((res) => setStudents(res.data))
@@ -77,11 +80,11 @@ export function SafeAuthorizationsPage() {
 
   const handleCreate = async () => {
     if (!form.reason.trim()) {
-      window.alert('Informe o motivo da solicitação.')
+      crudToast.notifyWarning(t('safeValidation.fillReason'))
       return
     }
     if (!form.safe_student_id && (!form.student_name.trim() || !form.class_name.trim())) {
-      window.alert('Selecione um aluno ou informe nome e turma.')
+      crudToast.notifyWarning(t('safeValidation.selectStudentOrNameClass'))
       return
     }
     setSaving(true)
@@ -99,9 +102,10 @@ export function SafeAuthorizationsPage() {
       })
       setDrawerOpen(false)
       setForm(emptyForm)
+      crudToast.notifySaved(false)
       load()
     } catch (e: unknown) {
-      window.alert(parseApiError(e))
+      crudToast.notifyError(e)
     } finally {
       setSaving(false)
     }
@@ -116,7 +120,7 @@ export function SafeAuthorizationsPage() {
           <>
             <input
               type="search"
-              placeholder="Buscar protocolo ou aluno..."
+              placeholder={t('safe.authorizations.searchPlaceholder')}
               value={search}
               onChange={(e) => {
                 setPage(1)
@@ -124,8 +128,24 @@ export function SafeAuthorizationsPage() {
               }}
               className={`${inputClass} max-w-xs`}
             />
+            <select
+              className={`${selectClass} max-w-xs`}
+              value={statusFilter}
+              onChange={(e) => {
+                setPage(1)
+                setStatusFilter(e.target.value)
+              }}
+              aria-label={t('safe.authorizations.filters.status')}
+            >
+              <option value="">{t('safe.authorizations.filters.allStatuses')}</option>
+              <option value="finalizado">{t('safe.authorizations.filters.finalizado')}</option>
+              <option value="negado">{t('safe.authorizations.filters.negado')}</option>
+              <option value="pendente_aqv">{t('safe.authorizations.filters.pendente_aqv')}</option>
+              <option value="aguardando_professor">{t('safe.authorizations.filters.aguardando_professor')}</option>
+              <option value="liberado_portaria">{t('safe.authorizations.filters.liberado_portaria')}</option>
+            </select>
             <PrimaryButton onClick={() => setDrawerOpen(true)}>
-              <Plus className="h-4 w-4" /> Nova solicitação
+              <Plus className="h-4 w-4" /> {t('safe.authorizations.newRequest')}
             </PrimaryButton>
           </>
         }
@@ -135,18 +155,18 @@ export function SafeAuthorizationsPage() {
         {loading ? (
           <ConnectLoadingSpinner />
         ) : items.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-hub-text-muted sm:px-6">Nenhuma autorização encontrada.</p>
+          <p className="px-4 py-10 text-center text-sm text-hub-text-muted sm:px-6">{t('safe.authorizations.empty')}</p>
         ) : (
           <ConnectTableScroll>
             <table className="w-full min-w-[720px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left sm:px-6">Protocolo</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Aluno</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Tipo</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Status</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Agendado</th>
-                  <th className="px-4 py-3 text-right sm:px-6">Ações</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.protocol')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.student')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.type')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.status')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.scheduled')}</th>
+                  <th className="px-4 py-3 text-right sm:px-6">{t('connect.common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -178,24 +198,24 @@ export function SafeAuthorizationsPage() {
       <ConnectDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title="Nova autorização"
+        title={t('safe.authorizations.drawerTitle')}
         footer={
           <>
-            <OutlineButton onClick={() => setDrawerOpen(false)}>Cancelar</OutlineButton>
+            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
             <PrimaryButton onClick={handleCreate} disabled={saving}>
-              {saving ? 'Enviando...' : 'Criar solicitação'}
+              {saving ? t('safe.authorizations.submitting') : t('safe.authorizations.createSubmit')}
             </PrimaryButton>
           </>
         }
       >
         <div className="space-y-4">
-          <FormField label="Aluno cadastrado">
+          <FormField label={t('safe.authorizations.form.registeredStudent')}>
             <select
               className={selectClass}
               value={form.safe_student_id}
               onChange={(e) => onStudentSelect(e.target.value)}
             >
-              <option value="">— Informar manualmente —</option>
+              <option value="">{t('safe.authorizations.form.manualEntry')}</option>
               {students.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} ({s.registration})
@@ -205,35 +225,35 @@ export function SafeAuthorizationsPage() {
           </FormField>
           {!form.safe_student_id && (
             <>
-              <FormField label="Nome do aluno" required>
+              <FormField label={t('safe.authorizations.form.studentName')} required>
                 <input className={inputClass} value={form.student_name} onChange={(e) => setForm((f) => ({ ...f, student_name: e.target.value }))} />
               </FormField>
-              <FormField label="Turma" required>
+              <FormField label={t('safe.authorizations.form.className')} required>
                 <input className={inputClass} value={form.class_name} onChange={(e) => setForm((f) => ({ ...f, class_name: e.target.value }))} />
               </FormField>
             </>
           )}
-          <FormField label="Tipo" required>
+          <FormField label={t('safe.table.type')} required>
             <select className={selectClass} value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as SafeAuthorizationType }))}>
-              <option value="entrada">Entrada</option>
-              <option value="saida">Saída</option>
+              <option value="entrada">{t('safe.authorizations.form.typeEntry')}</option>
+              <option value="saida">{t('safe.authorizations.form.typeExit')}</option>
             </select>
           </FormField>
-          <FormField label="Motivo" required>
+          <FormField label={t('safe.table.reason')} required>
             <textarea className={`${inputClass} min-h-[88px] py-2`} value={form.reason} onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))} />
           </FormField>
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Data" required>
+            <FormField label={t('safe.authorizations.form.date')} required>
               <input type="date" className={inputClass} value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
             </FormField>
-            <FormField label="Horário" required>
+            <FormField label={t('safe.authorizations.form.time')} required>
               <input type="time" className={inputClass} value={form.time} onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))} />
             </FormField>
           </div>
-          <FormField label="Faltas (saída)">
+          <FormField label={t('safe.authorizations.form.absences')}>
             <input type="number" min={0} max={5} className={inputClass} value={form.absence_count} onChange={(e) => setForm((f) => ({ ...f, absence_count: e.target.value }))} />
           </FormField>
-          <FormField label="Observações">
+          <FormField label={t('safe.detail.fields.notes')}>
             <textarea className={`${inputClass} min-h-[72px] py-2`} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
           </FormField>
         </div>

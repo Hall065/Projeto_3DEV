@@ -1,3 +1,4 @@
+import i18n from '../i18n'
 import { readCustomWallpaperImage } from '../utils/wallpaperImage'
 
 export const CUSTOM_WALLPAPER_ID = 'custom' as const
@@ -26,8 +27,8 @@ export type WallpaperCategory = 'light' | 'dark' | 'vivid'
 
 export interface WallpaperPreset {
   id: PresetWallpaperId
-  name: string
-  description: string
+  nameKey: string
+  descriptionKey: string
   category: WallpaperCategory
   baseColor: string
   mesh: string
@@ -52,8 +53,8 @@ export type ResolvedWallpaper = {
 export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   {
     id: 'senai-dawn',
-    name: 'Amanhecer',
-    description: 'Pêssego e azul claro — estilo vidro da referência.',
+    nameKey: 'wallpapers.presets.senai-dawn.name',
+    descriptionKey: 'wallpapers.presets.senai-dawn.description',
     category: 'light',
     baseColor: '#f2e6df',
     mesh: `
@@ -70,8 +71,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-classic',
-    name: 'Clássico SENAI',
-    description: 'Neutro com orbes navy, vermelho e azul suave.',
+    nameKey: 'wallpapers.presets.senai-classic.name',
+    descriptionKey: 'wallpapers.presets.senai-classic.description',
     category: 'light',
     baseColor: '#e8edf4',
     mesh: `
@@ -88,8 +89,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-cool',
-    name: 'Industrial',
-    description: 'Azuis e cinzas com destaque técnico.',
+    nameKey: 'wallpapers.presets.senai-cool.name',
+    descriptionKey: 'wallpapers.presets.senai-cool.description',
     category: 'light',
     baseColor: '#dce6f2',
     mesh: `
@@ -104,8 +105,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-warm',
-    name: 'Energia',
-    description: 'Vermelho SENAI, âmbar e navy suave.',
+    nameKey: 'wallpapers.presets.senai-warm.name',
+    descriptionKey: 'wallpapers.presets.senai-warm.description',
     category: 'vivid',
     baseColor: '#f5ebe6',
     mesh: `
@@ -120,8 +121,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-minimal',
-    name: 'Minimal',
-    description: 'Suave, com poucos destaques de cor.',
+    nameKey: 'wallpapers.presets.senai-minimal.name',
+    descriptionKey: 'wallpapers.presets.senai-minimal.description',
     category: 'light',
     baseColor: '#eef1f5',
     mesh: `
@@ -135,8 +136,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-sunset',
-    name: 'Pôr do sol',
-    description: 'Laranja, rosa e roxo no fim do dia.',
+    nameKey: 'wallpapers.presets.senai-sunset.name',
+    descriptionKey: 'wallpapers.presets.senai-sunset.description',
     category: 'vivid',
     baseColor: '#f8e8e0',
     mesh: `
@@ -151,8 +152,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-lavender',
-    name: 'Lavanda',
-    description: 'Roxo claro e lilás relaxante.',
+    nameKey: 'wallpapers.presets.senai-lavender.name',
+    descriptionKey: 'wallpapers.presets.senai-lavender.description',
     category: 'light',
     baseColor: '#ebe8f5',
     mesh: `
@@ -167,8 +168,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-mint',
-    name: 'Menta',
-    description: 'Verde água e turquesa leve.',
+    nameKey: 'wallpapers.presets.senai-mint.name',
+    descriptionKey: 'wallpapers.presets.senai-mint.description',
     category: 'light',
     baseColor: '#e4f3ef',
     mesh: `
@@ -183,8 +184,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-dark-navy',
-    name: 'Navy noturno',
-    description: 'Azul profundo SENAI — ideal para ambientes escuros.',
+    nameKey: 'wallpapers.presets.senai-dark-navy.name',
+    descriptionKey: 'wallpapers.presets.senai-dark-navy.description',
     category: 'dark',
     baseColor: '#060d18',
     mesh: `
@@ -201,8 +202,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-dark-charcoal',
-    name: 'Carvão',
-    description: 'Cinza escuro neutro, baixo contraste.',
+    nameKey: 'wallpapers.presets.senai-dark-charcoal.name',
+    descriptionKey: 'wallpapers.presets.senai-dark-charcoal.description',
     category: 'dark',
     baseColor: '#0c0e12',
     mesh: `
@@ -218,8 +219,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-dark-red',
-    name: 'SENAI escuro',
-    description: 'Fundo escuro com brilho vermelho institucional.',
+    nameKey: 'wallpapers.presets.senai-dark-red.name',
+    descriptionKey: 'wallpapers.presets.senai-dark-red.description',
     category: 'dark',
     baseColor: '#12080a',
     mesh: `
@@ -235,8 +236,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-midnight',
-    name: 'Meia-noite',
-    description: 'Índigo e violeta profundos.',
+    nameKey: 'wallpapers.presets.senai-midnight.name',
+    descriptionKey: 'wallpapers.presets.senai-midnight.description',
     category: 'dark',
     baseColor: '#080612',
     mesh: `
@@ -252,8 +253,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-forest',
-    name: 'Floresta',
-    description: 'Verde escuro com reflexos sutis.',
+    nameKey: 'wallpapers.presets.senai-forest.name',
+    descriptionKey: 'wallpapers.presets.senai-forest.description',
     category: 'dark',
     baseColor: '#061008',
     mesh: `
@@ -269,8 +270,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-ocean-deep',
-    name: 'Oceano profundo',
-    description: 'Azul petróleo e ciano escuro.',
+    nameKey: 'wallpapers.presets.senai-ocean-deep.name',
+    descriptionKey: 'wallpapers.presets.senai-ocean-deep.description',
     category: 'dark',
     baseColor: '#051018',
     mesh: `
@@ -286,8 +287,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-slate',
-    name: 'Ardósia',
-    description: 'Cinza-azulado escuro uniforme.',
+    nameKey: 'wallpapers.presets.senai-slate.name',
+    descriptionKey: 'wallpapers.presets.senai-slate.description',
     category: 'dark',
     baseColor: '#0f1419',
     mesh: `
@@ -303,8 +304,8 @@ export const WALLPAPER_PRESETS: WallpaperPreset[] = [
   },
   {
     id: 'senai-neon',
-    name: 'Neon técnico',
-    description: 'Escuro com orbes coloridos mais intensos.',
+    nameKey: 'wallpapers.presets.senai-neon.name',
+    descriptionKey: 'wallpapers.presets.senai-neon.description',
     category: 'vivid',
     baseColor: '#0a0c14',
     mesh: `
@@ -345,8 +346,8 @@ export function getWallpaperPreset(id: string): WallpaperPreset {
 export function presetToResolved(preset: WallpaperPreset): ResolvedWallpaper {
   return {
     id: preset.id,
-    name: preset.name,
-    description: preset.description,
+    name: i18n.t(preset.nameKey),
+    description: i18n.t(preset.descriptionKey),
     category: preset.category,
     kind: 'preset',
     baseColor: preset.baseColor,
@@ -360,8 +361,8 @@ export function resolveWallpaper(id: WallpaperId, customImageUrl: string | null)
   if (id === CUSTOM_WALLPAPER_ID && customImageUrl) {
     return {
       id: CUSTOM_WALLPAPER_ID,
-      name: 'Imagem personalizada',
-      description: 'Foto ou ilustração enviada por você.',
+      name: i18n.t('wallpapers.custom.name'),
+      description: i18n.t('wallpapers.custom.description'),
       category: 'custom',
       kind: 'image',
       baseColor: '#0f172a',

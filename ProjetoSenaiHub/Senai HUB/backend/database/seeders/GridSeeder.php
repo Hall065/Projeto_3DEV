@@ -49,11 +49,12 @@ class GridSeeder extends Seeder
         }
 
         $users = [
-            ['name' => 'Júlio Oliveira', 'email' => 'julio.oliveira@senai.br', 'role' => 'Técnico de manutenção', 'phone' => '(11) 98765-1001'],
-            ['name' => 'Maria Santos', 'email' => 'maria.santos@senai.br', 'role' => 'Técnico de manutenção', 'phone' => '(11) 98765-1002'],
-            ['name' => 'Carlos Mendes', 'email' => 'carlos.mendes.grid@senai.br', 'role' => 'Gerente de manutenção', 'phone' => '(11) 98765-4321'],
-            ['name' => 'Roberto Alves', 'email' => 'roberto.alves.grid@senai.br', 'role' => 'Gerente de manutenção', 'phone' => '(11) 98765-4322'],
-            ['name' => 'Ana Grid', 'email' => 'ana.grid@senai.local', 'role' => 'Administrador', 'phone' => '(11) 98765-2000'],
+            ['name' => 'Joao Gerente Manutencao', 'email' => 'joao.chefe@grid.senai.local', 'role' => 'Gerente de manutenção', 'phone' => '(11) 98765-4321'],
+            ['name' => 'Carlos Chefe Manutencao', 'email' => 'carlos.chefe@grid.senai.local', 'role' => 'Gerente de manutenção', 'phone' => '(11) 98765-4322'],
+            ['name' => 'Pedro Tecnico', 'email' => 'pedro.tecnico@grid.senai.local', 'role' => 'Técnico de manutenção', 'phone' => '(11) 98765-1001'],
+            ['name' => 'Julia Tecnica', 'email' => 'julia.tecnica@grid.senai.local', 'role' => 'Técnico de manutenção', 'phone' => '(11) 98765-1002'],
+            ['name' => 'Marcos Professor Grid', 'email' => 'marcos.professor@grid.senai.local', 'role' => 'Professor', 'phone' => '(11) 98765-2001'],
+            ['name' => 'Sandra Secretaria Grid', 'email' => 'sandra.secretaria@grid.senai.local', 'role' => 'Secretaria', 'phone' => '(11) 98765-2002'],
         ];
 
         foreach ($users as $index => $user) {

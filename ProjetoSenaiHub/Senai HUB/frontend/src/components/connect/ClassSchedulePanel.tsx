@@ -2,7 +2,7 @@ import { CalendarPlus, RefreshCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { connectService } from '../../services/connectService'
-import { parseApiError } from '../../utils/parseApiError'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import type { ConnectSchedulePlan, ConnectWeeklyPattern } from '../../types/connect'
 import { FormField, inputClass, OutlineButton, PrimaryButton, selectClass } from './ConnectShared'
 
@@ -16,6 +16,7 @@ type Props = {
 
 export function ClassSchedulePanel({ classId, canManage, onUpdated }: Props) {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const [patterns, setPatterns] = useState<ConnectWeeklyPattern[]>([])
   const [plan, setPlan] = useState<ConnectSchedulePlan | null>(null)
   const [loading, setLoading] = useState(true)
@@ -64,11 +65,12 @@ export function ClassSchedulePanel({ classId, canManage, onUpdated }: Props) {
           created: result.generation.created,
           skipped: result.generation.skipped,
         })
-        window.alert(msg)
+        crudToast.notifySuccess(msg)
       }
+      crudToast.notifySaved(true)
       onUpdated?.()
     } catch (err) {
-      window.alert(parseApiError(err, t('common.error')))
+      crudToast.notifyError(err, t('common.error'))
     } finally {
       setBusy(false)
     }
@@ -79,7 +81,7 @@ export function ClassSchedulePanel({ classId, canManage, onUpdated }: Props) {
     try {
       const { plan: pl, generation } = await connectService.generateClassSchedule(classId, replaceFuture)
       setPlan(pl)
-      window.alert(
+      crudToast.notifySuccess(
         t('connect.schedule.generationResult', {
           created: generation.created,
           skipped: generation.skipped,
@@ -87,7 +89,7 @@ export function ClassSchedulePanel({ classId, canManage, onUpdated }: Props) {
       )
       onUpdated?.()
     } catch (err) {
-      window.alert(parseApiError(err, t('common.error')))
+      crudToast.notifyError(err, t('common.error'))
     } finally {
       setBusy(false)
     }
@@ -97,10 +99,10 @@ export function ClassSchedulePanel({ classId, canManage, onUpdated }: Props) {
     setBusy(true)
     try {
       const result = await connectService.provisionClassAttendance(classId)
-      window.alert(t('connect.schedule.provisionResult', { count: result.created }))
+      crudToast.notifySuccess(t('connect.schedule.provisionResult', { count: result.created }))
       onUpdated?.()
     } catch (err) {
-      window.alert(parseApiError(err, t('common.error')))
+      crudToast.notifyError(err, t('common.error'))
     } finally {
       setBusy(false)
     }

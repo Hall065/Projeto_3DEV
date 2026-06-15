@@ -18,7 +18,10 @@ import {
   selectClass,
   StatusBadge,
 } from '../../components/connect/ConnectShared'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { gridService } from '../../services/gridService'
+import { GRID_API_ROLE_MANAGER, GRID_API_ROLE_TECHNICIAN } from '../../constants/gridRoles'
 import type { GridUser, PaginatedMeta } from '../../types/grid'
 
 const emptyForm = {
@@ -30,7 +33,7 @@ const emptyForm = {
   status: 'active',
 }
 
-const ROLES = ['Técnico de manutenção', 'Gerente de manutenção', 'Administrador', 'Professor', 'Secretaria']
+import { GRID_API_ROLES, gridRoleLabel } from '../../constants/gridRoles'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR')
@@ -38,6 +41,8 @@ function formatDate(iso: string) {
 
 export function GridUsersPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete } = useConfirmAction()
   const [users, setUsers] = useState<GridUser[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [loading, setLoading] = useState(true)
@@ -91,7 +96,7 @@ export function GridUsersPage() {
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.email.trim() || !form.role.trim()) {
-      window.alert(t('grid.users.alert.required'))
+      crudToast.notifyWarning(t('grid.users.alert.required'))
       return
     }
 
@@ -111,6 +116,7 @@ export function GridUsersPage() {
         await gridService.createUser(payload)
       }
       setDrawerOpen(false)
+      crudToast.notifySaved(!!editingId)
       load()
     } finally {
       setSaving(false)
@@ -118,8 +124,9 @@ export function GridUsersPage() {
   }
 
   const handleDelete = async (user: GridUser) => {
-    if (!window.confirm(t('connect.confirm.delete', { entity: `o usuário "${user.name}"` }))) return
+    if (!(await confirmDelete(`o usuário "${user.name}"`))) return
     await gridService.deleteUser(user.id)
+    crudToast.notifyDeleted()
     load()
   }
 
@@ -144,8 +151,8 @@ export function GridUsersPage() {
           <>
             <KpiCard icon={Users} label={t('grid.users.kpis.total')} value={meta?.total ?? 0} variant="blue" to="/grid/usuarios" />
             <KpiCard icon={Users} label={t('grid.users.kpis.activePage')} value={activeCount} variant="green" />
-            <KpiCard icon={Users} label={t('grid.users.kpis.technicians')} value={users.filter((u) => u.role.includes('Técnico')).length} variant="coral" />
-            <KpiCard icon={Users} label={t('grid.users.kpis.managers')} value={users.filter((u) => u.role.includes('Gerente')).length} variant="violet" />
+            <KpiCard icon={Users} label={t('grid.users.kpis.technicians')} value={users.filter((u) => u.role === GRID_API_ROLE_TECHNICIAN).length} variant="coral" />
+            <KpiCard icon={Users} label={t('grid.users.kpis.managers')} value={users.filter((u) => u.role === GRID_API_ROLE_MANAGER).length} variant="violet" />
           </>
         )}
       </div>
@@ -163,8 +170,8 @@ export function GridUsersPage() {
           />
           <select className={selectClass} value={roleFilter} onChange={(e) => { setPage(1); setRoleFilter(e.target.value) }}>
             <option value="">{t('grid.users.filters.userType')}</option>
-            {ROLES.map((r) => (
-              <option key={r} value={r}>{r}</option>
+            {GRID_API_ROLES.map((r) => (
+              <option key={r} value={r}>{gridRoleLabel(r)}</option>
             ))}
           </select>
           <select className={selectClass} value={statusFilter} onChange={(e) => { setPage(1); setStatusFilter(e.target.value) }}>
@@ -219,7 +226,7 @@ export function GridUsersPage() {
                       <td className="px-4 py-3">{u.phone}</td>
                       <td className="px-4 py-3">
                         <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                          {u.role}
+                          {gridRoleLabel(u.role)}
                         </span>
                       </td>
                       <td className="px-4 py-3">{formatDate(u.created_at)}</td>
@@ -274,8 +281,8 @@ export function GridUsersPage() {
           <FormField label={t('grid.users.filters.userType')} required>
             <select className={selectClass} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
               <option value="">—</option>
-              {ROLES.map((r) => (
-                <option key={r} value={r}>{r}</option>
+              {GRID_API_ROLES.map((r) => (
+                <option key={r} value={r}>{gridRoleLabel(r)}</option>
               ))}
             </select>
           </FormField>

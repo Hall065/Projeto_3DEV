@@ -1,5 +1,6 @@
 import { BookmarkPlus, ChevronDown, Download, FileJson, FileSpreadsheet, FileText, Printer, Save, Sparkles, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -21,15 +22,8 @@ import type {
   ReportModule,
   ReportSchema,
 } from '../../types/reports'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { mergeSystemPreset, sanitizeReportConfig } from '../../utils/reportConfig'
-
-const EXPORT_OPTIONS: { id: ReportExportFormat; label: string; icon: typeof Download }[] = [
-  { id: 'csv', label: 'CSV (planilha)', icon: Download },
-  { id: 'xlsx', label: 'Excel (.xlsx)', icon: FileSpreadsheet },
-  { id: 'json', label: 'JSON (dados brutos)', icon: FileJson },
-  { id: 'html', label: 'PDF / Imprimir', icon: Printer },
-  { id: 'html-download', label: 'HTML (arquivo)', icon: FileText },
-]
 
 /** Estado inicial vazio — modelos completos apenas via presets */
 function emptyConfig(): ReportBuildConfig {
@@ -49,6 +43,8 @@ function emptyConfig(): ReportBuildConfig {
 }
 
 export function CustomReportBuilder({ module, embedded = false }: { module: ReportModule; embedded?: boolean }) {
+  const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const [schema, setSchema] = useState<ReportSchema | null>(null)
   const [filterOptions, setFilterOptions] = useState<ConnectFilterOptions | GridFilterOptions | null>(null)
   const [config, setConfig] = useState<ReportBuildConfig | null>(null)
@@ -61,8 +57,15 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
   const [presetName, setPresetName] = useState('')
   const [savingPreset, setSavingPreset] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const exportMenuRef = useRef<HTMLDivElement>(null)
+
+  const exportOptions: { id: ReportExportFormat; label: string; icon: typeof Download }[] = [
+    { id: 'csv', label: t('reports.builder.exportCsv'), icon: Download },
+    { id: 'xlsx', label: t('reports.builder.exportXlsx'), icon: FileSpreadsheet },
+    { id: 'json', label: t('reports.builder.exportJson'), icon: FileJson },
+    { id: 'html', label: t('reports.builder.exportPdf'), icon: Printer },
+    { id: 'html-download', label: t('reports.builder.exportHtml'), icon: FileText },
+  ]
 
   useEffect(() => {
     setLoading(true)
@@ -74,10 +77,10 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
         setReport(null)
       })
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : 'Nao foi possivel carregar o construtor de relatorios.')
+        setError(err instanceof Error ? err.message : t('reports.builder.loadError'))
       })
       .finally(() => setLoading(false))
-  }, [module])
+  }, [module, t])
 
   useEffect(() => {
     reportPresetService.list(module).then(setServerPresets).catch(() => setServerPresets([]))
@@ -98,19 +101,17 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
     async (cfg: ReportBuildConfig) => {
       setBuilding(true)
       setError(null)
-      setSuccess(null)
       try {
         const built = await reportService.build(module, cfg)
         setReport(built)
-        setSuccess(`Relatorio gerado com ${built.meta.sections_count} secao(oes).`)
-        window.setTimeout(() => setSuccess(null), 4000)
+        crudToast.notifySuccess(t('reports.builder.buildSuccess', { count: built.meta.sections_count }))
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Falha ao gerar o relatorio.')
+        setError(err instanceof Error ? err.message : t('reports.builder.buildError'))
       } finally {
         setBuilding(false)
       }
     },
-    [module],
+    [module, crudToast, t],
   )
 
   const handleBuild = useCallback(() => {
@@ -160,11 +161,10 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
     try {
       await reportService.export(module, config, format)
       if (format !== 'html') {
-        setSuccess('Arquivo exportado com sucesso.')
-        window.setTimeout(() => setSuccess(null), 3000)
+        crudToast.notifySuccess(t('reports.builder.exportSuccess'))
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nao foi possivel exportar o relatorio.')
+      setError(err instanceof Error ? err.message : t('reports.builder.exportError'))
     } finally {
       setExporting(null)
     }
@@ -184,10 +184,9 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
       })
       setServerPresets((prev) => [...prev, created])
       setPresetName('')
-      setSuccess('Preset salvo no servidor.')
-      window.setTimeout(() => setSuccess(null), 3000)
+      crudToast.notifySuccess(t('reports.builder.presetSaved'))
     } catch {
-      setError('Nao foi possivel salvar o preset.')
+      setError(t('reports.builder.presetSaveError'))
     } finally {
       setSavingPreset(false)
     }
@@ -206,14 +205,14 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
       await reportPresetService.remove(module, id)
       setServerPresets((prev) => prev.filter((p) => p.id !== id))
     } catch {
-      setError('Nao foi possivel remover o preset.')
+      setError(t('reports.builder.presetDeleteError'))
     }
   }
 
   if (loading || !schema || !config) {
     return (
       <ConnectCard>
-        <ConnectLoadingSpinner label="Carregando construtor de relatorios..." className="min-h-[400px]" />
+        <ConnectLoadingSpinner label={t('reports.builder.loading')} className="min-h-[400px]" />
       </ConnectCard>
     )
   }
@@ -235,12 +234,12 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
       <div className="relative" ref={exportMenuRef}>
         <OutlineButton type="button" onClick={() => setExportMenuOpen((o) => !o)} disabled={Boolean(exporting)}>
           <Download className="h-4 w-4" />
-          {exporting ? 'Exportando...' : 'Exportar'}
+          {exporting ? t('reports.builder.exporting') : t('reports.builder.export')}
           <ChevronDown className="h-4 w-4 opacity-70" />
         </OutlineButton>
         {exportMenuOpen && (
           <div className="glass-panel-solid absolute right-0 top-full z-20 mt-2 w-56 overflow-hidden rounded-xl py-1 shadow-xl">
-            {EXPORT_OPTIONS.map((opt) => {
+            {exportOptions.map((opt) => {
               const Icon = opt.icon
               return (
                 <button
@@ -259,11 +258,11 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
         )}
       </div>
       <OutlineButton type="button" onClick={handlePrint} disabled={!report}>
-        <Printer className="h-4 w-4" /> Preview local
+        <Printer className="h-4 w-4" /> {t('reports.builder.localPreview')}
       </OutlineButton>
       <PrimaryButton type="button" onClick={handleBuild} disabled={building}>
         <Sparkles className="h-4 w-4" />
-        {building ? 'Gerando...' : report ? 'Atualizar preview' : 'Gerar preview'}
+        {building ? t('reports.builder.generating') : report ? t('reports.builder.updatePreview') : t('reports.builder.generatePreview')}
       </PrimaryButton>
     </>
   )
@@ -272,8 +271,8 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
     <div className="w-full min-w-0">
       {!embedded && (
         <ConnectPageHeader
-          title={module === 'connect' ? 'Relatorios personalizados' : 'Relatorios Grid'}
-          subtitle="Monte o relatorio escolhendo secoes, colunas e filtros. Exporte em CSV, Excel, JSON ou PDF."
+          title={module === 'connect' ? t('reports.builder.connectTitle') : t('reports.builder.gridTitle')}
+          subtitle={t('reports.builder.subtitle')}
           actions={headerActions}
         />
       )}
@@ -285,21 +284,16 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
       {error && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
       )}
-      {success && (
-        <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800" role="status">
-          {success}
-        </p>
-      )}
 
       <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
         <div className="space-y-4 print:hidden">
           <ConnectCard className="p-4">
             <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-hub-navy">
-              <FileText className="h-4 w-4" /> Configuracao
+              <FileText className="h-4 w-4" /> {t('reports.builder.configuration')}
             </h3>
 
             <div className="space-y-3">
-              <FormField label="Modelo rapido (sistema)">
+              <FormField label={t('reports.builder.quickPreset')}>
                 <select
                   className={selectClass}
                   defaultValue=""
@@ -308,7 +302,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
                     e.target.value = ''
                   }}
                 >
-                  <option value="">Selecionar preset...</option>
+                  <option value="">{t('reports.builder.selectPreset')}</option>
                   {schema.presets.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.label}
@@ -317,9 +311,9 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
                 </select>
               </FormField>
 
-              <FormField label="Meus presets salvos">
+              <FormField label={t('reports.builder.savedPresets')}>
                 {serverPresets.length === 0 ? (
-                  <p className="text-xs text-hub-text-muted">Nenhum preset salvo no servidor.</p>
+                  <p className="text-xs text-hub-text-muted">{t('reports.builder.noSavedPresets')}</p>
                 ) : (
                   <ul className="max-h-32 space-y-1 overflow-y-auto rounded-lg border border-hub-border/50 p-2">
                     {serverPresets.map((preset) => (
@@ -331,14 +325,14 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
                         >
                           <BookmarkPlus className="mr-1 inline h-3 w-3" />
                           {preset.name}
-                          {preset.is_shared && ' (compartilhado)'}
+                          {preset.is_shared && ` ${t('reports.builder.shared')}`}
                         </button>
                         {preset.is_owner && (
                           <button
                             type="button"
                             className="rounded p-1 text-red-600 hover:bg-red-50"
                             onClick={() => handleDeletePreset(preset.id)}
-                            aria-label="Excluir preset"
+                            aria-label={t('reports.builder.deletePreset')}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -352,7 +346,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
               <div className="flex gap-2">
                 <input
                   className={inputClass}
-                  placeholder="Nome do novo preset..."
+                  placeholder={t('reports.builder.newPresetPlaceholder')}
                   value={presetName}
                   onChange={(e) => setPresetName(e.target.value)}
                 />
@@ -361,7 +355,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
                 </OutlineButton>
               </div>
 
-              <FormField label="Titulo do relatorio">
+              <FormField label={t('reports.builder.reportTitle')}>
                 <input
                   className={inputClass}
                   value={config.title}
@@ -373,7 +367,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
                 />
               </FormField>
 
-              <FormField label="Subtitulo (opcional)">
+              <FormField label={t('reports.builder.reportSubtitle')}>
                 <input
                   className={inputClass}
                   value={config.subtitle}
@@ -382,7 +376,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
               </FormField>
 
               <div className="grid grid-cols-2 gap-2">
-                <FormField label="Data inicial">
+                <FormField label={t('reports.builder.startDate')}>
                   <input
                     type="date"
                     className={inputClass}
@@ -393,7 +387,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
                     }}
                   />
                 </FormField>
-                <FormField label="Data final">
+                <FormField label={t('reports.builder.endDate')}>
                   <input
                     type="date"
                     className={inputClass}
@@ -410,7 +404,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
 
           {schema.filters.length > 0 && (
             <ConnectCard className="p-4">
-              <h3 className="mb-3 text-sm font-semibold text-hub-navy">Filtros</h3>
+              <h3 className="mb-3 text-sm font-semibold text-hub-navy">{t('reports.builder.filters')}</h3>
               <div className="space-y-3">
                 {schema.filters.map((filter) => {
                   if (filter.type === 'course' && module === 'connect' && connectOptions) {
@@ -431,7 +425,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
                             setReport(null)
                           }}
                         >
-                          <option value="">Todos</option>
+                          <option value="">{t('connect.common.all')}</option>
                           {connectOptions.courses.map((c) => (
                             <option key={c.id} value={c.id}>
                               {c.name}
@@ -456,7 +450,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
                             setReport(null)
                           }}
                         >
-                          <option value="">Todas</option>
+                          <option value="">{t('connect.common.all')}</option>
                           {filteredClasses.map((c) => (
                             <option key={c.id} value={c.id}>
                               {c.name}
@@ -505,7 +499,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
                             setReport(null)
                           }}
                         >
-                          <option value="">Todos</option>
+                          <option value="">{t('connect.common.all')}</option>
                           {gridOptions.blocks.map((block) => (
                             <option key={block} value={block}>
                               {block}
@@ -541,7 +535,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
           )}
 
           <ConnectCard className="max-h-[420px] overflow-y-auto p-4">
-            <h3 className="mb-3 text-sm font-semibold text-hub-navy">Secoes do relatorio</h3>
+            <h3 className="mb-3 text-sm font-semibold text-hub-navy">{t('reports.builder.sections')}</h3>
             <div className="space-y-3">
               {schema.sections.map((section) => {
                 const enabled = config.sections.includes(section.id)
@@ -565,7 +559,7 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
 
                     {enabled && section.has_columns && section.columns && (
                       <div className="mt-3 border-t border-hub-border/40 pt-3">
-                        <p className="mb-2 text-xs font-medium text-hub-text-muted">Colunas</p>
+                        <p className="mb-2 text-xs font-medium text-hub-text-muted">{t('reports.builder.columns')}</p>
                         <div className="flex flex-wrap gap-2">
                           {section.columns.map((col) => {
                             const selected = (config.columns[section.id] ?? []).includes(col.key)
@@ -597,15 +591,15 @@ export function CustomReportBuilder({ module, embedded = false }: { module: Repo
         <ConnectCard className="min-h-[480px] overflow-hidden p-0 print:border-0 print:shadow-none">
           <div className="border-b border-hub-border/50 bg-hub-bg/50 px-4 py-2 text-xs text-hub-text-muted print:hidden">
             {building ? (
-              <>Gerando relatorio com dados do servidor...</>
+              <>{t('reports.builder.statusBuilding')}</>
             ) : report ? (
-              <>Preview atualizado — exporte em CSV, Excel, JSON ou PDF pelo menu Exportar.</>
+              <>{t('reports.builder.statusReady')}</>
             ) : (
-              <>Selecione um preset ou configure as secoes e clique em Gerar preview.</>
+              <>{t('reports.builder.statusIdle')}</>
             )}
           </div>
           {building && !report ? (
-            <ConnectLoadingSpinner label="Montando secoes e tabelas..." className="min-h-[400px]" />
+            <ConnectLoadingSpinner label={t('reports.builder.assembling')} className="min-h-[400px]" />
           ) : (
             <ReportPreview report={report} />
           )}

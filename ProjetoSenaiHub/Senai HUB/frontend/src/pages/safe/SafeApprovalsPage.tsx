@@ -14,10 +14,12 @@ import {
 } from '../../components/connect/ConnectShared'
 import { safeService } from '../../services/safeService'
 import type { PaginatedMeta, SafeAuthorization } from '../../types/safe'
-import { parseApiError } from '../../utils/parseApiError'
-
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 export function SafeApprovalsPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmAction } = useConfirmAction()
   const navigate = useNavigate()
   const [items, setItems] = useState<SafeAuthorization[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
@@ -44,22 +46,24 @@ export function SafeApprovalsPage() {
     setActingId(id)
     try {
       await safeService.approveByTeacher(id)
+      crudToast.notifySuccess(t('safe.approvals.approvedSuccess'))
       load()
     } catch (e: unknown) {
-      window.alert(parseApiError(e))
+      crudToast.notifyError(e)
     } finally {
       setActingId(null)
     }
   }
 
   const handleDeny = async (id: number) => {
-    if (!window.confirm('Negar esta solicitação?')) return
+    if (!(await confirmAction({ message: t('safe.approvals.denyConfirm'), variant: 'danger' }))) return
     setActingId(id)
     try {
       await safeService.denyByTeacher(id)
+      crudToast.notifySuccess(t('safe.approvals.deniedSuccess'))
       load()
     } catch (e: unknown) {
-      window.alert(parseApiError(e))
+      crudToast.notifyError(e)
     } finally {
       setActingId(null)
     }
@@ -76,18 +80,18 @@ export function SafeApprovalsPage() {
         {loading ? (
           <ConnectLoadingSpinner />
         ) : items.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-hub-text-muted sm:px-6">Nenhuma solicitação pendente.</p>
+          <p className="px-4 py-10 text-center text-sm text-hub-text-muted sm:px-6">{t('safe.approvals.empty')}</p>
         ) : (
           <ConnectTableScroll>
             <table className="w-full min-w-[800px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left sm:px-6">Protocolo</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Aluno</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Tipo</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Motivo</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Agendado</th>
-                  <th className="px-4 py-3 text-right sm:px-6">Ações</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.protocol')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.student')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.type')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.reason')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.scheduled')}</th>
+                  <th className="px-4 py-3 text-right sm:px-6">{t('connect.common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -106,10 +110,10 @@ export function SafeApprovalsPage() {
                           <Eye className="h-4 w-4" />
                         </OutlineButton>
                         <PrimaryButton onClick={() => handleApprove(auth.id)} disabled={actingId === auth.id}>
-                          <Check className="h-4 w-4" /> Aprovar
+                          <Check className="h-4 w-4" /> {t('safe.approvals.approve')}
                         </PrimaryButton>
                         <OutlineButton onClick={() => handleDeny(auth.id)} disabled={actingId === auth.id}>
-                          <X className="h-4 w-4 text-red-600" /> Negar
+                          <X className="h-4 w-4 text-red-600" /> {t('safe.approvals.deny')}
                         </OutlineButton>
                       </div>
                     </td>

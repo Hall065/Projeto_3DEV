@@ -1,4 +1,5 @@
 import { chartColorByIndex } from '../../constants/chartPalette'
+import { useTranslation } from 'react-i18next'
 import { IsometricDistributionDonut, type IsometricDonutSegmentInput } from '../connect/ConnectCharts'
 import type { BuiltReport, ReportChartItem, ReportKpiItem, ReportSection } from '../../types/reports'
 
@@ -12,6 +13,7 @@ const kpiVariantClass: Record<string, string> = {
 }
 
 function ChartPrintLegend({ items }: { items: ReportChartItem[] }) {
+  const { t } = useTranslation()
   const total = items.reduce((sum, item) => sum + item.value, 0)
   const max = Math.max(...items.map((i) => i.value), 1)
 
@@ -38,7 +40,7 @@ function ChartPrintLegend({ items }: { items: ReportChartItem[] }) {
       </ul>
       {total > 0 && (
         <p className="mt-3 border-t border-hub-border/40 pt-2 text-xs text-hub-text-muted">
-          Total: <strong className="text-hub-navy">{total.toLocaleString('pt-BR')}</strong>
+          {t('reportPreview.total')}: <strong className="text-hub-navy">{total.toLocaleString('pt-BR')}</strong>
         </p>
       )}
     </div>

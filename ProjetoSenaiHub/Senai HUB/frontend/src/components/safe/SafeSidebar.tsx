@@ -53,7 +53,7 @@ export function SafeSidebar({ collapsed, mobileOpen = false, onMobileClose }: Sa
             type="button"
             onClick={onMobileClose}
             className="rounded-lg p-2 hover:bg-white/10 lg:hidden"
-            aria-label="Fechar menu"
+            aria-label={t('header.closeMenu')}
           >
             <X className="h-5 w-5" />
           </button>

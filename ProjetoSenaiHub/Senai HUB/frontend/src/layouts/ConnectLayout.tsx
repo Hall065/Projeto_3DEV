@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ConnectHeader } from '../components/connect/ConnectHeader'
 import { ConnectSidebar } from '../components/connect/ConnectSidebar'
 import { GlassShell } from '../components/layout/GlassShell'
@@ -7,6 +8,7 @@ import { SkipToMainLink } from '../components/layout/SkipToMainLink'
 import { SidebarRailToggle } from '../components/layout/SidebarRailToggle'
 
 export function ConnectLayout() {
+  const { t } = useTranslation()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
@@ -32,7 +34,7 @@ export function ConnectLayout() {
         <button
           type="button"
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          aria-label="Fechar menu"
+          aria-label={t('header.closeMenu')}
           onClick={() => setMobileNavOpen(false)}
         />
       )}

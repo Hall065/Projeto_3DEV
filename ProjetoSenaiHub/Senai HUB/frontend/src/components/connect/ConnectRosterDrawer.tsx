@@ -1,9 +1,10 @@
 import { Loader2, UserMinus, UserPlus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { connectService } from '../../services/connectService'
 import type { CourseRoster, CourseRosterRole, HubPerson } from '../../types/connect'
 import {
-  COURSE_ROSTER_ROLE_LABELS,
+  courseRosterRoleLabel,
   hubPersonKindLabel,
   personDisplayName,
 } from '../../utils/connectPerson'
@@ -29,6 +30,7 @@ export function ConnectRosterDrawer({
   entityName,
   onChanged,
 }: ConnectRosterDrawerProps) {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -49,11 +51,11 @@ export function ConnectRosterDrawer({
         setClassRoster(await connectService.getClassRoster(entityId))
       }
     } catch {
-      setError('Não foi possível carregar as matrículas.')
+      setError(t('connectComponents.rosterDrawer.loadError'))
     } finally {
       setLoading(false)
     }
-  }, [entityId, mode, open])
+  }, [entityId, mode, open, t])
 
   useEffect(() => {
     if (open && entityId) {
@@ -121,7 +123,7 @@ export function ConnectRosterDrawer({
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Não foi possível vincular a pessoa.'
+        t('connectComponents.rosterDrawer.linkError')
       setError(message)
     } finally {
       setSaving(false)
@@ -141,7 +143,7 @@ export function ConnectRosterDrawer({
       await loadRoster()
       onChanged?.()
     } catch {
-      setError('Não foi possível remover o vínculo.')
+      setError(t('connectComponents.rosterDrawer.unlinkError'))
     } finally {
       setSaving(false)
     }
@@ -167,7 +169,7 @@ export function ConnectRosterDrawer({
           disabled={saving}
           onClick={() => void handleRemove(person, role)}
           className="rounded-lg p-2 text-hub-text-muted transition hover:bg-white hover:text-hub-red"
-          aria-label={`Remover ${personDisplayName(person)}`}
+          aria-label={t('connectComponents.rosterDrawer.removePerson', { name: personDisplayName(person) })}
         >
           <UserMinus className="h-4 w-4" />
         </button>
@@ -175,7 +177,7 @@ export function ConnectRosterDrawer({
     </li>
   )
 
-  const title = mode === 'course' ? 'Matrículas do curso' : 'Alunos da turma'
+  const title = mode === 'course' ? t('connectComponents.rosterDrawer.courseTitle') : t('connectComponents.rosterDrawer.classTitle')
   const subtitle = entityName ? `${title} · ${entityName}` : title
 
   return (
@@ -187,7 +189,7 @@ export function ConnectRosterDrawer({
       width="lg"
       footer={
         <div className="flex justify-end">
-          <OutlineButton onClick={onClose}>Fechar</OutlineButton>
+          <OutlineButton onClick={onClose}>{t('connectComponents.rosterDrawer.close')}</OutlineButton>
         </div>
       }
     >
@@ -205,7 +207,7 @@ export function ConnectRosterDrawer({
                 courseTab === tab ? 'bg-hub-red text-white' : 'bg-hub-bg text-hub-text-muted hover:text-hub-navy'
               }`}
             >
-              {COURSE_ROSTER_ROLE_LABELS[tab]}
+              {courseRosterRoleLabel(tab)}
               {courseRoster && (
                 <span className="ml-1 opacity-80">
                   (
@@ -223,46 +225,48 @@ export function ConnectRosterDrawer({
       )}
 
       <section className="glass-panel mb-6 rounded-xl p-4">
-        <h3 className="mb-3 text-sm font-semibold text-hub-navy">Adicionar vínculo</h3>
+        <h3 className="mb-3 text-sm font-semibold text-hub-navy">{t('connectComponents.rosterDrawer.addLink')}</h3>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1">
-          <FormField label="Pessoa">
-            <select
-              className={selectClass}
-              value={personId}
-              onChange={(e) => setPersonId(e.target.value)}
-              disabled={saving || availablePeople.length === 0}
-            >
-              <option value="">
-                {availablePeople.length === 0 ? 'Nenhuma pessoa disponível' : 'Selecione...'}
-              </option>
-              {availablePeople.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {personDisplayName(p)} — {hubPersonKindLabel(p.kind)}
+            <FormField label={t('connectComponents.rosterDrawer.personField')}>
+              <select
+                className={selectClass}
+                value={personId}
+                onChange={(e) => setPersonId(e.target.value)}
+                disabled={saving || availablePeople.length === 0}
+              >
+                <option value="">
+                  {availablePeople.length === 0
+                    ? t('connectComponents.rosterDrawer.noPeopleAvailable')
+                    : t('connectComponents.rosterDrawer.selectPlaceholder')}
                 </option>
-              ))}
-            </select>
-          </FormField>
+                {availablePeople.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {personDisplayName(p)} — {hubPersonKindLabel(p.kind)}
+                  </option>
+                ))}
+              </select>
+            </FormField>
           </div>
           <PrimaryButton onClick={() => void handleAdd()} disabled={saving || !personId}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-            Vincular
+            {t('connectComponents.rosterDrawer.link')}
           </PrimaryButton>
         </div>
         {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
       </section>
 
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-hub-navy">Vinculados</h3>
+        <h3 className="mb-3 text-sm font-semibold text-hub-navy">{t('connectComponents.rosterDrawer.linked')}</h3>
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-10 text-sm text-hub-text-muted">
             <Loader2 className="h-5 w-5 animate-spin text-hub-red" />
-            Carregando...
+            {t('connectComponents.rosterDrawer.loading')}
           </div>
         ) : mode === 'course' ? (
           <ul className="space-y-2">
             {currentCourseList().length === 0 ? (
-              <p className="py-6 text-center text-sm text-hub-text-muted">Nenhuma pessoa neste papel.</p>
+              <p className="py-6 text-center text-sm text-hub-text-muted">{t('connectComponents.rosterDrawer.noPeopleInRole')}</p>
             ) : (
               currentCourseList().map((p) => renderPersonRow(p, courseTab))
             )}
@@ -270,7 +274,7 @@ export function ConnectRosterDrawer({
         ) : (
           <ul className="space-y-2">
             {classRoster.length === 0 ? (
-              <p className="py-6 text-center text-sm text-hub-text-muted">Nenhum aluno na turma.</p>
+              <p className="py-6 text-center text-sm text-hub-text-muted">{t('connectComponents.rosterDrawer.noStudentsInClass')}</p>
             ) : (
               classRoster.map((p) => renderPersonRow(p))
             )}

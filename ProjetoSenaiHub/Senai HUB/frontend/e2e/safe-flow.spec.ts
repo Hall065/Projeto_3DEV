@@ -90,4 +90,11 @@ test.describe('SAFE module', () => {
     await page.goto('/safe/autorizacoes')
     await expect(page.getByText(/SAFE-2026-0001/i)).toBeVisible()
   })
+
+  test('SAFE authorizations archive filter is available', async ({ page }) => {
+    await page.goto('/safe/autorizacoes')
+    await expect(page.getByLabel(/Situação|Status/i)).toBeVisible()
+    await page.getByLabel(/Situação|Status/i).selectOption('finalizado')
+    await expect(page.getByLabel(/Situação|Status/i)).toHaveValue('finalizado')
+  })
 })

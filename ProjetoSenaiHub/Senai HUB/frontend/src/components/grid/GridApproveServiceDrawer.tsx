@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../connect/ConnectDrawer'
 import { FormField, inputClass, OutlineButton, PrimaryButton } from '../connect/ConnectShared'
 import { gridService } from '../../services/gridService'
 import type { GridTicket } from '../../types/grid'
-import { parseApiError } from '../../utils/parseApiError'
+import { useCrudToast } from '../../hooks/useCrudToast'
 
 export function GridApproveServiceDrawer({
   ticket,
@@ -18,6 +19,8 @@ export function GridApproveServiceDrawer({
   onApproved: () => void
   approverName: string
 }) {
+  const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const [notes, setNotes] = useState('')
   const [resolutionSummary, setResolutionSummary] = useState('')
   const [saving, setSaving] = useState(false)
@@ -35,8 +38,9 @@ export function GridApproveServiceDrawer({
       onClose()
       setNotes('')
       setResolutionSummary('')
+      crudToast.notifySuccess(t('gridComponents.approveService.success'))
     } catch (err: unknown) {
-      window.alert(parseApiError(err, 'Nao foi possivel registrar a aprovacao.'))
+      crudToast.notifyError(err, t('gridComponents.approveService.error'))
     } finally {
       setSaving(false)
     }
@@ -46,35 +50,32 @@ export function GridApproveServiceDrawer({
     <ConnectDrawer
       open={open}
       onClose={onClose}
-      title="Aprovar serviço"
+      title={t('gridComponents.approveService.title')}
       subtitle={ticket ? `${ticket.code} — ${ticket.title}` : ''}
       footer={
         <div className="flex justify-end gap-2">
-          <OutlineButton onClick={onClose}>Cancelar</OutlineButton>
+          <OutlineButton onClick={onClose}>{t('common.cancel')}</OutlineButton>
           <PrimaryButton onClick={() => void handleSave()} disabled={saving}>
-            {saving ? 'Salvando...' : 'Aprovar e enviar ao solicitante'}
+            {saving ? t('connect.common.saving') : t('gridComponents.approveService.approveAndSend')}
           </PrimaryButton>
         </div>
       }
     >
-      <p className="mb-4 text-sm text-hub-text-muted">
-        Como chefe de manutenção, confirme se o serviço foi executado corretamente. Após aprovar, o chamado segue para
-        avaliação do solicitante.
-      </p>
-      <FormField label="Resumo da resolução">
+      <p className="mb-4 text-sm text-hub-text-muted">{t('gridComponents.approveService.body')}</p>
+      <FormField label={t('gridComponents.approveService.resolutionSummary')}>
         <textarea
           className={`${inputClass} min-h-[80px] py-2`}
           value={resolutionSummary}
           onChange={(e) => setResolutionSummary(e.target.value)}
-          placeholder="Descreva o que foi verificado..."
+          placeholder={t('gridComponents.approveService.resolutionPlaceholder')}
         />
       </FormField>
-      <FormField label="Observações da aprovação">
+      <FormField label={t('gridComponents.approveService.approvalNotes')}>
         <textarea
           className={`${inputClass} min-h-[80px] py-2`}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Comentários internos ou pendências..."
+          placeholder={t('gridComponents.approveService.approvalPlaceholder')}
         />
       </FormField>
     </ConnectDrawer>

@@ -25,7 +25,7 @@ class GridSampleTicketsSeeder extends Seeder
             ->keyBy('sku');
 
         $requesters = ['Ana Costa', 'Carlos Mendes', 'Paula Ribeiro', 'João Lima', 'Fernanda Dias'];
-        $technicians = ['Júlio Oliveira', 'Maria Santos'];
+        $technicians = ['Pedro Tecnico', 'Julia Tecnica'];
 
         $samples = [
             [

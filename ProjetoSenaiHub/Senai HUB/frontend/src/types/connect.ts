@@ -156,6 +156,7 @@ export interface ConnectClass {
   course?: ConnectCourse
   teacher?: ConnectTeacher
   students_count?: number
+  attendance_sessions_count?: number
 }
 
 export interface ConnectStudent {

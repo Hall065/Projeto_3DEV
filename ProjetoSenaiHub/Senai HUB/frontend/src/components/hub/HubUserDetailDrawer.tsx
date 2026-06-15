@@ -1,5 +1,6 @@
 import { LayoutGrid, Shield, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../connect/ConnectDrawer'
 import { ConnectDrawerHeroCard } from '../connect/ConnectDrawerHeroCard'
 import { ConnectLoadingSpinner } from '../connect/ConnectShared'
@@ -8,10 +9,12 @@ import { adminService } from '../../services/adminService'
 import type { HubUserDetail } from '../../types/auth'
 import { groupPermissions } from '../../utils/profileLabels'
 
-function formatDateTime(value?: string | null) {
+import { intlLocale, normalizeLocale } from '../../i18n'
+
+function formatDateTime(value: string | undefined | null, locale: string) {
   if (!value) return '—'
   try {
-    return new Date(value).toLocaleString('pt-BR')
+    return new Date(value).toLocaleString(locale)
   } catch {
     return value
   }
@@ -35,6 +38,8 @@ export function HubUserDetailDrawer({
   open: boolean
   onClose: () => void
 }) {
+  const { t, i18n } = useTranslation()
+  const locale = intlLocale(normalizeLocale(i18n.language))
   const [tab, setTab] = useState<'overview' | 'access'>('overview')
   const [detail, setDetail] = useState<HubUserDetail | null>(null)
   const [loading, setLoading] = useState(false)
@@ -54,7 +59,7 @@ export function HubUserDetailDrawer({
     adminService
       .getUser(userId)
       .then(setDetail)
-      .catch(() => setError('Não foi possível carregar os detalhes do usuário.'))
+      .catch(() => setError(t('gridComponents.shared.loadUserError')))
       .finally(() => setLoading(false))
   }, [open, userId])
 
@@ -64,12 +69,12 @@ export function HubUserDetailDrawer({
     <ConnectDrawer
       open={open}
       onClose={onClose}
-      title={detail?.name ?? 'Usuário'}
-      subtitle={detail?.role_label ?? detail?.role ?? 'Carregando...'}
+      title={detail?.name ?? t('common.user')}
+      subtitle={detail?.role_label ?? detail?.role ?? t('common.loading')}
       width="2xl"
     >
       {loading ? (
-        <ConnectLoadingSpinner label="Carregando usuário..." className="min-h-[320px]" />
+        <ConnectLoadingSpinner label={t('gridComponents.shared.loadingUser')} className="min-h-[320px]" />
       ) : error ? (
         <p className="py-12 text-center text-sm text-red-600">{error}</p>
       ) : detail ? (
@@ -85,7 +90,7 @@ export function HubUserDetailDrawer({
                 </span>
               </p>
               {detail.is_admin && (
-                <p className="mt-2 text-xs font-medium text-amber-700">Conta administradora</p>
+                <p className="mt-2 text-xs font-medium text-amber-700">{t('gridComponents.shared.adminAccount')}</p>
               )}
             </div>
           </ConnectDrawerHeroCard>
@@ -98,7 +103,7 @@ export function HubUserDetailDrawer({
                 tab === 'overview' ? 'border-hub-red text-hub-red' : 'border-transparent text-hub-text-muted hover:text-hub-navy'
               }`}
             >
-              Visão geral
+              {t('gridComponents.shared.overview')}
             </button>
             <button
               type="button"
@@ -107,7 +112,7 @@ export function HubUserDetailDrawer({
                 tab === 'access' ? 'border-hub-red text-hub-red' : 'border-transparent text-hub-text-muted hover:text-hub-navy'
               }`}
             >
-              Acessos e permissões
+              {t('gridComponents.shared.accessAndPermissions')}
             </button>
           </div>
 
@@ -121,13 +126,16 @@ export function HubUserDetailDrawer({
 
               <dl className="surface-inset rounded-2xl border border-hub-border/50 px-4">
                 <DetailRow label="ID" value={detail.id} />
-                <DetailRow label="E-mail" value={detail.email} />
-                <DetailRow label="Perfil" value={detail.role_label ?? detail.role ?? '—'} />
-                <DetailRow label="Módulo principal" value={detail.role_module ?? '—'} />
-                {detail.company_name ? <DetailRow label="Empresa" value={detail.company_name} /> : null}
-                <DetailRow label="E-mail verificado" value={detail.email_verified_at ? formatDateTime(detail.email_verified_at) : 'Pendente'} />
-                <DetailRow label="Cadastrado em" value={formatDateTime(detail.created_at)} />
-                <DetailRow label="Última atualização" value={formatDateTime(detail.updated_at)} />
+                <DetailRow label={t('connect.table.email')} value={detail.email} />
+                <DetailRow label={t('common.role')} value={detail.role_label ?? detail.role ?? '—'} />
+                <DetailRow label={t('gridComponents.shared.mainModule')} value={detail.role_module ?? '—'} />
+                {detail.company_name ? <DetailRow label={t('gridComponents.shared.company')} value={detail.company_name} /> : null}
+                <DetailRow
+                  label={t('gridComponents.shared.emailVerified')}
+                  value={detail.email_verified_at ? formatDateTime(detail.email_verified_at, locale) : t('gridComponents.shared.pending')}
+                />
+                <DetailRow label={t('gridComponents.shared.registeredAt')} value={formatDateTime(detail.created_at, locale)} />
+                <DetailRow label={t('gridComponents.shared.lastUpdate')} value={formatDateTime(detail.updated_at, locale)} />
               </dl>
             </>
           ) : (
@@ -135,10 +143,10 @@ export function HubUserDetailDrawer({
               <section>
                 <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-hub-navy">
                   <LayoutGrid className="h-4 w-4 text-hub-red" />
-                  Aplicativos liberados
+                  {t('gridComponents.shared.releasedApps')}
                 </h4>
                 {(detail.applications_detail?.length ?? 0) === 0 ? (
-                  <p className="text-sm text-hub-text-muted">Nenhum aplicativo vinculado.</p>
+                  <p className="text-sm text-hub-text-muted">{t('gridComponents.shared.noApps')}</p>
                 ) : (
                   <ul className="space-y-2">
                     {detail.applications_detail?.map((app) => (
@@ -157,10 +165,10 @@ export function HubUserDetailDrawer({
               <section>
                 <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-hub-navy">
                   <Shield className="h-4 w-4 text-hub-red" />
-                  Permissões do perfil
+                  {t('gridComponents.shared.profilePermissions')}
                 </h4>
                 {permissionGroups.length === 0 ? (
-                  <p className="text-sm text-hub-text-muted">Sem permissões listadas.</p>
+                  <p className="text-sm text-hub-text-muted">{t('gridComponents.shared.noPermissions')}</p>
                 ) : (
                   <div className="space-y-4">
                     {permissionGroups.map((group) => (
@@ -183,7 +191,7 @@ export function HubUserDetailDrawer({
         </div>
       ) : (
         <p className="flex items-center justify-center gap-2 py-12 text-sm text-hub-text-muted">
-          <User className="h-5 w-5" /> Selecione um usuário
+          <User className="h-5 w-5" /> {t('gridComponents.shared.selectUser')}
         </p>
       )}
     </ConnectDrawer>

@@ -21,10 +21,12 @@ import {
 import { GridInventoryStatusBadge } from '../../components/grid/GridBadges'
 import { GridInventoryThumb } from '../../components/grid/GridInventoryThumb'
 import { gridService } from '../../services/gridService'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus'
 import type { GridDashboardData, GridInventoryItem, PaginatedMeta } from '../../types/grid'
 import { prepareAvatarFile, readAvatarPreview, validateAvatarFile } from '../../utils/avatarImage'
-import { parseApiError } from '../../utils/parseApiError'
+import { GRID_INVENTORY_CATEGORIES } from '../../constants/gridInventoryCategories'
 
 type InventoryImageSource = 'auto' | 'upload' | 'url'
 
@@ -56,6 +58,8 @@ const emptyForm = {
 
 export function GridInventoryPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete } = useConfirmAction()
   const [searchParams, setSearchParams] = useSearchParams()
   const [items, setItems] = useState<GridInventoryItem[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
@@ -163,7 +167,7 @@ export function GridInventoryPage() {
 
     const validation = validateAvatarFile(file)
     if (validation) {
-      window.alert(validation)
+      crudToast.notifyWarning(validation)
       event.target.value = ''
       return
     }
@@ -174,24 +178,24 @@ export function GridInventoryPage() {
       setImageFile(prepared)
       setImagePreview(preview)
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : t('common.error'))
+      crudToast.notifyError(error, t('common.error'))
       event.target.value = ''
     }
   }
 
   const handleSave = async () => {
     if (!form.title.trim()) {
-      window.alert(t('grid.inventory.alert.nameRequired'))
+      crudToast.notifyWarning(t('grid.inventory.alert.nameRequired'))
       return
     }
 
     if (imageSource === 'upload' && !imageFile && !imagePreview) {
-      window.alert(t('grid.inventory.alert.photoRequired'))
+      crudToast.notifyWarning(t('grid.inventory.alert.photoRequired'))
       return
     }
 
     if (imageSource === 'url' && !imageUrl.trim()) {
-      window.alert(t('grid.inventory.alert.photoRequired'))
+      crudToast.notifyWarning(t('grid.inventory.alert.photoRequired'))
       return
     }
 
@@ -223,7 +227,7 @@ export function GridInventoryPage() {
         const created = await gridService.createInventory(payload)
         itemId = created.item.id
         if (created.merged) {
-          window.alert(created.message)
+          crudToast.notifySuccess(created.message)
         }
       }
 
@@ -236,10 +240,11 @@ export function GridInventoryPage() {
       }
 
       setDrawerOpen(false)
+      crudToast.notifySaved(!!editingId)
       load()
       loadDashboard()
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('common.error')))
+      crudToast.notifyError(err, t('common.error'))
     } finally {
       setSaving(false)
     }
@@ -249,29 +254,31 @@ export function GridInventoryPage() {
     if (!adjustTarget) return
     const qty = Number(adjustQty)
     if (!qty || qty < 1) {
-      window.alert(t('grid.inventory.alert.qtyInvalid'))
+      crudToast.notifyWarning(t('grid.inventory.alert.qtyInvalid'))
       return
     }
     setSaving(true)
     try {
       await gridService.adjustInventory(adjustTarget.id, adjustType, qty)
       setAdjustOpen(false)
+      crudToast.notifySaved(true)
       load()
       loadDashboard()
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('common.error')))
+      crudToast.notifyError(err, t('common.error'))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (item: GridInventoryItem) => {
-    if (!window.confirm(t('connect.confirm.delete', { entity: `o item "${item.title}"` }))) return
+    if (!(await confirmDelete(`o item "${item.title}"`))) return
     try {
       await gridService.deleteInventory(item.id)
+      crudToast.notifyDeleted()
       load()
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('common.error')))
+      crudToast.notifyError(err, t('common.error'))
     }
   }
 
@@ -281,7 +288,7 @@ export function GridInventoryPage() {
       const updated = await gridService.syncInventoryImage(itemId)
       setItems((prev) => prev.map((i) => (i.id === itemId ? updated : i)))
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('common.error')))
+      crudToast.notifyError(err, t('common.error'))
     } finally {
       setSyncingImageId(null)
     }
@@ -367,10 +374,11 @@ export function GridInventoryPage() {
           <FormField label={t('grid.inventory.filters.category')}>
             <select className={selectClass} value={category} onChange={(e) => { setPage(1); setCategory(e.target.value) }}>
               <option value="">{t('connect.common.all')}</option>
-              <option value="Informática">Informática</option>
-              <option value="Elétrica">Elétrica</option>
-              <option value="Climatização">Climatização</option>
-              <option value="Hidráulica">Hidráulica</option>
+              {GRID_INVENTORY_CATEGORIES.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {t(cat.labelKey)}
+                </option>
+              ))}
             </select>
           </FormField>
           <FormField label={t('grid.inventory.filters.status')}>

@@ -39,24 +39,12 @@ class ConnectAttendanceService
                 continue;
             }
 
-            $session = ConnectAttendanceSession::query()->create([
-                'connect_class_id' => $class->id,
-                'connect_teacher_id' => $lesson->connect_teacher_id ?? $class->connect_teacher_id,
-                'connect_lesson_schedule_id' => $lesson->id,
-                'session_date' => $lesson->scheduled_date,
-                'subject' => $lesson->subject,
-                'lessons_count' => $lesson->lessons_count ?? $class->default_lessons_per_day ?? 4,
-                'status' => 'open',
-            ]);
-
-            foreach ($class->students as $student) {
-                ConnectAttendanceMark::query()->create([
-                    'connect_attendance_session_id' => $session->id,
-                    'connect_student_id' => $student->id,
-                    'status' => 'present',
-                    'missed_lessons' => 0,
-                ]);
-            }
+            $this->findOrCreateSession(
+                $class,
+                $lesson->scheduled_date?->format('Y-m-d') ?? now()->toDateString(),
+                (string) $lesson->subject,
+                $lesson,
+            );
 
             $created++;
         }
@@ -69,29 +57,95 @@ class ConnectAttendanceService
         $lesson->loadMissing(['connectClass.students']);
         $class = $lesson->connectClass;
 
-        $existing = $lesson->attendanceSession;
-        if ($existing) {
-            return $existing;
+        return $this->findOrCreateSession(
+            $class,
+            $lesson->scheduled_date?->format('Y-m-d') ?? now()->toDateString(),
+            (string) $lesson->subject,
+            $lesson,
+        );
+    }
+
+    public function findOrCreateSession(
+        ConnectClass $class,
+        string $sessionDate,
+        string $subject,
+        ?ConnectLessonSchedule $lesson = null,
+        ?int $lessonsCount = null,
+    ): ConnectAttendanceSession {
+        $class->loadMissing(['students', 'teacher']);
+
+        $lessonsCount ??= $lesson?->lessons_count ?? $class->default_lessons_per_day ?? 4;
+        $teacherId = $lesson?->connect_teacher_id ?? $class->connect_teacher_id;
+
+        if ($lesson) {
+            $byLesson = ConnectAttendanceSession::query()
+                ->where('connect_lesson_schedule_id', $lesson->id)
+                ->first();
+
+            if ($byLesson) {
+                return $this->ensureMarksForStudents($byLesson, $class);
+            }
+        }
+
+        $session = ConnectAttendanceSession::query()
+            ->where('connect_class_id', $class->id)
+            ->whereDate('session_date', $sessionDate)
+            ->where('subject', $subject)
+            ->first();
+
+        if ($session) {
+            $updates = [];
+
+            if ($lesson && ! $session->connect_lesson_schedule_id) {
+                $updates['connect_lesson_schedule_id'] = $lesson->id;
+            }
+
+            if (! $session->connect_teacher_id && $teacherId) {
+                $updates['connect_teacher_id'] = $teacherId;
+            }
+
+            if ($session->lessons_count !== $lessonsCount) {
+                $updates['lessons_count'] = $lessonsCount;
+            }
+
+            if ($updates !== []) {
+                $session->update($updates);
+                $session->refresh();
+            }
+
+            return $this->ensureMarksForStudents($session, $class);
         }
 
         $session = ConnectAttendanceSession::query()->create([
             'connect_class_id' => $class->id,
-            'connect_teacher_id' => $lesson->connect_teacher_id ?? $class->connect_teacher_id,
-            'connect_lesson_schedule_id' => $lesson->id,
-            'session_date' => $lesson->scheduled_date,
-            'subject' => $lesson->subject,
-            'lessons_count' => $lesson->lessons_count ?? $class->default_lessons_per_day ?? 4,
+            'connect_teacher_id' => $teacherId,
+            'connect_lesson_schedule_id' => $lesson?->id,
+            'session_date' => $sessionDate,
+            'subject' => $subject,
+            'lessons_count' => $lessonsCount,
             'status' => 'open',
         ]);
 
+        return $this->ensureMarksForStudents($session, $class);
+    }
+
+    private function ensureMarksForStudents(
+        ConnectAttendanceSession $session,
+        ConnectClass $class,
+    ): ConnectAttendanceSession {
+        $existingStudentIds = $session->marks()->pluck('connect_student_id');
+
         foreach ($class->students as $student) {
-            ConnectAttendanceMark::query()->firstOrCreate(
-                [
-                    'connect_attendance_session_id' => $session->id,
-                    'connect_student_id' => $student->id,
-                ],
-                ['status' => 'present', 'missed_lessons' => 0],
-            );
+            if ($existingStudentIds->contains($student->id)) {
+                continue;
+            }
+
+            ConnectAttendanceMark::query()->create([
+                'connect_attendance_session_id' => $session->id,
+                'connect_student_id' => $student->id,
+                'status' => 'present',
+                'missed_lessons' => 0,
+            ]);
         }
 
         return $session;

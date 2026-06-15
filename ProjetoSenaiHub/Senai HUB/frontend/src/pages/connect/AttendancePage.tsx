@@ -15,6 +15,7 @@ import {
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
 import { spreadsheetService } from '../../services/spreadsheetService'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { parseApiError } from '../../utils/parseApiError'
 import type {
   ConnectAttendanceMark,
@@ -47,6 +48,7 @@ function emptyMarkState(): StudentMarkState {
 
 export function AttendancePage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const [searchParams] = useSearchParams()
   const [classes, setClasses] = useState<ConnectClass[]>([])
   const [classId, setClassId] = useState(searchParams.get('class') ?? '')
@@ -193,7 +195,7 @@ export function AttendancePage() {
       }
       await spreadsheetService.exportData('connect', 'attendance', params)
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('connect.attendance.alert.exportError')))
+      crudToast.notifyError(err, t('connect.attendance.alert.exportError'))
     } finally {
       setExporting(false)
     }
@@ -215,8 +217,9 @@ export function AttendancePage() {
         default_lessons_per_day: lessons,
       })
       setSession(updated)
+      crudToast.notifySaved(true)
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('connect.attendance.alert.loadError')))
+      crudToast.notifyError(err, t('connect.attendance.alert.loadError'))
     } finally {
       setSaving(false)
     }

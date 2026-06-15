@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             GridSeeder::class,
             GridSampleTicketsSeeder::class,
             SafeSeeder::class,
+            CrossModuleStaffLinkSeeder::class,
             ApplicationPermissionSeeder::class,
         ]);
     }

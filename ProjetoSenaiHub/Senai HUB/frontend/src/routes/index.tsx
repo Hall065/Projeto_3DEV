@@ -26,6 +26,7 @@ import { ModuleAccessRoute } from './ModuleAccessRoute'
 import { PermissionRoute } from './PermissionRoute'
 import { AdminRoute } from './AdminRoute'
 import { HubUsersPage } from '../pages/hub/HubUsersPage'
+import { HubArchivePage } from '../pages/hub/HubArchivePage'
 import { ConnectOverviewPage } from '../pages/connect/ConnectOverviewPage'
 import { PeoplePage } from '../pages/connect/PeoplePage'
 import { StudentsPage } from '../pages/connect/StudentsPage'
@@ -75,6 +76,7 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<HubLayout />}>
           <Route path="/hub" element={<ApplicationHubPage />} />
+          <Route path="/hub/arquivo" element={<HubArchivePage />} />
           <Route element={<AdminRoute />}>
             <Route path="/hub/usuarios" element={<HubUsersPage />} />
           </Route>

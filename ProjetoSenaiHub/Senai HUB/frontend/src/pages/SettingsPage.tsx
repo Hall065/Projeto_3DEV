@@ -22,6 +22,7 @@ import { useAppearance } from '../contexts/AppearanceContext'
 import { useAuth } from '../contexts/AuthContext'
 import { notificationService } from '../services/notificationService'
 import type { NotificationPreferences } from '../types/notification'
+import { useCrudToast } from '../hooks/useCrudToast'
 import { useInterfacePreferences } from '../hooks/useInterfacePreferences'
 import { usePermissions } from '../hooks/usePermissions'
 import { DEFAULT_WALLPAPER_ID } from '../constants/wallpapers'
@@ -79,7 +80,7 @@ export function SettingsPage() {
   const { isAdmin, can } = usePermissions()
   const { setWallpaperId, removeCustomWallpaper } = useAppearance()
   const { reduceMotion, setReduceMotion } = useInterfacePreferences()
-  const [feedback, setFeedback] = useState<string | null>(null)
+  const crudToast = useCrudToast()
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>(
     user?.notification_preferences ?? DEFAULT_NOTIFICATION_PREFS,
   )
@@ -108,10 +109,10 @@ export function SettingsPage() {
     try {
       await notificationService.updatePreferences(next)
       await refreshUser()
-      showFeedback(t('settings.notificationsSaved'))
+      crudToast.notifySuccess(t('settings.notificationsSaved'))
     } catch {
       setNotificationPrefs(notificationPrefs)
-      showFeedback(t('settings.notificationsSaveError'))
+      crudToast.notifyError(null, t('settings.notificationsSaveError'))
     } finally {
       setSavingNotifications(false)
     }
@@ -141,25 +142,20 @@ export function SettingsPage() {
     })
   }
 
-  function showFeedback(message: string) {
-    setFeedback(message)
-    window.setTimeout(() => setFeedback(null), 3500)
-  }
-
   function clearLocalDrafts() {
     try {
       localStorage.removeItem('senai_report_config_connect')
       localStorage.removeItem('senai_report_config_grid')
-      showFeedback(t('settings.draftsCleared'))
+      crudToast.notifySuccess(t('settings.draftsCleared'))
     } catch {
-      showFeedback(t('settings.draftsClearError'))
+      crudToast.notifyError(null, t('settings.draftsClearError'))
     }
   }
 
   function resetWallpaper() {
     removeCustomWallpaper()
     setWallpaperId(DEFAULT_WALLPAPER_ID)
-    showFeedback(t('settings.wallpaperReset'))
+    crudToast.notifySuccess(t('settings.wallpaperReset'))
   }
 
   return (
@@ -177,12 +173,6 @@ export function SettingsPage() {
           </Link>
         }
       />
-
-      {feedback && (
-        <p className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">
-          {feedback}
-        </p>
-      )}
 
       <div className="grid gap-6 lg:grid-cols-12">
         <aside className="space-y-4 lg:col-span-4">

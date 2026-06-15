@@ -31,8 +31,8 @@ export function LandingThemesPreview() {
               />
             </div>
             <div className="p-4">
-              <h3 className="text-sm font-semibold text-hub-navy">{preset.name}</h3>
-              <p className="mt-1 text-xs text-hub-text-muted">{preset.description}</p>
+              <h3 className="text-sm font-semibold text-hub-navy">{t(preset.nameKey)}</h3>
+              <p className="mt-1 text-xs text-hub-text-muted">{t(preset.descriptionKey)}</p>
             </div>
           </article>
         ))}

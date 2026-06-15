@@ -1,13 +1,16 @@
 import { Check } from 'lucide-react'
-import { TICKET_WORKFLOW_STEPS, workflowStepIndex } from '../../utils/gridTicketWorkflow'
+import { useTranslation } from 'react-i18next'
+import { getTicketWorkflowSteps, workflowStepIndex } from '../../utils/gridTicketWorkflow'
 import type { GridTicketStatus } from '../../types/grid'
 
 export function GridTicketWorkflowStepper({ currentStatus }: { currentStatus: GridTicketStatus }) {
+  const { t } = useTranslation()
+  const steps = getTicketWorkflowSteps()
   const activeIndex = workflowStepIndex(currentStatus)
 
   return (
     <ol className="flex flex-col gap-0 sm:flex-row sm:items-start sm:justify-between">
-      {TICKET_WORKFLOW_STEPS.map((step, index) => {
+      {steps.map((step, index) => {
         const done = index < activeIndex
         const current = index === activeIndex
         const upcoming = index > activeIndex
@@ -16,7 +19,7 @@ export function GridTicketWorkflowStepper({ currentStatus }: { currentStatus: Gr
           <li
             key={step.status}
             className={`relative flex min-w-0 flex-1 gap-3 sm:flex-col sm:items-center sm:px-1 sm:text-center ${
-              index < TICKET_WORKFLOW_STEPS.length - 1
+              index < steps.length - 1
                 ? "pb-6 after:absolute after:left-[15px] after:top-8 after:hidden after:h-[calc(100%-2rem)] after:w-px after:bg-hub-border/60 sm:pb-0 sm:after:left-[calc(50%+20px)] sm:after:top-5 sm:after:block sm:after:h-px sm:after:w-[calc(100%-40px)]"
                 : ''
             }`}
@@ -38,9 +41,11 @@ export function GridTicketWorkflowStepper({ currentStatus }: { currentStatus: Gr
                   current ? 'text-hub-red' : done ? 'text-emerald-700' : upcoming ? 'text-hub-text-muted' : 'text-hub-navy'
                 }`}
               >
-                {step.label}
+                {t(`grid.labels.ticketStatus.${step.status}`, { defaultValue: step.label })}
               </p>
-              <p className="mt-0.5 hidden text-xs leading-snug text-hub-text-muted sm:line-clamp-2">{step.description}</p>
+              <p className="mt-0.5 hidden text-xs leading-snug text-hub-text-muted sm:line-clamp-2">
+                {t(`grid.workflow.stepHints.${step.status}`, { defaultValue: step.description })}
+              </p>
             </div>
           </li>
         )

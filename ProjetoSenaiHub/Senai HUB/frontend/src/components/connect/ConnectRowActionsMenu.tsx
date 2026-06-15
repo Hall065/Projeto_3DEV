@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { MoreVertical } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface ConnectRowAction {
   key: string
@@ -20,9 +21,11 @@ interface ConnectRowActionsMenuProps {
 
 export function ConnectRowActionsMenu({
   actions,
-  ariaLabel = 'Abrir menu de ações',
+  ariaLabel,
   align = 'right',
 }: ConnectRowActionsMenuProps) {
+  const { t } = useTranslation()
+  const resolvedAriaLabel = ariaLabel ?? t('connectActions.openMenu')
   const menuId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -53,7 +56,7 @@ export function ConnectRowActionsMenu({
     <div ref={rootRef} className="relative inline-flex">
       <button
         type="button"
-        aria-label={ariaLabel}
+        aria-label={resolvedAriaLabel}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}

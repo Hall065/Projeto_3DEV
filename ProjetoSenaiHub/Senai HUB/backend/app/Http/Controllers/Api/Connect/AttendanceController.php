@@ -10,6 +10,7 @@ use App\Models\Connect\ConnectAttendanceSession;
 use App\Models\Connect\ConnectClass;
 use App\Models\Connect\ConnectLessonSchedule;
 use App\Models\Connect\ConnectStudent;
+use App\Services\Connect\ConnectAttendanceService;
 use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,10 @@ use Illuminate\Validation\Rule;
 
 class AttendanceController extends Controller
 {
+    public function __construct(
+        private readonly ConnectAttendanceService $attendance,
+    ) {}
+
     public function show(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -40,19 +45,15 @@ class AttendanceController extends Controller
 
             $class = $lesson->connectClass;
             $sessionDate = $lesson->scheduled_date?->format('Y-m-d') ?? now()->toDateString();
-            $subject = $lesson->subject;
+            $subject = (string) $lesson->subject;
             $lessonsCount = $lesson->lessons_count ?? $class->default_lessons_per_day ?? 4;
 
-            $session = ConnectAttendanceSession::query()->firstOrCreate(
-                ['connect_lesson_schedule_id' => $lesson->id],
-                [
-                    'connect_class_id' => $class->id,
-                    'connect_teacher_id' => $lesson->connect_teacher_id ?? $class->connect_teacher_id,
-                    'session_date' => $sessionDate,
-                    'subject' => $subject,
-                    'lessons_count' => $lessonsCount,
-                    'status' => 'open',
-                ],
+            $session = $this->attendance->findOrCreateSession(
+                $class,
+                $sessionDate,
+                $subject,
+                $lesson,
+                $lessonsCount,
             );
         } else {
             $sessionDate = isset($validated['session_date'])
@@ -69,22 +70,13 @@ class AttendanceController extends Controller
                 ?? $class->default_lessons_per_day
                 ?? 4;
 
-            $session = ConnectAttendanceSession::query()->firstOrCreate(
-                [
-                    'connect_class_id' => $class->id,
-                    'session_date' => $sessionDate,
-                    'subject' => $subject,
-                ],
-                [
-                    'connect_teacher_id' => $class->connect_teacher_id,
-                    'lessons_count' => $lessonsCount,
-                    'status' => 'open',
-                ],
+            $session = $this->attendance->findOrCreateSession(
+                $class,
+                $sessionDate,
+                $subject,
+                null,
+                $lessonsCount,
             );
-
-            if ($session->lessons_count !== $lessonsCount) {
-                $session->update(['lessons_count' => $lessonsCount]);
-            }
         }
 
         $class = $class ?? $session->connectClass;
@@ -95,21 +87,6 @@ class AttendanceController extends Controller
             'students',
             $class->students->whereIn('id', $allowedStudentIds)->values(),
         );
-
-        $existingStudentIds = $session->marks()->pluck('connect_student_id');
-
-        $class->students->each(function (ConnectStudent $student) use ($session, $existingStudentIds): void {
-            if ($existingStudentIds->contains($student->id)) {
-                return;
-            }
-
-            ConnectAttendanceMark::query()->create([
-                'connect_attendance_session_id' => $session->id,
-                'connect_student_id' => $student->id,
-                'status' => 'present',
-                'missed_lessons' => 0,
-            ]);
-        });
 
         $session->load(['connectClass.course', 'teacher.hubPerson', 'marks.student.hubPerson', 'lessonSchedule']);
         $session->setRelation('connectClass', $class);

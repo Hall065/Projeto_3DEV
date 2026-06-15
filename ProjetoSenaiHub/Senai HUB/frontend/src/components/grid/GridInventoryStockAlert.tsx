@@ -1,7 +1,9 @@
 import { AlertTriangle, Ban } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { InventoryLineCheck } from '../../utils/gridInventoryAvailability'
 
 export function GridInventoryStockAlert({ lines }: { lines: InventoryLineCheck[] }) {
+  const { t } = useTranslation()
   const blocked = lines.filter((l) => l.level === 'out')
   const low = lines.filter((l) => l.level === 'low')
 
@@ -17,8 +19,7 @@ export function GridInventoryStockAlert({ lines }: { lines: InventoryLineCheck[]
         >
           <Ban className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            <span className="font-semibold">{line.title}</span> está sem estoque (zerado). Remova o item ou escolha
-            outro — não será possível reservar na execução.
+            <span className="font-semibold">{line.title}</span> {t('gridComponents.stockAlert.outOfStockBody')}
           </p>
         </div>
       ))}
@@ -30,8 +31,12 @@ export function GridInventoryStockAlert({ lines }: { lines: InventoryLineCheck[]
         >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            <span className="font-semibold">{line.title}</span> está acabando: {line.available} un. disponíveis
-            {line.minimum > 0 ? ` (mínimo: ${line.minimum})` : ''}.
+            <span className="font-semibold">{line.title}</span>{' '}
+            {t('gridComponents.stockAlert.lowStockBody', {
+              available: line.available,
+              minimum:
+                line.minimum > 0 ? t('gridComponents.stockAlert.minimumSuffix', { min: line.minimum }) : '',
+            })}
           </p>
         </div>
       ))}

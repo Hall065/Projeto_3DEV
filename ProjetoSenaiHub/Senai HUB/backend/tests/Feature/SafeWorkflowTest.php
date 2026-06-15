@@ -22,7 +22,7 @@ class SafeWorkflowTest extends TestCase
         $this->seed();
 
         $aqv = User::query()->where('email', 'ana.aqv@safe.senai.local')->firstOrFail();
-        $student = SafeStudent::query()->where('registration', '20240001')->firstOrFail();
+        $student = SafeStudent::query()->where('registration', '2025AUT0003')->firstOrFail();
 
         Sanctum::actingAs($aqv);
 
@@ -47,7 +47,7 @@ class SafeWorkflowTest extends TestCase
         $aqv = User::query()->where('email', 'ana.aqv@safe.senai.local')->firstOrFail();
         $professor = User::query()->where('email', 'marcos.professor@safe.senai.local')->firstOrFail();
         $portaria = User::query()->where('email', 'helena.portaria@safe.senai.local')->firstOrFail();
-        $student = SafeStudent::query()->where('registration', '20240001')->firstOrFail();
+        $student = SafeStudent::query()->where('registration', '2025AUT0003')->firstOrFail();
 
         Sanctum::actingAs($aqv);
 
@@ -92,7 +92,7 @@ class SafeWorkflowTest extends TestCase
 
         $aqv = User::query()->where('email', 'ana.aqv@safe.senai.local')->firstOrFail();
         $professor = User::query()->where('email', 'marcos.professor@safe.senai.local')->firstOrFail();
-        $student = SafeStudent::query()->where('registration', '20240002')->firstOrFail();
+        $student = SafeStudent::query()->where('registration', '2025AUT0021')->firstOrFail();
 
         Sanctum::actingAs($aqv);
 

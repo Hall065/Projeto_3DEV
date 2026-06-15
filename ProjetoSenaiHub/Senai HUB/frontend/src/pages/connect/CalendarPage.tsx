@@ -16,6 +16,8 @@ import {
 } from '../../components/connect/ConnectShared'
 import { ClassSchedulePanel } from '../../components/connect/ClassSchedulePanel'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { connectService } from '../../services/connectService'
 import { parseApiError } from '../../utils/parseApiError'
 import type { ConnectClass, ConnectLessonSchedule, ConnectTeacher } from '../../types/connect'
@@ -49,6 +51,8 @@ const emptyLessonForm = {
 
 export function CalendarPage() {
   const { t, i18n } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmAction } = useConfirmAction()
   const { can, role } = usePermissions()
   const canManage = can('connect.calendar.manage') || can('connect.classes.manage')
   const canAttendance = can('connect.attendance.manage') || can('connect.attendance.view_own')
@@ -186,7 +190,7 @@ export function CalendarPage() {
 
   const handleSave = async () => {
     if (!form.connect_class_id || !form.scheduled_date) {
-      window.alert(t('connect.calendar.alert.classDateRequired'))
+      crudToast.notifyWarning(t('connect.calendar.alert.classDateRequired'))
       return
     }
 
@@ -202,26 +206,29 @@ export function CalendarPage() {
     }
 
     try {
+      const wasEdit = !!editingLesson
       if (editingLesson) {
         await connectService.updateCalendarLesson(editingLesson.id, payload)
       } else {
         await connectService.createCalendarLesson(payload)
       }
       setDrawerOpen(false)
+      crudToast.notifySaved(wasEdit)
       load()
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('connect.calendar.alert.saveError')))
+      crudToast.notifyError(err, t('connect.calendar.alert.saveError'))
     }
   }
 
   const handleDelete = async (lesson: ConnectLessonSchedule) => {
-    if (!window.confirm(t('connect.calendar.alert.removeConfirm'))) return
+    if (!(await confirmAction({ message: t('connect.calendar.alert.removeConfirm'), variant: 'danger' }))) return
     try {
       await connectService.deleteCalendarLesson(lesson.id)
       setDetailLesson(null)
+      crudToast.notifyDeleted()
       load()
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('connect.calendar.alert.saveError')))
+      crudToast.notifyError(err, t('connect.calendar.alert.saveError'))
     }
   }
 

@@ -1,4 +1,5 @@
 import { LogOut } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { NotificationBell } from '../notifications/NotificationBell'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../ui/Button'
@@ -9,6 +10,7 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
 
   return (
@@ -22,13 +24,13 @@ export function Header({ title, subtitle }: HeaderProps) {
         <NotificationBell variant="chrome" />
 
         <div className="hidden text-right sm:block">
-          <p className="text-sm font-medium text-white">{user?.name ?? 'Usuario Demo'}</p>
+          <p className="text-sm font-medium text-white">{user?.name ?? t('header.demoUser')}</p>
           <p className="text-xs text-white/70">{user?.email ?? 'demo@senaihub.local'}</p>
         </div>
 
         <Button variant="ghost" size="sm" onClick={logout}>
           <LogOut className="h-4 w-4" />
-          Sair
+          {t('common.logout')}
         </Button>
       </div>
     </header>

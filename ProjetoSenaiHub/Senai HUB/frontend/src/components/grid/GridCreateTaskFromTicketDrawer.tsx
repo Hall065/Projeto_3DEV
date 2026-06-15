@@ -1,12 +1,15 @@
 import { ClipboardList } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { GRID_API_ROLE_TECHNICIAN } from '../../constants/gridRoles'
 import { ConnectDrawer } from '../connect/ConnectDrawer'
 import { FormField, inputClass, OutlineButton, PrimaryButton, selectClass } from '../connect/ConnectShared'
 import { GridPriorityBadge, GridTicketStatusBadge } from './GridBadges'
 import { GridInventoryPicker, guardInventoryBeforeSubmit } from './GridInventoryPicker'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { gridService } from '../../services/gridService'
 import type { GridInventoryLine, GridTicket, GridUser } from '../../types/grid'
-import { parseApiError } from '../../utils/parseApiError'
 
 export function GridCreateTaskFromTicketDrawer({
   open,
@@ -17,6 +20,9 @@ export function GridCreateTaskFromTicketDrawer({
   onClose: () => void
   onCreated: () => void
 }) {
+  const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmAction } = useConfirmAction()
   const [tickets, setTickets] = useState<GridTicket[]>([])
   const [technicians, setTechnicians] = useState<GridUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -27,14 +33,14 @@ export function GridCreateTaskFromTicketDrawer({
   const [description, setDescription] = useState('')
   const [inventoryItems, setInventoryItems] = useState<GridInventoryLine[]>([])
 
-  const selected = tickets.find((t) => t.id === selectedId)
+  const selected = tickets.find((ticket) => ticket.id === selectedId)
 
   useEffect(() => {
     if (!open) return
     setLoading(true)
     Promise.all([
       gridService.getTickets({ open_for_task: true, per_page: 100, search }),
-      gridService.getUsers({ per_page: 50, role: 'Técnico de manutenção' }),
+      gridService.getUsers({ per_page: 50, role: GRID_API_ROLE_TECHNICIAN }),
     ])
       .then(([ticketRes, userRes]) => {
         setTickets(ticketRes.data)
@@ -43,29 +49,29 @@ export function GridCreateTaskFromTicketDrawer({
           if (!userRes.data.length) setTechnicians(all.data)
         })
       })
-      .catch((err) => window.alert(parseApiError(err, 'Nao foi possivel carregar os chamados.')))
+      .catch((err) => crudToast.notifyError(err, t('gridComponents.createTaskFromTicket.loadError')))
       .finally(() => setLoading(false))
-  }, [open, search])
+  }, [open, search, crudToast, t])
 
   useEffect(() => {
     if (!selected) return
     setDescription(selected.summary)
     setAssignee(selected.assignee || '')
-  }, [selectedId])
+  }, [selectedId, selected])
 
   const handleCreate = async () => {
     if (!selected) {
-      window.alert('Selecione um chamado aberto.')
+      crudToast.notifyWarning(t('gridComponents.createTaskFromTicket.selectTicket'))
       return
     }
     if (!assignee.trim()) {
-      window.alert('Informe o responsável pela tarefa.')
+      crudToast.notifyWarning(t('gridComponents.createTaskFromTicket.assigneeRequired'))
       return
     }
 
     if (inventoryItems.length > 0) {
       const catalogRes = await gridService.getInventory({ per_page: 100 })
-      if (!guardInventoryBeforeSubmit(inventoryItems, catalogRes.data)) {
+      if (!(await guardInventoryBeforeSubmit(inventoryItems, catalogRes.data, crudToast, confirmAction))) {
         return
       }
     }
@@ -82,8 +88,9 @@ export function GridCreateTaskFromTicketDrawer({
       onClose()
       setSelectedId(null)
       setInventoryItems([])
+      crudToast.notifySaved(false)
     } catch (e: unknown) {
-      window.alert(parseApiError(e, 'Nao foi possivel criar a tarefa.'))
+      crudToast.notifyError(e, t('gridComponents.createTaskFromTicket.saveError'))
     } finally {
       setSaving(false)
     }
@@ -93,22 +100,22 @@ export function GridCreateTaskFromTicketDrawer({
     <ConnectDrawer
       open={open}
       onClose={onClose}
-      title="Nova tarefa a partir de chamado"
-      subtitle="Selecione um chamado aberto e defina o responsável e materiais."
+      title={t('gridComponents.createTaskFromTicket.title')}
+      subtitle={t('gridComponents.createTaskFromTicket.subtitle')}
       footer={
         <div className="flex justify-end gap-2">
-          <OutlineButton onClick={onClose}>Cancelar</OutlineButton>
+          <OutlineButton onClick={onClose}>{t('common.cancel')}</OutlineButton>
           <PrimaryButton onClick={() => void handleCreate()} disabled={saving || !selected}>
-            {saving ? 'Criando...' : 'Criar tarefa'}
+            {saving ? t('gridComponents.createTaskFromTicket.creating') : t('gridComponents.createTaskFromTicket.createTask')}
           </PrimaryButton>
         </div>
       }
     >
       <div className="space-y-6">
-        <FormField label="Buscar chamado">
+        <FormField label={t('gridComponents.createTaskFromTicket.searchTicket')}>
           <input
             className={inputClass}
-            placeholder="Código, título ou solicitante..."
+            placeholder={t('gridComponents.createTaskFromTicket.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -116,9 +123,13 @@ export function GridCreateTaskFromTicketDrawer({
 
         <div className="max-h-[240px] space-y-2 overflow-y-auto rounded-xl border border-hub-border/50 p-2">
           {loading ? (
-            <p className="p-4 text-center text-sm text-hub-text-muted">Carregando chamados...</p>
+            <p className="p-4 text-center text-sm text-hub-text-muted">
+              {t('gridComponents.createTaskFromTicket.loadingTickets')}
+            </p>
           ) : tickets.length === 0 ? (
-            <p className="p-4 text-center text-sm text-hub-text-muted">Nenhum chamado aberto encontrado.</p>
+            <p className="p-4 text-center text-sm text-hub-text-muted">
+              {t('gridComponents.createTaskFromTicket.noOpenTickets')}
+            </p>
           ) : (
             tickets.map((ticket) => (
               <button
@@ -138,7 +149,11 @@ export function GridCreateTaskFromTicketDrawer({
                 </div>
                 <p className="font-semibold text-hub-navy">{ticket.title}</p>
                 <p className="text-xs text-hub-text-muted">
-                  {ticket.requester} · Sala {ticket.room}/{ticket.block}
+                  {t('gridComponents.createTaskFromTicket.roomBlock', {
+                    requester: ticket.requester,
+                    room: ticket.room,
+                    block: ticket.block,
+                  })}
                 </p>
               </button>
             ))
@@ -149,11 +164,11 @@ export function GridCreateTaskFromTicketDrawer({
           <div className="glass-panel-solid space-y-4 rounded-xl p-4">
             <div className="flex items-center gap-2 text-sm font-semibold text-hub-navy">
               <ClipboardList className="h-4 w-4 text-hub-red" />
-              Chamado {selected.code}
+              {t('gridComponents.createTaskFromTicket.ticketLabel', { code: selected.code })}
             </div>
-            <FormField label="Responsável (técnico)" required>
+            <FormField label={t('gridComponents.createTaskFromTicket.assignee')} required>
               <select className={selectClass} value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-                <option value="">Selecione o técnico</option>
+                <option value="">{t('gridComponents.createTaskFromTicket.selectTechnician')}</option>
                 {technicians.map((u) => (
                   <option key={u.id} value={u.name}>
                     {u.name} — {u.role}
@@ -161,15 +176,15 @@ export function GridCreateTaskFromTicketDrawer({
                 ))}
               </select>
             </FormField>
-            <FormField label="Descrição / observações da tarefa">
+            <FormField label={t('gridComponents.createTaskFromTicket.taskDescription')}>
               <textarea
                 className={`${inputClass} min-h-[72px] py-2`}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Detalhes do atendimento..."
+                placeholder={t('gridComponents.createTaskFromTicket.taskPlaceholder')}
               />
             </FormField>
-            <FormField label="Materiais do estoque (opcional)">
+            <FormField label={t('gridComponents.createTaskFromTicket.materialsOptional')}>
               <GridInventoryPicker value={inventoryItems} onChange={setInventoryItems} />
             </FormField>
           </div>

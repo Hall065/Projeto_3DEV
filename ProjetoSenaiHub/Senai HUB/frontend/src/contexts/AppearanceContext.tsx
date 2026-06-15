@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import i18n from '../i18n'
 import {
   CUSTOM_WALLPAPER_ID,
   DEFAULT_WALLPAPER_ID,
@@ -80,7 +81,7 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
     try {
       writeCustomWallpaperImage(dataUrl)
     } catch {
-      throw new Error('Imagem grande demais para salvar neste navegador. Tente uma foto menor.')
+      throw new Error(i18n.t('appearanceContext.imageTooLarge'))
     }
     setCustomImageUrl(dataUrl)
     setWallpaperIdState(CUSTOM_WALLPAPER_ID)

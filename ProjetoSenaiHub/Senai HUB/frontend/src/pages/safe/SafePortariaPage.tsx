@@ -15,10 +15,12 @@ import {
 } from '../../components/connect/ConnectShared'
 import { safeService } from '../../services/safeService'
 import type { PaginatedMeta, SafeAuthorization } from '../../types/safe'
-import { parseApiError } from '../../utils/parseApiError'
-
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 export function SafePortariaPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmAction } = useConfirmAction()
   const navigate = useNavigate()
   const [items, setItems] = useState<SafeAuthorization[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
@@ -45,22 +47,24 @@ export function SafePortariaPage() {
     setActingId(id)
     try {
       await safeService.confirmByPortaria(id)
+      crudToast.notifySuccess(t('safe.portaria.confirmedSuccess'))
       load()
     } catch (e: unknown) {
-      window.alert(parseApiError(e))
+      crudToast.notifyError(e)
     } finally {
       setActingId(null)
     }
   }
 
   const handleDeny = async (id: number) => {
-    if (!window.confirm('Recusar esta autorização na portaria?')) return
+    if (!(await confirmAction({ message: t('safe.portaria.denyConfirm'), variant: 'danger' }))) return
     setActingId(id)
     try {
       await safeService.denyByPortaria(id)
+      crudToast.notifySuccess(t('safe.portaria.deniedSuccess'))
       load()
     } catch (e: unknown) {
-      window.alert(parseApiError(e))
+      crudToast.notifyError(e)
     } finally {
       setActingId(null)
     }
@@ -77,17 +81,17 @@ export function SafePortariaPage() {
         {loading ? (
           <ConnectLoadingSpinner />
         ) : items.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-hub-text-muted sm:px-6">Nenhuma autorização aguardando confirmação.</p>
+          <p className="px-4 py-10 text-center text-sm text-hub-text-muted sm:px-6">{t('safe.portaria.empty')}</p>
         ) : (
           <ConnectTableScroll>
             <table className="w-full min-w-[760px] text-sm">
               <thead className="glass-thead text-hub-text-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left sm:px-6">Protocolo</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Aluno</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Professor</th>
-                  <th className="px-4 py-3 text-left sm:px-6">Agendado</th>
-                  <th className="px-4 py-3 text-right sm:px-6">Ações</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.protocol')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.student')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.teacher')}</th>
+                  <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.scheduled')}</th>
+                  <th className="px-4 py-3 text-right sm:px-6">{t('connect.common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -103,10 +107,10 @@ export function SafePortariaPage() {
                           <Eye className="h-4 w-4" />
                         </OutlineButton>
                         <PrimaryButton onClick={() => handleConfirm(auth.id)} disabled={actingId === auth.id}>
-                          <Check className="h-4 w-4" /> Confirmar
+                          <Check className="h-4 w-4" /> {t('safe.portaria.confirm')}
                         </PrimaryButton>
                         <OutlineButton onClick={() => handleDeny(auth.id)} disabled={actingId === auth.id}>
-                          <X className="h-4 w-4 text-red-600" /> Recusar
+                          <X className="h-4 w-4 text-red-600" /> {t('safe.portaria.deny')}
                         </OutlineButton>
                       </div>
                     </td>

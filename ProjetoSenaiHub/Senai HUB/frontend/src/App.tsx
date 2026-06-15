@@ -6,22 +6,28 @@ import { AuthProvider } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { GlobalSearchProvider } from './contexts/GlobalSearchContext'
 import { GlobalSearchPalette } from './components/search/GlobalSearchPalette'
+import { ToastProvider } from './contexts/ToastContext'
+import { ConfirmProvider } from './contexts/ConfirmContext'
 import { AppRoutes } from './routes'
 
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
       <BrowserRouter>
-        <AuthProvider>
-          <NotificationProvider>
-            <GlobalSearchProvider>
-              <AppearanceProvider>
-                <AppRoutes />
-                <GlobalSearchPalette />
-              </AppearanceProvider>
-            </GlobalSearchProvider>
-          </NotificationProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <ConfirmProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <GlobalSearchProvider>
+                <AppearanceProvider>
+                  <AppRoutes />
+                  <GlobalSearchPalette />
+                </AppearanceProvider>
+              </GlobalSearchProvider>
+            </NotificationProvider>
+          </AuthProvider>
+          </ConfirmProvider>
+        </ToastProvider>
       </BrowserRouter>
     </I18nextProvider>
   )

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { navigateBack } from '../../utils/navigation'
 import { Button } from '../ui/Button'
 
@@ -16,10 +17,12 @@ export function SettingsPageFooter({
   onBack,
   saving = false,
   saveDisabled = false,
-  saveLabel = 'Salvar',
+  saveLabel,
   saveVariant = 'primary',
 }: SettingsPageFooterProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+  const resolvedSaveLabel = saveLabel ?? t('common.save')
 
   return (
     <footer className="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-hub-border/40 pt-6">
@@ -28,7 +31,7 @@ export function SettingsPageFooter({
         variant="secondary"
         onClick={onBack ?? (() => navigateBack(navigate))}
       >
-        Voltar
+        {t('common.back')}
       </Button>
       <Button
         type="button"
@@ -38,7 +41,7 @@ export function SettingsPageFooter({
         isLoading={saving}
         disabled={saveDisabled || !onSave}
       >
-        {saveLabel}
+        {resolvedSaveLabel}
       </Button>
     </footer>
   )

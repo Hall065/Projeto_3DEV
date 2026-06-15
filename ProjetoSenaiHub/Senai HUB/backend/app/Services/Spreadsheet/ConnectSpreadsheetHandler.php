@@ -634,18 +634,22 @@ class ConnectSpreadsheetHandler
                 $sessionDate = Carbon::parse($validated['data_sessao'])->toDateString();
                 $subject = $validated['disciplina'] ?? 'Aula regular';
 
-                $session = ConnectAttendanceSession::query()->firstOrCreate(
-                    [
+                $session = ConnectAttendanceSession::query()
+                    ->where('connect_class_id', $class->id)
+                    ->whereDate('session_date', $sessionDate)
+                    ->where('subject', $subject)
+                    ->first();
+
+                if (! $session) {
+                    $session = ConnectAttendanceSession::query()->create([
                         'connect_class_id' => $class->id,
                         'session_date' => $sessionDate,
                         'subject' => $subject,
-                    ],
-                    [
                         'connect_teacher_id' => $class->connect_teacher_id,
                         'lessons_count' => $class->default_lessons_per_day ?? 4,
                         'status' => 'open',
-                    ],
-                );
+                    ]);
+                }
 
                 $status = $validated['situacao'] ?? 'present';
                 $missed = (int) ($validated['aulas_faltadas'] ?? ($status === 'absent' ? $session->lessons_count : 0));

@@ -23,8 +23,8 @@ import { connectService } from '../../services/connectService'
 import type { ConnectClass, ConnectStudent, PaginatedMeta } from '../../types/connect'
 import { optionalForeignIdOrNull } from '../../utils/connectForm'
 import { downloadCsv } from '../../utils/csvExport'
-import { parseApiError } from '../../utils/parseApiError'
-
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 const emptyStudentForm = {
   full_name: '',
   registration_number: '',
@@ -41,6 +41,8 @@ const emptyStudentForm = {
 
 export function StudentsPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete } = useConfirmAction()
   const [students, setStudents] = useState<ConnectStudent[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [classes, setClasses] = useState<ConnectClass[]>([])
@@ -120,12 +122,13 @@ export function StudentsPage() {
 
   const handleSave = async (keepOpen = false) => {
     if (!form.full_name.trim()) {
-      window.alert(t('connect.students.alert.nameRequired'))
+      crudToast.notifyWarning(t('connect.students.alert.nameRequired'))
       return
     }
 
     setSaving(true)
     try {
+      const wasEdit = !!editingId
       const payload = buildPayload()
       if (editingId) {
         await connectService.updateStudent(editingId, payload)
@@ -141,8 +144,9 @@ export function StudentsPage() {
         setForm(emptyStudentForm)
       }
       load()
+      crudToast.notifySaved(wasEdit)
     } catch (error: unknown) {
-      window.alert(parseApiError(error, 'Nao foi possivel salvar o aluno.'))
+      crudToast.notifyError(error, t('connect.students.alert.saveError'))
     } finally {
       setSaving(false)
     }
@@ -171,12 +175,13 @@ export function StudentsPage() {
   }
 
   const handleDelete = async (student: ConnectStudent) => {
-    if (!window.confirm(t('connect.confirm.delete', { entity: `o aluno "${student.full_name}"` }))) return
+    if (!(await confirmDelete(`o aluno "${student.full_name}"`))) return
     try {
       await connectService.deleteStudent(student.id)
+      crudToast.notifyDeleted()
       load()
     } catch (error: unknown) {
-      window.alert(parseApiError(error, 'Nao foi possivel excluir o aluno.'))
+      crudToast.notifyError(error, t('connect.students.alert.deleteError'))
     }
   }
 
@@ -364,22 +369,22 @@ export function StudentsPage() {
             <h3 className="mb-3 font-semibold text-hub-navy">{t('connect.students.sections.personal')}</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label={t('connect.students.form.fullName')} required>
-                <input className={inputClass} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="Ex: Maria Silva" />
+                <input className={inputClass} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder={t('connect.students.form.placeholders.fullName')} />
               </FormField>
               <FormField label={t('connect.students.form.registration')} hint={t('connect.students.form.optional')}>
-                <input className={inputClass} value={form.registration_number} onChange={(e) => setForm({ ...form, registration_number: e.target.value })} placeholder="Ex: RM20250130" />
+                <input className={inputClass} value={form.registration_number} onChange={(e) => setForm({ ...form, registration_number: e.target.value })} placeholder={t('connect.students.form.placeholders.registration')} />
               </FormField>
               <FormField label={t('connect.students.form.cpf')}>
-                <input className={inputClass} value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00" />
+                <input className={inputClass} value={form.cpf} onChange={(e) => setForm({ ...form, cpf: e.target.value })} placeholder={t('connect.students.form.placeholders.cpf')} />
               </FormField>
               <FormField label={t('connect.students.form.birthDate')} hint={t('connect.students.form.calendarHint')}>
                 <input type="date" className={inputClass} value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
               </FormField>
               <FormField label={t('connect.students.form.personalEmail')}>
-                <input type="email" className={inputClass} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="aluno@email.com" />
+                <input type="email" className={inputClass} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder={t('connect.students.form.placeholders.email')} />
               </FormField>
               <FormField label={t('connect.students.form.phone')}>
-                <input className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(11) 99999-9999" />
+                <input className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder={t('connect.students.form.placeholders.phone')} />
               </FormField>
             </div>
           </section>
@@ -406,7 +411,7 @@ export function StudentsPage() {
                 className={inputClass}
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
-                placeholder="Rua, número, bairro, cidade"
+                placeholder={t('connect.students.form.placeholders.address')}
               />
             </FormField>
             <FormField label={t('connect.students.form.guardian')}>
@@ -414,7 +419,7 @@ export function StudentsPage() {
                 className={inputClass}
                 value={form.guardian_name}
                 onChange={(e) => setForm({ ...form, guardian_name: e.target.value })}
-                placeholder="Nome do responsável legal"
+                placeholder={t('connect.students.form.placeholders.guardian')}
               />
             </FormField>
             <FormField label={t('connect.students.form.notes')}>
@@ -422,7 +427,7 @@ export function StudentsPage() {
                 className={`${inputClass} min-h-[80px] py-2`}
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                placeholder="Alergias, necessidades especiais, etc."
+                placeholder={t('connect.students.form.placeholders.notes')}
               />
             </FormField>
           </section>

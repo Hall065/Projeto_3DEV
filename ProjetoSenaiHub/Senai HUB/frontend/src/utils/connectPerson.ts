@@ -1,3 +1,4 @@
+import i18n from '../i18n'
 import type { ConnectStudent, ConnectTeacher, HubPerson, HubPersonKind } from '../types/connect'
 
 export function personDisplayName(person: Pick<HubPerson, 'full_name'> | null | undefined, fallback = '—'): string {
@@ -20,19 +21,28 @@ export function teacherHubPersonId(teacher: ConnectTeacher): number | undefined 
   return teacher.hub_person_id ?? teacher.hub_person?.id
 }
 
-export const HUB_PERSON_KIND_LABELS: Record<HubPersonKind, string> = {
-  student: 'Aluno',
-  teacher: 'Professor',
-  staff: 'Funcionário',
-  other: 'Outro',
-}
-
 export function hubPersonKindLabel(kind: HubPersonKind): string {
-  return HUB_PERSON_KIND_LABELS[kind] ?? kind
+  return i18n.t(`connect.personKind.${kind}`)
 }
 
+export type CourseRosterRole = 'student' | 'teacher' | 'coordinator'
+
+export function courseRosterRoleLabel(role: CourseRosterRole): string {
+  if (role === 'coordinator') {
+    return i18n.t('connect.rosterRole.coordinator')
+  }
+  return i18n.t(`connect.personKind.${role}`)
+}
+
+/** @deprecated Use courseRosterRoleLabel */
 export const COURSE_ROSTER_ROLE_LABELS = {
-  student: 'Aluno',
-  teacher: 'Professor',
-  coordinator: 'Coordenador',
+  get student() {
+    return courseRosterRoleLabel('student')
+  },
+  get teacher() {
+    return courseRosterRoleLabel('teacher')
+  },
+  get coordinator() {
+    return courseRosterRoleLabel('coordinator')
+  },
 } as const

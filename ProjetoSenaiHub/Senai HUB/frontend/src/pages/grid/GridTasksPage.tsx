@@ -17,11 +17,13 @@ import {
 import { GridCreateTaskFromTicketDrawer } from '../../components/grid/GridCreateTaskFromTicketDrawer'
 import { GridInventoryPicker, guardInventoryBeforeSubmit } from '../../components/grid/GridInventoryPicker'
 import { GridKanbanBoard, type KanbanColumnDef } from '../../components/grid/GridKanbanBoard'
+import { GridKanbanMoveConfirmModal } from '../../components/grid/GridKanbanMoveConfirmModal'
 import { applyTaskColumn, GridTaskKanbanCard } from '../../components/grid/GridTaskKanbanCard'
 import type { GridInventoryLine } from '../../types/grid'
 import { gridService } from '../../services/gridService'
 import type { GridPriority, GridTaskCard, GridTaskColumn } from '../../types/grid'
-import { parseApiError } from '../../utils/parseApiError'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 
 const emptyForm = {
   opened_by: '',
@@ -37,6 +39,8 @@ const emptyForm = {
 
 export function GridTasksPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete, confirmAction } = useConfirmAction()
   const [searchParams, setSearchParams] = useSearchParams()
   const openedFromQuery = useRef(false)
   const [tasks, setTasks] = useState<GridTaskCard[]>([])
@@ -50,6 +54,12 @@ export function GridTasksPage() {
   const [movingId, setMovingId] = useState<number | null>(null)
   const [fromTicketOpen, setFromTicketOpen] = useState(false)
   const [inventoryItems, setInventoryItems] = useState<GridInventoryLine[]>([])
+  const [moveConfirm, setMoveConfirm] = useState<{
+    task: GridTaskCard
+    from: GridTaskColumn
+    to: GridTaskColumn
+    resolve: (value: boolean) => void
+  } | null>(null)
 
   const columnMeta = useMemo<KanbanColumnDef<GridTaskColumn>[]>(
     () => [
@@ -125,13 +135,13 @@ export function GridTasksPage() {
 
   const handleSave = async () => {
     if (!form.title.trim() || !form.opened_by.trim()) {
-      window.alert(t('grid.tasks.alert.required'))
+      crudToast.notifyWarning(t('grid.tasks.alert.required'))
       return
     }
 
     if (inventoryItems.length > 0) {
       const catalogRes = await gridService.getInventory({ per_page: 100 })
-      if (!guardInventoryBeforeSubmit(inventoryItems, catalogRes.data)) {
+      if (!(await guardInventoryBeforeSubmit(inventoryItems, catalogRes.data, crudToast, confirmAction))) {
         return
       }
     }
@@ -156,9 +166,10 @@ export function GridTasksPage() {
         await gridService.createTask({ ...payload, column: createColumn })
       }
       closeDrawer()
+      crudToast.notifySaved(!!editingId)
       load()
     } catch (e: unknown) {
-      window.alert(parseApiError(e, t('grid.tasks.alert.saveError')))
+      crudToast.notifyError(e, t('grid.tasks.alert.saveError'))
     } finally {
       setSaving(false)
     }
@@ -174,14 +185,49 @@ export function GridTasksPage() {
       setTasks((prev) => prev.map((item) => (item.id === taskId ? updated : item)))
     } catch (e: unknown) {
       setTasks(snapshot)
-      window.alert(parseApiError(e, t('grid.tasks.alert.moveError')))
+      crudToast.notifyError(e, t('grid.tasks.alert.moveError'))
     } finally {
       setMovingId(null)
     }
   }, [tasks, t])
 
+  const confirmTaskColumnMove = useCallback(
+    (task: GridTaskCard, from: GridTaskColumn, to: GridTaskColumn): Promise<boolean> =>
+      new Promise((resolve) => {
+        setMoveConfirm({ task, from, to, resolve })
+      }),
+    [],
+  )
+
+  const closeMoveConfirm = useCallback((confirmed: boolean) => {
+    setMoveConfirm((current) => {
+      current?.resolve(confirmed)
+      return null
+    })
+  }, [])
+
+  const taskMoveNeedsAssignee = (task: GridTaskCard, to: GridTaskColumn) =>
+    to === 'em_andamento' && !task.assignee?.trim()
+
+  const handleMoveConfirmAssign = () => {
+    setMoveConfirm((current) => {
+      if (current) {
+        openEdit(current.task)
+        current.resolve(false)
+      }
+      return null
+    })
+  }
+
+  const moveConfirmFromLabel =
+    moveConfirm && columnMeta.find((column) => column.id === moveConfirm.from)?.label
+  const moveConfirmToLabel =
+    moveConfirm && columnMeta.find((column) => column.id === moveConfirm.to)?.label
+  const moveConfirmNeedsAssignee =
+    moveConfirm != null && taskMoveNeedsAssignee(moveConfirm.task, moveConfirm.to)
+
   const handleDelete = async (task: GridTaskCard) => {
-    if (!window.confirm(t('connect.confirm.delete', { entity: `a tarefa "${task.title}"` }))) return
+    if (!(await confirmDelete(`a tarefa "${task.title}"`))) return
     await gridService.deleteTask(task.id)
     load()
   }
@@ -242,6 +288,7 @@ export function GridTasksPage() {
           applyColumn={applyTaskColumn}
           onItemsChange={setTasks}
           onItemMove={handleTaskMove}
+          confirmColumnMove={confirmTaskColumnMove}
           renderCard={(task, { isDragging }) => (
             <GridTaskKanbanCard
               task={task}
@@ -328,6 +375,19 @@ export function GridTasksPage() {
         open={fromTicketOpen}
         onClose={() => setFromTicketOpen(false)}
         onCreated={load}
+      />
+
+      <GridKanbanMoveConfirmModal
+        open={moveConfirm != null}
+        itemLabel={moveConfirm ? moveConfirm.task.title : ''}
+        fromLabel={moveConfirmFromLabel ?? ''}
+        toLabel={moveConfirmToLabel ?? ''}
+        warning={moveConfirmNeedsAssignee ? t('grid.kanban.confirmMove.noAssigneeTask') : null}
+        showAssignAction={moveConfirmNeedsAssignee}
+        confirmDisabled={moveConfirmNeedsAssignee}
+        onConfirm={() => closeMoveConfirm(true)}
+        onCancel={() => closeMoveConfirm(false)}
+        onAssign={handleMoveConfirmAssign}
       />
     </div>
   )

@@ -1,4 +1,5 @@
 import { Activity, AlertCircle, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface HealthStatusBadgeProps {
   loading: boolean
@@ -7,11 +8,13 @@ interface HealthStatusBadgeProps {
 }
 
 export function HealthStatusBadge({ loading, error, status }: HealthStatusBadgeProps) {
+  const { t } = useTranslation()
+
   if (loading) {
     return (
       <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Verificando API...
+        {t('health.checking')}
       </span>
     )
   }
@@ -20,7 +23,7 @@ export function HealthStatusBadge({ loading, error, status }: HealthStatusBadgeP
     return (
       <span className="inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
         <AlertCircle className="h-3.5 w-3.5" />
-        Backend offline
+        {t('health.offline')}
       </span>
     )
   }
@@ -28,7 +31,7 @@ export function HealthStatusBadge({ loading, error, status }: HealthStatusBadgeP
   return (
     <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
       <Activity className="h-3.5 w-3.5" />
-      API {status ?? 'ok'}
+      {t('health.online', { status: status ?? 'ok' })}
     </span>
   )
 }

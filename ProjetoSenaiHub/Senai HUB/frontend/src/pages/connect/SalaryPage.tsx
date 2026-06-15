@@ -32,6 +32,8 @@ import {
 import { UserAvatar } from '../../components/ui/UserAvatar'
 import { usePermissions } from '../../hooks/usePermissions'
 import { connectService } from '../../services/connectService'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { parseApiError } from '../../utils/parseApiError'
 import type {
   ConnectSalaryRecord,
@@ -124,6 +126,8 @@ function AttendanceBreakdown({ preview }: { preview: SalaryPreviewData }) {
 
 export function SalaryPage() {
   const { t, i18n } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmAction } = useConfirmAction()
   const { isAdmin, role } = usePermissions()
   const isStudentView = role === 'connect_aluno'
   const isCompanyView = role === 'connect_empresa'
@@ -153,7 +157,6 @@ export function SalaryPage() {
   const [batching, setBatching] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [viewSnapshot, setViewSnapshot] = useState<ConnectSalaryRecord | null>(null)
 
   const loadRecords = useCallback(() => {
@@ -227,7 +230,6 @@ export function SalaryPage() {
     }
     setPreviewing(true)
     setError(null)
-    setSuccess(null)
     try {
       const data = await connectService.previewSalary({
         connect_student_id: Number(selectedStudent),
@@ -257,7 +259,7 @@ export function SalaryPage() {
         bonuses: Number(bonuses) || 0,
         deductions: Number(deductions) || 0,
       })
-      setSuccess(t('connect.salary.success.calculated'))
+      crudToast.notifySuccess(t('connect.salary.success.calculated'))
       setPreview(null)
       loadRecords()
     } catch (err: unknown) {
@@ -268,12 +270,12 @@ export function SalaryPage() {
   }
 
   const handleBatchCalculate = async () => {
-    if (!window.confirm(t('connect.salary.alert.batchConfirm'))) return
+    if (!(await confirmAction({ message: t('connect.salary.alert.batchConfirm') }))) return
     setBatching(true)
     setError(null)
     try {
       const res = await connectService.calculateSalaryBatch(month)
-      setSuccess(res.message)
+      crudToast.notifySuccess(res.message)
       loadRecords()
     } catch (err: unknown) {
       setError(parseApiError(err, t('connect.salary.alert.calculateError')))
@@ -329,7 +331,6 @@ export function SalaryPage() {
       />
 
       {error && <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>}
-      {success && <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">{success}</p>}
 
       {summary && (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

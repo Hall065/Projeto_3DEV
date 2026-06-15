@@ -95,6 +95,7 @@ class NotificationController extends Controller
             'modules.hub' => ['sometimes', 'boolean'],
             'modules.connect' => ['sometimes', 'boolean'],
             'modules.grid' => ['sometimes', 'boolean'],
+            'modules.safe' => ['sometimes', 'boolean'],
         ]);
 
         $user = $request->user();

@@ -21,12 +21,14 @@ import { UserAvatar } from '../../components/ui/UserAvatar'
 import { connectService } from '../../services/connectService'
 import type { ConnectTeacher, PaginatedMeta } from '../../types/connect'
 import { downloadCsv } from '../../utils/csvExport'
-import { parseApiError } from '../../utils/parseApiError'
-
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 const emptyTeacherForm = { full_name: '', email: '', specialty: '', cpf: '', phone: '', status: 'active' }
 
 export function TeachersPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete } = useConfirmAction()
   const [teachers, setTeachers] = useState<ConnectTeacher[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
@@ -86,11 +88,12 @@ export function TeachersPage() {
 
   const handleSave = async () => {
     if (!form.full_name.trim()) {
-      window.alert(t('connect.teachers.alert.nameRequired'))
+      crudToast.notifyWarning(t('connect.teachers.alert.nameRequired'))
       return
     }
 
     try {
+      const wasEdit = !!editingId
       if (editingId) {
         await connectService.updateTeacher(editingId, {
           ...form,
@@ -112,9 +115,10 @@ export function TeachersPage() {
       }
       setDrawerOpen(false)
       setEditingId(null)
+      crudToast.notifySaved(wasEdit)
       load()
     } catch (error: unknown) {
-      window.alert(parseApiError(error, 'Nao foi possivel salvar o professor.'))
+      crudToast.notifyError(error, t('connect.teachers.alert.saveError'))
     }
   }
 
@@ -139,12 +143,13 @@ export function TeachersPage() {
   }
 
   const handleDelete = async (teacher: ConnectTeacher) => {
-    if (!window.confirm(t('connect.confirm.delete', { entity: `o professor "${teacher.full_name}"` }))) return
+    if (!(await confirmDelete(`o professor "${teacher.full_name}"`))) return
     try {
       await connectService.deleteTeacher(teacher.id)
+      crudToast.notifyDeleted()
       load()
     } catch (error: unknown) {
-      window.alert(parseApiError(error, 'Nao foi possivel excluir o professor.'))
+      crudToast.notifyError(error, t('connect.teachers.alert.deleteError'))
     }
   }
 
@@ -320,7 +325,7 @@ export function TeachersPage() {
               className={inputClass}
               value={form.full_name}
               onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-              placeholder="Ex: João Santos"
+              placeholder={t('connect.teachers.form.placeholders.fullName')}
             />
           </FormField>
           <FormField label={t('connect.teachers.form.institutionalEmail')} hint={t('connect.students.form.optional')}>
@@ -329,7 +334,7 @@ export function TeachersPage() {
               className={inputClass}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="professor@senai.edu.br"
+              placeholder={t('connect.teachers.form.placeholders.email')}
             />
           </FormField>
           <FormField label={t('connect.teachers.form.specialty')}>
@@ -337,7 +342,7 @@ export function TeachersPage() {
               className={inputClass}
               value={form.specialty}
               onChange={(e) => setForm({ ...form, specialty: e.target.value })}
-              placeholder="Ex: Automação Industrial"
+              placeholder={t('connect.teachers.form.placeholders.specialty')}
             />
           </FormField>
           <FormField label={t('connect.teachers.form.cpf')}>
@@ -345,7 +350,7 @@ export function TeachersPage() {
               className={inputClass}
               value={form.cpf}
               onChange={(e) => setForm({ ...form, cpf: e.target.value })}
-              placeholder="000.000.000-00"
+              placeholder={t('connect.teachers.form.placeholders.cpf')}
             />
           </FormField>
           <FormField label={t('connect.teachers.form.phone')}>
@@ -353,7 +358,7 @@ export function TeachersPage() {
               className={inputClass}
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="(11) 99999-9999"
+              placeholder={t('connect.teachers.form.placeholders.phone')}
             />
           </FormField>
           <FormField label={t('connect.table.status')}>

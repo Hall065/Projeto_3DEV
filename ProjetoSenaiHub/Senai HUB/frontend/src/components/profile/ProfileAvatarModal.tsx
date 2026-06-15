@@ -1,8 +1,10 @@
 import { ImagePlus, Loader2, Trash2, Upload, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { UserAvatar } from '../ui/UserAvatar'
 import { OutlineButton, PrimaryButton } from '../connect/ConnectShared'
 import { useAuth } from '../../contexts/AuthContext'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { prepareAvatarFile, readAvatarPreview, validateAvatarFile } from '../../utils/avatarImage'
 import { resolveMediaUrl } from '../../utils/mediaUrl'
 
@@ -13,8 +15,21 @@ interface ProfileAvatarModalProps {
   onError?: (message: string) => void
 }
 
+function mapAvatarValidationError(message: string | null, t: (key: string) => string): string | null {
+  if (!message) return null
+  if (message.includes('JPG') || message.includes('PNG') || message.includes('WebP') || message.includes('GIF')) {
+    return t('profileAvatar.invalidType')
+  }
+  if (message.includes('2 MB') || message.includes('2MB')) {
+    return t('profileAvatar.tooLarge')
+  }
+  return message
+}
+
 export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: ProfileAvatarModalProps) {
+  const { t } = useTranslation()
   const { user, uploadAvatar, removeAvatar, isSubmitting } = useAuth()
+  const crudToast = useCrudToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -55,7 +70,7 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
 
     const validation = validateAvatarFile(file)
     if (validation) {
-      setLocalError(validation)
+      setLocalError(mapAvatarValidationError(validation, t))
       return
     }
 
@@ -68,7 +83,9 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
       setSelectedFile(prepared)
       setPreviewUrl(preview)
     } catch (error) {
-      setLocalError(error instanceof Error ? error.message : 'Nao foi possivel processar a imagem.')
+      setLocalError(
+        mapAvatarValidationError(error instanceof Error ? error.message : null, t) ?? t('profileAvatar.processError'),
+      )
       setSelectedFile(null)
       setPreviewUrl(null)
     } finally {
@@ -78,7 +95,7 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
 
   async function handleSave() {
     if (!selectedFile) {
-      setLocalError('Selecione uma imagem antes de salvar.')
+      setLocalError(t('profileAvatar.selectBeforeSave'))
       return
     }
 
@@ -86,11 +103,14 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
 
     try {
       await uploadAvatar(selectedFile)
-      onSuccess?.('Foto de perfil atualizada com sucesso.')
+      const message = t('profileAvatar.updated')
+      crudToast.notifySuccess(message)
+      onSuccess?.(message)
       onClose()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nao foi possivel salvar a foto.'
+      const message = error instanceof Error ? error.message : t('profileAvatar.saveError')
       setLocalError(message)
+      crudToast.notifyError(error, t('profileAvatar.saveError'))
       onError?.(message)
     }
   }
@@ -102,11 +122,14 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
 
     try {
       await removeAvatar()
-      onSuccess?.('Foto de perfil removida.')
+      const message = t('profileAvatar.removed')
+      crudToast.notifySuccess(message)
+      onSuccess?.(message)
       onClose()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nao foi possivel remover a foto.'
+      const message = error instanceof Error ? error.message : t('profileAvatar.removeError')
       setLocalError(message)
+      crudToast.notifyError(error, t('profileAvatar.removeError'))
       onError?.(message)
     }
   }
@@ -126,15 +149,15 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
         <div className="flex items-center justify-between border-b border-hub-border/50 px-5 py-4">
           <div>
             <h2 id="profile-avatar-title" className="text-lg font-semibold text-hub-navy">
-              Foto de perfil
+              {t('profileAvatar.title')}
             </h2>
-            <p className="mt-0.5 text-sm text-hub-text-muted">JPG, PNG, WebP ou GIF. Maximo 2 MB.</p>
+            <p className="mt-0.5 text-sm text-hub-text-muted">{t('profileAvatar.hint')}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-hub-text-muted transition hover:bg-hub-bg hover:text-hub-navy"
-            aria-label="Fechar"
+            aria-label={t('common.close')}
           >
             <X className="h-5 w-5" />
           </button>
@@ -145,7 +168,7 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
             {displayUrl ? (
               <img
                 src={displayUrl}
-                alt={`Preview da foto de ${user.name}`}
+                alt={t('profileAvatar.previewAlt', { name: user.name })}
                 className="h-32 w-32 rounded-full object-cover ring-4 ring-white shadow-md"
               />
             ) : (
@@ -167,12 +190,12 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
             <div className="flex flex-wrap justify-center gap-2">
               <OutlineButton type="button" onClick={() => fileRef.current?.click()} disabled={busy}>
                 {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                Escolher imagem
+                {t('profileAvatar.chooseImage')}
               </OutlineButton>
               {user.avatar_url && !selectedFile && (
                 <OutlineButton type="button" onClick={() => void handleRemove()} disabled={busy}>
                   <Trash2 className="h-4 w-4" />
-                  Remover foto
+                  {t('profileAvatar.removePhoto')}
                 </OutlineButton>
               )}
             </div>
@@ -187,17 +210,17 @@ export function ProfileAvatarModal({ open, onClose, onSuccess, onError }: Profil
           {!selectedFile && (
             <div className="rounded-xl border border-dashed border-hub-border bg-hub-bg/50 px-4 py-5 text-center text-sm text-hub-text-muted">
               <ImagePlus className="mx-auto mb-2 h-6 w-6 text-hub-text-muted" />
-              Clique em &quot;Escolher imagem&quot; para enviar uma nova foto de perfil.
+              {t('profileAvatar.emptyHint')}
             </div>
           )}
         </div>
 
         <div className="flex flex-wrap justify-end gap-2 border-t border-hub-border/50 px-5 py-4">
           <OutlineButton type="button" onClick={onClose} disabled={busy}>
-            Cancelar
+            {t('common.cancel')}
           </OutlineButton>
           <PrimaryButton type="button" onClick={() => void handleSave()} disabled={!selectedFile || busy}>
-            {busy ? 'Salvando...' : 'Salvar foto'}
+            {busy ? t('connect.common.saving') : t('profileAvatar.savePhoto')}
           </PrimaryButton>
         </div>
       </div>

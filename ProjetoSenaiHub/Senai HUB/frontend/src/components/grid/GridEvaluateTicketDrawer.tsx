@@ -1,10 +1,11 @@
 import { Star } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../connect/ConnectDrawer'
 import { FormField, inputClass, OutlineButton, PrimaryButton } from '../connect/ConnectShared'
 import { gridService } from '../../services/gridService'
 import type { GridTicket } from '../../types/grid'
-import { parseApiError } from '../../utils/parseApiError'
+import { useCrudToast } from '../../hooks/useCrudToast'
 
 export function GridEvaluateTicketDrawer({
   ticket,
@@ -17,6 +18,8 @@ export function GridEvaluateTicketDrawer({
   onClose: () => void
   onEvaluated: () => void
 }) {
+  const { t } = useTranslation()
+  const crudToast = useCrudToast()
   const [rating, setRating] = useState(5)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
@@ -34,8 +37,9 @@ export function GridEvaluateTicketDrawer({
       onClose()
       setNotes('')
       setRating(5)
+      crudToast.notifySuccess(t('gridComponents.evaluateTicket.success'))
     } catch (err: unknown) {
-      window.alert(parseApiError(err, 'Nao foi possivel registrar a avaliacao.'))
+      crudToast.notifyError(err, t('gridComponents.evaluateTicket.error'))
     } finally {
       setSaving(false)
     }
@@ -45,21 +49,21 @@ export function GridEvaluateTicketDrawer({
     <ConnectDrawer
       open={open}
       onClose={onClose}
-      title="Avaliar atendimento (solicitante)"
+      title={t('gridComponents.evaluateTicket.title')}
       subtitle={ticket ? `${ticket.code} — ${ticket.title}` : ''}
       footer={
         <div className="flex justify-end gap-2">
-          <OutlineButton onClick={onClose}>Cancelar</OutlineButton>
+          <OutlineButton onClick={onClose}>{t('common.cancel')}</OutlineButton>
           <PrimaryButton onClick={() => void handleSave()} disabled={saving}>
-            {saving ? 'Salvando...' : 'Finalizar chamado'}
+            {saving ? t('connect.common.saving') : t('gridComponents.evaluateTicket.finishTicket')}
           </PrimaryButton>
         </div>
       }
     >
       <p className="mb-4 text-sm text-hub-text-muted">
-        Avaliação do solicitante ({ticket?.requester}). Após salvar, o chamado será finalizado e permanecerá disponível para consulta.
+        {t('gridComponents.evaluateTicket.body', { requester: ticket?.requester })}
       </p>
-      <FormField label="Nota (1 a 5)" required>
+      <FormField label={t('gridComponents.evaluateTicket.rating')} required>
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map((n) => (
             <button
@@ -67,19 +71,19 @@ export function GridEvaluateTicketDrawer({
               type="button"
               onClick={() => setRating(n)}
               className={`rounded-lg p-2 transition-colors ${rating >= n ? 'text-amber-500' : 'text-hub-border'}`}
-              aria-label={`Nota ${n}`}
+              aria-label={t('gridComponents.evaluateTicket.ratingAria', { n })}
             >
               <Star className={`h-6 w-6 ${rating >= n ? 'fill-current' : ''}`} />
             </button>
           ))}
         </div>
       </FormField>
-      <FormField label="Considerações da avaliação">
+      <FormField label={t('gridComponents.evaluateTicket.evaluationNotes')}>
         <textarea
           className={`${inputClass} min-h-[100px] py-2`}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Comentários sobre o serviço prestado..."
+          placeholder={t('gridComponents.evaluateTicket.evaluationPlaceholder')}
         />
       </FormField>
     </ConnectDrawer>

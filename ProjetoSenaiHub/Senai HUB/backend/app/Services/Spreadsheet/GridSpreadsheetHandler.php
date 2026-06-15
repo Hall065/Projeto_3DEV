@@ -271,7 +271,7 @@ class GridSpreadsheetHandler
                     'codigo_chamado' => ['nullable', 'string', 'max:50'],
                     'titulo' => ['required', 'string', 'max:255'],
                     'responsavel' => ['nullable', 'string', 'max:255'],
-                    'coluna' => ['nullable', 'string', 'max:50'],
+                    'coluna' => ['nullable', Rule::in(['a_fazer', 'em_andamento', 'concluidas'])],
                     'prioridade' => ['nullable', Rule::in(['baixa', 'media', 'alta', 'critica'])],
                     'sala' => ['nullable', 'string', 'max:50'],
                     'bloco' => ['nullable', 'string', 'max:50'],

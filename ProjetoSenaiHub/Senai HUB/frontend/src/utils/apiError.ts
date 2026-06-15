@@ -1,6 +1,8 @@
 import axios from 'axios'
+import i18n from '../i18n'
 
-export function getApiErrorMessage(error: unknown, fallback = 'Operação falhou.'): string {
+export function getApiErrorMessage(error: unknown, fallback?: string): string {
+  const defaultFallback = fallback ?? i18n.t('errors.api.operationFailed')
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as {
       message?: string
@@ -23,5 +25,5 @@ export function getApiErrorMessage(error: unknown, fallback = 'Operação falhou
     return error.message
   }
 
-  return fallback
+  return defaultFallback
 }

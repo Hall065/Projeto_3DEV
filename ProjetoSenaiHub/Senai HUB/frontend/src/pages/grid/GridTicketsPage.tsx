@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
+import { GRID_API_ROLE_TECHNICIAN } from '../../constants/gridRoles'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
@@ -21,16 +22,23 @@ import {
 } from '../../components/connect/ConnectShared'
 import { GridPriorityBadge, GridTicketStatusBadge } from '../../components/grid/GridBadges'
 import { GridKanbanBoard, type KanbanColumnDef } from '../../components/grid/GridKanbanBoard'
+import { GridKanbanMoveConfirmModal } from '../../components/grid/GridKanbanMoveConfirmModal'
 import { GridApproveServiceDrawer } from '../../components/grid/GridApproveServiceDrawer'
 import { GridEvaluateTicketDrawer } from '../../components/grid/GridEvaluateTicketDrawer'
-import { canDragTicket, canMoveTicketTo, ticketMoveBlockedMessage } from '../../utils/gridTicketWorkflow'
+import {
+  canDragTicket,
+  canMoveTicketTo,
+  ticketKanbanDropAllowed,
+  ticketMoveNeedsAssignee,
+} from '../../utils/gridTicketWorkflow'
 import { applyTicketStatus, GridTicketKanbanCard } from '../../components/grid/GridTicketKanbanCard'
 import { useAuth } from '../../contexts/AuthContext'
 import { GridTicketAttachmentsPanel, uploadPendingTicketAttachments } from '../../components/grid/GridTicketAttachmentsPanel'
 import { GridTicketCard } from '../../components/grid/GridTicketCard'
 import { gridService } from '../../services/gridService'
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus'
-import { parseApiError } from '../../utils/parseApiError'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import type {
   GridDashboardData,
   GridPriority,
@@ -76,6 +84,8 @@ function formatDateTime(iso: string) {
 
 export function GridTicketsPage() {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmDelete } = useConfirmAction()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [tickets, setTickets] = useState<GridTicket[]>([])
@@ -102,6 +112,12 @@ export function GridTicketsPage() {
   const [approveTarget, setApproveTarget] = useState<GridTicket | null>(null)
   const [ticketAttachments, setTicketAttachments] = useState<GridTicketAttachment[]>([])
   const [pendingAttachments, setPendingAttachments] = useState<File[]>([])
+  const [moveConfirm, setMoveConfirm] = useState<{
+    ticket: GridTicket
+    from: GridTicketStatus
+    to: GridTicketStatus
+    resolve: (value: boolean) => void
+  } | null>(null)
 
   const ticketColumns = useMemo(() => getTicketColumns(t), [t])
 
@@ -135,7 +151,7 @@ export function GridTicketsPage() {
 
   useEffect(() => {
     loadDashboard()
-    gridService.getUsers({ per_page: 50, role: 'Técnico de manutenção' }).then((res) => {
+    gridService.getUsers({ per_page: 50, role: GRID_API_ROLE_TECHNICIAN }).then((res) => {
       const names = res.data.map((u) => u.name)
       setTechnicians(names.length ? names : res.data.map((u) => u.name))
     })
@@ -176,7 +192,7 @@ export function GridTicketsPage() {
       })
       .catch((err) => {
         if (!cancelled) {
-          window.alert(parseApiError(err, t('common.error')))
+          crudToast.notifyError(err, t('common.error'))
           closeView()
         }
       })
@@ -221,7 +237,7 @@ export function GridTicketsPage() {
 
   const handleSave = async () => {
     if (!form.requester.trim() || !form.title.trim()) {
-      window.alert(t('grid.tickets.alert.required'))
+      crudToast.notifyWarning(t('grid.tickets.alert.required'))
       return
     }
 
@@ -253,10 +269,11 @@ export function GridTicketsPage() {
 
       setDrawerOpen(false)
       setPendingAttachments([])
+      crudToast.notifySaved(!!editingId)
       load()
       loadDashboard()
     } catch (e: unknown) {
-      window.alert(parseApiError(e, t('common.error')))
+      crudToast.notifyError(e, t('common.error'))
     } finally {
       setSaving(false)
     }
@@ -268,40 +285,31 @@ export function GridTicketsPage() {
     try {
       await gridService.updateTicket(assignTarget.id, { assignee: assignee.trim() })
       setAssignOpen(false)
+      crudToast.notifySaved(true)
       load()
     } catch (e: unknown) {
-      window.alert(parseApiError(e, t('common.error')))
+      crudToast.notifyError(e, t('common.error'))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (ticket: GridTicket) => {
-    if (!window.confirm(t('connect.confirm.delete', { entity: `o chamado "${ticket.code}"` }))) return
+    if (!(await confirmDelete(`o chamado "${ticket.code}"`))) return
     try {
       await gridService.deleteTicket(ticket.id)
+      crudToast.notifyDeleted()
       load()
       loadDashboard()
     } catch (e: unknown) {
-      window.alert(parseApiError(e, t('common.error')))
+      crudToast.notifyError(e, t('common.error'))
     }
   }
 
   const handleTicketMove = useCallback(
     async (ticketId: number, newStatus: GridTicketStatus) => {
       const current = tickets.find((item) => item.id === ticketId)
-      if (!current) return
-
-      const blocked = ticketMoveBlockedMessage(current, newStatus)
-      if (blocked && !canMoveTicketTo(current, newStatus)) {
-        window.alert(blocked)
-        return
-      }
-
-      if (!canMoveTicketTo(current, newStatus)) {
-        window.alert(blocked ?? t('grid.tickets.alert.moveBlocked'))
-        return
-      }
+      if (!current || !canMoveTicketTo(current, newStatus)) return
 
       const snapshot = tickets
       setMovingId(ticketId)
@@ -317,13 +325,47 @@ export function GridTicketsPage() {
         loadDashboard()
       } catch (e: unknown) {
         setTickets(snapshot)
-        window.alert(parseApiError(e, t('grid.tickets.alert.moveError')))
+        crudToast.notifyError(e, t('grid.tickets.alert.moveError'))
       } finally {
         setMovingId(null)
       }
     },
-    [tickets, t],
+    [tickets, t, loadDashboard],
   )
+
+  const confirmTicketColumnMove = useCallback(
+    (ticket: GridTicket, from: GridTicketStatus, to: GridTicketStatus): Promise<boolean> =>
+      new Promise((resolve) => {
+        setMoveConfirm({ ticket, from, to, resolve })
+      }),
+    [],
+  )
+
+  const closeMoveConfirm = useCallback((confirmed: boolean) => {
+    setMoveConfirm((current) => {
+      current?.resolve(confirmed)
+      return null
+    })
+  }, [])
+
+  const handleMoveConfirmAssign = () => {
+    setMoveConfirm((current) => {
+      if (current) {
+        openAssign(current.ticket)
+        current.resolve(false)
+      }
+      return null
+    })
+  }
+
+  const moveConfirmFromLabel =
+    moveConfirm && ticketColumns.find((column) => column.id === moveConfirm.from)?.label
+  const moveConfirmToLabel =
+    moveConfirm && ticketColumns.find((column) => column.id === moveConfirm.to)?.label
+  const moveConfirmNeedsAssignee =
+    moveConfirm != null && ticketMoveNeedsAssignee(moveConfirm.ticket, moveConfirm.to)
+  const moveConfirmCanProceed =
+    moveConfirm != null && canMoveTicketTo(moveConfirm.ticket, moveConfirm.to, moveConfirm.from)
 
   const kpis = dashboard?.kpis
   const spark = dashboard?.kpi_sparklines
@@ -473,8 +515,9 @@ export function GridTicketsPage() {
               applyColumn={applyTicketStatus}
               onItemsChange={setTickets}
               onItemMove={handleTicketMove}
+              confirmColumnMove={confirmTicketColumnMove}
               canDragItem={canDragTicket}
-              canDropToColumn={(ticket, from, to) => canMoveTicketTo(ticket, to, from)}
+              canDropToColumn={(ticket, from, to) => ticketKanbanDropAllowed(ticket, from, to)}
               renderCard={(ticket, { isDragging }) => (
                 <GridTicketKanbanCard
                   ticket={ticket}
@@ -713,6 +756,20 @@ export function GridTicketsPage() {
         open={viewSnapshot !== null}
         onClose={closeView}
         snapshot={viewSnapshot ?? undefined}
+      />
+
+      <GridKanbanMoveConfirmModal
+        open={moveConfirm != null}
+        itemLabel={moveConfirm ? `${moveConfirm.ticket.code} — ${moveConfirm.ticket.title}` : ''}
+        fromLabel={moveConfirmFromLabel ?? ''}
+        toLabel={moveConfirmToLabel ?? ''}
+        warning={moveConfirmNeedsAssignee ? t('grid.kanban.confirmMove.noAssigneeTicket') : null}
+        showAssignAction={moveConfirmNeedsAssignee}
+        assignActionLabel={t('grid.tickets.actions.assign')}
+        confirmDisabled={!moveConfirmCanProceed}
+        onConfirm={() => closeMoveConfirm(true)}
+        onCancel={() => closeMoveConfirm(false)}
+        onAssign={handleMoveConfirmAssign}
       />
     </div>
   )

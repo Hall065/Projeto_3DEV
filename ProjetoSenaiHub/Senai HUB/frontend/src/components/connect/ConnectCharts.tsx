@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   CHART_PALETTE_5,
   CHART_PALETTE_GRADIENTS,
@@ -216,8 +217,8 @@ export function IsometricDistributionDonut({
   centerLabel,
   centerSubtitle,
   loading,
-  loadingLabel = 'Carregando gráfico...',
-  emptyMessage = 'Sem dados para exibir.',
+  loadingLabel,
+  emptyMessage,
   ariaLabel,
 }: {
   segments: IsometricDonutSegmentInput[]
@@ -229,6 +230,9 @@ export function IsometricDistributionDonut({
   emptyMessage?: string
   ariaLabel?: string
 }) {
+  const { t } = useTranslation()
+  const resolvedLoadingLabel = loadingLabel ?? t('gridComponents.charts.loadingChart')
+  const resolvedEmptyMessage = emptyMessage ?? t('gridComponents.charts.emptyData')
   const { wallpaperTone } = useAppearance()
   const isDark = wallpaperTone === 'dark'
   const gid = useId().replace(/:/g, '')
@@ -271,10 +275,10 @@ export function IsometricDistributionDonut({
     return () => window.clearTimeout(timer)
   }, [loading, visibleSegments])
 
-  if (loading) return <ConnectLoadingSpinner label={loadingLabel} />
+  if (loading) return <ConnectLoadingSpinner label={resolvedLoadingLabel} />
 
   if (visibleSegments.length === 0) {
-    return <p className="py-10 text-center text-sm text-hub-text-muted">{emptyMessage}</p>
+    return <p className="py-10 text-center text-sm text-hub-text-muted">{resolvedEmptyMessage}</p>
   }
 
   const { viewW, viewH, cx, cy, rxo, ryo, rxi, ryi } = DONUT
@@ -296,7 +300,7 @@ export function IsometricDistributionDonut({
               className="h-full w-full drop-shadow-[0_12px_28px_rgba(2,26,58,0.08)]"
               preserveAspectRatio="xMidYMid meet"
               role="img"
-              aria-label={ariaLabel ?? `Distribuição: ${centerLabel}`}
+              aria-label={ariaLabel ?? t('gridComponents.charts.distributionAria', { label: centerLabel })}
             >
               <defs>
                 <radialGradient id={`${gid}-floorGlow`} cx="50%" cy="50%" r="50%">
@@ -483,40 +487,41 @@ export function AttendanceDonutChart({
   rate: number
   loading?: boolean
 }) {
+  const { t } = useTranslation()
   const total = present + justified + unjustified
 
   if (!loading && rate === 0 && total <= 1) {
-    return <p className="py-10 text-center text-sm text-hub-text-muted">Sem registros de frequencia ainda.</p>
+    return <p className="py-10 text-center text-sm text-hub-text-muted">{t('connectComponents.charts.noAttendanceRecords')}</p>
   }
 
-  const t = total || 1
+  const tTotal = total || 1
   const segments: IsometricDonutSegmentInput[] = [
     {
       key: 'present',
-      pct: (present / t) * 100,
-      label: 'Presentes',
-      short: 'Presentes',
+      pct: (present / tTotal) * 100,
+      label: t('connectComponents.charts.present'),
+      short: t('connectComponents.charts.presentShort'),
       color: SEGMENT_COLORS.present,
       gradient: INFO_GRADIENTS.present,
-      legendHint: 'Alunos com registro de presença no período.',
+      legendHint: t('connectComponents.charts.presentHint'),
     },
     {
       key: 'justified',
-      pct: (justified / t) * 100,
-      label: 'Faltas justificadas',
-      short: 'Faltas justif.',
+      pct: (justified / tTotal) * 100,
+      label: t('connectComponents.charts.justified'),
+      short: t('connectComponents.charts.justifiedShort'),
       color: SEGMENT_COLORS.justified,
       gradient: INFO_GRADIENTS.justified,
-      legendHint: 'Ausências com justificativa aceita.',
+      legendHint: t('connectComponents.charts.justifiedHint'),
     },
     {
       key: 'unjustified',
-      pct: (unjustified / t) * 100,
-      label: 'Faltas injustificadas',
-      short: 'Faltas injustif.',
+      pct: (unjustified / tTotal) * 100,
+      label: t('connectComponents.charts.unjustified'),
+      short: t('connectComponents.charts.unjustifiedShort'),
       color: SEGMENT_COLORS.unjustified,
       gradient: INFO_GRADIENTS.unjustified,
-      legendHint: 'Ausências sem justificativa ou pendentes.',
+      legendHint: t('connectComponents.charts.unjustifiedHint'),
     },
   ]
 
@@ -524,11 +529,11 @@ export function AttendanceDonutChart({
     <IsometricDistributionDonut
       segments={segments}
       centerValue={`${rate.toFixed(1)}%`}
-      centerLabel="Presença geral"
-      centerSubtitle={`${t.toLocaleString('pt-BR')} registros no período`}
+      centerLabel={t('connectComponents.charts.generalPresence')}
+      centerSubtitle={t('connectComponents.charts.recordsInPeriod', { count: tTotal })}
       loading={loading}
-      loadingLabel="Calculando frequencia..."
-      ariaLabel={`Distribuição de frequência: ${rate}% de presença`}
+      loadingLabel={t('connectComponents.charts.calculatingAttendance')}
+      ariaLabel={t('connectComponents.charts.attendanceDistributionAria', { rate })}
     />
   )
 }
@@ -540,6 +545,7 @@ export function TeacherSessionsBarChart({
   items: { name: string; sessions: number }[]
   loading?: boolean
 }) {
+  const { t } = useTranslation()
   const { wallpaperTone } = useAppearance()
   const isDark = wallpaperTone === 'dark'
   const [animated, setAnimated] = useState(false)
@@ -550,14 +556,14 @@ export function TeacherSessionsBarChart({
       setAnimated(false)
       return
     }
-    const t = window.setTimeout(() => setAnimated(true), 150)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(() => setAnimated(true), 150)
+    return () => window.clearTimeout(timer)
   }, [loading, items])
 
-  if (loading) return <ConnectLoadingSpinner label="Buscando aulas da semana..." />
+  if (loading) return <ConnectLoadingSpinner label={t('connectComponents.charts.loadingWeeklySessions')} />
 
   if (items.length === 0) {
-    return <p className="py-10 text-center text-sm text-hub-text-muted">Nenhuma aula registrada na semana.</p>
+    return <p className="py-10 text-center text-sm text-hub-text-muted">{t('connect.shared.noWeeklyLessons')}</p>
   }
 
   return (
@@ -603,7 +609,7 @@ export function TeacherSessionsBarChart({
                 <div
                   key={item.name}
                   className="flex w-14 shrink-0 flex-col items-center gap-2 sm:w-16"
-                  title={`${item.name}: ${item.sessions} aula(s)`}
+                  title={t('connectComponents.charts.sessionsTooltip', { name: item.name, count: item.sessions })}
                 >
                   <div className="relative flex h-36 w-full items-end justify-center">
                     <div
@@ -647,6 +653,7 @@ export function StudentsByCourseChart({
   items: { name: string; count: number }[]
   loading?: boolean
 }) {
+  const { t } = useTranslation()
   const { wallpaperTone } = useAppearance()
   const isDark = wallpaperTone === 'dark'
   const [animated, setAnimated] = useState(false)
@@ -657,14 +664,14 @@ export function StudentsByCourseChart({
       setAnimated(false)
       return
     }
-    const t = window.setTimeout(() => setAnimated(true), 200)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(() => setAnimated(true), 200)
+    return () => window.clearTimeout(timer)
   }, [loading, items])
 
-  if (loading) return <ConnectLoadingSpinner label="Distribuindo alunos..." />
+  if (loading) return <ConnectLoadingSpinner label={t('connectComponents.charts.distributingStudents')} />
 
   if (items.length === 0) {
-    return <p className="py-10 text-center text-sm text-hub-text-muted">Nenhum aluno vinculado a cursos.</p>
+    return <p className="py-10 text-center text-sm text-hub-text-muted">{t('connectComponents.charts.noStudentsInCourses')}</p>
   }
 
   return (
@@ -715,17 +722,29 @@ export function QuickReportsSection({
   teachers: { name: string; sessions: number }[]
   courses: { name: string; count: number }[]
 }) {
+  const { t } = useTranslation()
   return (
     <ConnectCard className="min-w-0 p-4 sm:p-6 lg:col-span-2 lg:p-8">
-      <h2 className="mb-6 text-lg font-semibold text-hub-navy sm:mb-8 sm:text-xl">Relatorios Rapidos</h2>
+      <h2 className="mb-6 text-lg font-semibold text-hub-navy sm:mb-8 sm:text-xl">
+        {t('connectComponents.charts.quickReports')}
+      </h2>
       <div className="flex w-full min-w-0 flex-col gap-6 sm:gap-8">
-        <ChartPanel title="Frequencia Geral" subtitle="Mes atual — presenca, faltas justificadas e injustificadas">
+        <ChartPanel
+          title={t('connectComponents.charts.attendanceTitle')}
+          subtitle={t('connectComponents.charts.attendanceSubtitle')}
+        >
           <AttendanceDonutChart {...attendance} loading={loading} />
         </ChartPanel>
-        <ChartPanel title="Aulas na semana" subtitle="Por professor (ultimos 7 dias)">
+        <ChartPanel
+          title={t('connectComponents.charts.teacherSessionsTitle')}
+          subtitle={t('connectComponents.charts.teacherSessionsSubtitle')}
+        >
           <TeacherSessionsBarChart items={teachers} loading={loading} />
         </ChartPanel>
-        <ChartPanel title="Alunos por curso" subtitle="Matriculas ativas por curso">
+        <ChartPanel
+          title={t('connectComponents.charts.studentsByCourseTitle')}
+          subtitle={t('connectComponents.charts.studentsByCourseSubtitle')}
+        >
           <StudentsByCourseChart items={courses} loading={loading} />
         </ChartPanel>
       </div>

@@ -5,7 +5,8 @@ import { FormField, OutlineButton } from '../connect/ConnectShared'
 import { useAuth } from '../../contexts/AuthContext'
 import { usePermissions } from '../../hooks/usePermissions'
 import { gridService } from '../../services/gridService'
-import { parseApiError } from '../../utils/parseApiError'
+import { useConfirmAction } from '../../hooks/useConfirmAction'
+import { useCrudToast } from '../../hooks/useCrudToast'
 import { resolveMediaUrl } from '../../utils/mediaUrl'
 import type { GridTicketAttachment } from '../../types/grid'
 
@@ -36,6 +37,8 @@ export function GridTicketAttachmentsPanel({
   readOnly = false,
 }: GridTicketAttachmentsPanelProps) {
   const { t } = useTranslation()
+  const crudToast = useCrudToast()
+  const { confirmAction } = useConfirmAction()
   const { user } = useAuth()
   const { can } = usePermissions()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -83,8 +86,9 @@ export function GridTicketAttachmentsPanel({
         next.push(uploaded)
       }
       onAttachmentsChange(next)
+      crudToast.notifySuccess('Anexo enviado com sucesso.')
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('grid.tickets.attachments.uploadError')))
+      crudToast.notifyError(err, t('grid.tickets.attachments.uploadError'))
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
@@ -98,14 +102,15 @@ export function GridTicketAttachmentsPanel({
 
   const removeAttachment = async (attachment: GridTicketAttachment) => {
     if (!ticketId || !onAttachmentsChange) return
-    if (!window.confirm(t('grid.tickets.attachments.removeConfirm'))) return
+    if (!(await confirmAction({ message: t('grid.tickets.attachments.removeConfirm'), variant: 'danger' }))) return
 
     setRemovingId(attachment.id)
     try {
       await gridService.deleteTicketAttachment(ticketId, attachment.id)
       onAttachmentsChange(attachments.filter((item) => item.id !== attachment.id))
+      crudToast.notifyDeleted()
     } catch (err: unknown) {
-      window.alert(parseApiError(err, t('grid.tickets.attachments.removeError')))
+      crudToast.notifyError(err, t('grid.tickets.attachments.removeError'))
     } finally {
       setRemovingId(null)
     }

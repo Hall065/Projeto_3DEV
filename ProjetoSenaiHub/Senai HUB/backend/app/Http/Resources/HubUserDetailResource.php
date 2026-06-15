@@ -17,8 +17,11 @@ class HubUserDetailResource extends JsonResource
 
         $permissionService = app(\App\Services\Auth\PermissionService::class);
 
+        /** @var User $user */
+        $user = $this->resource;
+
         return [
-            ...(new UserResource($this))->toArray($request),
+            ...(new UserResource($user))->toArray($request),
             'custom_permissions' => $this->custom_permissions,
             'default_permissions' => $permissionService->defaultPermissionsForRole((string) $this->role),
             'updated_at' => $this->updated_at?->toIso8601String(),

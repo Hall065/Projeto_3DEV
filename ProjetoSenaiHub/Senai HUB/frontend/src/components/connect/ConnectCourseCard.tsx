@@ -1,4 +1,5 @@
-import { Clock, Layers, Pencil, Users } from 'lucide-react'
+import { Clock, Layers, Pencil, Trash2, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { ConnectCourse } from '../../types/connect'
 import { courseStatusLabel, getCourseCoverImage } from '../../utils/courseThemes'
 import { ConnectRowActionsMenu } from './ConnectRowActionsMenu'
@@ -9,24 +10,25 @@ export function ConnectCourseCard({
   onView,
   onEdit,
   onRoster,
+  onDelete,
 }: {
   course: ConnectCourse
   onView: () => void
   onEdit: () => void
   onRoster: () => void
+  onDelete?: () => void
 }) {
+  const { t } = useTranslation()
   const cover = getCourseCoverImage(course)
-  const workload = course.workload_hours ? `${course.workload_hours}h` : 'Carga a definir'
-  const area = course.area?.trim() || 'Formação profissional'
-  const description =
-    course.description?.trim() ||
-    'Curso técnico SENAI com formação prática alinhada às demandas da indústria.'
+  const workload = course.workload_hours ? `${course.workload_hours}h` : t('connectComponents.courseCard.workloadTbd')
+  const area = course.area?.trim() || t('connectComponents.courseCard.defaultArea')
+  const description = course.description?.trim() || t('connectComponents.courseCard.defaultDescription')
 
   return (
     <article className="group relative flex min-h-[400px] flex-col overflow-hidden rounded-[1.75rem] bg-[#0f1115] shadow-lg ring-1 ring-black/10 transition hover:shadow-xl sm:min-h-[420px]">
       <img
         src={cover}
-        alt={`Capa do curso ${course.name}`}
+        alt={t('connectComponents.courseCard.coverAlt', { name: course.name })}
         className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
         loading="lazy"
         decoding="async"
@@ -42,11 +44,14 @@ export function ConnectCourseCard({
 
       <div className="absolute right-4 top-4 z-[2]">
         <ConnectRowActionsMenu
-          ariaLabel={`Ações do curso ${course.name}`}
+          ariaLabel={t('connectComponents.courseCard.actionsAria', { name: course.name })}
           actions={[
             viewRowAction(onView),
-            { key: 'roster', label: 'Gerenciar matrículas', icon: Users, onClick: onRoster },
-            { key: 'edit', label: 'Editar', icon: Pencil, onClick: onEdit },
+            { key: 'roster', label: t('connectComponents.courseCard.manageRoster'), icon: Users, onClick: onRoster },
+            { key: 'edit', label: t('connectComponents.courseCard.edit'), icon: Pencil, onClick: onEdit },
+            ...(onDelete
+              ? [{ key: 'delete', label: t('common.delete'), icon: Trash2, onClick: onDelete, variant: 'danger' as const }]
+              : []),
           ]}
         />
       </div>
@@ -82,7 +87,7 @@ export function ConnectCourseCard({
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-bold text-[#0f1115] transition hover:bg-white/95 active:scale-[0.99]"
           >
             <Users className="h-4 w-4" />
-            Gerenciar matrículas
+            {t('connectComponents.courseCard.manageRoster')}
           </button>
           <button
             type="button"
@@ -90,7 +95,7 @@ export function ConnectCourseCard({
             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-white/25 bg-white/10 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15"
           >
             <Pencil className="h-4 w-4" />
-            Editar curso
+            {t('connectComponents.courseCard.editCourse')}
           </button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import i18n from '../i18n'
 import type { ConnectCourse } from '../types/connect'
 
 /** Imagens públicas (Unsplash) por área técnica SENAI */
@@ -51,7 +52,7 @@ export function getCourseCoverImage(course: ConnectCourse): string {
 
 export function courseStatusLabel(status: string): string {
   const s = status.toLowerCase()
-  if (s === 'active' || s.includes('ativ')) return 'Curso ativo'
-  if (s.includes('inactiv') || s.includes('inativ')) return 'Inativo'
+  if (s === 'active' || s.includes('ativ')) return i18n.t('courseThemes.active')
+  if (s.includes('inactiv') || s.includes('inativ')) return i18n.t('courseThemes.inactive')
   return status
 }

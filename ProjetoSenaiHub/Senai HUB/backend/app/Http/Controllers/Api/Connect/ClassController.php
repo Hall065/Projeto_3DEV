@@ -9,6 +9,7 @@ use App\Models\Connect\ConnectClass;
 use App\Services\Connect\ConnectEnrollmentService;
 use App\Services\Connect\ConnectScheduleService;
 use App\Support\ConnectForm;
+use App\Support\ConnectWeeklyPatternDefaults;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -93,12 +94,7 @@ class ClassController extends Controller
 
         $this->schedule->validateClassAssignment($class->fresh(['course']));
 
-        if (is_array($weeklyPatterns)) {
-            $this->schedule->syncWeeklyPatterns($class, $weeklyPatterns);
-            if ($generateSchedule) {
-                $this->schedule->generateFromPatterns($class->fresh(['course', 'weeklyPatterns']));
-            }
-        }
+        $this->persistClassSchedule($class, $weeklyPatterns, $request, $generateSchedule);
 
         ConnectActivity::query()->create([
             'title' => 'Nova turma criada',
@@ -158,12 +154,7 @@ class ClassController extends Controller
         $this->schedule->validateClassAssignment($connectClass, $connectClass->id);
         $this->enrollment->syncTeacherCourseFromClass($connectClass);
 
-        if (is_array($weeklyPatterns)) {
-            $this->schedule->syncWeeklyPatterns($connectClass, $weeklyPatterns);
-            if ($generateSchedule) {
-                $this->schedule->generateFromPatterns($connectClass->fresh(['course', 'weeklyPatterns']));
-            }
-        }
+        $this->persistClassSchedule($connectClass, $weeklyPatterns, $request, $generateSchedule);
 
         app(\App\Services\Notification\SystemNotificationTriggers::class)
             ->connectClassAssigned($connectClass, $request->user());
@@ -172,6 +163,38 @@ class ClassController extends Controller
             'data' => new ConnectClassResource($connectClass),
             'message' => 'Turma atualizada com sucesso.',
         ]);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>|null  $weeklyPatterns
+     */
+    private function persistClassSchedule(
+        ConnectClass $class,
+        ?array $weeklyPatterns,
+        Request $request,
+        bool $generateSchedule,
+    ): void {
+        if (! is_array($weeklyPatterns)) {
+            return;
+        }
+
+        if ($weeklyPatterns === [] && $class->start_date && $class->end_date) {
+            $weeklyPatterns = ConnectWeeklyPatternDefaults::forShift((string) ($class->shift ?? 'noite'));
+        }
+
+        if ($weeklyPatterns === []) {
+            return;
+        }
+
+        $this->schedule->syncWeeklyPatterns($class, $weeklyPatterns);
+
+        $shouldGenerate = $request->has('generate_schedule')
+            ? $generateSchedule
+            : ($class->start_date && $class->end_date);
+
+        if ($shouldGenerate) {
+            $this->schedule->generateFromPatterns($class->fresh(['course', 'weeklyPatterns']));
+        }
     }
 
     public function destroy(ConnectClass $connectClass): JsonResponse

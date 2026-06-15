@@ -1,4 +1,6 @@
 import { GripVertical, Pencil, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 import { GridPriorityBadge } from './GridBadges'
 import type { GridPriority, GridTaskCard, GridTaskColumn } from '../../types/grid'
 import { UserAvatar } from '../ui/UserAvatar'
@@ -7,6 +9,12 @@ const columnStatusClass: Record<GridTaskColumn, string> = {
   a_fazer: 'border-hub-navy/25 bg-hub-navy/10 text-blue-700',
   em_andamento: 'border-amber-200 bg-amber-50 text-amber-700',
   concluidas: 'bg-emerald-500 text-white border-emerald-500',
+}
+
+const TASK_COLUMN_KEYS: Record<GridTaskColumn, string> = {
+  a_fazer: 'grid.tasks.columns.todo',
+  em_andamento: 'grid.tasks.columns.inProgress',
+  concluidas: 'grid.tasks.columns.done',
 }
 
 export function GridTaskKanbanCard({
@@ -20,6 +28,8 @@ export function GridTaskKanbanCard({
   onEdit: () => void
   onDelete: () => void
 }) {
+  const { t } = useTranslation()
+
   return (
     <article
       className={`glass-panel-solid min-w-0 overflow-hidden rounded-xl p-3 shadow-sm transition-shadow duration-300 sm:p-4 ${
@@ -39,14 +49,16 @@ export function GridTaskKanbanCard({
             <div className="min-w-0 flex-1">
               <span className="block truncate text-xs font-semibold text-blue-600">{task.code}</span>
               {task.ticket_code ? (
-                <span className="block truncate text-[10px] text-hub-text-muted">Chamado {task.ticket_code}</span>
+                <span className="block truncate text-[10px] text-hub-text-muted">
+                  {t('gridComponents.taskKanbanCard.ticketRef', { code: task.ticket_code })}
+                </span>
               ) : null}
             </div>
             <div className="flex shrink-0 gap-0.5" onPointerDown={(e) => e.stopPropagation()}>
-              <button type="button" className="rounded p-1.5 hover:bg-white/50" onClick={onEdit} aria-label="Editar">
+              <button type="button" className="rounded p-1.5 hover:bg-white/50" onClick={onEdit} aria-label={t('gridComponents.taskKanbanCard.edit')}>
                 <Pencil className="h-3.5 w-3.5 text-hub-text-muted" />
               </button>
-              <button type="button" className="rounded p-1.5 hover:bg-white/50" onClick={onDelete} aria-label="Excluir">
+              <button type="button" className="rounded p-1.5 hover:bg-white/50" onClick={onDelete} aria-label={t('gridComponents.taskKanbanCard.delete')}>
                 <Trash2 className="h-3.5 w-3.5 text-hub-red" />
               </button>
             </div>
@@ -61,34 +73,34 @@ export function GridTaskKanbanCard({
 
       <ul className="mb-3 flex flex-col gap-2 text-xs text-hub-text-muted">
         <li className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-          <span className="text-[10px] font-medium uppercase tracking-wide">Sala</span>
+          <span className="text-[10px] font-medium uppercase tracking-wide">{t('grid.common.room')}</span>
           <span className="font-medium text-hub-text">{task.room || '—'}</span>
         </li>
         <li className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-          <span className="text-[10px] font-medium uppercase tracking-wide">Bloco</span>
+          <span className="text-[10px] font-medium uppercase tracking-wide">{t('grid.common.block')}</span>
           <span className="font-medium text-hub-text">{task.block || '—'}</span>
         </li>
         <li className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-          <span className="text-[10px] font-medium uppercase tracking-wide">Aberto em</span>
+          <span className="text-[10px] font-medium uppercase tracking-wide">{t('gridComponents.taskKanbanCard.openedAt')}</span>
           <span className="font-medium text-hub-text">{task.opened_at}</span>
         </li>
       </ul>
 
       <div className="mb-3 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-xs text-hub-text-muted">Responsável</span>
+        <span className="text-xs text-hub-text-muted">{t('gridComponents.taskKanbanCard.assignee')}</span>
         {task.assignee ? (
           <div className="flex min-w-0 items-center gap-1.5">
             <UserAvatar name={task.assignee} size="sm" />
             <span className="truncate text-xs font-medium">{task.assignee}</span>
           </div>
         ) : (
-          <span className="text-xs font-medium text-red-600">Sem responsável</span>
+          <span className="text-xs font-medium text-red-600">{t('grid.common.noResponsible')}</span>
         )}
       </div>
 
       {task.items.length > 0 ? (
         <p className="mb-3 break-words text-xs leading-relaxed text-hub-text-muted">
-          <span className="font-medium text-hub-text">Itens: </span>
+          <span className="font-medium text-hub-text">{t('gridComponents.taskKanbanCard.items')} </span>
           {task.items.join(', ')}
         </p>
       ) : null}
@@ -103,17 +115,10 @@ export function GridTaskKanbanCard({
   )
 }
 
-export const TASK_COLUMN_LABELS: Record<GridTaskColumn, string> = {
-  a_fazer: 'A fazer',
-  em_andamento: 'Em andamento',
-  concluidas: 'Concluída',
-}
-
 export function applyTaskColumn(task: GridTaskCard, column: GridTaskColumn): GridTaskCard {
   return {
     ...task,
     column,
-    status_label: TASK_COLUMN_LABELS[column],
+    status_label: i18n.t(TASK_COLUMN_KEYS[column]),
   }
 }
-
