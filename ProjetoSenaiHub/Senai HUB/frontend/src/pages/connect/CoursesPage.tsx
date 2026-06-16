@@ -18,12 +18,21 @@ import { connectService } from '../../services/connectService'
 import type { ConnectCourse, PaginatedMeta } from '../../types/connect'
 import { useCrudToast } from '../../hooks/useCrudToast'
 import { useConfirmAction } from '../../hooks/useConfirmAction'
+
+function defaultSemesterDates(): { start_date: string; end_date: string } {
+  const now = new Date()
+  const year = now.getFullYear()
+  if (now.getMonth() < 6) {
+    return { start_date: `${year}-01-15`, end_date: `${year}-06-30` }
+  }
+  return { start_date: `${year}-07-01`, end_date: `${year}-12-20` }
+}
+
 const emptyForm = {
   name: '',
   description: '',
   workload_hours: '120',
-  start_date: '',
-  end_date: '',
+  ...defaultSemesterDates(),
   area: '',
   status: 'active',
 }

@@ -426,8 +426,13 @@
                 @php
                     $chartItems = $section['items'] ?? [];
                     $chartKind = $section['chart_kind'] ?? 'bar_horizontal';
-                    $chartMax = max(array_map(fn ($i) => (float) ($i['value'] ?? 0), $chartItems ?: [['value' => 0]]), 1);
-                    $chartTotal = array_sum(array_map(fn ($i) => (float) ($i['value'] ?? 0), $chartItems));
+                    $chartValues = array_map(function ($item) {
+                        $value = $item['value'] ?? 0;
+
+                        return is_array($value) ? 0.0 : (float) $value;
+                    }, $chartItems ?: [['value' => 0]]);
+                    $chartMax = max(max($chartValues), 1);
+                    $chartTotal = array_sum($chartValues);
                     $palette = ['#003a6f', '#e30613', '#10b981', '#f59e0b', '#6366f1', '#0ea5e9', '#8b5cf6', '#ec4899'];
                 @endphp
                 <section class="section-compact">
@@ -437,7 +442,8 @@
                             <div class="chart-columns">
                                 @foreach($chartItems as $index => $item)
                                     @php
-                                        $value = (float) ($item['value'] ?? 0);
+                                        $rawValue = $item['value'] ?? 0;
+                                        $value = is_array($rawValue) ? 0.0 : (float) $rawValue;
                                         $color = $item['color'] ?? $palette[$index % count($palette)];
                                         $height = max(4, round(($value / $chartMax) * 110));
                                     @endphp
@@ -452,7 +458,8 @@
                             <div class="donut-legend">
                                 @foreach($chartItems as $index => $item)
                                     @php
-                                        $value = (float) ($item['value'] ?? 0);
+                                        $rawValue = $item['value'] ?? 0;
+                                        $value = is_array($rawValue) ? 0.0 : (float) $rawValue;
                                         $color = $item['color'] ?? $palette[$index % count($palette)];
                                         $pct = $chartTotal > 0 ? round(($value / $chartTotal) * 100, 1) : 0;
                                     @endphp
@@ -475,7 +482,8 @@
                         @else
                             @foreach($chartItems as $index => $item)
                                 @php
-                                    $value = (float) ($item['value'] ?? 0);
+                                    $rawValue = $item['value'] ?? 0;
+                                    $value = is_array($rawValue) ? 0.0 : (float) $rawValue;
                                     $color = $item['color'] ?? $palette[$index % count($palette)];
                                     $width = round(($value / $chartMax) * 100, 1);
                                 @endphp

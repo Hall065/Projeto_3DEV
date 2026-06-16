@@ -9,6 +9,7 @@ use App\Models\Safe\SafeAuthorizationLog;
 use App\Models\Safe\SafeStudent;
 use App\Models\User;
 use App\Services\Notification\SafeNotificationTriggers;
+use App\Services\Safe\SafeConnectStudentBridge;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -17,6 +18,7 @@ class SafeWorkflowService
 {
     public function __construct(
         private readonly SafeNotificationTriggers $notifications,
+        private readonly SafeConnectStudentBridge $studentBridge,
     ) {}
     /**
      * @param  array<string, mixed>  $data
@@ -24,10 +26,10 @@ class SafeWorkflowService
     public function createAuthorization(User $user, array $data): SafeAuthorization
     {
         return DB::transaction(function () use ($user, $data) {
-            $student = null;
-            if (! empty($data['safe_student_id'])) {
-                $student = SafeStudent::query()->findOrFail($data['safe_student_id']);
-            }
+            $student = $this->studentBridge->resolveSafeStudent(
+                isset($data['safe_student_id']) ? (int) $data['safe_student_id'] : null,
+                isset($data['connect_student_id']) ? (int) $data['connect_student_id'] : null,
+            );
 
             $authorization = SafeAuthorization::query()->create([
                 'protocol' => $this->generateProtocol(),
@@ -60,10 +62,10 @@ class SafeWorkflowService
         $this->assertEditable($authorization);
 
         return DB::transaction(function () use ($authorization, $user, $data) {
-            $student = null;
-            if (! empty($data['safe_student_id'])) {
-                $student = SafeStudent::query()->findOrFail($data['safe_student_id']);
-            }
+            $student = $this->studentBridge->resolveSafeStudent(
+                isset($data['safe_student_id']) ? (int) $data['safe_student_id'] : null,
+                isset($data['connect_student_id']) ? (int) $data['connect_student_id'] : null,
+            );
 
             $authorization->update([
                 'safe_student_id' => $student?->id ?? $data['safe_student_id'] ?? $authorization->safe_student_id,

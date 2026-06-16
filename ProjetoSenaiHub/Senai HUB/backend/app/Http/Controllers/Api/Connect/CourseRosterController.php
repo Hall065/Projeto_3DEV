@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Connect;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\HubPersonResource;
+use App\Models\Connect\ConnectClass;
 use App\Models\Connect\ConnectCourse;
 use App\Models\HubPerson;
 use App\Services\Connect\ConnectEnrollmentService;
@@ -62,6 +63,25 @@ class CourseRosterController extends Controller
         return response()->json([
             'message' => 'Vinculo ao curso registrado.',
             'data' => new HubPersonResource($person->load('courses')),
+        ], 201);
+    }
+
+    public function storeFromClass(Request $request, ConnectCourse $course): JsonResponse
+    {
+        $validated = $request->validate([
+            'connect_class_id' => ['required', 'exists:connect_classes,id'],
+        ]);
+
+        $class = ConnectClass::query()->findOrFail($validated['connect_class_id']);
+        $result = $this->enrollment->enrollClassInCourse($class, $course);
+
+        $message = $result['enrolled'] > 0
+            ? "Turma vinculada. {$result['enrolled']} aluno(s) matriculado(s) no curso."
+            : 'Turma vinculada. Nenhum aluno novo para matricular (todos já estavam no curso ou a turma está vazia).';
+
+        return response()->json([
+            'message' => $message,
+            'data' => $result,
         ], 201);
     }
 

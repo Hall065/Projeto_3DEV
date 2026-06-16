@@ -9,6 +9,8 @@ import {
   gridLogoMarkLight,
   hubLogoExpanded,
   hubLogoIcon,
+  hubLogoMarkDark,
+  hubLogoMarkLight,
   safeLogoExpanded,
   safeLogoIcon,
   safeLogoMarkDark,
@@ -38,6 +40,8 @@ export interface HubBrandAssetSet {
   dashboardTo: string
   expanded: string
   icon: string
+  markLight: string
+  markDark: string
 }
 
 /**
@@ -80,11 +84,14 @@ export const HUB_BRAND_ASSETS: HubBrandAssetSet = {
   dashboardTo: '/hub',
   expanded: hubLogoExpanded,
   icon: hubLogoIcon,
+  markLight: hubLogoMarkLight,
+  markDark: hubLogoMarkDark,
 }
 
 export const MODULE_BRAND_SLUGS: AppBrandSlug[] = ['connect', 'grid', 'safe']
 
 export function getAppBrandName(slug: string): string {
+  if (slug === 'hub') return HUB_BRAND_ASSETS.name
   return i18n.t(`modules.${slug}`, { defaultValue: slug })
 }
 
@@ -100,8 +107,17 @@ export function getSidebarBrandAssets(app: SidebarAppSlug): AppBrandAssetSet | H
   return APP_BRAND_ASSETS[app]
 }
 
-export function getAppBrandMarkSrc(slug: string, tone: WallpaperTone): string | undefined {
+export function getBrandMarkSrc(slug: string, tone: WallpaperTone): string | undefined {
+  if (slug === 'hub') {
+    return tone === 'dark' ? HUB_BRAND_ASSETS.markDark : HUB_BRAND_ASSETS.markLight
+  }
+
   const assets = getAppBrandAssets(slug)
   if (!assets) return undefined
   return tone === 'dark' ? assets.markDark : assets.markLight
+}
+
+/** @deprecated Use getBrandMarkSrc */
+export function getAppBrandMarkSrc(slug: string, tone: WallpaperTone): string | undefined {
+  return getBrandMarkSrc(slug, tone)
 }

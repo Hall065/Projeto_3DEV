@@ -168,9 +168,11 @@
     },
     "students": {
       "title": "Alunos",
-      "subtitle": "Cadastro de alunos vinculados ao modulo SAFE.",
-      "newStudent": "Novo aluno",
-      "editStudent": "Editar aluno"
+      "subtitle": "Alunos do SENAI Connect disponiveis para autorizacoes no SAFE.",
+      "searchPlaceholder": "Buscar por nome, matricula ou turma...",
+      "empty": "Nenhum aluno encontrado no Connect.",
+      "connectHint": "Os alunos sao os mesmos cadastrados no SENAI Connect. Alteracoes de matricula, turma e status devem ser feitas la.",
+      "manageInConnect": "Gerenciar no Connect"
     },
     "authorizations": {
       "title": "Autorizacoes",
@@ -530,7 +532,8 @@
         "studentName": "Nome do aluno",
         "company": "Empresa",
         "start": "Início",
-        "monthlyValue": "Valor mensal"
+        "monthlyValue": "Valor mensal",
+        "copy": "Cópia"
       },
       "drawer": {
         "edit": "Editar contrato",
@@ -546,7 +549,24 @@
         "monthlyValue": "Valor mensal",
         "emails": "E-mails"
       },
-      "attachmentsFuture": "Anexos de documentos serão disponibilizados em versão futura."
+      "attachments": {
+        "title": "Cópia do contrato",
+        "hint": "Anexe o PDF ou imagem assinada do contrato deste aluno. Você também pode gerar uma cópia padrão com os dados preenchidos automaticamente.",
+        "add": "Anexar arquivo",
+        "generate": "Gerar cópia padrão",
+        "generateOnSave": "Gerar cópia padrão do contrato ao salvar",
+        "empty": "Nenhum anexo neste contrato.",
+        "saveFirst": "Salve o contrato para anexar ou gerar a cópia.",
+        "count": "{{count}} de {{max}} anexos",
+        "generated": "Gerado pelo sistema",
+        "remove": "Remover anexo",
+        "removeConfirm": "Remover este anexo do contrato?",
+        "uploadSuccess": "Anexo enviado com sucesso.",
+        "uploadError": "Não foi possível enviar o anexo.",
+        "generateSuccess": "Cópia padrão gerada e anexada.",
+        "generateError": "Não foi possível gerar a cópia do contrato.",
+        "removeError": "Não foi possível remover o anexo."
+      }
     },
     "attendance": {
       "title": "Frequência",
@@ -655,6 +675,7 @@
       },
       "loading": "Carregando calendário...",
       "loadError": "Não foi possível carregar o calendário.",
+      "emptyRange": "Nenhuma aula neste período. Gere o calendário da turma ou navegue para outro mês/semana.",
       "moreLessons": "+{{count}} aulas",
       "nav": {
         "prevMonth": "Mês anterior",

@@ -100,8 +100,15 @@ class AuthorizationController extends Controller
 
         return $request->validate([
             'safe_student_id' => ['nullable', 'integer', Rule::exists('safe_students', 'id')],
-            'student_name' => [$partial ? 'required_without:safe_student_id' : 'required_without:safe_student_id', 'string', 'max:255'],
-            'class_name' => [$partial ? 'required_without:safe_student_id' : 'required_without:safe_student_id', 'string', 'max:255'],
+            'connect_student_id' => ['nullable', 'integer', Rule::exists('connect_students', 'id')],
+            'student_name' => array_merge(
+                $partial ? ['sometimes'] : [],
+                ['required_without_all:safe_student_id,connect_student_id', 'string', 'max:255'],
+            ),
+            'class_name' => array_merge(
+                $partial ? ['sometimes'] : [],
+                ['required_without_all:safe_student_id,connect_student_id', 'string', 'max:255'],
+            ),
             'type' => [$required, Rule::in(array_map(fn (AuthorizationType $type) => $type->value, AuthorizationType::cases()))],
             'reason' => [$required, 'string', 'max:2000'],
             'absence_count' => ['nullable', 'integer', 'min:0', 'max:5'],

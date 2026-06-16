@@ -1,5 +1,5 @@
 import { ChevronRight, Headphones, Shield, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, useLocation } from 'react-router-dom'
 import { SidebarAppLogo } from '../layout/SidebarAppLogo'
@@ -11,6 +11,7 @@ import {
 } from '../../config/navPermissions'
 import { usePermissions } from '../../hooks/usePermissions'
 import { useNavLabel } from '../../hooks/useNavLabel'
+import { useSupportChat } from '../../contexts/SupportChatContext'
 
 interface ConnectSidebarProps {
   collapsed: boolean
@@ -30,25 +31,13 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
   const showContracts = canAny('connect.contracts.view', 'connect.contracts.view_own', 'connect.contracts.manage')
   const showSalary = canAny('connect.salary.view', 'connect.salary.view_own')
   const [contractsOpen, setContractsOpen] = useState(location.pathname.startsWith('/connect/contratos'))
-  const [supportOpen, setSupportOpen] = useState(false)
-  const supportRef = useRef<HTMLDivElement>(null)
+  const { open: openSupportChat } = useSupportChat()
 
   useEffect(() => {
     if (location.pathname.startsWith('/connect/contratos')) {
       setContractsOpen(true)
     }
   }, [location.pathname])
-
-  useEffect(() => {
-    if (!supportOpen) return
-    const onClickOutside = (event: MouseEvent) => {
-      if (supportRef.current && !supportRef.current.contains(event.target as Node)) {
-        setSupportOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [supportOpen])
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
@@ -147,36 +136,17 @@ export function ConnectSidebar({ collapsed, mobileOpen = false, onMobileClose }:
           </div>
         )}
 
-        <div className="relative" ref={supportRef}>
-          <button
-            type="button"
-            onClick={() => setSupportOpen((open) => !open)}
-            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/85 transition hover:bg-white/10 ${
-              isCollapsed ? 'justify-center px-3' : ''
-            }`}
-          >
-            <Headphones className="h-5 w-5 shrink-0" />
-            {!isCollapsed && (
-              <>
-                <span className="flex-1 text-left">{t('safe.sidebar.support')}</span>
-                <ChevronRight className={`h-4 w-4 ${supportOpen ? 'rotate-90' : ''}`} />
-              </>
-            )}
-          </button>
-          {supportOpen && !isCollapsed && (
-            <div className="mt-1 rounded-xl border border-white/10 bg-[#002847] p-3 text-sm">
-              <div className="mb-2 flex justify-between">
-                <span className="text-xs font-semibold uppercase text-white/70">{t('safe.sidebar.support')}</span>
-                <button type="button" onClick={() => setSupportOpen(false)} aria-label={t('header.closeMenu')}>
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <a href="mailto:suporte@senaihub.local" className="block rounded-lg px-2 py-2 hover:bg-white/10">
-                suporte@senaihub.local
-              </a>
-            </div>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={openSupportChat}
+          className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/85 transition hover:bg-white/10 ${
+            isCollapsed ? 'justify-center px-3' : ''
+          }`}
+          aria-label={t('safe.sidebar.support')}
+        >
+          <Headphones className="h-5 w-5 shrink-0" />
+          {!isCollapsed && <span className="flex-1 text-left">{t('safe.sidebar.support')}</span>}
+        </button>
       </div>
     </aside>
   )

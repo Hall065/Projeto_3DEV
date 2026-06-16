@@ -1,8 +1,8 @@
-import { Loader2, UserMinus, UserPlus } from 'lucide-react'
+import { GraduationCap, Loader2, UserMinus, UserPlus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { connectService } from '../../services/connectService'
-import type { CourseRoster, CourseRosterRole, HubPerson } from '../../types/connect'
+import type { ConnectClass, CourseRoster, CourseRosterRole, HubPerson } from '../../types/connect'
 import {
   courseRosterRoleLabel,
   hubPersonKindLabel,
@@ -39,6 +39,10 @@ export function ConnectRosterDrawer({
   const [courseTab, setCourseTab] = useState<CourseTab>('student')
   const [personId, setPersonId] = useState('')
   const [peopleOptions, setPeopleOptions] = useState<HubPerson[]>([])
+  const [classOptions, setClassOptions] = useState<ConnectClass[]>([])
+  const [selectedClassId, setSelectedClassId] = useState('')
+  const [importingClass, setImportingClass] = useState(false)
+  const [classSuccess, setClassSuccess] = useState<string | null>(null)
 
   const loadRoster = useCallback(async () => {
     if (!entityId || !open) return
@@ -64,6 +68,8 @@ export function ConnectRosterDrawer({
       setCourseRoster(null)
       setClassRoster([])
       setPersonId('')
+      setSelectedClassId('')
+      setClassSuccess(null)
       setError(null)
     }
   }, [open, entityId, loadRoster])
@@ -90,6 +96,41 @@ export function ConnectRosterDrawer({
     }
     void loadOptions()
   }, [open, mode, courseTab])
+
+  useEffect(() => {
+    if (!open || mode !== 'course' || courseTab !== 'student' || !entityId) {
+      setClassOptions([])
+      return
+    }
+
+    const loadClasses = async () => {
+      try {
+        const res = await connectService.getClasses({ per_page: 100 })
+        setClassOptions(res.data)
+      } catch {
+        setClassOptions([])
+      }
+    }
+
+    void loadClasses()
+  }, [open, mode, courseTab, entityId])
+
+  const isClassDisabled = (turma: ConnectClass) =>
+    turma.connect_course_id != null && turma.connect_course_id !== entityId
+
+  const availableClasses = classOptions.filter((turma) => !isClassDisabled(turma))
+
+  const classOptionLabel = (turma: ConnectClass) => {
+    const students =
+      turma.students_count != null
+        ? t('connectComponents.rosterDrawer.classStudentsCount', { count: turma.students_count })
+        : ''
+    const linked =
+      turma.connect_course_id === entityId
+        ? t('connectComponents.rosterDrawer.classAlreadyLinked')
+        : ''
+    return `${turma.code} — ${turma.name}${students}${linked}`
+  }
 
   const currentCourseList = (): HubPerson[] => {
     if (!courseRoster) return []
@@ -127,6 +168,35 @@ export function ConnectRosterDrawer({
       setError(message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleImportClass = async () => {
+    if (!entityId || !selectedClassId) return
+    setImportingClass(true)
+    setError(null)
+    setClassSuccess(null)
+    try {
+      const result = await connectService.enrollCourseRosterFromClass(entityId, Number(selectedClassId))
+      setSelectedClassId('')
+      setClassSuccess(
+        t('connectComponents.rosterDrawer.importClassSuccess', {
+          className: result.class_name,
+          enrolled: result.enrolled,
+          total: result.total,
+        }),
+      )
+      await loadRoster()
+      onChanged?.()
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string; errors?: { connect_class_id?: string[] } } } })?.response
+          ?.data?.errors?.connect_class_id?.[0] ??
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        t('connectComponents.rosterDrawer.importClassError')
+      setError(message)
+    } finally {
+      setImportingClass(false)
     }
   }
 
@@ -224,8 +294,60 @@ export function ConnectRosterDrawer({
         </div>
       )}
 
+      {mode === 'course' && courseTab === 'student' && (
+        <section className="glass-panel mb-6 rounded-xl p-4">
+          <h3 className="mb-1 text-sm font-semibold text-hub-navy">
+            {t('connectComponents.rosterDrawer.addClassTitle')}
+          </h3>
+          <p className="mb-3 text-xs text-hub-text-muted">{t('connectComponents.rosterDrawer.addClassHint')}</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1">
+              <FormField label={t('connectComponents.rosterDrawer.classField')}>
+                <select
+                  className={selectClass}
+                  value={selectedClassId}
+                  onChange={(e) => {
+                    setSelectedClassId(e.target.value)
+                    setClassSuccess(null)
+                    setError(null)
+                  }}
+                  disabled={importingClass || availableClasses.length === 0}
+                >
+                  <option value="">
+                    {availableClasses.length === 0
+                      ? t('connectComponents.rosterDrawer.noClassesAvailable')
+                      : t('connectComponents.rosterDrawer.selectClassPlaceholder')}
+                  </option>
+                  {availableClasses.map((turma) => (
+                    <option key={turma.id} value={turma.id}>
+                      {classOptionLabel(turma)}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+            </div>
+            <PrimaryButton
+              onClick={() => void handleImportClass()}
+              disabled={importingClass || saving || !selectedClassId}
+            >
+              {importingClass ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <GraduationCap className="h-4 w-4" />
+              )}
+              {t('connectComponents.rosterDrawer.importClass')}
+            </PrimaryButton>
+          </div>
+          {classSuccess && <p className="mt-2 text-xs text-emerald-700">{classSuccess}</p>}
+        </section>
+      )}
+
       <section className="glass-panel mb-6 rounded-xl p-4">
-        <h3 className="mb-3 text-sm font-semibold text-hub-navy">{t('connectComponents.rosterDrawer.addLink')}</h3>
+        <h3 className="mb-3 text-sm font-semibold text-hub-navy">
+          {mode === 'course' && courseTab === 'student'
+            ? t('connectComponents.rosterDrawer.addIndividualTitle')
+            : t('connectComponents.rosterDrawer.addLink')}
+        </h3>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1">
             <FormField label={t('connectComponents.rosterDrawer.personField')}>

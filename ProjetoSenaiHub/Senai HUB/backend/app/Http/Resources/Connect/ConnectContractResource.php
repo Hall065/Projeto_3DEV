@@ -25,6 +25,7 @@ class ConnectContractResource extends JsonResource
             'company_email' => $this->company_email,
             'status' => $this->status,
             'student' => new ConnectStudentResource($this->whenLoaded('student')),
+            'attachments' => ConnectContractAttachmentResource::collection($this->whenLoaded('attachments')),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

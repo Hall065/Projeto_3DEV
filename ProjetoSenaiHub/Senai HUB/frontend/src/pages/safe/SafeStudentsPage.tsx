@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { useNavigate } from 'react-router-dom'
+import { SafePageToolbar } from '../../components/safe/SafePageToolbar'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -9,41 +10,31 @@ import {
   ConnectPagination,
   ConnectTableScroll,
   FormField,
-  inputClass,
   OutlineButton,
-  PrimaryButton,
   selectClass,
   StatusBadge,
 } from '../../components/connect/ConnectShared'
 import { safeService } from '../../services/safeService'
 import type { PaginatedMeta, SafeStudent } from '../../types/safe'
-import { useConfirmAction } from '../../hooks/useConfirmAction'
-import { useCrudToast } from '../../hooks/useCrudToast'
-const emptyForm = {
-  registration: '',
-  name: '',
-  class_name: '',
-  active: 'true',
-}
 
 export function SafeStudentsPage() {
   const { t } = useTranslation()
-  const crudToast = useCrudToast()
-  const { confirmDelete } = useConfirmAction()
+  const navigate = useNavigate()
   const [students, setStudents] = useState<SafeStudent[]>([])
   const [meta, setMeta] = useState<PaginatedMeta | undefined>()
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [loading, setLoading] = useState(true)
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState(emptyForm)
 
   const load = () => {
     setLoading(true)
+    const params: Record<string, string | number | boolean> = { page, search, per_page: 10 }
+    if (statusFilter === 'active') params.active = true
+    if (statusFilter === 'inactive') params.active = false
+
     safeService
-      .getStudents({ page, search, per_page: 10 })
+      .getStudents(params)
       .then((res) => {
         setStudents(res.data)
         setMeta(res.meta)
@@ -53,64 +44,7 @@ export function SafeStudentsPage() {
 
   useEffect(() => {
     load()
-  }, [page, search])
-
-  const openCreate = () => {
-    setEditingId(null)
-    setForm(emptyForm)
-    setDrawerOpen(true)
-  }
-
-  const openEdit = (student: SafeStudent) => {
-    setEditingId(student.id)
-    setForm({
-      registration: student.registration,
-      name: student.name,
-      class_name: student.class_name,
-      active: student.active ? 'true' : 'false',
-    })
-    setDrawerOpen(true)
-  }
-
-  const handleSave = async () => {
-    if (!form.registration.trim() || !form.name.trim() || !form.class_name.trim()) {
-      crudToast.notifyWarning(t('safeValidation.fillRegistrationNameClass'))
-      return
-    }
-    setSaving(true)
-    try {
-      const wasEdit = !!editingId
-      const payload = {
-        registration: form.registration.trim(),
-        name: form.name.trim(),
-        class_name: form.class_name.trim(),
-        active: form.active === 'true',
-      }
-      if (editingId) {
-        await safeService.updateStudent(editingId, payload)
-      } else {
-        await safeService.createStudent(payload)
-      }
-      setDrawerOpen(false)
-      crudToast.notifySaved(wasEdit)
-      load()
-    } catch (e: unknown) {
-      crudToast.notifyError(e)
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const handleDelete = async (student: SafeStudent) => {
-    if (!(await confirmDelete(`o aluno "${student.name}"`))) return
-    try {
-      await safeService.deleteStudent(student.id)
-      crudToast.notifyDeleted()
-      load()
-    } catch (e: unknown) {
-      crudToast.notifyError(e)
-    }
-  }
+  }, [page, search, statusFilter])
 
   return (
     <div className="w-full min-w-0">
@@ -118,21 +52,37 @@ export function SafeStudentsPage() {
         title={t('safe.students.title')}
         subtitle={t('safe.students.subtitle')}
         actions={
-          <>
-            <input
-              type="search"
-              placeholder={t('safe.students.searchPlaceholder')}
-              value={search}
+          <OutlineButton onClick={() => navigate('/connect/alunos')}>
+            <ExternalLink className="h-4 w-4" /> {t('safe.students.manageInConnect')}
+          </OutlineButton>
+        }
+      />
+
+      <p className="mb-4 text-sm text-hub-text-muted">{t('safe.students.connectHint')}</p>
+
+      <SafePageToolbar
+        search={search}
+        onSearchChange={(value) => {
+          setPage(1)
+          setSearch(value)
+        }}
+        searchLabel={t('connect.table.name')}
+        searchPlaceholder={t('safe.students.searchPlaceholder')}
+        filters={
+          <FormField label={t('safe.table.status')}>
+            <select
+              className={selectClass}
+              value={statusFilter}
               onChange={(e) => {
                 setPage(1)
-                setSearch(e.target.value)
+                setStatusFilter(e.target.value)
               }}
-              className={`${inputClass} max-w-xs`}
-            />
-            <PrimaryButton onClick={openCreate}>
-              <Plus className="h-4 w-4" /> {t('safe.students.newStudent')}
-            </PrimaryButton>
-          </>
+            >
+              <option value="">{t('connect.students.filters.allStatuses')}</option>
+              <option value="active">{t('connect.status.active')}</option>
+              <option value="inactive">{t('connect.status.inactive')}</option>
+            </select>
+          </FormField>
         }
       />
 
@@ -150,7 +100,6 @@ export function SafeStudentsPage() {
                   <th className="px-4 py-3 text-left sm:px-6">{t('safe.students.table.name')}</th>
                   <th className="px-4 py-3 text-left sm:px-6">{t('safe.students.table.class')}</th>
                   <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.status')}</th>
-                  <th className="px-4 py-3 text-right sm:px-6">{t('connect.common.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,16 +111,6 @@ export function SafeStudentsPage() {
                     <td className="px-4 py-3 sm:px-6">
                       <StatusBadge status={student.active ? 'active' : 'inactive'} />
                     </td>
-                    <td className="px-4 py-3 sm:px-6">
-                      <div className="flex justify-end gap-2">
-                        <OutlineButton onClick={() => openEdit(student)}>
-                          <Pencil className="h-4 w-4" />
-                        </OutlineButton>
-                        <OutlineButton onClick={() => handleDelete(student)}>
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </OutlineButton>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -180,54 +119,6 @@ export function SafeStudentsPage() {
         )}
         <ConnectPagination meta={meta} onPageChange={setPage} />
       </ConnectCard>
-
-      <ConnectDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        title={editingId ? t('safe.students.editStudent') : t('safe.students.newStudent')}
-        footer={
-          <>
-            <OutlineButton onClick={() => setDrawerOpen(false)}>{t('common.cancel')}</OutlineButton>
-            <PrimaryButton onClick={handleSave} disabled={saving}>
-              {saving ? t('connect.common.saving') : t('common.save')}
-            </PrimaryButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <FormField label={t('safe.students.form.registration')} required>
-            <input
-              className={inputClass}
-              value={form.registration}
-              onChange={(e) => setForm((f) => ({ ...f, registration: e.target.value }))}
-            />
-          </FormField>
-          <FormField label={t('safe.students.form.name')} required>
-            <input
-              className={inputClass}
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            />
-          </FormField>
-          <FormField label={t('safe.students.form.class')} required>
-            <input
-              className={inputClass}
-              value={form.class_name}
-              onChange={(e) => setForm((f) => ({ ...f, class_name: e.target.value }))}
-            />
-          </FormField>
-          <FormField label={t('safe.table.status')}>
-            <select
-              className={selectClass}
-              value={form.active}
-              onChange={(e) => setForm((f) => ({ ...f, active: e.target.value }))}
-            >
-              <option value="true">{t('connect.status.active')}</option>
-              <option value="false">{t('connect.status.inactive')}</option>
-            </select>
-          </FormField>
-        </div>
-      </ConnectDrawer>
     </div>
   )
 }

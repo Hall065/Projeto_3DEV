@@ -165,13 +165,15 @@ class DashboardController extends Controller
         $present = (int) ($totals['present'] ?? 0) + (int) ($totals['late'] ?? 0);
         $justified = (int) ($totals['justified'] ?? 0);
         $unjustified = (int) ($totals['absent'] ?? 0);
-        $all = max($present + $justified + $unjustified, 1);
+        $recordTotal = $present + $justified + $unjustified;
+        $all = max($recordTotal, 1);
 
         return [
             'present' => round(($present / $all) * 100, 1),
             'justified' => round(($justified / $all) * 100, 1),
             'unjustified' => round(($unjustified / $all) * 100, 1),
             'rate' => round(($present / $all) * 100, 1),
+            'total_records' => $recordTotal,
         ];
     }
 

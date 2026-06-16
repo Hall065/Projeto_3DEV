@@ -9,7 +9,6 @@ use App\Models\Connect\ConnectClass;
 use App\Services\Connect\ConnectEnrollmentService;
 use App\Services\Connect\ConnectScheduleService;
 use App\Support\ConnectForm;
-use App\Support\ConnectWeeklyPatternDefaults;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -92,7 +91,7 @@ class ClassController extends Controller
             'status' => $validated['status'] ?? 'active',
         ]);
 
-        $this->schedule->validateClassAssignment($class->fresh(['course']));
+        $this->schedule->validateClassAssignment($class->fresh(['course']), $class->id);
 
         $this->persistClassSchedule($class, $weeklyPatterns, $request, $generateSchedule);
 
@@ -174,26 +173,16 @@ class ClassController extends Controller
         Request $request,
         bool $generateSchedule,
     ): void {
-        if (! is_array($weeklyPatterns)) {
-            return;
+        if (is_array($weeklyPatterns) && $weeklyPatterns !== []) {
+            $this->schedule->syncWeeklyPatterns($class, $weeklyPatterns);
         }
-
-        if ($weeklyPatterns === [] && $class->start_date && $class->end_date) {
-            $weeklyPatterns = ConnectWeeklyPatternDefaults::forShift((string) ($class->shift ?? 'noite'));
-        }
-
-        if ($weeklyPatterns === []) {
-            return;
-        }
-
-        $this->schedule->syncWeeklyPatterns($class, $weeklyPatterns);
 
         $shouldGenerate = $request->has('generate_schedule')
             ? $generateSchedule
             : ($class->start_date && $class->end_date);
 
         if ($shouldGenerate) {
-            $this->schedule->generateFromPatterns($class->fresh(['course', 'weeklyPatterns']));
+            $this->schedule->ensureClassCalendar($class->fresh(['course', 'weeklyPatterns']));
         }
     }
 

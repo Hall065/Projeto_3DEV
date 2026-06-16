@@ -99,17 +99,49 @@ function layoutDonutCallouts(
   arcList: { a0: number; a1: number }[],
   donut: typeof DONUT,
 ) {
-  const { cx, cy, rxo, ryo } = donut
+  const { cx, cy, rxo, ryo, viewW, viewH } = donut
   const count = arcList.length
+  const smallThreshold = Math.PI / 16
 
-  return arcList.map((seg, i) => {
+  const smallIndices = arcList
+    .map((seg, i) => ((seg.a1 - seg.a0) < smallThreshold ? i : -1))
+    .filter((i) => i >= 0)
+
+  const raw = arcList.map((seg, i) => {
     const mid = (seg.a0 + seg.a1) / 2
     const span = seg.a1 - seg.a0
-    const radial = 22 + Math.min(18, span * 36) + (count > 4 ? (i % 3) * 4 : 0)
-    const horizontal = Math.max(40, Math.min(76, 36 + span * 90))
-    const labelYOffset = count > 3 ? Math.sin(mid) * (i % 2 === 0 ? -10 : 10) : 0
-    return segmentCallout(cx, cy, rxo, ryo, mid, { radial, horizontal, labelYOffset })
+    const isSmall = span < smallThreshold
+    const smallOrder = smallIndices.indexOf(i)
+
+    const radial = isSmall
+      ? 30 + smallOrder * 10
+      : 22 + Math.min(18, span * 36) + (count > 4 ? (i % 3) * 4 : 0)
+    const horizontal = isSmall
+      ? 58 + smallOrder * 14
+      : Math.max(40, Math.min(76, 36 + span * 90))
+
+    let labelYOffset = 0
+    if (isSmall && smallIndices.length > 1) {
+      labelYOffset = (smallOrder - (smallIndices.length - 1) / 2) * 26
+    } else if (count > 3) {
+      labelYOffset = Math.sin(mid) * (i % 2 === 0 ? -10 : 10)
+    }
+
+    const callout = segmentCallout(cx, cy, rxo, ryo, mid, { radial, horizontal, labelYOffset })
+
+    // Fatias pequenas vizinhas: alterna lado esquerdo/direito para abrir espaço.
+    if (isSmall && smallOrder % 2 === 1) {
+      const dx = callout.label.x - cx
+      if (Math.abs(dx) > 1) {
+        callout.label.x = cx - dx
+        callout.elbow.x = cx - (callout.elbow.x - cx)
+      }
+    }
+
+    return callout
   })
+
+  return resolveCalloutOverlaps(raw, viewW, viewH)
 }
 
 /** Cards dos rótulos no SVG — largura suficiente para abreviações de status */
@@ -121,6 +153,83 @@ function calloutLabelBox(labelX: number, labelY: number, viewW: number) {
   boxX = Math.max(10, Math.min(viewW - w - 10, boxX))
   const boxY = labelY - h / 2
   return { boxX, boxY, boxW: w, boxH: h, textX: boxX + w / 2 }
+}
+
+type CalloutLayout = ReturnType<typeof segmentCallout>
+
+function boxesOverlap(
+  a: { boxX: number; boxY: number; boxW: number; boxH: number },
+  b: { boxX: number; boxY: number; boxW: number; boxH: number },
+  gap: number,
+): boolean {
+  return (
+    a.boxX < b.boxX + b.boxW + gap &&
+    a.boxX + a.boxW + gap > b.boxX &&
+    a.boxY < b.boxY + b.boxH + gap &&
+    a.boxY + a.boxH + gap > b.boxY
+  )
+}
+
+/** Evita cards de rótulo sobrepostos quando fatias pequenas ficam próximas no donut. */
+function resolveCalloutOverlaps(
+  callouts: CalloutLayout[],
+  viewW: number,
+  viewH: number,
+  gap = 6,
+): CalloutLayout[] {
+  if (callouts.length <= 1) return callouts
+
+  const adjusted = callouts.map((c) => ({
+    ...c,
+    anchor: { ...c.anchor },
+    elbow: { ...c.elbow },
+    label: { ...c.label },
+  }))
+
+  const rebox = () => adjusted.map((c) => calloutLabelBox(c.label.x, c.label.y, viewW))
+
+  const clampToView = (boxes: ReturnType<typeof calloutLabelBox>[]) => {
+    const pad = 4
+    for (let i = 0; i < adjusted.length; i++) {
+      const b = boxes[i]
+      if (b.boxY < pad) {
+        adjusted[i].label.y += pad - b.boxY
+      } else if (b.boxY + b.boxH > viewH - pad) {
+        adjusted[i].label.y -= b.boxY + b.boxH - (viewH - pad)
+      }
+    }
+  }
+
+  let boxes = rebox()
+
+  for (let pass = 0; pass < 16; pass++) {
+    let changed = false
+    for (let i = 0; i < adjusted.length; i++) {
+      for (let j = i + 1; j < adjusted.length; j++) {
+        if (!boxesOverlap(boxes[i], boxes[j], gap)) continue
+
+        const centerI = boxes[i].boxY + boxes[i].boxH / 2
+        const centerJ = boxes[j].boxY + boxes[j].boxH / 2
+        const push = boxes[i].boxH + gap
+
+        if (centerJ >= centerI) {
+          adjusted[j].label.y += push
+        } else {
+          adjusted[i].label.y -= push
+        }
+
+        changed = true
+      }
+    }
+
+    boxes = rebox()
+    clampToView(boxes)
+    boxes = rebox()
+
+    if (!changed) break
+  }
+
+  return adjusted
 }
 
 /** Ponto na borda do card voltado para o gráfico (a linha não fica sob o retângulo) */
@@ -479,18 +588,21 @@ export function AttendanceDonutChart({
   justified,
   unjustified,
   rate,
+  totalRecords,
   loading,
 }: {
   present: number
   justified: number
   unjustified: number
   rate: number
+  totalRecords?: number
   loading?: boolean
 }) {
   const { t } = useTranslation()
   const total = present + justified + unjustified
+  const recordCount = Math.round(totalRecords ?? total)
 
-  if (!loading && rate === 0 && total <= 1) {
+  if (!loading && rate === 0 && recordCount <= 0) {
     return <p className="py-10 text-center text-sm text-hub-text-muted">{t('connectComponents.charts.noAttendanceRecords')}</p>
   }
 
@@ -530,7 +642,7 @@ export function AttendanceDonutChart({
       segments={segments}
       centerValue={`${rate.toFixed(1)}%`}
       centerLabel={t('connectComponents.charts.generalPresence')}
-      centerSubtitle={t('connectComponents.charts.recordsInPeriod', { count: tTotal })}
+      centerSubtitle={t('connectComponents.charts.recordsInPeriod', { count: recordCount })}
       loading={loading}
       loadingLabel={t('connectComponents.charts.calculatingAttendance')}
       ariaLabel={t('connectComponents.charts.attendanceDistributionAria', { rate })}
@@ -718,7 +830,7 @@ export function QuickReportsSection({
   courses,
 }: {
   loading: boolean
-  attendance: { present: number; justified: number; unjustified: number; rate: number }
+  attendance: { present: number; justified: number; unjustified: number; rate: number; total_records?: number }
   teachers: { name: string; sessions: number }[]
   courses: { name: string; count: number }[]
 }) {
@@ -733,7 +845,7 @@ export function QuickReportsSection({
           title={t('connectComponents.charts.attendanceTitle')}
           subtitle={t('connectComponents.charts.attendanceSubtitle')}
         >
-          <AttendanceDonutChart {...attendance} loading={loading} />
+          <AttendanceDonutChart {...attendance} totalRecords={attendance.total_records} loading={loading} />
         </ChartPanel>
         <ChartPanel
           title={t('connectComponents.charts.teacherSessionsTitle')}

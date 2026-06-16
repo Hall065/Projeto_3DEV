@@ -4,7 +4,10 @@ namespace App\Services\Connect;
 
 use App\Models\Connect\ConnectClass;
 use App\Models\Connect\ConnectClassWeeklyPattern;
+use App\Models\Connect\ConnectCourse;
 use App\Models\Connect\ConnectLessonSchedule;
+use App\Support\ConnectSemesterDefaults;
+use App\Support\ConnectWeeklyPatternDefaults;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -45,6 +48,91 @@ class ConnectScheduleService
         }
 
         return $created;
+    }
+
+    /**
+     * @return array{created: int, skipped: int, errors: array<int, string>}
+     */
+    public function ensureClassCalendar(ConnectClass $class, bool $replaceFuture = false): array
+    {
+        $class->loadMissing(['course', 'weeklyPatterns']);
+
+        if ($class->weeklyPatterns->isEmpty()) {
+            $this->syncWeeklyPatterns(
+                $class,
+                ConnectWeeklyPatternDefaults::forShift((string) ($class->shift ?? 'noite')),
+            );
+            $class->load('weeklyPatterns');
+        }
+
+        if (
+            ! $replaceFuture
+            && $class->lessonSchedules()->where('status', '!=', 'cancelled')->exists()
+        ) {
+            return ['created' => 0, 'skipped' => 0, 'errors' => []];
+        }
+
+        $this->assertClassHasSchedulingPeriod($class);
+
+        return $this->generateFromPatterns($class->fresh(['course', 'weeklyPatterns']), $replaceFuture);
+    }
+
+    /**
+     * @return array{class: ConnectClass, generation: array{created: int, skipped: int, errors: array<int, string>}}
+     */
+    public function provisionDefaultSemesterCalendar(ConnectCourse $course): array
+    {
+        $course = ConnectSemesterDefaults::ensureCoursePeriod($course);
+        $semester = ConnectSemesterDefaults::currentLabel();
+
+        $class = ConnectClass::query()
+            ->where('connect_course_id', $course->id)
+            ->where('status', 'active')
+            ->where('semester', $semester)
+            ->first();
+
+        if (! $class) {
+            $class = ConnectClass::query()->create([
+                'connect_course_id' => $course->id,
+                'code' => $this->uniqueClassCode($course, $semester),
+                'name' => "{$course->name} — {$semester}",
+                'shift' => 'noite',
+                'semester' => $semester,
+                'start_date' => $course->start_date,
+                'end_date' => $course->end_date,
+                'capacity' => 30,
+                'status' => 'active',
+            ]);
+        } elseif (! $class->start_date || ! $class->end_date) {
+            $class->update([
+                'start_date' => $course->start_date,
+                'end_date' => $course->end_date,
+            ]);
+            $class->refresh();
+        }
+
+        $this->validateClassAssignment($class, $class->id);
+
+        $generation = $this->ensureClassCalendar($class);
+
+        return [
+            'class' => $class->fresh(['course']),
+            'generation' => $generation,
+        ];
+    }
+
+    private function uniqueClassCode(ConnectCourse $course, string $semester): string
+    {
+        $base = strtoupper(preg_replace('/[^A-Z0-9]/', '-', $course->code) ?? '');
+        $candidate = "{$base}-".str_replace('.', '', $semester);
+        $suffix = 1;
+
+        while (ConnectClass::query()->where('code', $candidate)->exists()) {
+            $candidate = "{$base}-".str_replace('.', '', $semester)."-{$suffix}";
+            $suffix++;
+        }
+
+        return $candidate;
     }
 
     /**

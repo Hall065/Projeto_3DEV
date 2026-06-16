@@ -530,7 +530,8 @@
         "studentName": "Student name",
         "company": "Company",
         "start": "Start",
-        "monthlyValue": "Monthly amount"
+        "monthlyValue": "Monthly amount",
+        "copy": "Copy"
       },
       "drawer": {
         "edit": "Edit contract",
@@ -546,7 +547,24 @@
         "monthlyValue": "Monthly amount",
         "emails": "Emails"
       },
-      "attachmentsFuture": "Document attachments will be available in a future version."
+      "attachments": {
+        "title": "Contract copy",
+        "hint": "Attach the signed PDF or image for this student. You can also generate a default copy with data filled in automatically.",
+        "add": "Attach file",
+        "generate": "Generate default copy",
+        "generateOnSave": "Generate default contract copy on save",
+        "empty": "No attachments on this contract.",
+        "saveFirst": "Save the contract to attach or generate a copy.",
+        "count": "{{count}} of {{max}} attachments",
+        "generated": "System generated",
+        "remove": "Remove attachment",
+        "removeConfirm": "Remove this attachment from the contract?",
+        "uploadSuccess": "Attachment uploaded successfully.",
+        "uploadError": "Could not upload the attachment.",
+        "generateSuccess": "Default copy generated and attached.",
+        "generateError": "Could not generate the contract copy.",
+        "removeError": "Could not remove the attachment."
+      }
     },
     "attendance": {
       "title": "Attendance",
@@ -655,6 +673,7 @@
       },
       "loading": "Loading calendar...",
       "loadError": "Could not load calendar.",
+      "emptyRange": "No lessons in this period. Generate the class schedule or navigate to another week/month.",
       "moreLessons": "+{{count}} lessons",
       "nav": {
         "prevMonth": "Previous month",

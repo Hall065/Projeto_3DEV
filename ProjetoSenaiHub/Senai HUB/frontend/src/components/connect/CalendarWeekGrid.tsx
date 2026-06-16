@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ConnectLessonSchedule } from '../../types/connect'
+import { formatLocalDate } from '../../utils/localDate'
 
 const HOUR_HEIGHT = 56
 const DAY_START_HOUR = 7
@@ -33,7 +34,7 @@ function parseTimeMinutes(time: string): number {
 }
 
 function toIsoDate(date: Date): string {
-  return date.toISOString().slice(0, 10)
+  return formatLocalDate(date)
 }
 
 export function getWeekDays(anchor: Date, todayIso: string): WeekDay[] {

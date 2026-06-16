@@ -166,6 +166,18 @@ class CrossModuleStaffLinkSeeder extends Seeder
                 ->where('email', $user->email)
                 ->whereNull('user_id')
                 ->update(['user_id' => $user->id, 'hub_person_id' => $person->id]);
+
+            if ($user->role === HubRole::SAFE_PROFESSOR) {
+                ConnectTeacher::query()->updateOrCreate(
+                    ['email' => $user->email],
+                    [
+                        'hub_person_id' => $person->id,
+                        'user_id' => $user->id,
+                        'full_name' => $user->name,
+                        'status' => 'active',
+                    ],
+                );
+            }
         }
 
         foreach (ConnectTeacher::query()->whereNotNull('hub_person_id')->cursor() as $teacher) {
@@ -180,7 +192,13 @@ class CrossModuleStaffLinkSeeder extends Seeder
 
     private function linkSafeStudentsToConnect(): void
     {
-        foreach (SafeStudent::query()->cursor() as $safeStudent) {
+        $bridge = app(\App\Services\Safe\SafeConnectStudentBridge::class);
+
+        foreach (ConnectStudent::query()->with('connectClass')->cursor() as $connectStudent) {
+            $bridge->ensureSafeStudentRecord($connectStudent);
+        }
+
+        foreach (SafeStudent::query()->whereNull('connect_student_id')->cursor() as $safeStudent) {
             $connectStudent = ConnectStudent::query()
                 ->with('connectClass')
                 ->where('registration_number', $safeStudent->registration)
@@ -190,11 +208,7 @@ class CrossModuleStaffLinkSeeder extends Seeder
                 continue;
             }
 
-            $safeStudent->update([
-                'connect_student_id' => $connectStudent->id,
-                'name' => $connectStudent->full_name,
-                'class_name' => $connectStudent->connectClass?->code ?? $safeStudent->class_name,
-            ]);
+            $bridge->ensureSafeStudentRecord($connectStudent);
         }
     }
 

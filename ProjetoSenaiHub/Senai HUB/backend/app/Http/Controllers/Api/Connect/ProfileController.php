@@ -212,7 +212,7 @@ class ProfileController extends Controller
 
     public function contract(ConnectContract $contract): JsonResponse
     {
-        $contract->load(['student.connectClass.course', 'student.hubPerson']);
+        $contract->load(['student.connectClass.course', 'student.hubPerson', 'attachments']);
 
         return response()->json([
             'data' => [

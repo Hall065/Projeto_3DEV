@@ -1,34 +1,50 @@
 ---
-description: Identidade visual SENAI HUB — logo black, tokens e assets
+description: Identidade visual SENAI HUB — logos, tokens e assets
 alwaysApply: true
 ---
 
 # SENAI HUB — Identidade visual
 
-## - Desenvolvimento padrão
+## Padrão de arquivos de logo (todos os apps)
 
-- **Pesquisar** api's q possar facilitar a implementação de alguma funcionalidade visual e/ou funcional na aplicação.
+Cada app usa o mesmo esquema de nomes em `frontend/src/assets/brand/`:
 
-## Logo
+| Arquivo | Uso |
+|---------|-----|
+| `{slug}-logo-expanded.png` | Sidebar expandida, header, landing |
+| `{slug}-logo-icon.png` | Sidebar recolhida (fundo escuro) |
+| `{slug}-logo-mark-light.png` | Chips/cards em fundo claro |
+| `{slug}-logo-mark-dark.png` | Chips/cards em fundo escuro |
 
-- **Sempre** usar a logo **black/dark** (`Logo Senai Hub Dark.png`).
-- **Nunca** usar a versão white em telas React.
-- Import padrao no frontend:
+Slugs: `hub`, `connect`, `grid`, `safe`.
+
+## Consumo no código
+
+**Sempre** usar `utils/appBrandAssets.ts` como fonte única:
 
 ```typescript
-import { logoSenaiHub } from '@/assets/brand'
-// ou caminho relativo: '../../assets/brand'
+import { HUB_BRAND_ASSETS, getSidebarBrandAssets, getBrandMarkSrc } from '@/utils/appBrandAssets'
+
+// Hub (landing, auth, sidebar)
+<img src={HUB_BRAND_ASSETS.expanded} alt={HUB_BRAND_ASSETS.name} />
+
+// Módulos (Connect, Grid, SAFE)
+const assets = getSidebarBrandAssets('safe')
+<img src={assets.expanded} alt={assets.name} />
+
+// Marks em cards (respeita tema claro/escuro)
+const mark = getBrandMarkSrc('safe', wallpaperTone)
 ```
 
-- Arquivo fonte: `frontend/src/assets/auth/logo-senai-hub.png`
-- Export central: `frontend/src/assets/brand/index.ts`
+Export central de imagens: `frontend/src/assets/brand/index.ts`
+
+Regenerar ícones SAFE a partir do expanded: `node frontend/scripts/sync-brand-assets.mjs`
 
 ## Cores principais
 
 - Navy sidebar: `#021A3A` (`bg-hub-navy`)
 - Vermelho SENAI: `#e30613` (`bg-hub-red`)
 
-## Assets do usuario
+## Assets do usuário
 
-- Arquivos enviados pelo usuario ficam em `localArchives/` — mover para a estrutura correta ao implementar telas.
-
+- Arquivos enviados pelo usuário ficam em `localArchives/` — mover para a estrutura correta ao implementar telas.

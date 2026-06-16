@@ -1,4 +1,5 @@
 import api from './api'
+import { openHtmlInNewTab } from '../utils/downloadFile'
 import type { BuiltReport, ConnectFilterOptions, GridFilterOptions, ReportBuildConfig, ReportModule, ReportSchema } from '../types/reports'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
@@ -122,30 +123,7 @@ export const reportService = {
     }
 
     const html = await response.text()
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer')
-    if (!printWindow) {
-      throw new Error('Permita pop-ups para abrir o relatorio em PDF.')
-    }
-
-    printWindow.document.open()
-    printWindow.document.write(html)
-    printWindow.document.close()
-    printWindow.focus()
-
-    if (options?.print !== false && !html.includes('data-auto-print="1"')) {
-      const triggerPrint = () => {
-        window.setTimeout(() => {
-          printWindow.focus()
-          printWindow.print()
-        }, 450)
-      }
-
-      if (printWindow.document.readyState === 'complete') {
-        triggerPrint()
-      } else {
-        printWindow.addEventListener('load', triggerPrint, { once: true })
-      }
-    }
+    openHtmlInNewTab(html)
   },
 
   async export(module: ReportModule, config: ReportBuildConfig, format: ReportExportFormat) {

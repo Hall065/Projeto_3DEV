@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { logoSenaiHub } from '../../assets/brand'
+import { HUB_BRAND_ASSETS } from '../../utils/appBrandAssets'
+import { SupportChatTrigger } from '../support/SupportChatTrigger'
+
+type FooterLink = { label: string; href?: string; openChat?: boolean }
 
 function SocialIcon({ name }: { name: 'facebook' | 'instagram' | 'linkedin' | 'youtube' }) {
   const common = 'h-4 w-4 fill-current'
@@ -39,16 +42,22 @@ const social = [
   { icon: 'youtube' as const, label: 'YouTube', href: 'https://www.youtube.com/@senai' },
 ]
 
-function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+function FooterColumn({ title, links }: { title: string; links: FooterLink[] }) {
   return (
     <div>
       <h3 className="text-sm font-semibold text-white">{title}</h3>
       <ul className="mt-4 space-y-2.5">
         {links.map((link) => (
           <li key={link.label}>
-            <a href={link.href} className="text-sm text-white/70 transition-colors hover:text-white">
-              {link.label}
-            </a>
+            {link.openChat ? (
+              <SupportChatTrigger className="text-sm text-white/70 transition-colors hover:text-white">
+                {link.label}
+              </SupportChatTrigger>
+            ) : (
+              <a href={link.href} className="text-sm text-white/70 transition-colors hover:text-white">
+                {link.label}
+              </a>
+            )}
           </li>
         ))}
       </ul>
@@ -66,10 +75,10 @@ export function LandingFooter() {
     { label: t('landing.navAudience'), href: '#para-quem' },
   ]
 
-  const support = [
-    { label: t('landing.footer.helpCenter'), href: '#suporte' },
-    { label: t('landing.footer.contactUs'), href: '#suporte' },
-    { label: t('landing.footer.documentation'), href: '#suporte' },
+  const support: FooterLink[] = [
+    { label: t('landing.footer.helpCenter'), openChat: true },
+    { label: t('landing.footer.contactUs'), openChat: true },
+    { label: t('landing.footer.documentation'), openChat: true },
     { label: t('landing.footer.systemStatus'), href: '#suporte' },
   ]
 
@@ -84,7 +93,7 @@ export function LandingFooter() {
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-1">
-            <img src={logoSenaiHub} alt="SENAI HUB" className="h-12 w-auto sm:h-14" />
+            <img src={HUB_BRAND_ASSETS.expanded} alt={HUB_BRAND_ASSETS.name} className="h-12 w-auto sm:h-14" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">{t('landing.footer.tagline')}</p>
             <div className="mt-6 flex gap-3">
               {social.map(({ icon, label, href }) => (

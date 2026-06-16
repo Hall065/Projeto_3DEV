@@ -19,6 +19,7 @@ import { usePermissions } from '../../hooks/usePermissions'
 import { useConfirmAction } from '../../hooks/useConfirmAction'
 import { useCrudToast } from '../../hooks/useCrudToast'
 import { connectService } from '../../services/connectService'
+import { formatLocalDate } from '../../utils/localDate'
 import { parseApiError } from '../../utils/parseApiError'
 import type { ConnectClass, ConnectLessonSchedule, ConnectTeacher } from '../../types/connect'
 
@@ -58,7 +59,7 @@ export function CalendarPage() {
   const canAttendance = can('connect.attendance.manage') || can('connect.attendance.view_own')
 
   const today = new Date()
-  const todayIso = today.toISOString().slice(0, 10)
+  const todayIso = formatLocalDate(today)
 
   const [viewMode, setViewMode] = useState<ViewMode>('week')
   const [weekAnchor, setWeekAnchor] = useState(new Date())
@@ -356,6 +357,8 @@ export function CalendarPage() {
 
         {loading ? (
           <ConnectLoadingSpinner label={t('connect.calendar.loading')} />
+        ) : lessons.length === 0 ? (
+          <p className="py-12 text-center text-sm text-hub-text-muted">{t('connect.calendar.emptyRange')}</p>
         ) : viewMode === 'week' ? (
           <CalendarWeekGrid weekDays={weekDays} lessons={lessons} onSelectLesson={setDetailLesson} />
         ) : (

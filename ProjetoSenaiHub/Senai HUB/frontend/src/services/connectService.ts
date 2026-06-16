@@ -4,6 +4,7 @@ import type {
   ConnectAttendanceSession,
   ConnectClass,
   ConnectContract,
+  ConnectContractAttachment,
   ConnectCourse,
   ConnectLessonSchedule,
   ConnectSchedulePlan,
@@ -269,6 +270,28 @@ export const connectService = {
     await api.delete(`/connect/contracts/${id}`)
   },
 
+  async uploadContractAttachment(contractId: number, file: File): Promise<ConnectContractAttachment> {
+    const form = new FormData()
+    form.append('file', file)
+    const { data } = await api.post<{ data: ConnectContractAttachment }>(
+      `/connect/contracts/${contractId}/attachments`,
+      form,
+    )
+    return data.data
+  },
+
+  async deleteContractAttachment(contractId: number, attachmentId: number): Promise<void> {
+    await api.delete(`/connect/contracts/${contractId}/attachments/${attachmentId}`)
+  },
+
+  async generateContractDocument(contractId: number, replaceExisting = true): Promise<ConnectContractAttachment> {
+    const { data } = await api.post<{ data: ConnectContractAttachment }>(
+      `/connect/contracts/${contractId}/generate-document`,
+      { replace_existing: replaceExisting },
+    )
+    return data.data
+  },
+
   async getSalaries(params?: Record<string, string | number>): Promise<SalariesListResponse> {
     const { data } = await api.get<SalariesListResponse>('/connect/salaries', { params })
     return data
@@ -345,6 +368,31 @@ export const connectService = {
 
   async removeFromCourseRoster(courseId: number, personId: number, role: CourseRosterRole): Promise<void> {
     await api.delete(`/connect/courses/${courseId}/roster/${personId}`, { params: { role } })
+  },
+
+  async enrollCourseRosterFromClass(
+    courseId: number,
+    connectClassId: number,
+  ): Promise<{
+    connect_class_id: number
+    class_name: string
+    class_code: string
+    enrolled: number
+    skipped: number
+    total: number
+  }> {
+    const { data } = await api.post<{
+      message: string
+      data: {
+        connect_class_id: number
+        class_name: string
+        class_code: string
+        enrolled: number
+        skipped: number
+        total: number
+      }
+    }>(`/connect/courses/${courseId}/roster/from-class`, { connect_class_id: connectClassId })
+    return data.data
   },
 
   async getClassRoster(classId: number): Promise<HubPerson[]> {

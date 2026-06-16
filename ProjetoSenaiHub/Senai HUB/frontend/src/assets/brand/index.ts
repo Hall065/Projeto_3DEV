@@ -6,11 +6,14 @@
  *   {slug}-logo-mark-dark.png  → chips/cards em fundo escuro
  *
  * Consumo via `utils/appBrandAssets.ts` (fonte única).
+ * Regenerar ícones SAFE: `node scripts/sync-brand-assets.mjs`
  */
 
 /** SENAI HUB */
 export { default as hubLogoExpanded } from './hub-logo-expanded.png'
 export { default as hubLogoIcon } from './hub-logo-icon.png'
+export { default as hubLogoMarkLight } from './hub-logo-mark-light.png'
+export { default as hubLogoMarkDark } from './hub-logo-mark-dark.png'
 
 /** SENAI Connect */
 export { default as connectLogoExpanded } from './connect-logo-expanded.png'
@@ -30,6 +33,5 @@ export { default as safeLogoIcon } from './safe-logo-icon.png'
 export { default as safeLogoMarkLight } from './safe-logo-mark-light.png'
 export { default as safeLogoMarkDark } from './safe-logo-mark-dark.png'
 
-/** Alias legado — landing, auth e telas claras do HUB. */
+/** @deprecated Prefer hubLogoExpanded */
 export { default as logoSenaiHub } from './hub-logo-expanded.png'
-export { default as logoSenaiHubBlack } from './hub-logo-expanded.png'

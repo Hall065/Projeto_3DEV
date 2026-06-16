@@ -181,6 +181,18 @@
     "closeSupport": "Close support",
     "chatSupport": "Open support chat"
   },
+  "supportChat": {
+    "title": "SENAI Support",
+    "subtitle": "Online now",
+    "welcome": "Hello! I'm the SENAI Hub support assistant. How can I help you today?",
+    "placeholder": "Type your message...",
+    "send": "Send message",
+    "minimize": "Minimize chat",
+    "close": "Close chat",
+    "open": "Open support chat",
+    "autoReply": "Thanks for your message! Our team will reply shortly. AI-powered support is coming soon.",
+    "emailFallback": "Or email us at"
+  },
   "themesPage": {
     "title": "Themes",
     "subtitle": "Customize the wallpaper and visual appearance of the system."
@@ -735,7 +747,18 @@
       "removePerson": "Remove {{name}}",
       "loadError": "Could not load enrollments.",
       "linkError": "Could not link the person.",
-      "unlinkError": "Could not remove the link."
+      "unlinkError": "Could not remove the link.",
+      "addClassTitle": "Add class",
+      "addClassHint": "Links the class to the course and imports all students enrolled in it.",
+      "classField": "Class",
+      "noClassesAvailable": "No classes available",
+      "selectClassPlaceholder": "Select a class...",
+      "classStudentsCount": " · {{count}} students",
+      "classAlreadyLinked": " · already in this course",
+      "importClass": "Import students",
+      "importClassSuccess": "Class {{className}}: {{enrolled}} of {{total}} student(s) enrolled in the course.",
+      "importClassError": "Could not import students from the class.",
+      "addIndividualTitle": "Add individual student"
     },
     "charts": {
       "quickReports": "Quick reports",

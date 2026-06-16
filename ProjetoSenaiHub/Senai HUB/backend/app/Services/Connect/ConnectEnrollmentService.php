@@ -6,7 +6,9 @@ use App\Models\Connect\ConnectClass;
 use App\Models\Connect\ConnectCourse;
 use App\Models\Connect\ConnectStudent;
 use App\Models\HubPerson;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ConnectEnrollmentService
 {
@@ -96,5 +98,81 @@ class ConnectEnrollmentService
         }
 
         $this->attachPersonToCourse($person, $class->course, 'teacher');
+    }
+
+    /**
+     * Vincula a turma ao curso (se ainda não estiver) e matricula os alunos da turma no curso.
+     *
+     * @return array{connect_class_id: int, class_name: string, class_code: string, enrolled: int, skipped: int, total: int}
+     */
+    public function enrollClassInCourse(ConnectClass $class, ConnectCourse $course): array
+    {
+        return DB::transaction(function () use ($class, $course) {
+            if ($class->connect_course_id !== null && (int) $class->connect_course_id !== (int) $course->id) {
+                throw ValidationException::withMessages([
+                    'connect_class_id' => 'Esta turma já está vinculada a outro curso.',
+                ]);
+            }
+
+            if ($class->connect_course_id === null) {
+                $class->update(['connect_course_id' => $course->id]);
+                $class->refresh();
+            }
+
+            $class->loadMissing('course');
+            $this->syncTeacherCourseFromClass($class);
+
+            $people = $this->resolveClassStudents($class);
+            $enrolled = 0;
+            $skipped = 0;
+
+            foreach ($people as $person) {
+                if (! $person->isStudent()) {
+                    $skipped++;
+
+                    continue;
+                }
+
+                $alreadyEnrolled = $course->people()
+                    ->where('hub_people.id', $person->id)
+                    ->wherePivot('role', 'student')
+                    ->exists();
+
+                $this->attachPersonToCourse($person, $course, 'student');
+
+                if ($alreadyEnrolled) {
+                    $skipped++;
+                } else {
+                    $enrolled++;
+                }
+            }
+
+            return [
+                'connect_class_id' => $class->id,
+                'class_name' => $class->name,
+                'class_code' => $class->code,
+                'enrolled' => $enrolled,
+                'skipped' => $skipped,
+                'total' => $people->count(),
+            ];
+        });
+    }
+
+    /** @return Collection<int, HubPerson> */
+    private function resolveClassStudents(ConnectClass $class): Collection
+    {
+        $class->load(['enrolledPeople', 'students.hubPerson']);
+
+        $fromPivot = $class->enrolledPeople
+            ->filter(fn (HubPerson $person) => $person->isStudent());
+
+        $fromLegacy = $class->students
+            ->map(fn (ConnectStudent $student) => $student->hubPerson)
+            ->filter(fn ($person) => $person instanceof HubPerson);
+
+        return $fromPivot
+            ->concat($fromLegacy)
+            ->unique('id')
+            ->values();
     }
 }

@@ -1,6 +1,7 @@
-import { Download, Eye, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Download, Eye, FileText, Filter, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ConnectContractAttachmentsPanel } from '../../components/connect/ConnectContractAttachmentsPanel'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
@@ -19,7 +20,7 @@ import {
   StatusBadge,
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
-import type { ConnectContract, ConnectStudent, PaginatedMeta } from '../../types/connect'
+import type { ConnectContract, ConnectContractAttachment, ConnectStudent, PaginatedMeta } from '../../types/connect'
 import { downloadCsv } from '../../utils/csvExport'
 import { useConfirmAction } from '../../hooks/useConfirmAction'
 import { useCrudToast } from '../../hooks/useCrudToast'
@@ -32,6 +33,7 @@ const emptyContractForm = {
   company_name: '',
   company_email: '',
   status: 'active',
+  generate_document: true,
 }
 
 export function ContractsPage() {
@@ -50,6 +52,7 @@ export function ContractsPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [filterStatus, setFilterStatus] = useState('')
   const [filterContractType, setFilterContractType] = useState('')
+  const [attachments, setAttachments] = useState<ConnectContractAttachment[]>([])
 
   const selectedStudent = useMemo(
     () => students.find((s) => String(s.id) === form.connect_student_id),
@@ -78,6 +81,7 @@ export function ContractsPage() {
   const openCreate = () => {
     setEditingId(null)
     setForm(emptyContractForm)
+    setAttachments([])
     setDrawerOpen(true)
   }
 
@@ -92,7 +96,9 @@ export function ContractsPage() {
       company_name: contract.company_name ?? '',
       company_email: contract.company_email ?? '',
       status: contract.status ?? 'active',
+      generate_document: false,
     })
+    setAttachments(contract.attachments ?? [])
     setDrawerOpen(true)
   }
 
@@ -105,6 +111,7 @@ export function ContractsPage() {
     company_name: form.company_name,
     company_email: form.company_email.trim() || undefined,
     status: form.status,
+    ...(editingId ? {} : { generate_document: form.generate_document }),
   })
 
   const handleSave = async (keepOpen = false) => {
@@ -114,11 +121,16 @@ export function ContractsPage() {
       if (editingId) {
         await connectService.updateContract(editingId, payload)
       } else {
-        await connectService.createContract(payload)
+        const created = await connectService.createContract(payload)
+        if (keepOpen) {
+          setEditingId(created.id)
+          setAttachments(created.attachments ?? [])
+        }
       }
       if (keepOpen) {
         setEditingId(null)
         setForm(emptyContractForm)
+        setAttachments([])
       } else {
         setDrawerOpen(false)
         setEditingId(null)
@@ -238,6 +250,7 @@ export function ContractsPage() {
                 <th className="px-4 py-3 text-left">{t('connect.contracts.table.start')}</th>
                 <th className="px-4 py-3 text-left">{t('connect.contracts.table.monthlyValue')}</th>
                 <th className="px-4 py-3 text-left">{t('connect.table.status')}</th>
+                <th className="px-4 py-3 text-left">{t('connect.contracts.table.copy')}</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -253,6 +266,16 @@ export function ContractsPage() {
                   <td className="px-4 py-3">{formatDate(contract.start_date)}</td>
                   <td className="px-4 py-3">R$ {contract.monthly_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   <td className="px-4 py-3"><StatusBadge status={contract.status} /></td>
+                  <td className="px-4 py-3">
+                    {(contract.attachments?.length ?? 0) > 0 ? (
+                      <span className="inline-flex items-center gap-1 text-hub-navy">
+                        <FileText className="h-4 w-4" />
+                        {contract.attachments?.length}
+                      </span>
+                    ) : (
+                      <span className="text-hub-text-muted">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <ConnectRowActionsMenu
                       ariaLabel={t('connect.common.actionsOf', { name: contract.student?.full_name ?? t('connect.personKind.student') })}
@@ -368,9 +391,22 @@ export function ContractsPage() {
               <option value="finished">{t('connect.contracts.filters.terminated')}</option>
             </select>
           </FormField>
-          <p className="text-sm text-hub-text-muted">
-            {t('connect.contracts.attachmentsFuture')}
-          </p>
+          {!editingId && (
+            <label className="flex items-start gap-2 text-sm text-hub-text-muted">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={form.generate_document}
+                onChange={(e) => setForm({ ...form, generate_document: e.target.checked })}
+              />
+              <span>{t('connect.contracts.attachments.generateOnSave')}</span>
+            </label>
+          )}
+          <ConnectContractAttachmentsPanel
+            contractId={editingId}
+            attachments={attachments}
+            onAttachmentsChange={setAttachments}
+          />
         </div>
       </ConnectDrawer>
 

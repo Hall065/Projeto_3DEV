@@ -3,6 +3,7 @@ import { Eye, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
+import { SafePageToolbar } from '../../components/safe/SafePageToolbar'
 import {
   ConnectCard,
   ConnectLoadingSpinner,
@@ -20,6 +21,7 @@ import { SafeStatusBadge } from '../../components/safe/SafeStatusBadge'
 import { safeService } from '../../services/safeService'
 import type { PaginatedMeta, SafeAuthorization, SafeAuthorizationType, SafeStudent } from '../../types/safe'
 import { useCrudToast } from '../../hooks/useCrudToast'
+
 const emptyForm = {
   safe_student_id: '',
   student_name: '',
@@ -89,8 +91,10 @@ export function SafeAuthorizationsPage() {
     }
     setSaving(true)
     try {
+      const selected = students.find((s) => String(s.id) === form.safe_student_id)
       await safeService.createAuthorization({
         safe_student_id: form.safe_student_id ? Number(form.safe_student_id) : undefined,
+        connect_student_id: selected?.connect_student_id ?? undefined,
         student_name: form.student_name.trim() || undefined,
         class_name: form.class_name.trim() || undefined,
         type: form.type,
@@ -117,25 +121,29 @@ export function SafeAuthorizationsPage() {
         title={t('safe.authorizations.title')}
         subtitle={t('safe.authorizations.subtitle')}
         actions={
-          <>
-            <input
-              type="search"
-              placeholder={t('safe.authorizations.searchPlaceholder')}
-              value={search}
-              onChange={(e) => {
-                setPage(1)
-                setSearch(e.target.value)
-              }}
-              className={`${inputClass} max-w-xs`}
-            />
+          <PrimaryButton onClick={() => setDrawerOpen(true)}>
+            <Plus className="h-4 w-4" /> {t('safe.authorizations.newRequest')}
+          </PrimaryButton>
+        }
+      />
+
+      <SafePageToolbar
+        search={search}
+        onSearchChange={(value) => {
+          setPage(1)
+          setSearch(value)
+        }}
+        searchLabel={t('common.search')}
+        searchPlaceholder={t('safe.authorizations.searchPlaceholder')}
+        filters={
+          <FormField label={t('safe.authorizations.filters.status')}>
             <select
-              className={`${selectClass} max-w-xs`}
+              className={selectClass}
               value={statusFilter}
               onChange={(e) => {
                 setPage(1)
                 setStatusFilter(e.target.value)
               }}
-              aria-label={t('safe.authorizations.filters.status')}
             >
               <option value="">{t('safe.authorizations.filters.allStatuses')}</option>
               <option value="finalizado">{t('safe.authorizations.filters.finalizado')}</option>
@@ -144,10 +152,7 @@ export function SafeAuthorizationsPage() {
               <option value="aguardando_professor">{t('safe.authorizations.filters.aguardando_professor')}</option>
               <option value="liberado_portaria">{t('safe.authorizations.filters.liberado_portaria')}</option>
             </select>
-            <PrimaryButton onClick={() => setDrawerOpen(true)}>
-              <Plus className="h-4 w-4" /> {t('safe.authorizations.newRequest')}
-            </PrimaryButton>
-          </>
+          </FormField>
         }
       />
 

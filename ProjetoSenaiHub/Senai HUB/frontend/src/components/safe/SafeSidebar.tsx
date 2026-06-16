@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { ChevronRight, Headphones, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Headphones, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { filterNavItems, safeNavItems } from '../../config/navPermissions'
 import { usePermissions } from '../../hooks/usePermissions'
 import { useNavLabel } from '../../hooks/useNavLabel'
 import { SidebarAppLogo } from '../layout/SidebarAppLogo'
+import { useSupportChat } from '../../contexts/SupportChatContext'
 
 interface SafeSidebarProps {
   collapsed: boolean
@@ -19,19 +19,7 @@ export function SafeSidebar({ collapsed, mobileOpen = false, onMobileClose }: Sa
   const { can } = usePermissions()
   const navLabel = useNavLabel('safe')
   const mainNav = filterNavItems(safeNavItems, can)
-  const [supportOpen, setSupportOpen] = useState(false)
-  const supportRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!supportOpen) return
-    const onClickOutside = (event: MouseEvent) => {
-      if (supportRef.current && !supportRef.current.contains(event.target as Node)) {
-        setSupportOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [supportOpen])
+  const { open: openSupportChat } = useSupportChat()
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
@@ -82,30 +70,17 @@ export function SafeSidebar({ collapsed, mobileOpen = false, onMobileClose }: Sa
             <p>{t('safe.sidebar.profileHint')}</p>
           </div>
         )}
-        <div className="relative" ref={supportRef}>
-          <button
-            type="button"
-            onClick={() => setSupportOpen((open) => !open)}
-            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/85 transition hover:bg-white/10 ${
-              isCollapsed ? 'justify-center px-3' : ''
-            }`}
-          >
-            <Headphones className="h-5 w-5 shrink-0" />
-            {!isCollapsed && (
-              <>
-                <span className="flex-1 text-left">{t('safe.sidebar.support')}</span>
-                <ChevronRight className={`h-4 w-4 ${supportOpen ? 'rotate-90' : ''}`} />
-              </>
-            )}
-          </button>
-          {supportOpen && !isCollapsed && (
-            <div className="mt-1 rounded-xl border border-white/10 bg-[#002847] p-3 text-sm">
-              <a href="mailto:suporte@senaihub.local" className="block rounded-lg px-2 py-2 hover:bg-white/10">
-                suporte@senaihub.local
-              </a>
-            </div>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={openSupportChat}
+          className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/85 transition hover:bg-white/10 ${
+            isCollapsed ? 'justify-center px-3' : ''
+          }`}
+          aria-label={t('safe.sidebar.support')}
+        >
+          <Headphones className="h-5 w-5 shrink-0" />
+          {!isCollapsed && <span className="flex-1 text-left">{t('safe.sidebar.support')}</span>}
+        </button>
       </div>
     </aside>
   )

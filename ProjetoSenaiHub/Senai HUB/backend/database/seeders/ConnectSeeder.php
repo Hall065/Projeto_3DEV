@@ -24,6 +24,8 @@ class ConnectSeeder extends Seeder
 {
     public function run(): void
     {
+        $year = (int) now()->format('Y');
+
         $carlosUser = User::query()->where('email', 'carlos.professor@senai.local')->first();
         $patriciaUser = User::query()->where('email', 'patricia.professor@senai.local')->first();
         $mariaUser = User::query()->where('email', 'maria.aluno@senai.local')->first();
@@ -70,8 +72,8 @@ class ConnectSeeder extends Seeder
             [
                 ...$course,
                 'status' => 'active',
-                'start_date' => '2025-01-01',
-                'end_date' => '2025-12-31',
+                'start_date' => "{$year}-01-01",
+                'end_date' => "{$year}-12-31",
             ],
         ));
 
@@ -124,55 +126,55 @@ class ConnectSeeder extends Seeder
                 'connect_course_id' => $courses[0]->id,
                 'connect_teacher_id' => $teachers[0]->id,
                 'code' => 'TURMA AUT25-02',
-                'name' => 'Turma Automação 2025 - 2º Semestre',
+                'name' => "Turma Automação {$year} - 2º Semestre",
                 'shift' => 'noite',
-                'semester' => '2025.2',
-                'start_date' => '2025-02-01',
-                'end_date' => '2025-12-15',
+                'semester' => "{$year}.2",
+                'start_date' => "{$year}-02-01",
+                'end_date' => "{$year}-12-15",
                 'capacity' => 35,
             ],
             [
                 'connect_course_id' => $courses[1]->id,
                 'connect_teacher_id' => $teachers[1]->id,
                 'code' => 'TURMA ELE25-01',
-                'name' => 'Turma Eletrotécnica 2025 - 1º Semestre',
+                'name' => "Turma Eletrotécnica {$year} - 1º Semestre",
                 'shift' => 'tarde',
-                'semester' => '2025.1',
-                'start_date' => '2025-01-15',
-                'end_date' => '2025-11-30',
+                'semester' => "{$year}.1",
+                'start_date' => "{$year}-01-15",
+                'end_date' => "{$year}-11-30",
                 'capacity' => 30,
             ],
             [
                 'connect_course_id' => $courses[2]->id,
                 'connect_teacher_id' => $teachers[2]->id,
                 'code' => 'TURMA MEC25-03',
-                'name' => 'Turma Mecânica 2025 - Turno Manhã',
+                'name' => "Turma Mecânica {$year} - Turno Manhã",
                 'shift' => 'manha',
-                'semester' => '2025.1',
-                'start_date' => '2025-03-01',
-                'end_date' => '2025-12-20',
+                'semester' => "{$year}.1",
+                'start_date' => "{$year}-03-01",
+                'end_date' => "{$year}-12-20",
                 'capacity' => 28,
             ],
             [
                 'connect_course_id' => $courses[3]->id,
                 'connect_teacher_id' => $teachers[3]->id,
                 'code' => 'TURMA INF25-01',
-                'name' => 'Turma Informática Industrial 2025',
+                'name' => "Turma Informática Industrial {$year}",
                 'shift' => 'noite',
-                'semester' => '2025.2',
-                'start_date' => '2025-02-10',
-                'end_date' => '2025-12-10',
+                'semester' => "{$year}.2",
+                'start_date' => "{$year}-02-10",
+                'end_date' => "{$year}-12-10",
                 'capacity' => 32,
             ],
             [
                 'connect_course_id' => $courses[4]->id,
                 'connect_teacher_id' => $teachers[0]->id,
                 'code' => 'TURMA LOG25-01',
-                'name' => 'Turma Logística 2025 - Integrado',
+                'name' => "Turma Logística {$year} - Integrado",
                 'shift' => 'tarde',
-                'semester' => '2025.2',
-                'start_date' => '2025-02-15',
-                'end_date' => '2025-12-01',
+                'semester' => "{$year}.2",
+                'start_date' => "{$year}-02-15",
+                'end_date' => "{$year}-12-01",
                 'capacity' => 30,
             ],
         ])->map(fn (array $class) => ConnectClass::query()->updateOrCreate(
@@ -461,7 +463,7 @@ class ConnectSeeder extends Seeder
                 ->delete();
 
             $schedule->syncWeeklyPatterns($class, $this->weeklyPatternsForShift((string) $class->shift));
-            $schedule->generateFromPatterns($class);
+            $schedule->generateFromPatterns($class, true);
         }
 
         $this->seedRecentClosedAttendance($classes);

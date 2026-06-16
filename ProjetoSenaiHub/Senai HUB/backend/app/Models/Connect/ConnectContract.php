@@ -5,6 +5,7 @@ namespace App\Models\Connect;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'connect_student_id',
@@ -32,5 +33,11 @@ class ConnectContract extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(ConnectStudent::class, 'connect_student_id');
+    }
+
+    /** @return HasMany<ConnectContractAttachment, $this> */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(ConnectContractAttachment::class, 'connect_contract_id');
     }
 }

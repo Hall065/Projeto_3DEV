@@ -8,6 +8,8 @@ import { GlobalSearchProvider } from './contexts/GlobalSearchContext'
 import { GlobalSearchPalette } from './components/search/GlobalSearchPalette'
 import { ToastProvider } from './contexts/ToastContext'
 import { ConfirmProvider } from './contexts/ConfirmContext'
+import { SupportChatProvider } from './contexts/SupportChatContext'
+import { SupportChatWidget } from './components/support/SupportChatWidget'
 import { AppRoutes } from './routes'
 
 function App() {
@@ -17,14 +19,17 @@ function App() {
         <ToastProvider>
           <ConfirmProvider>
           <AuthProvider>
+            <SupportChatProvider>
             <NotificationProvider>
               <GlobalSearchProvider>
                 <AppearanceProvider>
                   <AppRoutes />
                   <GlobalSearchPalette />
+                  <SupportChatWidget />
                 </AppearanceProvider>
               </GlobalSearchProvider>
             </NotificationProvider>
+            </SupportChatProvider>
           </AuthProvider>
           </ConfirmProvider>
         </ToastProvider>

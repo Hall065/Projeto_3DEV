@@ -190,6 +190,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::put('/courses/{course}', [CourseController::class, 'update']);
             Route::delete('/courses/{course}', [CourseController::class, 'destroy']);
             Route::get('/courses/{course}/roster', [CourseRosterController::class, 'index']);
+            Route::post('/courses/{course}/roster/from-class', [CourseRosterController::class, 'storeFromClass']);
             Route::post('/courses/{course}/roster', [CourseRosterController::class, 'store']);
             Route::delete('/courses/{course}/roster/{person}', [CourseRosterController::class, 'destroy']);
         });
@@ -225,6 +226,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
             Route::post('/contracts', [ContractController::class, 'store']);
             Route::put('/contracts/{contract}', [ContractController::class, 'update']);
             Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
+            Route::post('/contracts/{contract}/attachments', [ContractController::class, 'storeAttachment']);
+            Route::delete('/contracts/{contract}/attachments/{connectContractAttachment}', [ContractController::class, 'destroyAttachment']);
+            Route::post('/contracts/{contract}/generate-document', [ContractController::class, 'generateDocument']);
         });
 
         Route::get('/salaries', [SalaryController::class, 'index'])->middleware('permission:connect.salary.view,connect.salary.view_own');

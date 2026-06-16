@@ -208,6 +208,19 @@ export interface ConnectAlert {
   created_at: string
 }
 
+export interface ConnectContractAttachment {
+  id: number
+  connect_contract_id: number
+  original_name: string
+  mime_type: string
+  size_bytes: number
+  url: string
+  is_image: boolean
+  is_generated?: boolean
+  uploaded_by_user_id?: number | null
+  created_at?: string
+}
+
 export interface ConnectContract {
   id: number
   connect_student_id: number
@@ -220,6 +233,7 @@ export interface ConnectContract {
   company_email?: string | null
   status: string
   student?: ConnectStudent
+  attachments?: ConnectContractAttachment[]
 }
 
 export interface ConnectSalaryRecord {
@@ -362,6 +376,7 @@ export interface DashboardData {
     justified: number
     unjustified: number
     rate: number
+    total_records?: number
   }
   students_by_course: { name: string; count: number }[]
   classes_by_teacher: { name: string; sessions: number }[]

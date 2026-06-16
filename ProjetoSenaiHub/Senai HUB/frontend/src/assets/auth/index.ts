@@ -1,2 +1,2 @@
-/** @deprecated Use `assets/brand` — mantido apenas por compatibilidade. */
-export { logoSenaiHub } from '../brand'
+/** @deprecated Use `HUB_BRAND_ASSETS` from `utils/appBrandAssets`. */
+export { hubLogoExpanded as logoSenaiHub } from '../brand'

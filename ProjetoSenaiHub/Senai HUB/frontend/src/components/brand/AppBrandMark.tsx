@@ -1,5 +1,5 @@
 import { useAppearance } from '../../contexts/AppearanceContext'
-import { getAppBrandAssets, getAppBrandMarkSrc } from '../../utils/appBrandAssets'
+import { getAppBrandAssets, getBrandMarkSrc } from '../../utils/appBrandAssets'
 
 type AppBrandMarkSize = 'sm' | 'md'
 
@@ -25,9 +25,9 @@ export function AppBrandMark({
   className?: string
 }) {
   const { wallpaperTone } = useAppearance()
-  const assets = getAppBrandAssets(slug)
-  const mark = getAppBrandMarkSrc(slug, wallpaperTone)
-  const displayName = assets?.name ?? name
+  const assets = slug === 'hub' ? undefined : getAppBrandAssets(slug)
+  const mark = getBrandMarkSrc(slug, wallpaperTone)
+  const displayName = slug === 'hub' ? 'SENAI HUB' : assets?.name ?? name
 
   if (!mark) {
     return (

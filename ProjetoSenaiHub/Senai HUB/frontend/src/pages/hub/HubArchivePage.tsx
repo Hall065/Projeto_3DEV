@@ -49,6 +49,8 @@ export function HubArchivePage() {
     return (['connect', 'grid', 'safe'] as const).filter((key) => summary.modules[key] != null)
   }, [summary])
 
+  const { notifyError } = crudToast
+
   const loadSummary = useCallback(() => {
     setLoadingSummary(true)
     archiveService
@@ -56,13 +58,13 @@ export function HubArchivePage() {
       .then((data) => {
         setSummary(data)
         const tabs = (['connect', 'grid', 'safe'] as const).filter((key) => data.modules[key] != null)
-        if (tabs.length > 0 && !tabs.includes(activeTab)) {
-          setActiveTab(tabs[0])
+        if (tabs.length > 0) {
+          setActiveTab((current) => (tabs.includes(current) ? current : tabs[0]))
         }
       })
-      .catch((err) => crudToast.notifyError(err, t('archive.loadError')))
+      .catch((err) => notifyError(err, t('archive.loadError')))
       .finally(() => setLoadingSummary(false))
-  }, [activeTab, crudToast, t])
+  }, [notifyError, t])
 
   const loadList = useCallback(() => {
     if (!summary?.modules[activeTab]) return
@@ -82,9 +84,9 @@ export function HubArchivePage() {
         else if (activeTab === 'grid') setGridTickets(res.data as GridTicket[])
         else setSafeItems(res.data as SafeAuthorization[])
       })
-      .catch((err) => crudToast.notifyError(err, t('archive.loadError')))
+      .catch((err) => notifyError(err, t('archive.loadError')))
       .finally(() => setLoadingList(false))
-  }, [activeTab, page, safeStatus, search, summary, crudToast, t])
+  }, [activeTab, page, safeStatus, search, summary, notifyError, t])
 
   useEffect(() => {
     loadSummary()

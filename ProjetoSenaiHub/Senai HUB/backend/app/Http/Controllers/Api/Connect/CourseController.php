@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Connect\ConnectCourseResource;
 use App\Models\Connect\ConnectActivity;
 use App\Models\Connect\ConnectCourse;
+use App\Models\Connect\ConnectLessonSchedule;
+use App\Services\Connect\ConnectScheduleService;
 use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +15,10 @@ use Illuminate\Validation\Rule;
 
 class CourseController extends Controller
 {
+    public function __construct(
+        private readonly ConnectScheduleService $schedule,
+    ) {}
+
     public function index(Request $request): JsonResponse
     {
         $query = UserAccessScope::connectCourseQuery($request->user())
@@ -55,6 +61,10 @@ class CourseController extends Controller
             'status' => $validated['status'] ?? 'active',
         ]);
 
+        $provision = $this->schedule->provisionDefaultSemesterCalendar($course);
+        $course = $course->fresh();
+        $lessonsCreated = (int) ($provision['generation']['created'] ?? 0);
+
         ConnectActivity::query()->create([
             'title' => 'Novo curso cadastrado',
             'description' => "Curso {$course->name} adicionado ao catálogo.",
@@ -65,9 +75,14 @@ class CourseController extends Controller
             'occurred_at' => now(),
         ]);
 
+        $message = 'Curso cadastrado com sucesso.';
+        if ($lessonsCreated > 0) {
+            $message .= " Calendario gerado com {$lessonsCreated} aula(s).";
+        }
+
         return response()->json([
             'data' => new ConnectCourseResource($course),
-            'message' => 'Curso cadastrado com sucesso.',
+            'message' => $message,
         ], 201);
     }
 
@@ -85,6 +100,19 @@ class CourseController extends Controller
         ]);
 
         $course->update($validated);
+        $course = $course->fresh();
+
+        if ($course->start_date && $course->end_date) {
+            $hasLessons = ConnectLessonSchedule::query()
+                ->whereHas('connectClass', fn ($query) => $query->where('connect_course_id', $course->id))
+                ->where('status', '!=', 'cancelled')
+                ->exists();
+
+            if (! $hasLessons) {
+                $this->schedule->provisionDefaultSemesterCalendar($course);
+                $course = $course->fresh();
+            }
+        }
 
         ConnectActivity::query()->create([
             'title' => 'Curso atualizado',

@@ -11,10 +11,12 @@ export type SafeAuthorizationStatus =
 
 export interface SafeStudent {
   id: number
+  connect_student_id?: number | null
   registration: string
   name: string
   class_name: string
   active: boolean
+  source?: 'connect' | 'legacy'
   authorizations_count?: number
   created_at?: string
   updated_at?: string
@@ -98,6 +100,7 @@ export interface SafeAuthorizationHistory {
 
 export interface SafeAuthorizationPayload {
   safe_student_id?: number | null
+  connect_student_id?: number | null
   student_name?: string
   class_name?: string
   type: SafeAuthorizationType

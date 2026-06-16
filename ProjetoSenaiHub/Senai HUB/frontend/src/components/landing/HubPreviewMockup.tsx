@@ -1,11 +1,10 @@
 import { ArrowRight, ChevronDown, Headphones, LayoutGrid } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { logoSenaiHub } from '../../assets/brand'
 import { AppBrandMark } from '../brand/AppBrandMark'
 import coverConnect from '../../assets/hub/cover-connect.png'
 import coverGrid from '../../assets/hub/cover-grid.png'
 import coverSafe from '../../assets/hub/cover-safe.png'
-import { getAppBrandName, MODULE_BRAND_SLUGS } from '../../utils/appBrandAssets'
+import { getAppBrandName, HUB_BRAND_ASSETS, MODULE_BRAND_SLUGS } from '../../utils/appBrandAssets'
 
 const previewApps = MODULE_BRAND_SLUGS.map((slug) => ({
   slug,
@@ -27,8 +26,8 @@ export function HubPreviewMockup() {
       <div className="flex min-h-[300px] sm:min-h-[320px]">
         <aside className="flex w-[118px] shrink-0 flex-col bg-hub-navy px-3 py-4 sm:w-[132px] sm:px-3.5">
           <img
-            src={logoSenaiHub}
-            alt="SENAI HUB"
+            src={HUB_BRAND_ASSETS.expanded}
+            alt={HUB_BRAND_ASSETS.name}
             className="h-auto w-full max-w-[100px] object-contain"
           />
 

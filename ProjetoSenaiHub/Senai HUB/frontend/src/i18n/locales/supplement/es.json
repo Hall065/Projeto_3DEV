@@ -181,6 +181,18 @@
     "closeSupport": "Cerrar soporte",
     "chatSupport": "Abrir chat de soporte"
   },
+  "supportChat": {
+    "title": "Soporte SENAI",
+    "subtitle": "En línea ahora",
+    "welcome": "¡Hola! Soy el asistente de soporte de SENAI Hub. ¿Cómo puedo ayudarle hoy?",
+    "placeholder": "Escriba su mensaje...",
+    "send": "Enviar mensaje",
+    "minimize": "Minimizar chat",
+    "close": "Cerrar chat",
+    "open": "Abrir chat de soporte",
+    "autoReply": "¡Gracias por su mensaje! Nuestro equipo responderá pronto. Pronto este chat contará con atención por IA.",
+    "emailFallback": "O envíe un correo a"
+  },
   "themesPage": {
     "title": "Temas",
     "subtitle": "Personalice el fondo de pantalla y la apariencia visual del sistema."
@@ -735,7 +747,18 @@
       "removePerson": "Eliminar {{name}}",
       "loadError": "No fue posible cargar las matrículas.",
       "linkError": "No fue posible vincular a la persona.",
-      "unlinkError": "No fue posible eliminar el vínculo."
+      "unlinkError": "No fue posible eliminar el vínculo.",
+      "addClassTitle": "Agregar clase",
+      "addClassHint": "Vincula la clase al curso e importa todos los alumnos matriculados en ella.",
+      "classField": "Clase",
+      "noClassesAvailable": "Ninguna clase disponible",
+      "selectClassPlaceholder": "Seleccione una clase...",
+      "classStudentsCount": " · {{count}} alumnos",
+      "classAlreadyLinked": " · ya en este curso",
+      "importClass": "Importar alumnos",
+      "importClassSuccess": "Clase {{className}}: {{enrolled}} de {{total}} alumno(s) matriculado(s) en el curso.",
+      "importClassError": "No fue posible importar los alumnos de la clase.",
+      "addIndividualTitle": "Agregar alumno individual"
     },
     "charts": {
       "quickReports": "Informes rápidos",

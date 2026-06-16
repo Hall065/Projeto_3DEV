@@ -24,7 +24,7 @@ import { useCrudToast } from '../../hooks/useCrudToast'
 
 export function GridTicketControlPage() {
   const { t } = useTranslation()
-  const crudToast = useCrudToast()
+  const { notifyError, notifyWarning, notifySaved } = useCrudToast()
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [tickets, setTickets] = useState<GridTicket[]>([])
@@ -57,9 +57,9 @@ export function GridTicketControlPage() {
     gridService
       .getTickets(params)
       .then((res) => setTickets(res.data))
-      .catch((err) => crudToast.notifyError(err, t('common.error')))
+      .catch((err) => notifyError(err, t('common.error')))
       .finally(() => setLoadingList(false))
-  }, [search, t, crudToast])
+  }, [search, t, notifyError])
 
   const loadDetail = useCallback(async (id: number) => {
     setLoadingDetail(true)
@@ -70,11 +70,11 @@ export function GridTicketControlPage() {
     } catch (err: unknown) {
       setTicket(null)
       setReport(null)
-      crudToast.notifyError(err, t('common.error'))
+      notifyError(err, t('common.error'))
     } finally {
       setLoadingDetail(false)
     }
-  }, [t])
+  }, [t, notifyError])
 
   useEffect(() => {
     loadList()
@@ -91,7 +91,10 @@ export function GridTicketControlPage() {
     const paramId = searchParams.get('id')
     if (paramId) {
       const id = Number(paramId)
-      if (!Number.isNaN(id)) setSelectedId(id)
+      if (!Number.isNaN(id)) {
+        setSelectedId(id)
+        setIncludeFinished(true)
+      }
     }
   }, [searchParams])
 
@@ -102,8 +105,7 @@ export function GridTicketControlPage() {
       return
     }
     void loadDetail(selectedId)
-    setSearchParams({ id: String(selectedId) }, { replace: true })
-  }, [selectedId, loadDetail, setSearchParams])
+  }, [selectedId, loadDetail])
 
   const filteredTickets = useMemo(() => {
     return tickets.filter((item) => includeFinished || item.status !== 'concluido')
@@ -111,6 +113,7 @@ export function GridTicketControlPage() {
 
   const selectTicket = (item: GridTicket) => {
     setSelectedId(item.id)
+    setSearchParams({ id: String(item.id) }, { replace: true })
   }
 
   const refreshDetail = async () => {
@@ -121,7 +124,7 @@ export function GridTicketControlPage() {
 
   const handleCreate = async () => {
     if (!createForm.requester.trim() || !createForm.title.trim()) {
-      crudToast.notifyWarning(t('grid.control.alert.required'))
+      notifyWarning(t('grid.control.alert.required'))
       return
     }
     setCreateSaving(true)
@@ -142,9 +145,10 @@ export function GridTicketControlPage() {
       setCreateAttachments([])
       loadList()
       setSelectedId(created.id)
-      crudToast.notifySaved(false)
+      setSearchParams({ id: String(created.id) }, { replace: true })
+      notifySaved(false)
     } catch (err: unknown) {
-      crudToast.notifyError(err, t('common.error'))
+      notifyError(err, t('common.error'))
     } finally {
       setCreateSaving(false)
     }
