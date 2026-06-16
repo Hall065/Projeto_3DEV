@@ -1,2660 +1,2446 @@
-# Guia completo para apresentação do site SENAI HUB
+# Manual do Sistema SENAI HUB
 
-> Documento elaborado a partir da estrutura e das regras existentes no projeto web `Senai HUB/`. Use as seções finais como roteiro de fala, revisão rápida e preparação para perguntas.
+> Documentação funcional e técnica completa da plataforma web `Senai HUB/`.
+> Última geração automática de referências: 2026-06-16.
+> Para regenerar índices de linha após mudanças no código: `node scripts/generate-system-manual.mjs`.
 
-## Mapa de leitura
+---
 
-| Parte | Conteúdo |
+## Índice
+
+1. [Como usar este manual](#1-como-usar-este-manual)
+2. [Visão geral da plataforma](#2-visão-geral-da-plataforma)
+3. [Arquitetura técnica](#3-arquitetura-técnica)
+4. [Modelo de dados (banco)](#4-modelo-de-dados-banco)
+5. [Autenticação, papéis e permissões](#5-autenticação-papéis-e-permissões)
+6. [Área pública e autenticação](#6-área-pública-e-autenticação)
+7. [Módulo Hub](#7-módulo-hub)
+8. [Módulo SENAI Connect](#8-módulo-senai-connect)
+9. [Módulo SENAI Grid](#9-módulo-senai-grid)
+10. [Módulo SENAI SAFE](#10-módulo-senai-safe)
+11. [Recursos globais (transversais)](#11-recursos-globais-transversais)
+12. [Relatórios personalizados](#12-relatórios-personalizados)
+13. [Importação e exportação por planilhas](#13-importação-e-exportação-por-planilhas)
+14. [Arquivo histórico](#14-arquivo-histórico)
+15. [Testes automatizados](#15-testes-automatizados)
+16. [Anexo A — Mapa completo de rotas API](#anexo-a--mapa-completo-de-rotas-api)
+17. [Anexo B — Mapa de rotas do frontend](#anexo-b--mapa-de-rotas-do-frontend)
+18. [Anexo C — Serviços backend](#anexo-c--serviços-backend)
+19. [Anexo D — Serviços frontend](#anexo-d--serviços-frontend)
+20. [Anexo E — Comandos Artisan](#anexo-e--comandos-artisan)
+21. [Anexo F — Catálogo de planilhas](#anexo-f--catálogo-de-planilhas)
+22. [Anexo G — Layouts e componentes estruturais](#anexo-g--layouts-e-componentes-estruturais)
+23. [Seção 16 — Fluxos de negócio](#seção-16--fluxos-de-negócio)
+24. [Apêndice — Roteiro de apresentação](#apêndice--roteiro-de-apresentação)
+
+---
+
+## 1. Como usar este manual
+
+Cada funcionalidade está documentada com:
+
+- **Descrição** do propósito e comportamento para o usuário.
+- **Tabelas** do banco e entidades relacionadas.
+- **Endpoints** REST consumidos pelo frontend.
+- **Referências de código** com caminho e intervalo de linhas (backend e frontend).
+- **Permissões** necessárias para acesso.
+- **Testes** automatizados quando existirem.
+
+Convenções:
+
+- Caminhos relativos à pasta `Senai HUB/`.
+- `L10–L80` = linhas 10 a 80 do arquivo indicado.
+- Permissões no formato `modulo.recurso.acao`; o middleware aceita lista separada por vírgula (OR).
+
+---
+
+## 2. Visão geral da plataforma
+
+O **SENAI HUB** centraliza quatro áreas em um único login:
+
+| Área | Finalidade |
 |---|---|
-| Seções 1 a 7 | visão geral, tecnologias, arquitetura e organização |
-| Seções 8 a 16 | acesso público, autenticação, usuários, permissões e escopos |
-| Seções 17 a 31 | funcionalidades acadêmicas do SENAI Connect |
-| Seções 32 a 44 | chamados, tarefas, estoque e relatórios do SENAI Grid |
-| Seções 45 a 50 | autorizações e fluxos do SENAI Safe |
-| Seções 51 a 65 | recursos globais, banco, validações e testes |
-| Seções 66 a 68 | limites atuais, pontos fortes e melhorias |
-| Seções 69 a 74 | demonstração, fala sugerida, perguntas e checklist |
+| **Hub** | Launcher de apps, usuários, perfil, configurações, arquivo histórico |
+| **SENAI Connect** | Gestão acadêmica: pessoas, cursos, turmas, calendário, frequência, contratos, salários |
+| **SENAI Grid** | Manutenção: chamados, tarefas Kanban, estoque, mapa, relatórios |
+| **SENAI SAFE** | Autorizações de entrada/saída de alunos (AQV → professor → portaria) |
 
-## 1. Visão geral
+Recursos transversais: landing pública, solicitação de acesso, busca global (Ctrl+K), notificações, chat de suporte, temas/wallpapers, i18n (pt/en/es), relatórios customizados, planilhas CSV, arquivamento.
 
-O **SENAI HUB** é uma plataforma web integrada que centraliza diferentes áreas da instituição em um único sistema.
+**Rotas principais:** `Senai HUB/frontend/src/routes/index.tsx` (L66–L145)
 
-O site possui quatro áreas principais:
-
-1. **Hub**: autenticação, seleção de aplicações, usuários, permissões, perfil, configurações, notificações e arquivo.
-2. **SENAI Connect**: gestão acadêmica de pessoas, alunos, professores, cursos, turmas, calendário, frequência, contratos e salários.
-3. **SENAI Grid**: gestão de manutenção, chamados, tarefas, técnicos, estoque, mapas e relatórios.
-4. **SENAI Safe**: controle de solicitações de entrada e saída de alunos, aprovação por professor e confirmação pela portaria.
-
-O sistema também possui:
-
-- landing page pública;
-- solicitação pública de acesso;
-- recuperação de senha;
-- busca global;
-- notificações internas e por e-mail;
-- personalização visual;
-- tradução;
-- importação e exportação de planilhas;
-- relatórios configuráveis;
-- arquivamento de registros finalizados;
-- testes automatizados.
-
-### Explicação curta para abrir a apresentação
-
-> O SENAI HUB é uma plataforma web que integra a gestão acadêmica, a manutenção da escola e o controle de entrada e saída de alunos. O usuário faz login uma única vez e o sistema libera apenas os módulos, telas e dados relacionados ao seu perfil. O frontend foi desenvolvido em React e TypeScript, enquanto a API foi desenvolvida em Laravel com autenticação Sanctum.
+**API REST:** `Senai HUB/backend/routes/api.php` (L1–L311)
 
 ---
 
-## 2. Problema resolvido
+## 3. Arquitetura técnica
 
-Em uma instituição, diferentes áreas costumam trabalhar com sistemas, planilhas e processos separados.
+| Camada | Tecnologia | Pasta |
+|---|---|---|
+| Frontend | React 19, TypeScript, Vite, Tailwind, react-router, i18next | `frontend/src/` |
+| Backend | Laravel, Sanctum, SQLite/MySQL | `backend/` |
+| Autenticação | Bearer token (Sanctum) em `localStorage` | `frontend/src/services/api.ts`, `AuthContext` |
+| Permissões | `config/permissions.php` + `custom_permissions` no usuário | `backend/app/Services/Auth/PermissionService.php` |
 
-Isso pode causar:
+**Providers do App (ordem de montagem):** `Senai HUB/frontend/src/App.tsx` (L14–L38)
 
-- duplicação de cadastros;
-- dificuldade para localizar informações;
-- ausência de controle de acesso;
-- conflitos de horários;
-- perda de histórico;
-- controle manual de frequência;
-- dificuldade para acompanhar manutenção;
-- falta de rastreabilidade de entradas e saídas;
-- relatórios demorados;
-- divergência de dados.
-
-O SENAI HUB resolve esses problemas centralizando os processos e conectando as informações.
-
-### Exemplo de integração
-
-No Connect:
-
-```text
-Pessoa
-  ↓
-Aluno
-  ↓
-Curso e turma
-  ↓
-Calendário de aulas
-  ↓
-Frequência
-  ↓
-Contrato
-  ↓
-Cálculo salarial
-```
-
-No Grid:
-
-```text
-Chamado
-  ↓
-Atribuição de técnico
-  ↓
-Tarefa
-  ↓
-Reserva de materiais
-  ↓
-Execução
-  ↓
-Aprovação
-  ↓
-Avaliação
-  ↓
-Conclusão
-```
-
-No Safe:
-
-```text
-Solicitação da AQV
-  ↓
-Aprovação do professor
-  ↓
-Confirmação da portaria, quando for saída
-  ↓
-Finalização e histórico
-```
+**Guards de rota:** `ProtectedRoute`, `ModuleAccessRoute`, `PermissionRoute`, `AdminRoute` em `frontend/src/routes/`.
 
 ---
 
-## 3. Diferença entre o site e o aplicativo mobile
+## 4. Modelo de dados (banco)
 
-O site da pasta `Senai HUB/` e o aplicativo `Mobile/senai-hub-app/` são produtos separados.
+### 4.1 Hub / compartilhado
 
-| Site | Aplicativo mobile |
+| Tabela | Model | Descrição |
+|---|---|---|
+| `users` | `User` | Contas de login, papel, permissões customizadas, avatar |
+| `applications` | `Application` | Apps exibidos no launcher (Connect, Grid, SAFE) |
+| `application_user` | pivot | Apps liberados por usuário |
+| `hub_people` | `HubPerson` | Cadastro unificado de pessoas (base de alunos/professores) |
+| `hub_notifications` | `HubNotification` | Notificações in-app |
+| `access_requests` | `AccessRequest` | Solicitações públicas de acesso |
+| `personal_access_tokens` | Sanctum | Tokens de API |
+| `report_presets` | `ReportPreset` | Presets de relatórios salvos |
+| `spreadsheet_import_logs` | `SpreadsheetImportLog` | Log de importações CSV |
+
+### 4.2 Connect
+
+| Tabela | Model |
 |---|---|
-| Backend Laravel | Backend Supabase |
-| Autenticação Laravel Sanctum | Supabase Auth |
-| Banco controlado pelas migrations Laravel | Banco estruturado nos schemas Supabase |
-| Frontend React para navegador | React Native e Expo |
-| API REST própria | API do Supabase e Edge Functions |
+| `connect_courses` | `ConnectCourse` |
+| `connect_classes` | `ConnectClass` |
+| `connect_students` | `ConnectStudent` |
+| `connect_teachers` | `ConnectTeacher` |
+| `connect_class_weekly_patterns` | `ConnectClassWeeklyPattern` |
+| `connect_lesson_schedules` | `ConnectLessonSchedule` |
+| `connect_attendance_sessions` | `ConnectAttendanceSession` |
+| `connect_attendance_marks` | `ConnectAttendanceMark` |
+| `connect_contracts` | `ConnectContract` |
+| `connect_contract_attachments` | `ConnectContractAttachment` |
+| `connect_salary_records` | `ConnectSalaryRecord` |
+| `connect_student_locations` | `ConnectStudentLocation` |
+| `connect_activities` | `ConnectActivity` |
+| `connect_alerts` | `ConnectAlert` |
+| `connect_course_hub_person` | pivot curso↔pessoa |
+| `connect_class_hub_person` | pivot turma↔pessoa |
 
-Os dois projetos compartilham o conceito de Hub, Connect e Grid, mas não utilizam automaticamente o mesmo backend.
+### 4.3 Grid
 
-### Resposta importante
-
-> O site não é apenas a versão web do aplicativo Expo. Ele possui sua própria API Laravel, banco, regras e autenticação. Uma integração completa entre os dois exigiria uma estratégia para unificar identidade, dados e contratos de API.
-
----
-
-## 4. Tecnologias utilizadas
-
-### Frontend
-
-| Tecnologia | Função |
+| Tabela | Model |
 |---|---|
-| React 19 | Construção da interface |
-| TypeScript | Tipagem e segurança do código |
-| Vite | Servidor de desenvolvimento e build |
-| React Router | Navegação da SPA |
-| Axios | Comunicação com a API |
-| Tailwind CSS | Estilização |
-| i18next | Tradução da interface |
-| Lucide React | Ícones |
-| DnD Kit | Arrastar e soltar nos quadros Kanban |
-| Three.js | Renderização do mapa 3D |
+| `grid_tickets` | `GridTicket` |
+| `grid_tasks` | `GridTask` |
+| `grid_inventory_items` | `GridInventoryItem` |
+| `grid_inventory_reservations` | `GridInventoryReservation` |
+| `grid_users` | `GridUser` |
+| `grid_ticket_attachments` | `GridTicketAttachment` |
 
-### Backend
+### 4.4 SAFE
 
-| Tecnologia | Função |
+| Tabela | Model |
 |---|---|
-| PHP 8.3+ | Linguagem do backend |
-| Laravel 13 | API, validação, models e regras |
-| Laravel Sanctum | Tokens de autenticação |
-| Eloquent ORM | Consultas e relacionamentos |
-| Migrations | Versionamento do banco |
-| Seeders | Dados iniciais e demonstração |
-| Mail | Recuperação de senha e notificações |
-| PHPUnit | Testes do backend |
+| `safe_students` | `SafeStudent` (vínculo `connect_student_id`) |
+| `safe_authorizations` | `SafeAuthorization` |
+| `safe_authorization_logs` | `SafeAuthorizationLog` |
 
-### Testes
+Migrations: `backend/database/migrations/` (29 arquivos).
 
-| Tecnologia | Função |
+---
+
+## 5. Autenticação, papéis e permissões
+
+**Configuração:** `Senai HUB/backend/config/permissions.php` (L1–L336)
+
+**Serviço de permissões:** `Senai HUB/backend/app/Services/Auth/PermissionService.php` (L1–L200)
+
+**Escopo de dados por usuário:** `Senai HUB/backend/app/Support/UserAccessScope.php` (L1–L150)
+
+Papéis principais: `admin`, `unassigned`, `connect_*`, `grid_*`, `safe_*`. Admin possui `*`. Usuários com `custom_permissions` JSON substituem o pacote padrão do papel.
+
+---
+
+## 6. Área pública e autenticação
+
+### PUB-01. Landing page
+
+| Campo | Valor |
 |---|---|
-| PHPUnit | Testes unitários e de API |
-| Playwright | Testes completos no navegador |
+| **Módulo** | Público |
+| **Rota UI** | `/` |
+
+**O que é / o que faz:** Página institucional pública com hero, recursos, público-alvo e CTA para login.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/LandingPage.tsx` (L1–L30) |
+| Seções | `frontend/src/components/landing/*` |
+
+**Componentes relacionados:** `components/landing/LandingHeader, LandingFooter, HubPreviewMockup`.
 
 ---
 
-## 5. Arquitetura geral
+### PUB-02. Login
 
-O sistema segue uma arquitetura cliente-servidor:
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `/login` |
+
+**O que é / o que faz:** Autenticação email/senha; redireciona para /hub.
+
+**Tabelas e relacionamentos:** users; personal_access_tokens.
+
+**Endpoints API:**
+- `POST /auth/login`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/LoginPage.tsx` (L1–L105) |
+| Service | `Senai HUB/frontend/src/services/authService.ts` (L1–L80) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/AuthController.php` (L23–L36) |
+| Service BE | `Senai HUB/backend/app/Services/Auth/AuthService.php` (L1–L120) |
+
+**Testes:** `tests/Feature/AuthFeatureTest.php`.
+
+---
+
+### PUB-03. Recuperar senha
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `/recuperar-senha` |
+
+**O que é / o que faz:** Envia e-mail com link de redefinição.
+
+**Tabelas e relacionamentos:** users; password_reset_tokens.
+
+**Endpoints API:**
+- `POST /auth/forgot-password`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/ForgotPasswordPage.tsx` (L1–L73) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/AuthController.php` (L38–L45) |
+
+---
+
+### PUB-04. Redefinir senha
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `/redefinir-senha` |
+
+**O que é / o que faz:** Define nova senha a partir do token do e-mail.
+
+**Tabelas e relacionamentos:** password_reset_tokens.
+
+**Endpoints API:**
+- `POST /auth/reset-password`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/ResetPasswordPage.tsx` (L1–L104) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/AuthController.php` (L47–L54) |
+
+---
+
+### PUB-05. Solicitar acesso
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `/solicitar-acesso` |
+
+**O que é / o que faz:** Formulário público; cria registro pendente e notifica admins.
+
+**Tabelas e relacionamentos:** access_requests.
+
+**Endpoints API:**
+- `POST /access-requests`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/RequestAccessPage.tsx` (L1–L106) |
+| Service | `Senai HUB/frontend/src/services/accessRequestService.ts` (L1–L30) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/AccessRequestController.php` (L13–L35) |
+
+**Testes:** `tests/Feature/AccessRequestTest.php`.
+
+---
+
+### PUB-06. Health check API
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+
+**O que é / o que faz:** Endpoint de saúde para monitoramento (DB, cache).
+
+**Endpoints API:**
+- `GET /health`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/HealthController.php` (L15–L18) |
+| Componente UI | `Senai HUB/frontend/src/components/layout/HealthStatusBadge.tsx` (L1–L60) |
+
+**Testes:** `tests/Feature/HealthCheckTest.php`.
+
+---
+
+### PUB-07. Config pública (mapa)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+
+**O que é / o que faz:** Blocos e parâmetros do mapa do campus (sem auth).
+
+**Endpoints API:**
+- `GET /public-config`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/PublicConfigController.php` (L10–L18) |
+| Hook | `Senai HUB/frontend/src/hooks/usePublicConfig.ts` (L1–L40) |
+
+---
+
+### PUB-08. Página 404
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `*` |
+
+**O que é / o que faz:** Rota não encontrada.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/NotFoundPage.tsx` (L1–L26) |
+
+---
+
+## 7. Módulo Hub
+
+### HUB-01. Launcher de aplicações
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Hub |
+| **Rota UI** | `/hub` |
+| **Permissão** | Autenticado |
+
+**O que é / o que faz:** Tela inicial após login: cards das aplicações (Connect, Grid, SAFE) conforme permissões do usuário. Usuários sem apps veem painel de acesso pendente.
+
+**Tabelas e relacionamentos:** applications; application_user; users.
+
+**Endpoints API:**
+- `GET /applications`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/ApplicationHubPage.tsx` (L11–L67) |
+| Componente | `Senai HUB/frontend/src/components/hub/ApplicationCard.tsx` (L1–L80) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/ApplicationController.php` (L12–L23) |
+
+---
+
+### HUB-02. Gestão de usuários (admin)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Hub |
+| **Rota UI** | `/hub/usuarios` |
+| **Permissão** | admin |
+
+**O que é / o que faz:** CRUD de usuários, atribuição de papel, permissões customizadas de navegação e sincronização de apps.
+
+**Tabelas e relacionamentos:** users; application_user.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /admin/users`
+- `GET /admin/roles`
+- `GET /admin/nav-permissions`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/hub/HubUsersPage.tsx` (L86–L459) |
+| Service | `Senai HUB/frontend/src/services/adminService.ts` (L1–L100) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/Admin/UserManagementController.php` (L18–L165) |
+
+**Testes:** `backend/tests/Feature/AdminUserManagementTest.php`.
+
+---
+
+### HUB-03. Perfil do usuário
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Hub |
+| **Rota UI** | `/perfil` |
+| **Permissão** | Autenticado |
+
+**O que é / o que faz:** Edição de nome/e-mail, troca de senha, upload/remoção de avatar, visualização de permissões e apps, logout.
+
+**Tabelas e relacionamentos:** users.
+
+**Endpoints API:**
+- `GET /auth/me`
+- `PUT /auth/me`
+- `PUT /auth/password`
+- `POST/DELETE /auth/avatar`
+- `POST /auth/logout`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/ProfilePage.tsx` (L145–L921) |
+| Context | `Senai HUB/frontend/src/contexts/AuthContext.tsx` (L1–L224) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/AuthController.php` (L56–L131) |
+
+---
+
+### HUB-04. Configurações
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Hub |
+| **Rota UI** | `/configuracoes` |
+| **Permissão** | Autenticado |
+
+**O que é / o que faz:** Idioma, aparência (atalho), preferências de notificação, redução de movimento, links rápidos.
+
+**Tabelas e relacionamentos:** users (notification_preferences).
+
+**Endpoints API:**
+- `GET/PUT /auth/notification-preferences`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/SettingsPage.tsx` (L77–L342) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/NotificationController.php` (L82–L112) |
+
+---
+
+### HUB-05. Temas e wallpapers
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Hub |
+| **Rota UI** | `/temas` |
+| **Permissão** | Autenticado |
+
+**O que é / o que faz:** Personalização visual do plano de fundo (presets ou imagem customizada); tom claro/escuro derivado do wallpaper. Persistência em localStorage.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/ThemesPage.tsx` (L1–L19) |
+| Context | `Senai HUB/frontend/src/contexts/AppearanceContext.tsx` (L1–L120) |
+| Constantes | `Senai HUB/frontend/src/constants/wallpapers.ts` (L1–L380) |
+| Componente | `Senai HUB/frontend/src/components/settings/AppearanceSettings.tsx` (L1–L200) |
+
+**Observações:** Sem persistência no backend — apenas cliente.
+
+---
+
+### HUB-06. Acesso negado
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Hub |
+| **Rota UI** | `/acesso-negado` |
+| **Permissão** | Autenticado |
+
+**O que é / o que faz:** Exibida quando o usuário não possui permissão para a rota solicitada.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/AccessDeniedPage.tsx` (L1–L32) |
+| Guard | `Senai HUB/frontend/src/routes/PermissionRoute.tsx` (L1–L80) |
+
+---
+
+## 8. Módulo SENAI Connect
+
+Permissão base do módulo: `connect.access`. Layout: `frontend/src/layouts/ConnectLayout.tsx`, sidebar: `components/connect/ConnectSidebar.tsx`.
+
+### CON-01. Dashboard Connect
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect` |
+| **Permissão** | connect.dashboard |
+
+**O que é / o que faz:** KPIs, gráficos de frequência, sessões por professor, alunos por curso, atividades e alertas.
+
+**Tabelas e relacionamentos:** connect_students; connect_teachers; connect_classes; connect_attendance_marks; connect_activities; connect_alerts.
+
+**Endpoints API:**
+- `GET /connect/dashboard`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/ConnectOverviewPage.tsx` (L1–L219) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/DashboardController.php` (L1–L398) |
+
+**Componentes relacionados:** `ConnectCharts.tsx (AttendanceDonutChart`, `QuickReportsSection)`.
+
+---
+
+### CON-02. Pessoas (cadastro unificado)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/pessoas` |
+| **Permissão** | connect.people.manage |
+
+**O que é / o que faz:** CRUD de hub_people — base para alunos e professores.
+
+**Tabelas e relacionamentos:** hub_people.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /connect/people`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/PeoplePage.tsx` (L1–L321) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/PersonController.php` (L1–L97) |
+
+**Componentes relacionados:** `ConnectEntityViewDrawer`.
+
+---
+
+### CON-03. Alunos
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/alunos` |
+| **Permissão** | connect.students.view|manage |
+
+**O que é / o que faz:** Matrícula de alunos, vínculo com turma, perfil acadêmico.
+
+**Tabelas e relacionamentos:** connect_students; hub_people; connect_classes; connect_class_hub_person.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /connect/students`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/StudentsPage.tsx` (L1–L446) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/StudentController.php` (L1–L200) |
+
+**Componentes relacionados:** `ConnectEnrollmentService`.
+
+**Testes:** `backend/tests/Feature/ConnectAccessScopeTest.php`.
+
+---
+
+### CON-04. Professores
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/professores` |
+| **Permissão** | connect.teachers.view|manage |
+
+**O que é / o que faz:** Cadastro de professores e especialidades.
+
+**Tabelas e relacionamentos:** connect_teachers; hub_people.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /connect/teachers`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/TeachersPage.tsx` (L1–L382) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/TeacherController.php` (L1–L142) |
+
+---
+
+### CON-05. Turmas
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/turmas` |
+| **Permissão** | connect.classes.view|manage |
+
+**O que é / o que faz:** CRUD de turmas, padrões semanais, geração de calendário e provisão de frequência.
+
+**Tabelas e relacionamentos:** connect_classes; connect_class_weekly_patterns; connect_lesson_schedules.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /connect/classes`
+- `roster endpoints`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/ClassesPage.tsx` (L1–L492) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/ClassController.php` (L1–L202) |
+
+**Componentes relacionados:** `ConnectScheduleService`, `ClassSchedulePanel`.
+
+**Testes:** `backend/tests/Feature/ConnectScheduleTest.php`.
+
+---
+
+### CON-06. Cursos
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/cursos` |
+| **Permissão** | connect.courses.view|manage |
+
+**O que é / o que faz:** CRUD de cursos; ao criar/atualizar provisiona calendário padrão do semestre.
+
+**Tabelas e relacionamentos:** connect_courses; connect_lesson_schedules.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /connect/courses`
+- `roster`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/CoursesPage.tsx` (L1–L294) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/CourseController.php` (L1–L158) |
+
+**Componentes relacionados:** `ConnectRosterDrawer`, `ConnectSemesterDefaults`.
+
+**Testes:** `backend/tests/Feature/ConnectCourseCalendarProvisionTest, ConnectCourseDeleteTest.php`.
+
+---
+
+### CON-07. Calendário de aulas
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/calendario` |
+| **Permissão** | connect.calendar.view|manage |
+
+**O que é / o que faz:** Visualização mês/semana; CRUD de aulas; integração com padrões semanais.
+
+**Tabelas e relacionamentos:** connect_lesson_schedules; connect_attendance_sessions.
+
+**Endpoints API:**
+- `GET /connect/calendar`
+- `POST/PUT/DELETE /connect/calendar/lessons`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/CalendarPage.tsx` (L1–L552) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/CalendarController.php` (L1–L267) |
+
+**Componentes relacionados:** `CalendarWeekGrid`.
+
+**Testes:** `backend/tests/Feature/ConnectScheduleTest.php`.
+
+---
+
+### CON-08. Frequência (chamada)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/frequencia` |
+| **Permissão** | connect.attendance.view|manage |
+
+**O que é / o que faz:** Registro de presença/falta por aula; export CSV.
+
+**Tabelas e relacionamentos:** connect_attendance_sessions; connect_attendance_marks.
+
+**Endpoints API:**
+- `GET /connect/attendance/session`
+- `POST .../marks`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/AttendancePage.tsx` (L1–L479) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/AttendanceController.php` (L1–L193) |
+
+**Componentes relacionados:** `ConnectAttendanceService`.
+
+**Testes:** `backend/tests/Feature/ConnectAttendanceSessionTest.php`.
+
+---
+
+### CON-09. Gerenciar frequência
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/gerenciar-frequencia` |
+| **Permissão** | connect.attendance.view|manage |
+
+**O que é / o que faz:** Histórico paginado de sessões de chamada e resumos.
+
+**Tabelas e relacionamentos:** connect_attendance_sessions.
+
+**Endpoints API:**
+- `GET /connect/attendance/records`
+- `class-summary`
+- `student-summary`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/AttendanceManagePage.tsx` (L1–L269) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/AttendanceManageController.php` (L1–L90) |
+
+---
+
+### CON-10. Relatório resumido Connect
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/relatorio (aba resumo)` |
+| **Permissão** | connect.reports.view |
+
+**O que é / o que faz:** Indicadores acadêmicos pré-definidos; export XLSX/PDF via HTML.
+
+**Tabelas e relacionamentos:** várias connect_*.
+
+**Endpoints API:**
+- `GET /connect/reports/summary`
+- `summary/xlsx`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/ConnectReportsPage.tsx` (L1–L209) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/ReportController.php` (L1–L110) |
+
+**Componentes relacionados:** `printHtmlDocument`.
+
+---
+
+### CON-11. Relatórios customizados Connect
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/relatorio (builder)` |
+| **Permissão** | connect.reports.view|manage |
+
+**O que é / o que faz:** Construtor de relatórios com seções, filtros, presets e export multi-formato.
+
+**Tabelas e relacionamentos:** report_presets; várias connect_*.
+
+**Endpoints API:**
+- `/reports/connect/*`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/CustomReportBuilder.tsx` (L1–Lnull) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/CustomReportController.php` (L1–Lnull) |
+
+**Componentes relacionados:** `ConnectReportBuilderService`.
+
+---
+
+### CON-12. Localização / mapa campus
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/localizacao` |
+| **Permissão** | connect.location.view |
+
+**O que é / o que faz:** Mapa 2D/3D do campus; posição simulada ou real de alunos.
+
+**Tabelas e relacionamentos:** connect_student_locations; connect_students.
+
+**Endpoints API:**
+- `GET /connect/locations`
+- `/connect/campus-people`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/LocationPage.tsx` (L1–L425) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/LocationController.php, CampusMapController.php` (L1–Lnull) |
+
+**Componentes relacionados:** `CampusMapContainer`, `CampusMap3DViewer`.
+
+**Testes:** `backend/tests/Feature/CampusMapTest.php`.
+
+---
+
+### CON-13. Contratos de alunos
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/contratos/alunos` |
+| **Permissão** | connect.contracts.* |
+
+**O que é / o que faz:** Contratos de estágio/aprendizagem; anexos por aluno; PDF padrão com lacunas.
+
+**Tabelas e relacionamentos:** connect_contracts; connect_contract_attachments.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /connect/contracts`
+- `attachments`
+- `generate-document`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/ContractsPage.tsx` (L1–L422) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/ContractController.php` (L1–L188) |
+
+**Componentes relacionados:** `ConnectContractAttachmentsPanel`, `ConnectContractDocumentService`.
+
+**Testes:** `backend/tests/Feature/ConnectContractAttachmentTest.php`.
+
+---
+
+### CON-14. Salário Jovem Aprendiz
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/salario` |
+| **Permissão** | connect.salary.view |
+
+**O que é / o que faz:** Preview, cálculo individual/lote, histórico com base em frequência e contrato.
+
+**Tabelas e relacionamentos:** connect_salary_records; connect_attendance_marks.
+
+**Endpoints API:**
+- `GET /connect/salaries`
+- `preview`
+- `calculate`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/SalaryPage.tsx` (L1–L615) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/SalaryController.php` (L1–L300) |
+
+---
+
+### CON-15. Planilhas Connect
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect/planilhas` |
+| **Permissão** | connect.spreadsheets |
+
+**O que é / o que faz:** Template, export, preview e import CSV de entidades Connect.
+
+**Tabelas e relacionamentos:** spreadsheet_import_logs.
+
+**Endpoints API:**
+- `/spreadsheets/connect/*`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/SpreadsheetHubPage.tsx` (L1–Lnull) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/SpreadsheetController.php` (L1–Lnull) |
+
+**Componentes relacionados:** `ConnectSpreadsheetHandler`.
+
+**Testes:** `backend/tests/Feature/SpreadsheetImportExportTest.php`.
+
+---
+
+### CON-16. Perfis unificados (drawer)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `várias telas` |
+| **Permissão** | conforme entidade |
+
+**O que é / o que faz:** Visualização read-only de perfil de aluno, professor, turma, curso, pessoa, contrato.
+
+**Tabelas e relacionamentos:** hub_people; connect_students; connect_teachers; connect_classes; connect_courses; connect_contracts.
+
+**Endpoints API:**
+- `GET /connect/*/profile`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/ConnectEntityViewDrawer.tsx` (L1–Lnull) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/ProfileController.php` (L1–L224) |
+
+---
+
+### CON-17. Roster de curso/turma
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `Cursos/Turmas` |
+| **Permissão** | connect.courses.manage|classes.manage |
+
+**O que é / o que faz:** Matrícula individual ou importação de turma inteira no curso.
+
+**Tabelas e relacionamentos:** connect_course_hub_person; connect_class_hub_person.
+
+**Endpoints API:**
+- `roster endpoints`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/connect/ConnectRosterDrawer.tsx` (L1–Lnull) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Connect/CourseRosterController.php, ClassRosterController.php` (L1–Lnull) |
+
+**Componentes relacionados:** `ConnectEnrollmentService`.
+
+**Testes:** `backend/tests/Feature/ConnectCourseRosterFromClassTest.php`.
+
+---
+
+## 9. Módulo SENAI Grid
+
+### GRD-01. Dashboard Grid
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid` |
+| **Permissão** | grid.dashboard |
+
+**O que é / o que faz:** KPIs de chamados, tarefas, estoque; gráficos e lista recente.
+
+**Tabelas e relacionamentos:** grid_tickets; grid_tasks; grid_inventory_items.
+
+**Endpoints API:**
+- `GET /grid/dashboard`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/grid/GridDashboardPage.tsx` (L1–L314) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Grid/DashboardController.php` (L1–L458) |
+
+**Componentes relacionados:** `GridCharts`.
+
+---
+
+### GRD-02. Chamados (Kanban)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/chamados` |
+| **Permissão** | grid.tickets.view|manage |
+
+**O que é / o que faz:** Lista/Kanban de chamados; criar, atribuir, transições de status, anexos, avaliação.
+
+**Tabelas e relacionamentos:** grid_tickets; grid_ticket_attachments.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /grid/tickets`
+- `approve-service`
+- `evaluate`
+- `tasks`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/grid/GridTicketsPage.tsx` (L1–L777) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Grid/TicketController.php` (L1–L312) |
+
+**Componentes relacionados:** `GridWorkflowService`, `GridTicketAttachmentsPanel`.
+
+---
+
+### GRD-03. Controle de chamados
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/controle` |
+| **Permissão** | grid.controle |
+
+**O que é / o que faz:** Console operacional: detalhe do chamado, workflow, relatório, anexos.
+
+**Tabelas e relacionamentos:** grid_tickets.
+
+**Endpoints API:**
+- `GET /grid/tickets/{id}`
+- `report`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/grid/GridTicketControlPage.tsx` (L1–L337) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Grid/TicketController.php` (L1–L312) |
+
+**Componentes relacionados:** `GridTicketControlPanel`.
+
+---
+
+### GRD-04. Tarefas Kanban
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/tarefas` |
+| **Permissão** | grid.tasks.manage |
+
+**O que é / o que faz:** Board de tarefas com colunas; reserva de materiais do estoque.
+
+**Tabelas e relacionamentos:** grid_tasks; grid_inventory_reservations.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /grid/tasks`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/grid/GridTasksPage.tsx` (L1–L395) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Grid/TaskController.php` (L1–L229) |
+
+**Componentes relacionados:** `GridWorkflowService`.
+
+---
+
+### GRD-05. Relatórios Grid
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/relatorios` |
+| **Permissão** | grid.reports.view |
+
+**O que é / o que faz:** KPIs + construtor de relatórios customizados do módulo Grid.
+
+**Tabelas e relacionamentos:** report_presets; grid_*.
+
+**Endpoints API:**
+- `/reports/grid/*`
+- `GET /grid/tickets`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/grid/GridReportsPage.tsx` (L1–L155) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/CustomReportController.php` (L1–L119) |
+
+**Componentes relacionados:** `GridReportBuilderService`.
+
+---
+
+### GRD-06. Estoque
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/estoque` |
+| **Permissão** | grid.inventory.view|manage |
+
+**O que é / o que faz:** CRUD de itens, ajuste de quantidade, upload/sync de imagem, alerta de estoque baixo.
+
+**Tabelas e relacionamentos:** grid_inventory_items.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /grid/inventory`
+- `adjust`
+- `image`
+- `sync-image`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/grid/GridInventoryPage.tsx` (L1–L647) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Grid/InventoryController.php` (L1–L215) |
+
+**Componentes relacionados:** `InventoryImageResolver`, `InventoryDuplicateService`.
+
+**Testes:** `backend/tests/Feature/InventoryDuplicateServiceTest (unit).php`.
+
+---
+
+### GRD-07. Mapa de tarefas
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/mapa` |
+| **Permissão** | grid.tasks.map |
+
+**O que é / o que faz:** Mapa do campus com chamados/tarefas abertos sobrepostos.
+
+**Tabelas e relacionamentos:** grid_tasks; grid_tickets.
+
+**Endpoints API:**
+- `GET /grid/tasks`
+- `GET /public-config`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/grid/GridTaskMapPage.tsx` (L1–L143) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Grid/TaskController.php` (L1–L229) |
+
+**Componentes relacionados:** `CampusMapContainer`.
+
+---
+
+### GRD-08. Usuários Grid
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/usuarios` |
+| **Permissão** | grid.users.manage |
+
+**O que é / o que faz:** Técnicos e equipe de manutenção (grid_users).
+
+**Tabelas e relacionamentos:** grid_users; hub_people.
+
+**Endpoints API:**
+- `GET/POST/PUT/DELETE /grid/users`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/grid/GridUsersPage.tsx` (L1–L309) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Grid/UserController.php` (L1–L89) |
+
+**Testes:** `backend/tests/Feature/GridAccessScopeTest.php`.
+
+---
+
+### GRD-09. Planilhas Grid
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/planilhas` |
+| **Permissão** | grid.spreadsheets |
+
+**O que é / o que faz:** Import/export CSV de tickets e estoque.
+
+**Tabelas e relacionamentos:** spreadsheet_import_logs.
+
+**Endpoints API:**
+- `/spreadsheets/grid/*`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/grid/SpreadsheetHubPage.tsx` (L1–Lnull) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/SpreadsheetController.php` (L1–L69) |
+
+**Componentes relacionados:** `GridSpreadsheetHandler`.
+
+**Testes:** `backend/tests/Feature/SpreadsheetImportExportTest.php`.
+
+---
+
+## 10. Módulo SENAI SAFE
+
+### SAF-01. Dashboard SAFE
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | SAFE |
+| **Rota UI** | `/safe` |
+| **Permissão** | safe.dashboard |
+
+**O que é / o que faz:** Painel conforme papel: AQV, professor ou portaria; filas e KPIs.
+
+**Tabelas e relacionamentos:** safe_authorizations.
+
+**Endpoints API:**
+- `GET /safe/dashboard`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/safe/SafeDashboardPage.tsx` (L1–L223) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Safe/DashboardController.php` (L1–L115) |
+
+**Testes:** `backend/tests/Feature/SafeModuleTest.php`.
+
+---
+
+### SAF-02. Alunos SAFE
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | SAFE |
+| **Rota UI** | `/safe/alunos` |
+| **Permissão** | safe.students.manage |
+
+**O que é / o que faz:** Listagem somente leitura espelhada do Connect; CRUD bloqueado no SAFE.
+
+**Tabelas e relacionamentos:** safe_students; connect_students.
+
+**Endpoints API:**
+- `GET /safe/students`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/safe/SafeStudentsPage.tsx` (L1–L125) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Safe/StudentController.php` (L1–L61) |
+
+**Componentes relacionados:** `SafeConnectStudentBridge`.
+
+**Testes:** `backend/tests/Feature/SafeConnectStudentsTest.php`.
+
+---
+
+### SAF-03. Autorizações (AQV)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | SAFE |
+| **Rota UI** | `/safe/autorizacoes` |
+| **Permissão** | safe.authorizations.manage |
+
+**O que é / o que faz:** Criar e editar solicitações de entrada/saída; histórico de auditoria.
+
+**Tabelas e relacionamentos:** safe_authorizations; safe_authorization_logs.
+
+**Endpoints API:**
+- `GET/POST/PUT /safe/authorizations`
+- `history`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/safe/SafeAuthorizationsPage.tsx` (L1–L269) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Safe/AuthorizationController.php` (L1–L140) |
+
+**Componentes relacionados:** `SafeWorkflowService`.
+
+**Fluxo:** AQV cria → professor aprova/nega → (se saída) portaria confirma → finalizado/arquivado.
+
+**Testes:** `backend/tests/Feature/SafeWorkflowTest.php`.
+
+---
+
+### SAF-04. Detalhe da autorização
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | SAFE |
+| **Rota UI** | `/safe/autorizacoes/:id` |
+| **Permissão** | safe.authorizations.manage |
+
+**O que é / o que faz:** Timeline de eventos e dados completos do protocolo.
+
+**Tabelas e relacionamentos:** safe_authorization_logs.
+
+**Endpoints API:**
+- `GET /safe/authorizations/{id}/history`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/safe/SafeAuthorizationDetailPage.tsx` (L1–L132) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Safe/AuthorizationController.php` (L1–L140) |
+
+---
+
+### SAF-05. Aprovações (professor)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | SAFE |
+| **Rota UI** | `/safe/aprovacoes` |
+| **Permissão** | safe.approve |
+
+**O que é / o que faz:** Fila de autorizações pendentes para aprovar ou negar.
+
+**Tabelas e relacionamentos:** safe_authorizations.
+
+**Endpoints API:**
+- `GET /safe/teacher/authorizations`
+- `approve`
+- `deny`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/safe/SafeApprovalsPage.tsx` (L1–L131) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Safe/TeacherController.php` (L1–L54) |
+
+**Componentes relacionados:** `SafeWorkflowService`.
+
+**Testes:** `backend/tests/Feature/SafeWorkflowTest.php`.
+
+---
+
+### SAF-06. Portaria
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | SAFE |
+| **Rota UI** | `/safe/portaria` |
+| **Permissão** | safe.portaria |
+
+**O que é / o que faz:** Confirmação física de saída/entrada na portaria.
+
+**Tabelas e relacionamentos:** safe_authorizations.
+
+**Endpoints API:**
+- `GET /safe/portaria/authorizations`
+- `confirm`
+- `deny`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Frontend | `Senai HUB/frontend/src/pages/safe/SafePortariaPage.tsx` (L1–L128) |
+| Backend | `Senai HUB/backend/app/Http/Controllers/Api/Safe/PortariaController.php` (L1–L50) |
+
+**Componentes relacionados:** `SafeWorkflowService`.
+
+**Testes:** `backend/tests/Feature/SafeWorkflowTest.php`.
+
+---
+
+## 11. Recursos globais (transversais)
+
+### GLB-01. Busca global (Ctrl+K)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Global |
+| **Rota UI** | `Qualquer tela autenticada` |
+| **Permissão** | Autenticado (resultados filtrados por permissão) |
+
+**O que é / o que faz:** Paleta de busca unificada: alunos, turmas, chamados, estoque. Debounce 250ms, mínimo 2 caracteres.
+
+**Tabelas e relacionamentos:** connect_students; connect_classes; grid_tickets; grid_inventory_items.
+
+**Endpoints API:**
+- `GET /search?q=`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Context | `Senai HUB/frontend/src/contexts/GlobalSearchContext.tsx` (L1–L80) |
+| UI | `Senai HUB/frontend/src/components/search/GlobalSearchPalette.tsx` (L1–L200) |
+| Service BE | `Senai HUB/backend/app/Services/Search/GlobalSearchService.php` (L1–L150) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/GlobalSearchController.php` (L16–L25) |
+
+---
+
+### GLB-02. Notificações in-app
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Global |
+| **Rota UI** | `Sino no header` |
+| **Permissão** | Autenticado |
+
+**O que é / o que faz:** Bell com contagem não lida (poll 45s); marcar lida; e-mail conforme preferências.
+
+**Tabelas e relacionamentos:** hub_notifications; users.notification_preferences.
+
+**Endpoints API:**
+- `GET /notifications`
+- `unread-count`
+- `PATCH read`
+- `read-all`
+- `DELETE`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Context | `Senai HUB/frontend/src/contexts/NotificationContext.tsx` (L1–L120) |
+| UI | `Senai HUB/frontend/src/components/notifications/NotificationBell.tsx` (L1–L150) |
+| Service BE | `Senai HUB/backend/app/Services/Notification/NotificationService.php` (L1–L200) |
+| Triggers | `Senai HUB/backend/app/Services/Notification/SystemNotificationTriggers.php` (L1–L300) |
+
+**Testes:** `backend/tests/Feature/NotificationTest.php`.
+
+---
+
+### GLB-03. Chat de suporte
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Global |
+| **Rota UI** | `Botão Suporte nas sidebars` |
+| **Permissão** | Autenticado / público (landing) |
+
+**O que é / o que faz:** Widget flutuante estilo messenger; mensagens locais com resposta automática placeholder (IA futura).
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Context | `Senai HUB/frontend/src/contexts/SupportChatContext.tsx` (L1–L120) |
+| Widget | `Senai HUB/frontend/src/components/support/SupportChatWidget.tsx` (L1–L180) |
+| Trigger | `Senai HUB/frontend/src/components/support/SupportChatTrigger.tsx` (L1–L30) |
+
+**Observações:** Sem backend ainda — integração futura via SupportChatContext.sendMessage.
+
+---
+
+### GLB-04. Internacionalização (i18n)
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Global |
+| **Rota UI** | `Todas as telas` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Português (padrão), inglês e espanhol; locales base + supplement JSON.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Config | `Senai HUB/frontend/src/i18n/index.ts` (L1–L80) |
+| Locales | `frontend/src/i18n/locales/*.json` e `supplement/*.json` |
+| UI | `Senai HUB/frontend/src/components/settings/LanguageSwitcher.tsx` (L1–L60) |
+
+---
+
+### GLB-05. Identidade visual / logos
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Global |
+| **Rota UI** | `—` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Pacote de logos por app: expanded, icon, mark-light, mark-dark. Script de sincronização SAFE/HUB.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Assets | `Senai HUB/frontend/src/assets/brand/index.ts` (L1–L40) |
+| Util | `Senai HUB/frontend/src/utils/appBrandAssets.ts` (L1–L130) |
+| Script | `Senai HUB/frontend/scripts/sync-brand-assets.mjs` (L1–L50) |
+| Regra | `Senai HUB/.cursor/rules/senai-hub-brand.mdc` (L1–L50) |
+
+---
+
+### GLB-06. Toast e confirmações
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Global |
+| **Rota UI** | `—` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Feedback de sucesso/erro e diálogos de confirmação para ações destrutivas.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Toast | `Senai HUB/frontend/src/contexts/ToastContext.tsx` (L1–L97) |
+| Confirm | `Senai HUB/frontend/src/contexts/ConfirmContext.tsx` (L1–L80) |
+| Hook | `Senai HUB/frontend/src/hooks/useCrudToast.ts` (L1–L40) |
+
+---
+
+## 12. Relatórios personalizados
+
+Módulos: **connect** e **grid**. Builder compartilhado: `Senai HUB/frontend/src/components/reports/CustomReportBuilder.tsx` (L45–L610).
+
+- Schema e seções: `backend/app/Support/Reports/ReportSchemaRegistry.php`
+- Builders: `ConnectReportBuilderService.php`, `GridReportBuilderService.php`
+- Export: CSV, XLSX, JSON, HTML (PDF via impressão do navegador — `openHtmlInNewTab` em `frontend/src/utils/downloadFile.ts`)
+- Template impressão: `backend/resources/views/reports/print.blade.php`
+
+## 13. Importação e exportação por planilhas
+
+| Módulo | Chaves (`spreadsheet_key`) | Handler |
+|---|---|---|
+| Connect | students, teachers, classes, courses, attendance, contracts, ... | `ConnectSpreadsheetHandler.php` |
+| Grid | tickets, inventory | `GridSpreadsheetHandler.php` |
+
+Orquestração: `Senai HUB/backend/app/Services/Spreadsheet/SpreadsheetService.php` (L1–L200). UI: `Senai HUB/frontend/src/pages/spreadsheet/SpreadsheetHubPage.tsx` (L24–L346).
+
+## 14. Arquivo histórico
+
+### ARC-01. Arquivo histórico Hub
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Hub |
+| **Rota UI** | `/hub/arquivo` |
+| **Permissão** | connect.classes.view | grid.tickets.view | safe.access (conforme aba) |
+
+**O que é / o que faz:** Consulta turmas encerradas, chamados concluídos e autorizações SAFE finalizadas; arquivamento automático de turmas com data fim vencida.
+
+**Tabelas e relacionamentos:** connect_classes; grid_tickets; safe_authorizations.
+
+**Endpoints API:**
+- `GET /archive/summary`
+- `connect/classes`
+- `grid/tickets`
+- `safe/authorizations`
+- `POST /archive/run-auto-archive`
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Página | `Senai HUB/frontend/src/pages/hub/HubArchivePage.tsx` (L30–L394) |
+| Service | `Senai HUB/frontend/src/services/archiveService.ts` (L1–L80) |
+| Controller | `Senai HUB/backend/app/Http/Controllers/Api/ArchiveController.php` (L27–L155) |
+| Service BE | `Senai HUB/backend/app/Services/Connect/ConnectClassArchiveService.php` (L1–L100) |
+
+**Testes:** `backend/tests/Feature/ArchiveTest.php`.
+
+---
+
+## 15. Testes automatizados
+
+| Arquivo | Escopo |
+|---|---|
+| `backend/tests/Feature/AccessRequestTest.php` | Feature |
+| `backend/tests/Feature/AdminUserManagementTest.php` | Feature |
+| `backend/tests/Feature/ArchiveTest.php` | Feature |
+| `backend/tests/Feature/AuthFeatureTest.php` | Feature |
+| `backend/tests/Feature/CampusMapTest.php` | Feature |
+| `backend/tests/Feature/ConnectAccessScopeTest.php` | Feature |
+| `backend/tests/Feature/ConnectAttendanceSessionTest.php` | Feature |
+| `backend/tests/Feature/ConnectContractAttachmentTest.php` | Feature |
+| `backend/tests/Feature/ConnectCourseCalendarProvisionTest.php` | Feature |
+| `backend/tests/Feature/ConnectCourseDeleteTest.php` | Feature |
+| `backend/tests/Feature/ConnectCourseRosterFromClassTest.php` | Feature |
+| `backend/tests/Feature/ConnectScheduleTest.php` | Feature |
+| `backend/tests/Feature/ExampleTest.php` | Feature |
+| `backend/tests/Feature/GridAccessScopeTest.php` | Feature |
+| `backend/tests/Feature/GridTicketAttachmentTest.php` | Feature |
+| `backend/tests/Feature/HealthCheckTest.php` | Feature |
+| `backend/tests/Feature/NotificationTest.php` | Feature |
+| `backend/tests/Feature/SafeConnectStudentsTest.php` | Feature |
+| `backend/tests/Feature/SafeModuleTest.php` | Feature |
+| `backend/tests/Feature/SafeWorkflowTest.php` | Feature |
+| `backend/tests/Feature/SpreadsheetImportExportTest.php` | Feature |
+| `backend/tests/Unit/ExampleTest.php` | Unit |
+| `backend/tests/Unit/InventoryDuplicateServiceTest.php` | Unit |
+| `backend/tests/Unit/InventoryImageResolverTest.php` | Unit |
+
+## Anexo A — Mapa completo de rotas API
+
+Fonte: `Senai HUB/backend/routes/api.php` (L54–L311)
+
+```
+Route::get('/health', [HealthController::class, 'index']);
+Route::get('/public-config', [PublicConfigController::class, 'index']);
+Route::post('/access-requests', [AccessRequestController::class, 'store'])->middleware('throttle:5,1');
+Route::prefix('auth')->group(function (): void {
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/permissions-catalog', [AuthController::class, 'permissionsCatalog']);
+        Route::put('/me', [AuthController::class, 'update']);
+        Route::post('/avatar', [AuthController::class, 'updateAvatar']);
+        Route::delete('/avatar', [AuthController::class, 'deleteAvatar']);
+        Route::put('/password', [AuthController::class, 'changePassword']);
+        Route::get('/notification-preferences', [NotificationController::class, 'preferences']);
+        Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->group(function (): void {
+    Route::get('/search', GlobalSearchController::class);
+    Route::prefix('notifications')->group(function (): void {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/read-all', [NotificationController::class, 'markAllRead']);
+        Route::patch('/{notification}/read', [NotificationController::class, 'markRead']);
+        Route::delete('/{notification}', [NotificationController::class, 'destroy']);
+    Route::get('/applications', [ApplicationController::class, 'index']);
+    Route::prefix('archive')->group(function (): void {
+        Route::get('/summary', [ArchiveController::class, 'summary']);
+        Route::get('/connect/classes', [ArchiveController::class, 'connectClasses']);
+        Route::get('/grid/tickets', [ArchiveController::class, 'gridTickets']);
+        Route::get('/safe/authorizations', [ArchiveController::class, 'safeAuthorizations']);
+        Route::post('/run-auto-archive', [ArchiveController::class, 'runAutoArchive'])->middleware('admin');
+    Route::prefix('admin')->middleware('admin')->group(function (): void {
+        Route::get('/roles', [UserManagementController::class, 'roles']);
+        Route::get('/nav-permissions', [UserManagementController::class, 'navPermissions']);
+        Route::get('/users', [UserManagementController::class, 'index']);
+        Route::get('/users/{user}', [UserManagementController::class, 'show']);
+        Route::post('/users', [UserManagementController::class, 'store']);
+        Route::put('/users/{user}', [UserManagementController::class, 'update']);
+        Route::delete('/users/{user}', [UserManagementController::class, 'destroy']);
+    Route::prefix('reports/{module}')->whereIn('module', ['connect', 'grid'])->group(function (): void {
+        Route::get('/schema', [CustomReportController::class, 'schema'])
+        Route::get('/filter-options', [CustomReportController::class, 'filterOptions'])
+        Route::get('/presets', [ReportPresetController::class, 'index'])
+        Route::post('/presets', [ReportPresetController::class, 'store'])
+        Route::put('/presets/{preset}', [ReportPresetController::class, 'update'])
+        Route::delete('/presets/{preset}', [ReportPresetController::class, 'destroy'])
+        Route::post('/build', [CustomReportController::class, 'build'])
+        Route::post('/export-csv', [CustomReportController::class, 'exportCsv'])
+        Route::post('/export-xlsx', [CustomReportController::class, 'exportXlsx'])
+        Route::post('/export-json', [CustomReportController::class, 'exportJson'])
+        Route::post('/export-html', [CustomReportController::class, 'exportHtml'])
+    Route::prefix('spreadsheets/{module}')->whereIn('module', ['connect', 'grid'])->group(function (): void {
+        Route::get('/', [SpreadsheetController::class, 'index'])
+        Route::get('/import-logs', [SpreadsheetController::class, 'logs'])
+        Route::get('/{key}/template', [SpreadsheetController::class, 'template'])
+        Route::get('/{key}/export', [SpreadsheetController::class, 'export'])
+        Route::post('/{key}/preview', [SpreadsheetController::class, 'preview'])
+        Route::post('/{key}/import', [SpreadsheetController::class, 'import'])
+    Route::prefix('connect')->middleware('permission:connect.access')->group(function (): void {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('permission:connect.dashboard');
+        Route::middleware('permission:connect.people.manage')->group(function (): void {
+            Route::get('/people/{person}/profile', [ProfileController::class, 'person']);
+            Route::get('/people', [PersonController::class, 'index']);
+            Route::post('/people', [PersonController::class, 'store']);
+            Route::put('/people/{person}', [PersonController::class, 'update']);
+            Route::delete('/people/{person}', [PersonController::class, 'destroy']);
+        Route::get('/students/{student}/profile', [ProfileController::class, 'student'])->middleware('permission:connect.students.view,connect.students.manage');
+        Route::get('/students', [StudentController::class, 'index'])->middleware('permission:connect.students.view,connect.students.manage');
+        Route::middleware('permission:connect.students.manage')->group(function (): void {
+            Route::post('/students', [StudentController::class, 'store']);
+            Route::put('/students/{student}', [StudentController::class, 'update']);
+            Route::delete('/students/{student}', [StudentController::class, 'destroy']);
+        Route::get('/teachers/{teacher}/profile', [ProfileController::class, 'teacher'])->middleware('permission:connect.teachers.view,connect.teachers.manage');
+        Route::get('/teachers', [TeacherController::class, 'index'])->middleware('permission:connect.teachers.view,connect.teachers.manage');
+        Route::middleware('permission:connect.teachers.manage')->group(function (): void {
+            Route::post('/teachers', [TeacherController::class, 'store']);
+            Route::put('/teachers/{teacher}', [TeacherController::class, 'update']);
+            Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy']);
+        Route::get('/classes/{connectClass}/profile', [ProfileController::class, 'classProfile'])->middleware('permission:connect.classes.view,connect.classes.manage');
+        Route::get('/classes', [ClassController::class, 'index'])->middleware('permission:connect.classes.view,connect.classes.manage');
+        Route::middleware('permission:connect.classes.manage')->group(function (): void {
+            Route::post('/classes', [ClassController::class, 'store']);
+            Route::put('/classes/{connectClass}', [ClassController::class, 'update']);
+            Route::delete('/classes/{connectClass}', [ClassController::class, 'destroy']);
+            Route::get('/classes/{connectClass}/roster', [ClassRosterController::class, 'index']);
+            Route::post('/classes/{connectClass}/roster', [ClassRosterController::class, 'store']);
+            Route::delete('/classes/{connectClass}/roster/{person}', [ClassRosterController::class, 'destroy']);
+        Route::get('/courses/{course}/profile', [ProfileController::class, 'course'])->middleware('permission:connect.courses.view,connect.courses.manage');
+        Route::get('/courses', [CourseController::class, 'index'])->middleware('permission:connect.courses.view,connect.courses.manage');
+        Route::middleware('permission:connect.courses.manage')->group(function (): void {
+            Route::post('/courses', [CourseController::class, 'store']);
+            Route::put('/courses/{course}', [CourseController::class, 'update']);
+            Route::delete('/courses/{course}', [CourseController::class, 'destroy']);
+            Route::get('/courses/{course}/roster', [CourseRosterController::class, 'index']);
+            Route::post('/courses/{course}/roster/from-class', [CourseRosterController::class, 'storeFromClass']);
+            Route::post('/courses/{course}/roster', [CourseRosterController::class, 'store']);
+            Route::delete('/courses/{course}/roster/{person}', [CourseRosterController::class, 'destroy']);
+        Route::get('/calendar', [CalendarController::class, 'index'])->middleware('permission:connect.calendar.view,connect.calendar.manage');
+        Route::get('/calendar/semesters', [CalendarController::class, 'semesters'])->middleware('permission:connect.calendar.view,connect.calendar.manage');
+        Route::get('/classes/{connectClass}/weekly-patterns', [CalendarController::class, 'weeklyPatterns'])->middleware('permission:connect.calendar.view,connect.calendar.manage,connect.classes.view,connect.classes.manage');
+        Route::get('/classes/{connectClass}/schedule-plan', [CalendarController::class, 'schedulePlan'])->middleware('permission:connect.calendar.view,connect.calendar.manage,connect.classes.view,connect.classes.manage');
+        Route::middleware('permission:connect.calendar.manage,connect.classes.manage')->group(function (): void {
+            Route::post('/calendar/lessons', [CalendarController::class, 'storeLesson']);
+            Route::put('/calendar/lessons/{connectLessonSchedule}', [CalendarController::class, 'updateLesson']);
+            Route::delete('/calendar/lessons/{connectLessonSchedule}', [CalendarController::class, 'destroyLesson']);
+            Route::put('/classes/{connectClass}/weekly-patterns', [CalendarController::class, 'syncWeeklyPatterns']);
+            Route::post('/classes/{connectClass}/generate-schedule', [CalendarController::class, 'generateSchedule']);
+            Route::post('/classes/{connectClass}/provision-attendance', [CalendarController::class, 'provisionAttendance']);
+        Route::get('/attendance/session', [AttendanceController::class, 'show'])->middleware('permission:connect.attendance.view,connect.attendance.view_own,connect.attendance.manage');
+        Route::post('/attendance/sessions/{session}/marks', [AttendanceController::class, 'saveMarks'])->middleware('permission:connect.attendance.manage');
+        Route::get('/attendance/records', [AttendanceManageController::class, 'index'])->middleware('permission:connect.attendance.view,connect.attendance.manage');
+        Route::get('/attendance/class-summary', [AttendanceManageController::class, 'classSummary'])->middleware('permission:connect.attendance.view,connect.attendance.manage');
+        Route::get('/attendance/student-summary', [AttendanceManageController::class, 'studentSummary'])->middleware('permission:connect.attendance.view,connect.attendance.manage');
+        Route::get('/reports/summary', [ReportController::class, 'summary'])->middleware('permission:connect.reports.view,connect.reports.manage');
+        Route::get('/reports/summary/xlsx', [ReportController::class, 'summaryXlsx'])->middleware('permission:connect.reports.view,connect.reports.manage');
+        Route::get('/locations', [LocationController::class, 'index'])->middleware('permission:connect.location.view');
+        Route::get('/campus-people', [CampusMapController::class, 'people'])->middleware('permission:connect.location.view');
+        Route::get('/contracts/{contract}/profile', [ProfileController::class, 'contract'])->middleware('permission:connect.contracts.view,connect.contracts.view_own,connect.contracts.manage');
+        Route::get('/contracts', [ContractController::class, 'index'])->middleware('permission:connect.contracts.view,connect.contracts.view_own,connect.contracts.manage');
+        Route::middleware('permission:connect.contracts.manage')->group(function (): void {
+            Route::post('/contracts', [ContractController::class, 'store']);
+            Route::put('/contracts/{contract}', [ContractController::class, 'update']);
+            Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
+            Route::post('/contracts/{contract}/attachments', [ContractController::class, 'storeAttachment']);
+            Route::delete('/contracts/{contract}/attachments/{connectContractAttachment}', [ContractController::class, 'destroyAttachment']);
+            Route::post('/contracts/{contract}/generate-document', [ContractController::class, 'generateDocument']);
+        Route::get('/salaries', [SalaryController::class, 'index'])->middleware('permission:connect.salary.view,connect.salary.view_own');
+        Route::get('/salaries/preview', [SalaryController::class, 'preview'])->middleware('permission:connect.salary.view,connect.salary.view_own');
+        Route::post('/salaries/calculate', [SalaryController::class, 'calculate'])->middleware('admin');
+        Route::post('/salaries/calculate-batch', [SalaryController::class, 'calculateBatch'])->middleware('admin');
+    Route::prefix('grid')->middleware('permission:grid.access')->group(function (): void {
+        Route::get('/dashboard', [GridDashboardController::class, 'index'])->middleware('permission:grid.dashboard');
+        Route::get('/tickets', [GridTicketController::class, 'index'])->middleware('permission:grid.tickets.view,grid.tickets.manage');
+        Route::get('/tickets/{ticket}', [GridTicketController::class, 'show'])->middleware('permission:grid.tickets.view,grid.tickets.manage');
+        Route::get('/tickets/{ticket}/report', [GridTicketController::class, 'report'])->middleware('permission:grid.reports.view');
+        Route::post('/tickets', [GridTicketController::class, 'store'])->middleware('permission:grid.tickets.manage');
+        Route::post('/tickets/{ticket}/tasks', [GridTicketController::class, 'createTask'])->middleware('permission:grid.tickets.manage');
+        Route::post('/tickets/{ticket}/approve-service', [GridTicketController::class, 'approveService'])->middleware('permission:grid.tickets.manage');
+        Route::post('/tickets/{ticket}/evaluate', [GridTicketController::class, 'evaluate'])->middleware('permission:grid.tickets.manage');
+        Route::put('/tickets/{ticket}', [GridTicketController::class, 'update'])->middleware('permission:grid.tickets.view,grid.tickets.manage');
+        Route::post('/tickets/{ticket}/attachments', [GridTicketController::class, 'storeAttachment'])->middleware('permission:grid.tickets.view,grid.tickets.manage');
+        Route::delete('/tickets/{ticket}/attachments/{gridTicketAttachment}', [GridTicketController::class, 'destroyAttachment'])->middleware('permission:grid.tickets.view,grid.tickets.manage');
+        Route::delete('/tickets/{ticket}', [GridTicketController::class, 'destroy'])->middleware('permission:grid.tickets.manage');
+        Route::get('/tasks', [GridTaskController::class, 'index'])->middleware('permission:grid.tasks.manage');
+        Route::post('/tasks', [GridTaskController::class, 'store'])->middleware('permission:grid.tasks.manage');
+        Route::put('/tasks/{task}', [GridTaskController::class, 'update'])->middleware('permission:grid.tasks.manage');
+        Route::delete('/tasks/{task}', [GridTaskController::class, 'destroy'])->middleware('permission:grid.tasks.manage');
+        Route::get('/inventory', [GridInventoryController::class, 'index'])->middleware('permission:grid.inventory.view,grid.inventory.manage');
+        Route::get('/inventory/{inventoryItem}', [GridInventoryController::class, 'show'])->middleware('permission:grid.inventory.view,grid.inventory.manage');
+        Route::middleware('permission:grid.inventory.manage')->group(function (): void {
+            Route::post('/inventory', [GridInventoryController::class, 'store']);
+            Route::put('/inventory/{inventoryItem}', [GridInventoryController::class, 'update']);
+            Route::post('/inventory/{inventoryItem}/adjust', [GridInventoryController::class, 'adjust']);
+            Route::post('/inventory/{inventoryItem}/sync-image', [GridInventoryController::class, 'syncImage']);
+            Route::post('/inventory/{inventoryItem}/image', [GridInventoryController::class, 'uploadImage']);
+            Route::delete('/inventory/{inventoryItem}', [GridInventoryController::class, 'destroy']);
+        Route::middleware('permission:grid.users.manage')->group(function (): void {
+            Route::get('/users', [GridUserController::class, 'index']);
+            Route::get('/users/{gridUser}', [GridUserController::class, 'show']);
+            Route::post('/users', [GridUserController::class, 'store']);
+            Route::put('/users/{gridUser}', [GridUserController::class, 'update']);
+            Route::delete('/users/{gridUser}', [GridUserController::class, 'destroy']);
+    Route::prefix('safe')->middleware('permission:safe.access')->group(function (): void {
+        Route::get('/dashboard', [SafeDashboardController::class, 'index'])->middleware('permission:safe.dashboard');
+        Route::middleware('permission:safe.students.manage')->group(function (): void {
+            Route::get('/students', [SafeStudentController::class, 'index']);
+            Route::post('/students', [SafeStudentController::class, 'store']);
+            Route::get('/students/{safeStudent}', [SafeStudentController::class, 'show']);
+            Route::put('/students/{safeStudent}', [SafeStudentController::class, 'update']);
+            Route::delete('/students/{safeStudent}', [SafeStudentController::class, 'destroy']);
+        Route::middleware('permission:safe.authorizations.manage')->group(function (): void {
+            Route::get('/authorizations', [SafeAuthorizationController::class, 'index']);
+            Route::post('/authorizations', [SafeAuthorizationController::class, 'store']);
+            Route::get('/authorizations/{safeAuthorization}', [SafeAuthorizationController::class, 'show']);
+            Route::put('/authorizations/{safeAuthorization}', [SafeAuthorizationController::class, 'update']);
+            Route::get('/authorizations/{safeAuthorization}/history', [SafeAuthorizationController::class, 'history']);
+        Route::prefix('teacher')->middleware('permission:safe.approve')->group(function (): void {
+            Route::get('/authorizations', [SafeTeacherController::class, 'index']);
+            Route::post('/authorizations/{safeAuthorization}/approve', [SafeTeacherController::class, 'approve']);
+            Route::post('/authorizations/{safeAuthorization}/deny', [SafeTeacherController::class, 'deny']);
+        Route::prefix('portaria')->middleware('permission:safe.portaria')->group(function (): void {
+            Route::get('/authorizations', [SafePortariaController::class, 'index']);
+            Route::post('/authorizations/{safeAuthorization}/confirm', [SafePortariaController::class, 'confirm']);
+            Route::post('/authorizations/{safeAuthorization}/deny', [SafePortariaController::class, 'deny']);
+```
+
+## Anexo B — Mapa de rotas do frontend
+
+Fonte: `Senai HUB/frontend/src/routes/index.tsx` (L66–L145)
+
+| Rota | Página |
+|---|---|
+| `/login` | `LoginPage` |
+| `/recuperar-senha` | `ForgotPasswordPage` |
+| `/redefinir-senha` | `ResetPasswordPage` |
+| `/solicitar-acesso` | `RequestAccessPage` |
+| `/hub` | `ApplicationHubPage` |
+| `/hub/arquivo` | `HubArchivePage` |
+| `/hub/usuarios` | `HubUsersPage` |
+| `/configuracoes` | `SettingsPage` |
+| `/temas` | `ThemesPage` |
+| `/perfil` | `ProfilePage` |
+| `/acesso-negado` | `AccessDeniedPage` |
+| `/grid` | `GridDashboardPage` |
+| `/grid/chamados` | `GridTicketsPage` |
+| `/grid/controle` | `GridTicketControlPage` |
+| `/grid/tarefas` | `GridTasksPage` |
+| `/grid/relatorios` | `GridReportsPage` |
+| `/grid/estoque` | `GridInventoryPage` |
+| `/grid/mapa` | `LazyPage` |
+| `/grid/usuarios` | `GridUsersPage` |
+| `/grid/planilhas` | `LazyPage` |
+| `/connect` | `ConnectOverviewPage` |
+| `/connect/pessoas` | `PeoplePage` |
+| `/connect/alunos` | `StudentsPage` |
+| `/connect/professores` | `TeachersPage` |
+| `/connect/turmas` | `ClassesPage` |
+| `/connect/cursos` | `CoursesPage` |
+| `/connect/calendario` | `CalendarPage` |
+| `/connect/frequencia` | `AttendancePage` |
+| `/connect/gerenciar-frequencia` | `AttendanceManagePage` |
+| `/connect/relatorio` | `ConnectReportsPage` |
+| `/connect/localizacao` | `LazyPage` |
+| `/connect/contratos/alunos` | `ContractsPage` |
+| `/connect/salario` | `SalaryPage` |
+| `/connect/planilhas` | `LazyPage` |
+| `/safe` | `SafeDashboardPage` |
+| `/safe/alunos` | `SafeStudentsPage` |
+| `/safe/autorizacoes` | `SafeAuthorizationsPage` |
+| `/safe/autorizacoes/:id` | `SafeAuthorizationDetailPage` |
+| `/safe/aprovacoes` | `SafeApprovalsPage` |
+| `/safe/portaria` | `SafePortariaPage` |
+| `/` | `LandingPage` |
+| `/dashboard` | `Navigate` |
+| `*` | `NotFoundPage` |
+
+## Anexo C — Serviços backend
+
+### `Senai HUB/backend/app/Services/Auth/AuthService.php` (235 linhas)
+Métodos públicos: login, register, updateProfile, updateAvatar, removeAvatar, changePassword, logout, sendPasswordResetLink, resetPassword
+
+### `Senai HUB/backend/app/Services/Auth/PermissionService.php` (155 linhas)
+Métodos públicos: permissionsFor, defaultPermissionsForRole, buildCustomPermissions, can, applicationSlugsFor, canAccessConnect, canAccessGrid, canAccessSafe
+
+### `Senai HUB/backend/app/Services/Connect/ConnectAttendanceService.php` (256 linhas)
+Métodos públicos: provisionSessionsForClass, provisionSessionForLesson, findOrCreateSession, classSummary, studentSummary
+
+### `Senai HUB/backend/app/Services/Connect/ConnectCampusMapService.php` (222 linhas)
+Métodos públicos: peopleForUser
+
+### `Senai HUB/backend/app/Services/Connect/ConnectClassArchiveService.php` (53 linhas)
+Métodos públicos: archiveExpiredClasses, countPendingAutoArchive
+
+### `Senai HUB/backend/app/Services/Connect/ConnectContractAttachmentService.php` (104 linhas)
+Métodos públicos: store, storeFromContents, delete, deleteAllForContract, publicUrl, canDelete
+
+### `Senai HUB/backend/app/Services/Connect/ConnectContractDocumentService.php` (141 linhas)
+Métodos públicos: __construct, templateData, renderHtml, renderPdf, generateAndAttach
+
+### `Senai HUB/backend/app/Services/Connect/ConnectEnrollmentService.php` (179 linhas)
+Métodos públicos: attachPersonToCourse, detachPersonFromCourse, attachStudentToClass, detachStudentFromClass, syncPivotsForStudent, syncTeacherCourseFromClass, enrollClassInCourse
+
+### `Senai HUB/backend/app/Services/Connect/ConnectScheduleService.php` (530 linhas)
+Métodos públicos: __construct, syncWeeklyPatterns, ensureClassCalendar, provisionDefaultSemesterCalendar, schedulePlan, generateFromPatterns, createLesson, updateLesson, assertNoDuplicateSemesterEnrollment, validateClassAssignment, assertNoConflict
+
+### `Senai HUB/backend/app/Services/Grid/GridTicketAttachmentService.php` (79 linhas)
+Métodos públicos: store, delete, deleteAllForTicket, publicUrl, canDelete
+
+### `Senai HUB/backend/app/Services/Grid/GridWorkflowService.php` (619 linhas)
+Métodos públicos: assertInventoryLinesAvailable, resolveStatusForNewTicket, updateTicket, transitionTicketStatus, enterEmAtendimento, ensurePrimaryTask, approveService, evaluateTicket, createTaskFromTicket, handleTaskColumnChange, syncTicketOnTaskChange, syncInventoryForTask, …
+
+### `Senai HUB/backend/app/Services/Grid/InventoryDuplicateService.php` (250 linhas)
+Métodos públicos: normalizeTitle, normalizeSku, findExisting, mergeIncomingQuantity, mergeAllDuplicates, findDuplicateGroups
+
+### `Senai HUB/backend/app/Services/Grid/InventoryImageResolver.php` (299 linhas)
+Métodos públicos: resolve, apply, storeUpload, isStoredUpload, deleteStoredUpload, applyQuick, isLegacyBrokenUrl, normalizeThumbnailUrl, publicImageUrl, resolveQuick
+
+### `Senai HUB/backend/app/Services/HealthService.php` (60 linhas)
+Métodos públicos: check
+
+### `Senai HUB/backend/app/Services/Notification/HubMailDispatcher.php` (161 linhas)
+Métodos públicos: sendForUser, sendToAddress
+
+### `Senai HUB/backend/app/Services/Notification/NotificationService.php` (151 linhas)
+Métodos públicos: __construct, notify, notifyMany, notifyRole, notifyPermission, userIdsByName, unreadCount, markRead, markAllRead, admins
+
+### `Senai HUB/backend/app/Services/Notification/SafeNotificationTriggers.php` (132 linhas)
+Métodos públicos: __construct, authorizationCreated, teacherApproved, teacherDenied, portariaConfirmed, portariaDenied
+
+### `Senai HUB/backend/app/Services/Notification/SystemNotificationTriggers.php` (603 linhas)
+Métodos públicos: __construct, userCreated, userRoleUpdated, passwordChanged, accessRequestSubmitted, connectStudentEnrolled, connectClassAssigned, connectCourseRosterAdded, connectLessonScheduled, connectLessonCancelled, connectScheduleGenerated, connectAttendanceSaved, …
+
+### `Senai HUB/backend/app/Services/Reports/ConnectReportBuilderService.php` (548 linhas)
+Métodos públicos: build
+
+### `Senai HUB/backend/app/Services/Reports/CustomReportService.php` (146 linhas)
+Métodos públicos: __construct, schema, build, exportCsv, exportXlsx, exportJson, exportHtml
+
+### `Senai HUB/backend/app/Services/Reports/GridReportBuilderService.php` (351 linhas)
+Métodos públicos: build
+
+### `Senai HUB/backend/app/Services/Safe/SafeConnectStudentBridge.php` (101 linhas)
+Métodos públicos: paginate, ensureSafeStudentRecord, resolveSafeStudent
+
+### `Senai HUB/backend/app/Services/Safe/SafeWorkflowService.php` (260 linhas)
+Métodos públicos: __construct, createAuthorization, updateAuthorization, approveByTeacher, denyByTeacher, confirmByPortaria, denyByPortaria, parseScheduledAt, generateProtocol, logAction
+
+### `Senai HUB/backend/app/Services/Search/GlobalSearchService.php` (185 linhas)
+Métodos públicos: __construct, search
+
+### `Senai HUB/backend/app/Services/Spreadsheet/ConnectSpreadsheetHandler.php` (679 linhas)
+Métodos públicos: __construct, export, import
+
+### `Senai HUB/backend/app/Services/Spreadsheet/GridSpreadsheetHandler.php` (314 linhas)
+Métodos públicos: export, import
+
+### `Senai HUB/backend/app/Services/Spreadsheet/SpreadsheetService.php` (196 linhas)
+Métodos públicos: __construct, listModule, downloadTemplate, export, preview, import, importLogs
+
+## Seção 16 — Fluxos de negócio
+
+### Fluxo acadêmico Connect
 
 ```text
-Navegador
-   ↓
-React + TypeScript
-   ↓ requisição HTTP com token
-Axios
-   ↓
-API REST Laravel
-   ↓
-Middleware de autenticação e permissão
-   ↓
-Controller
-   ↓
-Service
-   ↓
-Model Eloquent
-   ↓
-Banco de dados
+Pessoa (hub_people)
+  → Aluno/Professor (connect_students / connect_teachers)
+  → Curso + Turma (connect_courses / connect_classes)
+  → Padrão semanal (connect_class_weekly_patterns)
+  → Aulas (connect_lesson_schedules)
+  → Sessão de frequência (connect_attendance_sessions)
+  → Marcações (connect_attendance_marks)
+  → Contrato (connect_contracts) → Salário (connect_salary_records)
 ```
 
-### Responsabilidades
+Serviços: `ConnectEnrollmentService`, `ConnectScheduleService`, `ConnectAttendanceService`.
 
-- **Página React**: apresenta dados e recebe ações.
-- **Componente**: parte reutilizável da interface.
-- **Context**: estado compartilhado, como sessão e notificações.
-- **Service frontend**: chama endpoints da API.
-- **Route Laravel**: define o endpoint e os middlewares.
-- **Controller**: valida a requisição e coordena a resposta.
-- **Service backend**: executa regras de negócio complexas.
-- **Model**: representa uma tabela e seus relacionamentos.
-- **Resource**: padroniza o JSON devolvido.
-- **Middleware**: bloqueia acesso não autorizado.
-
-### Exemplo: abrir um chamado
+### Fluxo de chamado Grid
 
 ```text
-GridTicketsPage
-   ↓
-gridService
-   ↓ POST /api/grid/tickets
-auth:sanctum
-permission:grid.tickets.manage
-   ↓
-TicketController::store
-   ↓
-GridWorkflowService
-   ↓
-GridTicket
-   ↓
-Banco de dados
-   ↓
-Notificação
-   ↓
-JSON para o frontend
+Aberto → Em atendimento → Aguardando aprovação → Em avaliação → Concluído
+         ↘ Tarefas Kanban (grid_tasks) + reservas de estoque (grid_inventory_reservations)
 ```
 
----
+Implementação: `GridWorkflowService.php` (L1–L619). Status em `grid_tickets.status`.
 
-## 6. Organização do projeto
+### Fluxo SAFE (autorização)
 
 ```text
-Senai HUB/
-├── backend/
-│   ├── app/
-│   │   ├── Http/Controllers/Api/
-│   │   ├── Http/Middleware/
-│   │   ├── Http/Requests/
-│   │   ├── Http/Resources/
-│   │   ├── Models/
-│   │   ├── Services/
-│   │   └── Support/
-│   ├── config/
-│   ├── database/
-│   │   ├── migrations/
-│   │   └── seeders/
-│   ├── resources/views/
-│   ├── routes/api.php
-│   └── tests/
-├── frontend/
-│   ├── e2e/
-│   ├── public/
-│   └── src/
-│       ├── components/
-│       ├── config/
-│       ├── contexts/
-│       ├── hooks/
-│       ├── i18n/
-│       ├── layouts/
-│       ├── pages/
-│       ├── routes/
-│       ├── services/
-│       ├── types/
-│       └── utils/
-├── ACESSOS_PADRAO.md
-├── README.md
-└── SUGESTOES_MELHORIAS.md
+AQV cria (pendente)
+  → Professor aprova → (saída) aguarda portaria → portaria confirma → finalizado
+  → Professor nega → negado
+  → Portaria nega na saída → negado
 ```
 
----
+Implementação: `SafeWorkflowService.php` (L1–L260). Auditoria em `safe_authorization_logs`.
 
-## 7. Funcionamento da SPA
+### Funcionalidades complementares (subtelas e painéis)
 
-SPA significa **Single Page Application**.
+### SUB-01. Painel acesso pendente
 
-O navegador carrega a aplicação React e as mudanças de tela acontecem com React Router, sem recarregar todo o documento HTML.
+| Campo | Valor |
+|---|---|
+| **Módulo** | Hub |
+| **Rota UI** | `/hub` |
+| **Permissão** | — |
 
-O arquivo principal de rotas é:
+**O que é / o que faz:** Usuário unassigned vê instruções até admin liberar apps.
 
-```text
-frontend/src/routes/index.tsx
-```
+**Referências no código:**
 
-### Tipos de rota
-
-- rotas públicas;
-- rotas de autenticação;
-- rotas protegidas;
-- rotas exclusivas de administrador;
-- rotas protegidas por módulo;
-- rotas protegidas por permissão;
-- rota de acesso negado;
-- rota 404.
-
-### Lazy loading
-
-Telas mais pesadas, como mapas e planilhas, são carregadas somente quando o usuário acessa a rota.
-
-Isso reduz o tamanho do carregamento inicial.
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/components/hub/PendingAccessPanel.tsx` (L1–L33) |
 
 ---
 
-## 8. Landing page pública
+### SUB-02. Aba cadastros no dashboard Connect
 
-A rota `/` apresenta a página institucional.
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect` |
+| **Permissão** | — |
 
-Ela é composta por:
+**O que é / o que faz:** Tabela de alunos recém-cadastrados.
 
-- cabeçalho;
-- seção principal;
-- apresentação da plataforma;
-- prévia dos temas;
-- públicos atendidos;
-- funcionalidades;
-- chamada para ação;
-- rodapé.
+**Referências no código:**
 
-A landing page explica a proposta do sistema antes do login e direciona o usuário para autenticação ou solicitação de acesso.
-
----
-
-## 9. Solicitação pública de acesso
-
-Usuários sem conta podem acessar:
-
-```text
-/solicitar-acesso
-```
-
-O formulário recebe:
-
-- nome;
-- e-mail;
-- organização;
-- mensagem.
-
-### Fluxo
-
-1. O frontend envia `POST /api/access-requests`.
-2. O backend valida os dados.
-3. Cria um registro com status `pending`.
-4. Dispara uma notificação aos administradores.
-5. O administrador analisa o pedido em `/hub/usuarios`.
-
-O endpoint possui limite de cinco solicitações por minuto para reduzir abuso.
-
-### Usuário sem perfil
-
-Um usuário pode existir com o perfil `unassigned`.
-
-Nesse caso:
-
-- ele consegue entrar;
-- não recebe acesso aos módulos;
-- vê um painel informando que aguarda liberação;
-- pode solicitar a configuração de acesso.
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/pages/connect/ConnectOverviewPage.tsx` (L1–L219) |
 
 ---
 
-## 10. Autenticação
+### SUB-03. Aba alertas no dashboard Connect
 
-### Login
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect` |
+| **Permissão** | — |
 
-O fluxo começa em `/login`.
+**O que é / o que faz:** Alertas operacionais do Connect.
 
-1. O usuário informa e-mail e senha.
-2. O frontend chama `POST /api/auth/login`.
-3. O Laravel procura o usuário pelo e-mail.
-4. `Hash::check` compara a senha.
-5. O Sanctum cria um token pessoal.
-6. A API retorna usuário e token.
-7. O frontend salva os dados no `localStorage`.
-8. O Axios envia o token nas próximas requisições.
+**Referências no código:**
 
-### Cabeçalho enviado
-
-```http
-Authorization: Bearer TOKEN
-```
-
-### Persistência da sessão
-
-O frontend armazena:
-
-```text
-senai_hub_token
-senai_hub_user
-```
-
-Ao abrir o site:
-
-1. verifica se existe token;
-2. chama `GET /api/auth/me`;
-3. atualiza o usuário;
-4. remove a sessão se o token for inválido.
-
-O usuário também é atualizado quando a janela volta a receber foco.
-
-### Sessão expirada
-
-O interceptor do Axios detecta HTTP 401:
-
-- remove token e usuário;
-- redireciona para `/login?expired=1`;
-- evita redirecionamento repetido nas páginas de autenticação.
-
-### Logout
-
-O logout:
-
-1. exclui o token atual no backend;
-2. limpa o estado local;
-3. redireciona para login.
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/pages/connect/ConnectOverviewPage.tsx` (L1–L219) |
 
 ---
 
-## 11. Recuperação e alteração de senha
+### SUB-04. Gráfico frequência (donut)
 
-### Recuperar senha
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect` |
+| **Permissão** | — |
 
-1. O usuário informa o e-mail.
-2. O Laravel cria um token pelo Password Broker.
-3. É gerado um link para `/redefinir-senha`.
-4. O e-mail é enviado pela classe `HubResetPasswordMail`.
+**O que é / o que faz:** Distribuição presente/FJ/FI; total_records real.
 
-Por segurança, a resposta não revela se o e-mail existe.
+**Referências no código:**
 
-### Redefinir senha
-
-O link contém:
-
-- e-mail;
-- token temporário.
-
-O backend valida o token e atualiza a senha. Depois da redefinição, todos os tokens anteriores do usuário são apagados.
-
-### Alteração no perfil
-
-O usuário autenticado também pode mudar a senha informando:
-
-- senha atual;
-- nova senha;
-- confirmação.
-
-O backend valida a senha atual com `Hash::check`.
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/pages/connect/ConnectOverviewPage.tsx` (L1–L219) |
 
 ---
 
-## 12. Perfil do usuário
+### SUB-05. Gráfico sessões por professor
 
-A tela `/perfil` permite:
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect` |
+| **Permissão** | — |
 
-- visualizar nome e e-mail;
-- visualizar perfil e permissões;
-- visualizar aplicações liberadas;
-- visualizar empresa relacionada;
-- alterar nome;
-- alterar e-mail;
-- alterar senha;
-- enviar foto;
-- remover foto;
-- acessar configurações;
-- sair da conta.
+**O que é / o que faz:** Barras com aulas ministradas na semana.
 
-### Avatar
+**Referências no código:**
 
-O arquivo é enviado como `FormData`.
-
-O backend:
-
-1. remove o avatar anterior armazenado;
-2. salva o novo arquivo no disco público;
-3. grava a URL em `avatar_url`;
-4. retorna o usuário atualizado.
-
-Arquivos externos não são apagados por engano; o serviço só remove caminhos reconhecidos como pertencentes ao armazenamento público.
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/pages/connect/ConnectOverviewPage.tsx` (L1–L219) |
 
 ---
 
-## 13. Hub de aplicações
+### SUB-06. Gráfico alunos por curso
 
-A rota `/hub` é a entrada dos usuários autenticados.
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `/connect` |
+| **Permissão** | — |
 
-Ela:
+**O que é / o que faz:** Barras horizontais de matrículas.
 
-- carrega as aplicações permitidas;
-- mostra cards do Connect, Grid e Safe;
-- esconde módulos sem permissão;
-- apresenta o painel de acesso pendente;
-- oferece navegação para perfil, configurações e arquivo.
+**Referências no código:**
 
-As aplicações não são decididas apenas no frontend. O backend calcula os módulos liberados com base no perfil e nas permissões.
-
----
-
-## 14. Administração de usuários
-
-A rota `/hub/usuarios` é protegida pelo `AdminRoute` e pelo middleware `admin` no backend.
-
-### Funções
-
-- listar usuários;
-- pesquisar;
-- filtrar por perfil;
-- visualizar detalhes;
-- criar;
-- editar;
-- alterar senha;
-- alterar perfil;
-- personalizar permissões;
-- vincular empresa;
-- excluir;
-- consultar pedidos de acesso.
-
-### Perfis
-
-O site reconhece:
-
-- `admin`;
-- `unassigned`;
-- `connect_professor`;
-- `connect_secretaria`;
-- `connect_diretor`;
-- `connect_aqv`;
-- `connect_empresa`;
-- `connect_aluno`;
-- `grid_chefe`;
-- `grid_funcionario`;
-- `grid_professor`;
-- `grid_secretaria`;
-- `safe_aqv`;
-- `safe_professor`;
-- `safe_portaria`.
-
-### Permissões padrão e personalizadas
-
-Cada perfil possui um pacote padrão de permissões.
-
-O administrador pode personalizar as permissões de um usuário. Quando existe `custom_permissions`, essa lista substitui o pacote padrão.
-
-### Regras automáticas
-
-- permissão de gerenciar aluno também inclui visualização;
-- gerenciar professor também inclui visualização;
-- gerenciar turma também inclui visualização;
-- gerenciar curso também inclui visualização;
-- gerenciar frequência também inclui visualização;
-- gerenciar estoque também inclui visualização;
-- cada perfil recebe a permissão base do seu módulo.
-
-### Empresa parceira
-
-O perfil `connect_empresa` exige `company_name`. Esse valor é usado para limitar alunos e contratos à empresa correspondente.
-
-### Segurança
-
-O administrador não pode excluir a própria conta.
-
-Ao alterar o perfil:
-
-- as aplicações são sincronizadas;
-- as permissões são recalculadas;
-- uma notificação pode ser gerada.
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/pages/connect/ConnectOverviewPage.tsx` (L1–L219) |
 
 ---
 
-## 15. Sistema de permissões
+### SUB-07. Painel padrão semanal da turma
 
-O arquivo central é:
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `Turmas/Calendário` |
+| **Permissão** | — |
 
-```text
-backend/config/permissions.php
-```
+**O que é / o que faz:** Sincroniza padrões, gera calendário, provisiona frequência.
 
-Ele define:
+**Referências no código:**
 
-- perfis;
-- descrições;
-- módulo principal;
-- permissões padrão;
-- itens de navegação;
-- aplicações de cada perfil.
-
-### Sincronização frontend
-
-O comando:
-
-```bash
-php artisan hub:sync-permissions-frontend
-```
-
-gera:
-
-```text
-frontend/src/generated/permissionKeys.ts
-frontend/src/generated/navManifest.ts
-```
-
-Isso reduz divergência entre menus do React e regras do Laravel.
-
-### Camadas de proteção
-
-1. `ProtectedRoute`: exige autenticação.
-2. `ModuleAccessRoute`: exige acesso ao módulo.
-3. `PermissionRoute`: exige permissão para a rota.
-4. Menu: esconde itens não permitidos.
-5. Middleware `auth:sanctum`: valida o token.
-6. Middleware `permission`: valida a ação.
-7. `UserAccessScope`: limita quais registros o usuário recebe.
-
-### Por que esconder o menu não basta?
-
-Porque alguém poderia tentar chamar a URL ou API manualmente. O backend precisa negar a requisição mesmo quando a interface foi contornada.
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/components/connect/ClassSchedulePanel.tsx` (L1–L232) |
 
 ---
 
-## 16. Escopo de dados por perfil
+### SUB-08. Drawer aprovar serviço Grid
 
-O `UserAccessScope` aplica filtros diretamente nas consultas.
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/chamados` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Transição pós-execução técnica.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/components/grid/GridApproveServiceDrawer.tsx` (L1–L84) |
+
+---
+
+### SUB-09. Drawer avaliar chamado Grid
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/chamados` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Nota e comentário final.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/components/grid/GridEvaluateTicketDrawer.tsx` (L1–L92) |
+
+---
+
+### SUB-10. Drawer criar tarefa do chamado
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/chamados` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Kanban task + materiais.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/components/grid/GridCreateTaskFromTicketDrawer.tsx` (L1–L196) |
+
+---
+
+### SUB-11. Anexos de chamado Grid
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Upload/listagem de arquivos.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/components/grid/GridTicketAttachmentsPanel.tsx` (L1–L263) |
+
+---
+
+### SUB-12. Seletor de estoque em tarefas
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Grid |
+| **Rota UI** | `/grid/tarefas` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Picker de itens com reserva.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/components/grid/GridInventoryPicker.tsx` (L1–L186) |
+
+---
+
+### SUB-13. Mapa 3D do campus
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect/Grid |
+| **Rota UI** | `localização/mapa` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Viewer Three.js do campus.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `components/connect/CampusMap3DViewer.tsx` |
+
+---
+
+### SUB-14. E-mail transacional
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Global |
+| **Rota UI** | `—` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Envio de e-mails de notificação e reset de senha.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Notification/HubMailDispatcher.php` |
+
+---
+
+### SUB-15. Template PDF contrato padrão
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `contratos` |
+| **Permissão** | — |
+
+**O que é / o que faz:** HTML/PDF com lacunas nome, curso, empresa.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/backend/resources/views/contracts/default.blade.php` (L1–L127) |
+
+---
+
+### SUB-16. Provisionamento calendário semestre
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Connect |
+| **Rota UI** | `cursos/turmas` |
+| **Permissão** | — |
+
+**O que é / o que faz:** Aulas padrão ao criar curso com período.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Código | `Senai HUB/frontend/src/pages/connect/ConnectOverviewPage.tsx` (L1–L219) |
+
+---
+
+### Seções da landing page (detalhe)
+
+### PUB-01a. Hero landing
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `/` |
+
+**O que é / o que faz:** Seção da landing: Hero.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Componente | `Senai HUB/frontend/src/components/landing/LandingHero.tsx` (L1–L88) |
+
+---
+
+### PUB-01b. Recursos landing
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `/` |
+
+**O que é / o que faz:** Seção da landing: Recursos.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Componente | `Senai HUB/frontend/src/components/landing/LandingFeatures.tsx` (L1–L53) |
+
+---
+
+### PUB-01c. Público-alvo landing
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `/` |
+
+**O que é / o que faz:** Seção da landing: Público-alvo.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Componente | `Senai HUB/frontend/src/components/landing/LandingAudience.tsx` (L1–L63) |
+
+---
+
+### PUB-01d. Preview mockup Hub
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `/` |
+
+**O que é / o que faz:** Seção da landing: Preview mockup Hub.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Componente | `Senai HUB/frontend/src/components/landing/HubPreviewMockup.tsx` (L1–L87) |
+
+---
+
+### PUB-01e. CTA landing
+
+| Campo | Valor |
+|---|---|
+| **Módulo** | Público |
+| **Rota UI** | `/` |
+
+**O que é / o que faz:** Seção da landing: CTA.
+
+**Referências no código:**
+
+| Camada | Arquivo (linhas) |
+|---|---|
+| Componente | `Senai HUB/frontend/src/components/landing/LandingCta.tsx` (L1–L34) |
+
+---
+
+## Anexo D — Serviços frontend
+
+| Service | Arquivo | Responsabilidade |
+|---|---|---|
+| `api` | `Senai HUB/frontend/src/services/api.ts` (48 linhas) | Cliente Axios + interceptors 401 |
+| `authService` | `Senai HUB/frontend/src/services/authService.ts` (71 linhas) | Login, logout, perfil, senha, avatar |
+| `applicationService` | `Senai HUB/frontend/src/services/applicationService.ts` (8 linhas) | GET /applications |
+| `adminService` | `Senai HUB/frontend/src/services/adminService.ts` (83 linhas) | CRUD usuários admin |
+| `connectService` | `Senai HUB/frontend/src/services/connectService.ts` (444 linhas) | Todas as APIs Connect |
+| `gridService` | `Senai HUB/frontend/src/services/gridService.ts` (212 linhas) | Todas as APIs Grid |
+| `safeService` | `Senai HUB/frontend/src/services/safeService.ts` (96 linhas) | Todas as APIs SAFE |
+| `archiveService` | `Senai HUB/frontend/src/services/archiveService.ts` (56 linhas) | Arquivo histórico |
+| `reportService` | `Senai HUB/frontend/src/services/reportService.ts` (146 linhas) | Relatórios customizados export |
+| `reportPresetService` | `Senai HUB/frontend/src/services/reportPresetService.ts` (29 linhas) | Presets de relatório |
+| `spreadsheetService` | `Senai HUB/frontend/src/services/spreadsheetService.ts` (100 linhas) | Import/export planilhas |
+| `notificationService` | `Senai HUB/frontend/src/services/notificationService.ts` (55 linhas) | Notificações e preferências |
+| `searchService` | `Senai HUB/frontend/src/services/searchService.ts` (25 linhas) | Busca global |
+| `accessRequestService` | `Senai HUB/frontend/src/services/accessRequestService.ts` (12 linhas) | Solicitação de acesso |
+| `publicConfigService` | `Senai HUB/frontend/src/services/publicConfigService.ts` (17 linhas) | Config pública mapa |
+| `healthService` | `Senai HUB/frontend/src/services/healthService.ts` (8 linhas) | Health check |
+| `permissionsCatalogService` | `Senai HUB/frontend/src/services/permissionsCatalogService.ts` (45 linhas) | Catálogo de permissões |
+
+## Anexo E — Comandos Artisan
+
+| Comando | Arquivo | Função |
+|---|---|---|
+| `php artisan connect:sync-class-schedules` | `Senai HUB/backend/app/Console/Commands/SyncConnectClassSchedules.php` | Sincroniza calendário de turmas |
+| `php artisan connect:archive-expired-classes` | `Senai HUB/backend/app/Console/Commands/ArchiveExpiredConnectClasses.php` | Arquiva turmas com data fim vencida |
+| `php artisan permissions:sync-frontend` | `Senai HUB/backend/app/Console/Commands/SyncPermissionsFrontendCommand.php` | Sincroniza permissões com frontend |
+| `php artisan grid:merge-inventory-duplicates` | `Senai HUB/backend/app/Console/Commands/MergeGridInventoryDuplicates.php` | Mescla itens duplicados no estoque |
+| `php artisan grid:sync-inventory-images` | `Senai HUB/backend/app/Console/Commands/SyncGridInventoryImages.php` | Busca imagens Wikimedia para estoque |
+| `php artisan grid:purge-demo-data` | `Senai HUB/backend/app/Console/Commands/PurgeGridDemoData.php` | Remove dados demo do Grid |
+
+## Anexo F — Catálogo de planilhas
+
+Fonte: `backend/app/Support/Spreadsheet/SpreadsheetRegistry.php`.
 
 ### Connect
 
-#### Aluno
-
-Recebe apenas:
-
-- seu próprio cadastro;
-- sua turma;
-- seu curso;
-- seus professores;
-- sua frequência;
-- seus contratos;
-- seu salário.
-
-#### Empresa
-
-Recebe alunos e contratos cuja empresa coincide com `company_name`.
-
-#### Professor
-
-Recebe turmas ligadas ao próprio cadastro de professor e os alunos dessas turmas.
+| key | Descrição | Import | Export |
+|---|---|---|---|
+| people | Pessoas (cadastro global) | sim | sim |
+| students | Alunos | sim | sim |
+| teachers | Professores | sim | sim |
+| courses | Cursos | sim | sim |
+| classes | Turmas | sim | sim |
+| contracts | Contratos | sim | sim |
+| attendance | Marcações de frequência | sim | sim |
+| attendance_sessions | Sessões de frequência | não | sim |
 
 ### Grid
 
-#### Funcionário
+| key | Descrição | Import | Export |
+|---|---|---|---|
+| users | Usuários Grid | sim | sim |
+| inventory | Estoque | sim | sim |
+| tickets | Chamados | sim | sim |
 
-Recebe:
+## Anexo G — Layouts e componentes estruturais
 
-- chamados atribuídos a ele;
-- tarefas atribuídas a ele.
+| Componente | Arquivo | Função |
+|---|---|---|
+| `HubLayout` | `Senai HUB/frontend/src/layouts/HubLayout.tsx` | Shell Hub + sidebar |
+| `ConnectLayout` | `Senai HUB/frontend/src/layouts/ConnectLayout.tsx` | Shell Connect |
+| `GridLayout` | `Senai HUB/frontend/src/layouts/GridLayout.tsx` | Shell Grid |
+| `SafeLayout` | `Senai HUB/frontend/src/components/safe/SafeLayout.tsx` | Shell SAFE |
+| `AuthLayout` | `Senai HUB/frontend/src/layouts/AuthLayout.tsx` | Telas de login |
+| `GlassShell` | `Senai HUB/frontend/src/components/layout/GlassShell.tsx` | Fundo glass + wallpaper |
+| `HubHeader` | `Senai HUB/frontend/src/components/hub/HubHeader.tsx` | Header Hub |
+| `ConnectHeader` | `Senai HUB/frontend/src/components/connect/ConnectHeader.tsx` | Header Connect + busca |
+| `GridHeader` | `Senai HUB/frontend/src/components/grid/GridHeader.tsx` | Header Grid |
+| `SafeHeader` | `Senai HUB/frontend/src/components/safe/SafeHeader.tsx` | Header SAFE |
+| `ProtectedRoute` | `Senai HUB/frontend/src/routes/ProtectedRoute.tsx` | Exige autenticação |
+| `ModuleAccessRoute` | `Senai HUB/frontend/src/routes/ModuleAccessRoute.tsx` | Exige connect/grid/safe.access |
+| `PermissionRoute` | `Senai HUB/frontend/src/routes/PermissionRoute.tsx` | Filtra por nav permission |
+| `AdminRoute` | `Senai HUB/frontend/src/routes/AdminRoute.tsx` | Somente admin |
 
-#### Professor e secretaria
+## Apêndice — Roteiro de apresentação
 
-Recebem chamados e tarefas abertos por eles próprios.
+### Abertura sugerida
 
-#### Chefe e administrador
+> O SENAI HUB é uma plataforma web que integra gestão acadêmica (Connect), manutenção (Grid) e controle de entrada/saída (SAFE). Login único com permissões por perfil. Frontend React/TypeScript, API Laravel/Sanctum.
 
-Possuem visão ampla da operação.
+### Ordem de demonstração recomendada
 
-### Resultado
+1. Landing pública → login
+2. Hub launcher → Connect dashboard
+3. Turma + calendário + frequência
+4. Grid chamado → tarefa → estoque
+5. SAFE autorização → aprovação → portaria
+6. Relatório PDF + planilha + arquivo histórico
+7. Perfil, temas, busca global, chat suporte
 
-O mesmo endpoint pode devolver conjuntos diferentes de registros conforme o usuário autenticado.
+### Perguntas frequentes
 
----
-
-## 17. SENAI Connect
-
-O Connect administra a área acadêmica.
-
----
-
-## 18. Dashboard Connect
-
-A rota `/connect` apresenta indicadores calculados no backend:
-
-- total de alunos;
-- professores;
-- cursos;
-- turmas;
-- taxa de presença;
-- atividades recentes;
-- alertas;
-- distribuição da frequência;
-- tendências semanais;
-- evolução dos indicadores.
-
-As consultas passam pelo escopo do usuário. Portanto, um professor ou empresa não recebe necessariamente os mesmos totais de um administrador.
-
----
-
-## 19. Pessoas
-
-A rota `/connect/pessoas` gerencia a entidade central `HubPerson`.
-
-Uma pessoa pode representar:
-
-- aluno;
-- professor;
-- funcionário;
-- outro contato institucional.
-
-### Funções
-
-- listar;
-- pesquisar;
-- cadastrar;
-- editar;
-- excluir;
-- consultar perfil detalhado;
-- associar cursos e turmas.
-
-### Por que existe uma tabela central de pessoas?
-
-Para evitar duplicação de dados pessoais. Aluno e professor podem manter dados específicos em suas tabelas, mas compartilham uma identidade central.
+- **É o mesmo backend do app mobile?** Não — o site usa Laravel; o app Expo usa Supabase (ver seção 3).
+- **Onde ficam os dados?** Migrations em `backend/database/migrations/`; SQLite em dev.
+- **Como adicionar permissão?** `config/permissions.php` + sync via artisan.
 
 ---
 
-## 20. Alunos
-
-A rota `/connect/alunos` permite:
-
-- listar alunos;
-- busca por nome, matrícula, e-mail e CPF;
-- filtros;
-- paginação;
-- cadastro;
-- edição;
-- exclusão;
-- perfil detalhado;
-- vínculo com turma;
-- vínculo com curso;
-- armazenamento de metadados adicionais.
-
-### Cadastro
-
-O controller usa uma transação:
-
-1. cria ou atualiza a pessoa central;
-2. cria o registro acadêmico;
-3. vincula turma;
-4. sincroniza relações de matrícula;
-5. dispara notificações.
-
-Se uma etapa falhar, a transação desfaz todas as alterações.
-
-### Busca por nome
-
-A busca considera o perfil central da pessoa e divide termos do nome. Isso permite localizar nomes compostos mesmo quando as partes estão distribuídas ou digitadas parcialmente.
-
-### Filtros
-
-Os filtros visuais são aplicados à API. A página separa o estado em edição dos filtros realmente aplicados e reinicia a paginação quando o conjunto muda.
-
----
-
-## 21. Professores
-
-A rota `/connect/professores` permite:
-
-- listar;
-- pesquisar;
-- filtrar por status e especialidade;
-- cadastrar;
-- editar;
-- excluir;
-- visualizar perfil;
-- associar cursos e turmas.
-
-O cadastro também usa transação para manter a pessoa central e o registro docente sincronizados.
-
----
-
-## 22. Cursos
-
-A rota `/connect/cursos` administra:
-
-- código;
-- nome;
-- descrição;
-- modalidade;
-- período;
-- carga horária;
-- datas;
-- status;
-- pessoas vinculadas;
-- turmas.
-
-### Exclusão
-
-O backend verifica vínculos relevantes antes de remover. Isso evita apagar um curso e deixar turmas ou matrículas inconsistentes.
-
-### Roster do curso
-
-O roster é a lista de pessoas relacionadas ao curso, com papéis como aluno ou professor.
-
----
-
-## 23. Turmas
-
-A rota `/connect/turmas` administra:
-
-- código;
-- nome;
-- curso;
-- professor;
-- semestre;
-- turno;
-- datas;
-- quantidade padrão de aulas;
-- alunos;
-- horários semanais;
-- status.
-
-### Validações
-
-O backend verifica:
-
-- data final posterior à inicial;
-- turma dentro do período do curso;
-- ausência de turma ativa duplicada no mesmo semestre;
-- ausência de sobreposição de períodos incompatíveis.
-
-### Roster da turma
-
-Permite adicionar ou remover alunos da turma.
-
-O `ConnectEnrollmentService` sincroniza os relacionamentos para manter os cadastros consistentes.
-
----
-
-## 24. Calendário acadêmico
-
-A rota `/connect/calendario` gerencia aulas.
-
-### Funcionalidades
-
-- visualizar calendário;
-- filtrar por turma e período;
-- criar aula manual;
-- editar;
-- cancelar ou excluir;
-- cadastrar padrão semanal;
-- gerar calendário automaticamente;
-- consultar semestres;
-- preparar sessões de frequência.
-
-### Padrão semanal
-
-Exemplo:
-
-```text
-Segunda-feira
-08:00 às 12:00
-4 aulas
-Disciplina: Desenvolvimento de Sistemas
-```
-
-Uma turma pode ter vários padrões.
-
-### Geração automática
-
-O `ConnectScheduleService`:
-
-1. valida datas da turma;
-2. valida o período do curso;
-3. percorre cada dia do período;
-4. encontra os padrões compatíveis;
-5. respeita a carga horária;
-6. impede aula duplicada;
-7. impede conflito da turma;
-8. impede conflito do professor;
-9. cria as aulas;
-10. prepara sessões de frequência.
-
-### Regra de conflito
-
-Existe conflito quando:
-
-```text
-início existente < fim novo
-e
-fim existente > início novo
-```
-
-Essa condição detecta horários sobrepostos.
-
-### Substituir aulas futuras
-
-O sistema pode apagar aulas futuras ainda não realizadas e sem frequência para gerar novamente a partir dos padrões.
-
----
-
-## 25. Frequência
-
-A rota `/connect/frequencia` é usada para registrar a chamada.
-
-### Fluxo
-
-1. selecionar turma;
-2. selecionar data ou aula;
-3. localizar ou criar sessão;
-4. carregar os alunos;
-5. marcar presença;
-6. marcar atraso;
-7. marcar falta justificada;
-8. marcar falta;
-9. informar aulas perdidas;
-10. salvar e fechar a sessão.
-
-### Sessão de frequência
-
-Uma sessão pertence a:
-
-- turma;
-- professor;
-- aula agendada;
-- data;
-- disciplina;
-- quantidade de aulas.
-
-### Marcas automáticas
-
-Ao criar a sessão, o serviço cria uma marca inicial para cada aluno da turma.
-
-O status inicial é:
-
-```text
-present
-```
-
-O professor altera apenas as exceções.
-
-### Estados
-
-- `present`: presente;
-- `late`: atraso, considerado presença nas métricas;
-- `justified`: falta justificada;
-- `absent`: falta injustificada.
-
----
-
-## 26. Gerenciamento de frequência
-
-A rota `/connect/gerenciar-frequencia` oferece uma visão analítica:
-
-- registros;
-- filtros;
-- resumo por turma;
-- resumo por aluno;
-- sessões abertas;
-- sessões fechadas;
-- aulas sem chamada;
-- taxa de presença;
-- faltas justificadas;
-- faltas injustificadas.
-
-### Taxa de presença
-
-```text
-taxa = presenças / total de marcações × 100
-```
-
-Presença e atraso entram como presença.
-
----
-
-## 27. Contratos
-
-A rota `/connect/contratos/alunos` administra:
-
-- aluno;
-- tipo do contrato;
-- empresa;
-- valor mensal;
-- início;
-- término;
-- status;
-- dados complementares.
-
-### Escopo
-
-- aluno vê os próprios contratos;
-- empresa vê contratos da própria empresa;
-- perfis administrativos veem o conjunto permitido.
-
-### Validação
-
-O contrato é vinculado a um aluno existente e pode ser usado pelo cálculo salarial.
-
----
-
-## 28. Salários e bolsas
-
-A rota `/connect/salario` permite:
-
-- consultar cálculos;
-- pesquisar aluno;
-- filtrar mês e status;
-- visualizar totais;
-- gerar prévia;
-- visualizar frequência;
-- visualizar contrato;
-- visualizar composição;
-- realizar cálculo individual;
-- realizar cálculo em lote, para administrador.
-
-### Fórmula
-
-O backend procura o contrato ativo no mês.
-
-```text
-salário-base = valor mensal do contrato
-```
-
-Se não houver valor:
-
-```text
-salário-base padrão = R$ 1.518,00
-```
-
-O cálculo utiliza 22 dias:
-
-```text
-valor diário = salário-base / 22
-desconto por ausência = valor diário × faltas injustificadas
-valor líquido = salário-base + bonificações - descontos
-```
-
-### Frequência usada
-
-No mês selecionado:
-
-- `present` e `late` contam como presença;
-- `justified` conta separadamente;
-- `absent` gera a quantidade de faltas injustificadas.
-
-### Prévia e salvamento
-
-- prévia: calcula sem gravar;
-- cálculo: cria ou atualiza o fechamento;
-- lote: repete para todos os alunos permitidos.
-
-O `updateOrCreate` impede duplicar o registro do mesmo aluno no mesmo mês.
-
----
-
-## 29. Localização e mapa Connect
-
-A rota `/connect/localizacao` apresenta pessoas no campus.
-
-### Funções
-
-- listar alunos e profissionais;
-- filtrar;
-- selecionar pessoa;
-- selecionar bloco;
-- mostrar detalhes;
-- visualizar posições;
-- mapa 2D;
-- mapa 3D.
-
-### Mapa 3D
-
-O frontend carrega modelos GLB dos blocos:
-
-- A;
-- B;
-- C;
-- D.
-
-O Three.js permite:
-
-- girar;
-- aproximar;
-- selecionar;
-- destacar bloco;
-- exibir marcadores;
-- alterar transparência para visualizar pontos internos.
-
-### Dados simulados
-
-O serviço pode incluir pessoas de demonstração. Portanto, durante a apresentação, é importante distinguir marcadores reais dos extras de demonstração.
-
----
-
-## 30. Relatórios Connect
-
-O Connect possui:
-
-- resumo acadêmico;
-- indicadores;
-- exportação rápida;
-- construtor personalizado.
-
-### Seções disponíveis
-
-- capa;
-- resumo executivo;
-- KPIs;
-- frequência;
-- alunos por curso;
-- alunos;
-- professores;
-- turmas;
-- contratos;
-- sessões de frequência;
-- detalhes de frequência;
-- ranking de turmas.
-
-### Filtros
-
-- período;
-- curso;
-- turma;
-- status do aluno.
-
-### Colunas configuráveis
-
-Nas tabelas, o usuário escolhe quais colunas serão exibidas.
-
-### Presets
-
-Exemplos:
-
-- completo acadêmico;
-- foco em frequência;
-- matrículas e turmas.
-
-### Formatos
-
-- CSV;
-- XLSX;
-- JSON;
-- HTML;
-- impressão do HTML como PDF pelo navegador.
-
----
-
-## 31. Planilhas Connect
-
-A rota `/connect/planilhas` permite importar e exportar:
-
-- pessoas;
-- alunos;
-- professores;
-- cursos;
-- turmas;
-- contratos;
-- frequência;
-- sessões.
-
-### Fluxo de importação
-
-1. baixar modelo;
-2. preencher arquivo;
-3. selecionar arquivo;
-4. gerar prévia;
-5. analisar erros;
-6. confirmar importação;
-7. consultar log.
-
-### Prévia sem gravar
-
-A prévia executa a importação dentro de uma transação e força rollback.
-
-Isso permite calcular:
-
-- quantos seriam criados;
-- quantos seriam atualizados;
-- quais linhas possuem erro;
-- amostra dos dados.
-
-Nenhuma alteração é mantida durante a prévia.
-
-### Importação real
-
-A importação:
-
-- cria e atualiza registros;
-- usa transações por operação;
-- registra totais;
-- registra erros;
-- salva um log;
-- gera notificação.
-
----
-
-## 32. SENAI Grid
-
-O Grid gerencia a manutenção e os recursos físicos.
-
----
-
-## 33. Dashboard Grid
-
-A rota `/grid` apresenta:
-
-- chamados abertos;
-- chamados em atendimento;
-- chamados concluídos;
-- itens com estoque baixo;
-- distribuição por status;
-- tarefas por coluna;
-- chamados por mês;
-- chamados por técnico;
-- evolução semanal;
-- itens críticos.
-
-As métricas respeitam o escopo do perfil.
-
----
-
-## 34. Chamados
-
-A rota `/grid/chamados` possui:
-
-- visualização em lista;
-- visualização Kanban;
-- pesquisa;
-- filtros;
-- criação;
-- edição;
-- atribuição;
-- anexos;
-- criação de tarefa;
-- aprovação;
-- avaliação;
-- relatório individual;
-- exclusão.
-
-### Campos
-
-- código;
-- solicitante;
-- título;
-- resumo;
-- sala;
-- bloco;
-- prioridade;
-- status;
-- técnico;
-- datas;
-- solução;
-- considerações.
-
-### Código automático
-
-O `GridCode` gera códigos sequenciais para chamados e tarefas.
-
-### Perfis solicitantes
-
-Professor e secretaria do Grid têm o solicitante forçado para o próprio usuário. Isso evita abrir chamado em nome de outra pessoa.
-
----
-
-## 35. Fluxo completo do chamado
-
-```text
-Aberto
-  ↓ atribuir técnico
-Pendente
-  ↓ iniciar atendimento
-Em atendimento
-  ↓ concluir tarefa
-Aguardando aprovação
-  ↓ chefe aprova
-Avaliação pendente
-  ↓ solicitante avalia
-Concluído
-```
-
-### 1. Aberto
-
-Chamado ainda sem técnico.
-
-### 2. Pendente
-
-Possui técnico, mas ainda não começou.
-
-### 3. Em atendimento
-
-O serviço começou e existe uma tarefa operacional.
-
-O chamado fica bloqueado para movimento manual.
-
-### 4. Aguardando aprovação
-
-Todas as tarefas foram concluídas. O chefe analisa o serviço.
-
-### 5. Avaliação pendente
-
-O chefe aprovou. O solicitante deve dar nota de 1 a 5 e pode escrever observações.
-
-### 6. Concluído
-
-O solicitante avaliou e o fluxo terminou.
-
-### Regras importantes
-
-- não inicia sem técnico;
-- não move manualmente quando está em atendimento;
-- não vai direto para aprovação;
-- não conclui sem avaliação;
-- estados finais são alcançados por ações específicas;
-- frontend e backend validam as transições.
-
----
-
-## 36. Controle de chamados
-
-A rota `/grid/controle` oferece uma visão específica do processo operacional.
-
-Ela reúne:
-
-- etapas;
-- chamados;
-- filtros;
-- criação;
-- indicadores;
-- ações de transição;
-- acompanhamento visual.
-
-O objetivo é permitir que a equipe gerencie a fila sem depender apenas da listagem comum.
-
----
-
-## 37. Tarefas
-
-A rota `/grid/tarefas` utiliza Kanban.
-
-### Colunas
-
-- `a_fazer`;
-- `em_andamento`;
-- `concluidas`.
-
-### Funções
-
-- criar tarefa;
-- editar;
-- excluir;
-- vincular chamado;
-- atribuir técnico;
-- escolher materiais;
-- mover por arrastar e soltar;
-- registrar solução;
-- sincronizar chamado.
-
-### Movimento
-
-Ao mover a tarefa:
-
-1. o backend recebe a nova coluna;
-2. atualiza o rótulo;
-3. registra conclusão quando necessário;
-4. atualiza reservas de estoque;
-5. atualiza o chamado relacionado.
-
-### Sincronização com chamado
-
-Quando a última tarefa é concluída e o chamado está em atendimento:
-
-```text
-chamado.status = aguardando_aprovacao
-```
-
----
-
-## 38. Estoque
-
-A rota `/grid/estoque` gerencia:
-
-- título;
-- descrição;
-- categoria;
-- SKU;
-- quantidade disponível;
-- quantidade mínima;
-- local;
-- fornecedor;
-- custo;
-- data de compra;
-- imagem;
-- status.
-
-### Entrada e saída
-
-O ajuste de estoque aceita:
-
-- `in`: entrada;
-- `out`: saída.
-
-Depois do ajuste, o status é recalculado e o sistema pode notificar estoque baixo.
-
-### Duplicatas
-
-Antes de criar, o backend procura item com:
-
-- mesmo SKU;
-- ou título normalizado equivalente.
-
-Se encontrar:
-
-- não cria uma nova linha;
-- soma a quantidade;
-- preenche dados ausentes;
-- informa que houve mesclagem.
-
-### Imagens
-
-O item pode:
-
-- receber upload local;
-- receber URL;
-- buscar imagem no Wikimedia Commons;
-- usar fallback pela categoria.
-
-### Status
-
-- disponível;
-- baixo;
-- reservado.
-
----
-
-## 39. Reserva e consumo de materiais
-
-Materiais podem ser ligados a uma tarefa.
-
-### Validação inicial
-
-O backend verifica:
-
-- item existente;
-- estoque maior que zero;
-- quantidade solicitada;
-- soma de linhas repetidas;
-- disponibilidade real.
-
-### Ao entrar em andamento
-
-```text
-disponível -= quantidade
-reservado += quantidade
-reserva.status = reserved
-```
-
-### Ao sair de andamento
-
-Se a tarefa volta ou é cancelada:
-
-```text
-disponível += quantidade
-reservado -= quantidade
-reserva.status = released
-```
-
-### Ao concluir
-
-```text
-reservado -= quantidade
-reserva.status = consumed
-```
-
-A quantidade já havia sido retirada do disponível no momento da reserva.
-
-### Concorrência
-
-O backend usa:
-
-```php
-lockForUpdate()
-```
-
-Isso reduz o risco de duas tarefas reservarem simultaneamente a mesma quantidade.
-
----
-
-## 40. Anexos de chamado
-
-O usuário pode enviar arquivos para um chamado.
-
-O backend:
-
-- valida o arquivo;
-- armazena no disco configurado;
-- cria o registro de anexo;
-- registra quem enviou;
-- devolve a URL pública.
-
-Na exclusão do chamado:
-
-- reservas são liberadas;
-- anexos físicos são apagados;
-- tarefas relacionadas são removidas.
-
----
-
-## 41. Usuários Grid
-
-A rota `/grid/usuarios` administra membros da equipe de manutenção.
-
-Permite:
-
-- listar;
-- pesquisar;
-- cadastrar;
-- editar;
-- excluir;
-- visualizar detalhes;
-- definir papel e disponibilidade.
-
-Esses registros representam participantes operacionais do Grid e podem ser sincronizados com usuários centrais.
-
----
-
-## 42. Mapa Grid
-
-A rota `/grid/mapa` apresenta chamados e tarefas no campus.
-
-### Funções
-
-- mapa 3D;
-- mapa 2D;
-- seleção de bloco;
-- marcadores;
-- filtros por status;
-- filtros por tipo;
-- detalhes do atendimento;
-- destaque visual.
-
-Somente registros ainda ativos são usados no mapa:
-
-- aberto;
-- pendente;
-- em atendimento;
-- aguardando aprovação;
-- avaliação pendente.
-
----
-
-## 43. Relatórios Grid
-
-O construtor do Grid possui:
-
-- capa;
-- resumo executivo;
-- KPIs;
-- chamados por status;
-- chamados por mês;
-- chamados por técnico;
-- tabela de chamados;
-- tabela de tarefas;
-- tabela de estoque;
-- estoque crítico.
-
-### Filtros
-
-- período;
-- status;
-- prioridade;
-- bloco.
-
-### Presets
-
-- operação completa;
-- indicadores de manutenção;
-- estoque e materiais.
-
-### Relatório individual do chamado
-
-O relatório de um chamado reúne:
-
-- dados do chamado;
-- linha do tempo;
-- duração;
-- tarefas;
-- materiais;
-- localização;
-- aprovação;
-- avaliação.
-
----
-
-## 44. Planilhas Grid
-
-A rota `/grid/planilhas` permite trabalhar com:
-
-- usuários;
-- estoque;
-- chamados;
-- tarefas.
-
-Possui o mesmo fluxo de:
-
-- modelo;
-- exportação;
-- prévia;
-- importação;
-- log.
-
----
-
-## 45. SENAI Safe
-
-O Safe controla autorizações escolares de entrada e saída.
-
-### Perfis
-
-- AQV;
-- professor;
-- portaria.
-
-Cada perfil possui uma responsabilidade diferente.
-
----
-
-## 46. Alunos Safe
-
-A rota `/safe/alunos` permite:
-
-- cadastrar alunos;
-- editar;
-- excluir;
-- buscar;
-- informar turma;
-- informar responsável;
-- informar contatos;
-- manter dados usados nas solicitações.
-
-Esse cadastro é específico do fluxo de controle de acesso.
-
----
-
-## 47. Autorizações Safe
-
-A rota `/safe/autorizacoes` é usada principalmente pela AQV.
-
-### Tipos
-
-- entrada;
-- saída.
-
-### Dados
-
-- protocolo;
-- aluno;
-- turma;
-- tipo;
-- motivo;
-- quantidade de ausências;
-- data e hora;
-- observações;
-- solicitante;
-- status.
-
-### Protocolo
-
-Formato:
-
-```text
-SAF2026-00001
-```
-
-O sistema procura o último protocolo do ano e incrementa a sequência.
-
-### Histórico
-
-Cada ação cria um log com:
-
-- autorização;
-- ação;
-- usuário;
-- data e hora.
-
----
-
-## 48. Fluxo de entrada Safe
-
-```text
-AQV cria solicitação
-  ↓
-Aguardando professor
-  ↓
-Professor aprova
-  ↓
-Finalizado
-```
-
-Se o professor negar:
-
-```text
-Negado
-```
-
-A entrada não precisa de confirmação posterior da portaria na lógica atual.
-
----
-
-## 49. Fluxo de saída Safe
-
-```text
-AQV cria solicitação
-  ↓
-Aguardando professor
-  ↓
-Professor aprova
-  ↓
-Liberado para portaria
-  ↓
-Portaria confirma
-  ↓
-Finalizado
-```
-
-O professor ou a portaria podem negar nas suas respectivas etapas.
-
-### Estados
-
-- `pendente_aqv`;
-- `aguardando_professor`;
-- `liberado_portaria`;
-- `finalizado`;
-- `negado`.
-
-### Regras
-
-- professor só decide quando está aguardando professor;
-- portaria só atua em saída liberada;
-- finalizado e negado não podem ser editados;
-- todas as mudanças usam transação;
-- cada etapa gera histórico e notificações.
-
----
-
-## 50. Dashboards Safe
-
-O dashboard muda conforme o perfil.
-
-### AQV
-
-- alunos;
-- solicitações;
-- pendências;
-- histórico.
-
-### Professor
-
-- solicitações aguardando decisão;
-- aprovações e negativas.
-
-### Portaria
-
-- saídas liberadas;
-- confirmações pendentes;
-- decisões recentes.
-
----
-
-## 51. Notificações
-
-O sistema possui notificações internas e e-mail opcional.
-
-### Ações que podem gerar notificações
-
-- solicitação de acesso;
-- criação de usuário;
-- mudança de perfil;
-- alteração de senha;
-- matrícula de aluno;
-- atribuição de turma;
-- aula agendada;
-- aula cancelada;
-- calendário gerado;
-- frequência salva;
-- contrato criado;
-- chamado criado;
-- chamado atualizado;
-- tarefa criada;
-- tarefa atualizada;
-- estoque baixo;
-- importação finalizada;
-- etapas do Safe.
-
-### Notificações internas
-
-O usuário pode:
-
-- listar;
-- consultar quantidade não lida;
-- marcar uma como lida;
-- marcar todas;
-- excluir.
-
-### Atualização
-
-O frontend consulta a contagem a cada 45 segundos.
-
-Portanto, o site usa **polling**, não WebSocket ou Supabase Realtime.
-
-### Preferências
-
-O usuário pode escolher:
-
-- receber no site;
-- receber por e-mail;
-- quais módulos podem notificar.
-
-### Desenvolvimento
-
-O backend pode redirecionar todos os e-mails para um endereço de teste, evitando envio acidental para usuários reais.
-
----
-
-## 52. Busca global
-
-A busca abre por:
-
-```text
-Ctrl + K
-```
-
-ou pelo botão no cabeçalho.
-
-### Pesquisa
-
-- alunos;
-- turmas;
-- chamados;
-- estoque.
-
-### Segurança
-
-Os grupos só aparecem se o usuário possui permissão.
-
-Alunos e turmas usam `UserAccessScope`, respeitando o contexto do perfil.
-
-### Regras
-
-- exige pelo menos dois caracteres;
-- limita resultados por grupo;
-- gera links com `highlight`;
-- permite abrir diretamente o registro.
-
----
-
-## 53. Arquivo
-
-A rota `/hub/arquivo` reúne registros finalizados.
-
-### Connect
-
-- turmas com status `finished`;
-- quantidade de sessões de frequência.
-
-### Grid
-
-- chamados concluídos.
-
-### Safe
-
-- autorizações finalizadas ou negadas.
-
-### Arquivamento automático
-
-O administrador pode executar a rotina que identifica turmas expiradas e altera o status para finalizado.
-
-O sistema não apaga os dados: ele altera o estado e os disponibiliza no arquivo.
-
----
-
-## 54. Configurações
-
-A rota `/configuracoes` contém:
-
-- atalhos;
-- informações da conta;
-- aparência;
-- idioma;
-- redução de movimento;
-- notificações;
-- limpeza de rascunhos;
-- restauração do papel de parede.
-
-### Redução de movimento
-
-É um recurso de acessibilidade que reduz animações.
-
-### Rascunhos locais
-
-Configurações de relatórios podem ser mantidas no navegador e apagadas pela tela.
-
----
-
-## 55. Temas e aparência
-
-A rota `/temas` permite:
-
-- escolher papel de parede;
-- visualizar prévia;
-- enviar imagem personalizada;
-- remover imagem personalizada;
-- restaurar padrão.
-
-### Armazenamento
-
-As preferências são salvas no `localStorage`.
-
-### Tom automático
-
-O sistema analisa o papel de parede e define um tom claro ou escuro para melhorar contraste dos componentes.
-
----
-
-## 56. Idiomas
-
-O site possui traduções locais em:
-
-- português;
-- inglês;
-- espanhol.
-
-O idioma é armazenado em:
-
-```text
-senai_hub_locale
-```
-
-O i18next:
-
-- carrega os arquivos JSON;
-- usa português como fallback;
-- atualiza o atributo `lang` do HTML;
-- permite tradução nos componentes.
-
----
-
-## 57. Relatórios personalizados
-
-O componente `CustomReportBuilder` é compartilhado pelo Connect e Grid.
-
-### Fluxo
-
-1. busca o schema do módulo;
-2. mostra filtros disponíveis;
-3. permite escolher seções;
-4. permite escolher colunas;
-5. permite título e subtítulo;
-6. gera a prévia;
-7. salva preset;
-8. exporta.
-
-### Validação
-
-O backend:
-
-- aceita apenas módulos permitidos;
-- aceita apenas seções registradas;
-- exige uma seção;
-- valida datas;
-- adiciona capa automaticamente;
-- aplica permissões e escopo.
-
-### Presets
-
-O usuário pode salvar configurações para reutilização.
-
----
-
-## 58. Planilhas e segurança
-
-O sistema não confia diretamente no arquivo enviado.
-
-Ele:
-
-- valida extensão e conteúdo;
-- verifica colunas;
-- normaliza dados;
-- valida cada linha;
-- registra erros;
-- usa transações;
-- mantém log.
-
-### Vantagem da prévia
-
-O usuário descobre problemas antes de alterar o banco.
-
----
-
-## 59. Validação e tratamento de erros
-
-### Frontend
-
-- estados de carregamento;
-- mensagens;
-- toasts;
-- confirmação;
-- telas vazias;
-- formulário controlado;
-- erros traduzidos;
-- redirecionamento de sessão.
-
-### Backend
-
-- `$request->validate`;
-- Form Requests;
-- `Rule::in`;
-- validação de relacionamentos;
-- transações;
-- exceptions;
-- HTTP 403;
-- HTTP 422;
-- resources JSON.
-
-### Exemplos
-
-- conflito de horário;
-- senha atual incorreta;
-- estoque insuficiente;
-- perfil sem permissão;
-- empresa sem nome;
-- chamado sem técnico;
-- transição inválida;
-- solicitação Safe no estado errado;
-- planilha incompatível.
-
----
-
-## 60. Transações
-
-Uma transação garante que um conjunto de alterações seja tratado como uma unidade.
-
-```text
-Tudo funciona → commit
-Alguma etapa falha → rollback
-```
-
-São usadas em:
-
-- cadastro de alunos;
-- cadastro de professores;
-- matrículas;
-- workflow do Grid;
-- reservas;
-- importação;
-- autorizações Safe.
-
-### Exemplo
-
-Se uma tarefa tentar reservar dois materiais e o segundo estiver sem estoque, a transação impede que o primeiro fique reservado sozinho.
-
----
-
-## 61. Models e relacionamentos
-
-### Hub
-
-- `User`;
-- `Application`;
-- `HubPerson`;
-- `HubNotification`;
-- `AccessRequest`;
-- `ReportPreset`;
-- `SpreadsheetImportLog`.
-
-### Connect
-
-- `ConnectStudent`;
-- `ConnectTeacher`;
-- `ConnectCourse`;
-- `ConnectClass`;
-- `ConnectLessonSchedule`;
-- `ConnectAttendanceSession`;
-- `ConnectAttendanceMark`;
-- `ConnectContract`;
-- `ConnectSalaryRecord`;
-- `ConnectStudentLocation`.
-
-### Grid
-
-- `GridUser`;
-- `GridTicket`;
-- `GridTask`;
-- `GridInventoryItem`;
-- `GridInventoryReservation`;
-- `GridTicketAttachment`.
-
-### Safe
-
-- `SafeStudent`;
-- `SafeAuthorization`;
-- `SafeAuthorizationLog`.
-
----
-
-## 62. Banco de dados e migrations
-
-As migrations versionam a estrutura do banco.
-
-O projeto possui migrations para:
-
-- usuários;
-- tokens Sanctum;
-- aplicações;
-- pessoas;
-- Connect;
-- Grid;
-- Safe;
-- notificações;
-- permissões personalizadas;
-- relatórios;
-- planilhas;
-- calendário;
-- anexos;
-- solicitações de acesso;
-- vínculo de funcionários entre módulos.
-
-### Por que migrations?
-
-- recriam o banco;
-- documentam mudanças;
-- facilitam implantação;
-- mantêm equipes sincronizadas;
-- permitem testes isolados.
-
----
-
-## 63. Seeders
-
-Os seeders preparam:
-
-- aplicações;
-- permissões;
-- usuários de teste;
-- dados Connect;
-- dados Grid;
-- dados Safe;
-- chamados de exemplo;
-- vínculos entre funcionários.
-
-O comando:
-
-```bash
-php artisan migrate --seed
-```
-
-cria a estrutura e os dados iniciais.
-
----
-
-## 64. Health check
-
-O endpoint:
-
-```text
-GET /api/health
-```
-
-verifica a disponibilidade do backend e serviços essenciais.
-
-O frontend exibe um indicador de saúde no layout.
-
-Isso ajuda a diferenciar erro de interface de indisponibilidade da API.
-
----
-
-## 65. Testes automatizados
-
-### Backend
-
-Existem testes para:
-
-- autenticação;
-- usuários;
-- permissões e escopo;
-- frequência;
-- calendário;
-- exclusão de curso;
-- Grid;
-- anexos;
-- estoque;
-- Safe;
-- notificações;
-- planilhas;
-- arquivo;
-- mapa;
-- health check.
-
-### Frontend E2E
-
-O Playwright testa:
-
-- login e Hub;
-- fluxo Safe;
-- controle Grid;
-- movimento Kanban;
-- smoke test geral.
-
-### Comandos
-
-```bash
-cd backend
-php artisan test
-```
-
-```bash
-cd frontend
-npm run test:e2e
-```
-
----
-
-## 66. Recursos que não fazem parte deste site
-
-### Chatbot
-
-O site Laravel/React não possui integração ativa com o chatbot Groq encontrado na pasta `chatbot/`.
-
-Esse material é uma especificação ou projeto separado, a menos que uma integração seja implementada posteriormente.
-
-### Supabase
-
-O site não usa Supabase como backend principal.
-
-### Geofencing em segundo plano
-
-O site possui mapa e localização, mas não executa a tarefa mobile de geofencing do aplicativo Expo.
-
-### Resposta segura
-
-> Esses recursos existem em outros projetos ou especificações do repositório, mas não fazem parte do fluxo atual do site Laravel.
-
----
-
-## 67. Pontos fortes do projeto
-
-- separação clara entre frontend e backend;
-- autenticação por token;
-- permissões centralizadas;
-- escopo de dados por perfil;
-- módulos independentes;
-- transações;
-- workflow completo de manutenção;
-- reserva real de estoque;
-- geração de calendário;
-- frequência integrada;
-- cálculo salarial;
-- Safe com histórico;
-- importação com prévia;
-- relatórios configuráveis;
-- notificações;
-- internacionalização;
-- testes.
-
----
-
-## 68. Limitações e melhorias futuras
-
-- unificar site e aplicativo mobile;
-- integrar chatbot ao site;
-- utilizar WebSocket para notificações instantâneas;
-- adicionar filas para importações grandes;
-- adicionar auditoria geral de alterações;
-- reforçar políticas de arquivos;
-- expandir testes frontend;
-- adicionar paginação virtual em listas grandes;
-- substituir dados simulados do mapa por localização real;
-- criar documentação OpenAPI;
-- centralizar observabilidade e logs;
-- implementar recuperação e aprovação de acesso diretamente pelo painel.
-
----
-
-## 69. Roteiro de demonstração
-
-### 1. Landing page
-
-Explique:
-
-- proposta;
-- públicos;
-- módulos;
-- entrada no sistema.
-
-### 2. Login
-
-Explique:
-
-- API;
-- token Sanctum;
-- persistência;
-- rotas protegidas.
-
-### 3. Hub
-
-Mostre:
-
-- aplicações permitidas;
-- notificações;
-- busca global;
-- perfil;
-- configurações.
-
-### 4. Connect
-
-Demonstre:
-
-1. dashboard;
-2. aluno;
-3. turma;
-4. calendário;
-5. frequência;
-6. contrato;
-7. salário;
-8. relatório;
-9. planilha.
-
-### 5. Grid
-
-Demonstre:
-
-1. chamado;
-2. atribuição;
-3. tarefa;
-4. reserva de estoque;
-5. conclusão;
-6. aprovação;
-7. avaliação;
-8. mapa;
-9. relatório.
-
-### 6. Safe
-
-Demonstre:
-
-1. cadastro do aluno;
-2. solicitação;
-3. aprovação;
-4. portaria;
-5. histórico.
-
-### 7. Administração
-
-Mostre:
-
-- usuários;
-- perfis;
-- permissões personalizadas;
-- escopo.
-
-### 8. Código
-
-Escolha um fluxo e mostre:
-
-```text
-Page → Service frontend → Route → Controller → Service → Model
-```
-
----
-
-## 70. Fala sugerida de 10 minutos
-
-### Abertura
-
-> Meu projeto é o SENAI HUB, uma plataforma web que reúne gestão acadêmica, manutenção e controle de entrada e saída em uma única experiência.
-
-### Arquitetura
-
-> O frontend é uma SPA em React e TypeScript. Ele consome uma API REST em Laravel. A autenticação usa Laravel Sanctum, e cada requisição protegida envia um token.
-
-### Segurança
-
-> O sistema protege o menu, a rota do frontend, a rota da API e também o conjunto de registros devolvidos. Por isso, um professor visualiza somente suas turmas, uma empresa visualiza apenas seus aprendizes e um técnico recebe apenas seus chamados e tarefas.
-
-### Connect
-
-> O Connect integra pessoas, cursos, turmas, calendário e frequência. O calendário pode ser gerado por padrões semanais e impede conflitos de turma e professor. A frequência alimenta relatórios e o cálculo de remuneração.
-
-### Grid
-
-> O Grid utiliza um workflow completo. O chamado é atribuído, vira tarefa, reserva materiais, passa por aprovação e termina somente depois da avaliação do solicitante.
-
-### Safe
-
-> O Safe controla entradas e saídas. A AQV cria a solicitação, o professor decide e, nas saídas, a portaria confirma. Todas as etapas geram histórico.
-
-### Recursos gerais
-
-> A plataforma também possui notificações, busca global, relatórios configuráveis, importação com prévia, temas, idiomas e testes automatizados.
-
-### Encerramento
-
-> O principal objetivo foi criar uma plataforma modular e segura, em que cada perfil recebe somente as funções e os dados necessários para o seu trabalho.
-
----
-
-## 71. Perguntas prováveis e respostas
-
-### O site e o aplicativo mobile usam o mesmo backend?
-
-Não. O site usa Laravel e Sanctum. O mobile usa Supabase. Eles são projetos separados.
-
-### O que é uma SPA?
-
-É uma aplicação em que as mudanças de tela ocorrem no navegador pelo React Router, sem recarregar toda a página.
-
-### Como o frontend conversa com o backend?
-
-Por requisições HTTP usando Axios e endpoints REST.
-
-### Como funciona a autenticação?
-
-O Laravel valida e-mail e senha e cria um token Sanctum. O frontend salva e envia esse token no cabeçalho.
-
-### O token fica onde?
-
-No `localStorage`.
-
-### Existe risco no localStorage?
-
-Sim. Um XSS poderia acessar o token. O projeto precisa manter proteção contra injeção, dependências atualizadas e políticas de conteúdo. Cookies HttpOnly seriam uma alternativa para uma evolução.
-
-### Como o sistema sabe quais módulos mostrar?
-
-O perfil define aplicações e permissões. O backend retorna somente as aplicações permitidas.
-
-### Esconder botão garante segurança?
-
-Não. O backend também valida token, módulo, permissão e escopo.
-
-### O que são permissões personalizadas?
-
-São permissões específicas do usuário que substituem o pacote padrão do perfil.
-
-### Como evita divergência entre menu e backend?
-
-O backend é a fonte principal e existe um comando Artisan que gera o manifesto de navegação do frontend.
-
-### Como um professor vê somente suas turmas?
-
-O backend localiza o cadastro docente pelo usuário e filtra as turmas por esse professor.
-
-### Como uma empresa vê somente seus alunos?
-
-O escopo busca contratos cujo nome da empresa corresponde ao `company_name` do usuário.
-
-### Como o calendário evita conflito?
-
-Ele procura aulas da mesma turma ou professor no mesmo dia cujo intervalo se sobrepõe ao novo.
-
-### Como o calendário é gerado?
-
-O sistema percorre o período da turma, compara os dias com os padrões semanais e cria aulas até atingir a carga horária.
-
-### Como funciona a frequência?
-
-Uma sessão é ligada a turma, data e aula. Cada aluno recebe uma marca, que pode ser presente, atraso, falta justificada ou falta.
-
-### Atraso conta como presença?
-
-Sim, nas métricas atuais.
-
-### Como o salário é calculado?
-
-Valor do contrato dividido por 22 dias. Faltas injustificadas geram desconto diário. Bonificações e outros descontos completam o cálculo.
-
-### O que ocorre se não houver contrato?
-
-O sistema usa o valor padrão de R$ 1.518,00.
-
-### Quem pode salvar cálculo salarial?
-
-Os endpoints de cálculo e lote estão protegidos como administrador. Outros perfis autorizados podem consultar ou gerar a prévia conforme o escopo.
-
-### Como funciona o workflow Grid?
-
-Aberto, pendente, em atendimento, aguardando aprovação, avaliação pendente e concluído.
-
-### Por que o chamado trava em atendimento?
-
-Porque a evolução deve acontecer pela tarefa. Isso mantém o chamado e a execução sincronizados.
-
-### Quando o estoque é descontado?
-
-Ao iniciar a tarefa, a quantidade sai do disponível e entra como reservada. Ao concluir, a reserva é consumida.
-
-### E se a tarefa voltar?
-
-A reserva é liberada e a quantidade retorna ao disponível.
-
-### Como evita duas reservas simultâneas?
-
-Usa transação e `lockForUpdate`.
-
-### Como evita itens duplicados no estoque?
-
-Compara SKU e título normalizado. Quando encontra duplicata, soma a quantidade.
-
-### Como funciona o Safe?
-
-A AQV cria. O professor aprova ou nega. Entrada aprovada finaliza. Saída aprovada vai para a portaria.
-
-### Por que entrada e saída têm fluxos diferentes?
-
-Na regra atual, uma entrada depende apenas da aprovação pedagógica. A saída exige também confirmação física da portaria.
-
-### Existe histórico no Safe?
-
-Sim. Cada ação cria um log com usuário e horário.
-
-### As notificações são em tempo real?
-
-Não exatamente. O frontend faz polling da contagem a cada 45 segundos.
-
-### Como funciona a busca global?
-
-Ctrl+K abre a busca. O backend pesquisa somente grupos permitidos e respeita o escopo do usuário.
-
-### A prévia de planilha grava dados?
-
-Não. Ela executa dentro de transação e faz rollback.
-
-### Quais formatos de relatório existem?
-
-CSV, XLSX, JSON e HTML. O HTML pode ser impresso como PDF.
-
-### O mapa usa modelos reais?
-
-O frontend carrega modelos GLB dos blocos e renderiza com Three.js.
-
-### O mapa mostra localização real?
-
-Pode usar dados cadastrados, mas também pode incluir extras de demonstração. Isso precisa ser explicado na apresentação.
-
-### O site possui chatbot?
-
-Não no código atual do site. A pasta de chatbot é um projeto ou especificação separada.
-
-### Por que usar services no backend?
-
-Para retirar regras complexas dos controllers e permitir reutilização e testes.
-
-### Por que usar transactions?
-
-Para evitar alterações parciais em operações com várias tabelas.
-
-### Por que usar Resources?
-
-Para padronizar o JSON e evitar expor campos internos.
-
-### Como os erros chegam ao usuário?
-
-O Laravel devolve status e mensagens; o frontend interpreta o erro e apresenta toast ou mensagem na tela.
-
-### Como o projeto é testado?
-
-PHPUnit testa backend e regras. Playwright testa fluxos completos no navegador.
-
----
-
-## 72. Arquivos importantes para mostrar
-
-| Arquivo | Assunto |
-|---|---|
-| `frontend/src/routes/index.tsx` | Rotas |
-| `frontend/src/contexts/AuthContext.tsx` | Sessão |
-| `frontend/src/services/api.ts` | Axios e token |
-| `backend/routes/api.php` | Endpoints |
-| `backend/config/permissions.php` | Perfis e permissões |
-| `backend/app/Support/UserAccessScope.php` | Escopo |
-| `backend/app/Services/Auth/AuthService.php` | Autenticação |
-| `backend/app/Services/Connect/ConnectScheduleService.php` | Calendário |
-| `backend/app/Services/Connect/ConnectAttendanceService.php` | Frequência |
-| `backend/app/Http/Controllers/Api/Connect/SalaryController.php` | Salário |
-| `backend/app/Services/Grid/GridWorkflowService.php` | Workflow Grid |
-| `backend/app/Services/Safe/SafeWorkflowService.php` | Workflow Safe |
-| `backend/app/Services/Spreadsheet/SpreadsheetService.php` | Planilhas |
-| `backend/app/Services/Reports/CustomReportService.php` | Relatórios |
-| `backend/app/Services/Search/GlobalSearchService.php` | Busca |
-| `backend/app/Services/Notification/NotificationService.php` | Notificações |
-
----
-
-## 73. Checklist antes da apresentação
-
-- [ ] Executar migrations e seeders.
-- [ ] Confirmar backend em execução.
-- [ ] Confirmar frontend em execução.
-- [ ] Testar login.
-- [ ] Preparar conta admin.
-- [ ] Preparar conta professor Connect.
-- [ ] Preparar conta empresa ou aluno.
-- [ ] Preparar chefe e técnico Grid.
-- [ ] Preparar AQV, professor e portaria Safe.
-- [ ] Criar turma com professor e alunos.
-- [ ] Criar padrão semanal.
-- [ ] Gerar calendário.
-- [ ] Registrar frequência.
-- [ ] Preparar contrato.
-- [ ] Preparar cálculo salarial.
-- [ ] Criar chamado.
-- [ ] Preparar técnico.
-- [ ] Preparar estoque.
-- [ ] Executar fluxo completo do Grid.
-- [ ] Preparar solicitação Safe.
-- [ ] Testar busca global.
-- [ ] Testar notificação.
-- [ ] Testar relatório.
-- [ ] Testar prévia de planilha.
-- [ ] Explicar que mobile e site são separados.
-- [ ] Explicar que o chatbot ainda não integra o site.
-
----
-
-## 74. Resumo para memorização
-
-```text
-Frontend:
-React + TypeScript + Vite + Axios
-
-Backend:
-Laravel + Sanctum + Eloquent
-
-Hub:
-identidade, aplicações, usuários, permissões, notificações e arquivo
-
-Connect:
-pessoas, alunos, professores, cursos, turmas, calendário,
-frequência, contratos, salários, mapas e relatórios
-
-Grid:
-chamados, tarefas, técnicos, estoque, reservas,
-aprovação, avaliação, mapas e relatórios
-
-Safe:
-alunos, entrada, saída, professor, portaria e histórico
-
-Segurança:
-token + rota + módulo + permissão + escopo
-
-Qualidade:
-validação + transação + Resources + testes
-```
-
-### Frase final
-
-> O SENAI HUB foi construído para integrar processos diferentes sem perder a separação de responsabilidades, a segurança por perfil e a rastreabilidade das ações.
+*Manual gerado e mantido com auxílio de `scripts/generate-system-manual.mjs` para referências de linha. Última atualização: 2026-06-16.*
