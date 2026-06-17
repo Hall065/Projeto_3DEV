@@ -18,10 +18,20 @@ type CreateUserProfileResponse = {
 };
 
 const DEFAULT_TEMPORARY_PASSWORD = 'Senai@123456';
+const MIN_PASSWORD_LENGTH = 6;
 
 function nullIfEmpty(value?: string | null) {
   const normalized = value?.trim();
   return normalized ? normalized : null;
+}
+
+function normalizePassword(value?: string | null) {
+  const password = nullIfEmpty(value);
+  if (!password) return null;
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    throw new Error(`A senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+  }
+  return password;
 }
 
 async function getFunctionErrorMessage(response: Response) {
@@ -54,6 +64,8 @@ export async function createAuthUserProfile(input: CreateUserProfileInput): Prom
     throw new Error('Entre novamente com uma conta administradora antes de cadastrar usuarios.');
   }
 
+  const password = normalizePassword(input.senha) ?? DEFAULT_TEMPORARY_PASSWORD;
+
   const response = await fetch(`${supabaseUrl}/functions/v1/create-user-profile`, {
     method: 'POST',
     headers: {
@@ -64,7 +76,7 @@ export async function createAuthUserProfile(input: CreateUserProfileInput): Prom
     body: JSON.stringify({
       action: 'create',
       email,
-      password: nullIfEmpty(input.senha) ?? DEFAULT_TEMPORARY_PASSWORD,
+      password,
       nome,
       tipo_usuario: input.tipoUsuario,
       email_institucional: email,
@@ -90,6 +102,41 @@ export async function createAuthUserProfile(input: CreateUserProfileInput): Prom
   }
 
   return data.userId;
+}
+
+export async function updateAuthUserPassword(userId: string, senha?: string | null): Promise<void> {
+  const normalizedUserId = userId.trim();
+  const password = normalizePassword(senha);
+  if (!normalizedUserId || !password) return;
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) {
+    throw new Error('Entre novamente com uma conta administradora antes de alterar senhas.');
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/create-user-profile`, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseAnonKey,
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'update_password',
+      user_id: normalizedUserId,
+      password,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await getFunctionErrorMessage(response));
+  }
+
+  const data = (await response.json()) as CreateUserProfileResponse;
+  if (data.error) {
+    throw new Error(data.error);
+  }
 }
 
 export async function deleteAuthUserProfile(userId: string): Promise<void> {

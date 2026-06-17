@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { createAuthUserProfile } from '@/services/user-profile.service';
+import { createAuthUserProfile, updateAuthUserPassword } from '@/services/user-profile.service';
 import { uploadService } from '@/services/upload.service';
 import type {
   Chamado,
@@ -476,6 +476,8 @@ async function createHubUsuario(values: FormValues) {
 }
 
 async function updateHubUsuario(id: string, values: FormValues) {
+  await updateAuthUserPassword(id, values.senha);
+
   const base = {
     nome: nullIfEmpty(values.nome),
     email_institucional: nullIfEmpty(values.email_institucional ?? values.email),

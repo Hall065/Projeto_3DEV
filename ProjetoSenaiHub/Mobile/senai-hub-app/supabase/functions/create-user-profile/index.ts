@@ -9,6 +9,8 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
+const MIN_PASSWORD_LENGTH = 6;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers });
@@ -123,6 +125,63 @@ serve(async (req) => {
     return new Response(JSON.stringify({ userId: targetUserId }), { headers });
   }
 
+  if (action === 'update_password') {
+    const targetUserId = String(user_id ?? '').trim();
+    if (!targetUserId || !initialPassword) {
+      return new Response(
+        JSON.stringify({ error: 'user_id e senha sao obrigatorios para alterar senha.' }),
+        { status: 400, headers }
+      );
+    }
+
+    if (initialPassword.length < MIN_PASSWORD_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `A senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.` }),
+        { status: 400, headers }
+      );
+    }
+
+    const { data: targetProfile, error: targetProfileError } = await supabase
+      .schema('hub')
+      .from('usuarios')
+      .select('id, tipo_usuario')
+      .eq('id', targetUserId)
+      .maybeSingle();
+
+    if (targetProfileError || !targetProfile) {
+      return new Response(
+        JSON.stringify({ error: targetProfileError?.message ?? 'Usuario nao encontrado em hub.usuarios.' }),
+        { status: 400, headers }
+      );
+    }
+
+    const targetRole = String(targetProfile.tipo_usuario ?? '');
+    const canUpdatePassword =
+      canCreateUsers ||
+      (
+        callerProfile?.status === 'ativo' &&
+        ['gerente_manutencao', 'grid_chefe'].includes(callerRole) &&
+        ['manutencao', 'grid_funcionario'].includes(targetRole)
+      );
+
+    if (callerProfileError || !canUpdatePassword) {
+      return new Response(
+        JSON.stringify({ error: 'Sem permissao para alterar senha deste usuario.' }),
+        { status: 403, headers }
+      );
+    }
+
+    const { error: updateAuthError } = await supabase.auth.admin.updateUserById(targetUserId, {
+      password: initialPassword,
+    });
+
+    if (updateAuthError) {
+      return new Response(JSON.stringify({ error: updateAuthError.message }), { status: 400, headers });
+    }
+
+    return new Response(JSON.stringify({ userId: targetUserId }), { headers });
+  }
+
   if (callerProfileError || (!canCreateUsers && !canCreateMaintenanceUser)) {
     return new Response(
       JSON.stringify({ error: 'Sem permissao para criar usuarios.' }),
@@ -133,6 +192,13 @@ serve(async (req) => {
   if (!normalizedEmail || !initialPassword || !nome) {
     return new Response(
       JSON.stringify({ error: 'email, senha e nome sao obrigatorios.' }),
+      { status: 400, headers }
+    );
+  }
+
+  if (initialPassword.length < MIN_PASSWORD_LENGTH) {
+    return new Response(
+      JSON.stringify({ error: `A senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.` }),
       { status: 400, headers }
     );
   }
