@@ -6,8 +6,8 @@
 <h2>📄 Links Importantes: </h2>
 
 <strong>Link:</strong> <a href="https://app.milanote.com/1VVhMY1W5awS4v?p=xnqgoJHf9J8">Milanote</a><br>
-<strong>Link:</strong> <a href="https://www.figma.com/design/vcBrIckb4xfhyQpkjpPvZk/Gest%C3%A3o-e-Manutens%C3%A3o-Predial?node-id=0-1&t=ROfJvp1NoLPOcgoj-1">Figma</a><br>
-<strong>Link:</strong> [Documentação](Documentação/Projeto_Gestão_Manutenção_Predial1.docx)
+<strong>Link:</strong> <a href="https://www.figma.com/design/QHglNi7cxkfA9et0MDvDQV/Senai-Hub?node-id=0-1&p=f&t=KEe6K3QUaYYP4LcK-0">Figma</a><br>
+<strong>Link:</strong> [Documentação](ProjetoSenaiHub/Documentação/Documentacao_Completa_SENAI_HUB_ABNT.docx)
 
 <p>O Projeto3DEVT – Manutenção Predial é uma aplicação desenvolvida para atender às demandas de gestão de manutenção predial do SENAI, oferecendo maior transparência, organização e eficiência no controle de chamados técnicos, contrinuindo para a otimização da comunicação interna assim aprimorando o ambiente</p>
 
