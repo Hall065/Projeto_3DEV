@@ -223,7 +223,7 @@ export function CoursesPage() {
               placeholder={t('connect.courses.form.placeholders.area')}
             />
           </FormField>
-          <FormField label={t('connect.courses.form.workload')} hint="Usada no planejamento do semestre">
+          <FormField label={t('connect.courses.form.workload')} hint={t('connect.courses.form.workloadHint')}>
             <input
               type="number"
               min={0}
@@ -233,7 +233,7 @@ export function CoursesPage() {
               placeholder={t('connect.courses.form.placeholders.workload')}
             />
           </FormField>
-          <FormField label={t('connect.courses.form.startDate')} hint="Turmas devem ficar dentro deste periodo">
+          <FormField label={t('connect.courses.form.startDate')} hint={t('connect.courses.form.startDateHint')}>
             <input
               type="date"
               className={inputClass}

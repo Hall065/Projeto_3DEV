@@ -159,7 +159,6 @@ class TaskController extends Controller
 
         if (array_key_exists('inventory_items', $validated)) {
             $normalized = $this->normalizeInventoryItems($validated['inventory_items']);
-            $this->workflow->assertInventoryLinesAvailable($normalized);
             $this->workflow->updateTaskInventory($task, $normalized);
             unset($validated['inventory_items']);
         }

@@ -13,13 +13,14 @@ class NotificationPreferences
     }
 
     /**
-     * @return array{in_app: bool, email: bool, modules: array<string, bool>}
+     * @return array{in_app: bool, email: bool, locale: string, modules: array<string, bool>}
      */
     public static function defaults(): array
     {
         return [
             'in_app' => true,
             'email' => true,
+            'locale' => 'pt',
             'modules' => [
                 'hub' => true,
                 'connect' => true,
@@ -30,7 +31,7 @@ class NotificationPreferences
     }
 
     /**
-     * @return array{in_app: bool, email: bool, modules: array<string, bool>}
+     * @return array{in_app: bool, email: bool, locale: string, modules: array<string, bool>}
      */
     public static function forUser(User $user): array
     {
@@ -44,6 +45,7 @@ class NotificationPreferences
         return [
             'in_app' => (bool) ($stored['in_app'] ?? $defaults['in_app']),
             'email' => (bool) ($stored['email'] ?? $defaults['email']),
+            'locale' => (string) ($stored['locale'] ?? $defaults['locale']),
             'modules' => array_merge($defaults['modules'], is_array($stored['modules'] ?? null) ? $stored['modules'] : []),
         ];
     }
@@ -72,7 +74,7 @@ class NotificationPreferences
 
     /**
      * @param  array<string, mixed>  $input
-     * @return array{in_app: bool, email: bool, modules: array<string, bool>}
+     * @return array{in_app: bool, email: bool, locale: string, modules: array<string, bool>}
      */
     public static function merge(array $input): array
     {
@@ -84,6 +86,11 @@ class NotificationPreferences
 
         if (array_key_exists('email', $input)) {
             $current['email'] = (bool) $input['email'];
+        }
+
+        if (array_key_exists('locale', $input)) {
+            $locale = (string) $input['locale'];
+            $current['locale'] = in_array($locale, ['pt', 'en', 'es'], true) ? $locale : 'pt';
         }
 
         if (isset($input['modules']) && is_array($input['modules'])) {

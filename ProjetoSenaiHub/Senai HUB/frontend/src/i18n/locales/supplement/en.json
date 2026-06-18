@@ -1029,7 +1029,8 @@
     }
   },
   "reportPreview": {
-    "total": "Total: {{total}}"
+    "total": "Total: {{total}}",
+    "noData": "No data to display."
   },
   "settingsFooter": {
     "back": "Back",
@@ -1239,7 +1240,9 @@
         "namePlaceholder": "E.g. Industrial Automation",
         "areaPlaceholder": "E.g. Industry 4.0",
         "workloadPlaceholder": "E.g. 120 hours",
-        "descriptionPlaceholder": "Describe the course, syllabus and objectives..."
+        "descriptionPlaceholder": "Describe the course, syllabus and objectives...",
+        "workloadHint": "Used for semester planning",
+        "startDateHint": "Classes must fall within this period"
       }
     },
     "classes": {
@@ -1248,7 +1251,11 @@
         "semesterPlaceholder": "2025-1",
         "capacityPlaceholder": "E.g. 30",
         "descriptionPlaceholder": "Describe the class, goals and notes...",
-        "periodHint": "Classes must fall within this period"
+        "periodHint": "Classes must fall within this period",
+        "semesterHint": "E.g. 2025-1",
+        "startDateHint": "Required to generate the calendar",
+        "teacherHint": "Avoids schedule conflicts in the calendar",
+        "courseHint": "Optional — link later"
       }
     }
   },

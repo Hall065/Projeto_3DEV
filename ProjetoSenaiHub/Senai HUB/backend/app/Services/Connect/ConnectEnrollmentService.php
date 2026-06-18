@@ -159,7 +159,7 @@ class ConnectEnrollmentService
     }
 
     /** @return Collection<int, HubPerson> */
-    private function resolveClassStudents(ConnectClass $class): Collection
+    public function resolveClassStudents(ConnectClass $class): Collection
     {
         $class->load(['enrolledPeople', 'students.hubPerson']);
 
@@ -174,5 +174,50 @@ class ConnectEnrollmentService
             ->concat($fromLegacy)
             ->unique('id')
             ->values();
+    }
+
+    /** @return Collection<int, ConnectStudent> */
+    public function resolveClassConnectStudents(ConnectClass $class): Collection
+    {
+        $class->loadMissing(['enrolledPeople', 'students']);
+
+        $students = $class->students->keyBy('id');
+
+        foreach ($this->resolveClassStudents($class) as $person) {
+            $student = ConnectStudent::query()->where('hub_person_id', $person->id)->first();
+
+            if (! $student) {
+                continue;
+            }
+
+            if ((int) $student->connect_class_id !== (int) $class->id) {
+                $student->update(['connect_class_id' => $class->id]);
+            }
+
+            $students->put($student->id, $student->fresh());
+        }
+
+        return $students->values();
+    }
+
+    public function ensureConnectStudentForPerson(HubPerson $person, ConnectClass $class): ConnectStudent
+    {
+        $student = ConnectStudent::query()->where('hub_person_id', $person->id)->first();
+
+        if ($student) {
+            if ((int) $student->connect_class_id !== (int) $class->id) {
+                $student->update(['connect_class_id' => $class->id]);
+            }
+
+            return $student->fresh();
+        }
+
+        return ConnectStudent::query()->create([
+            'hub_person_id' => $person->id,
+            'connect_class_id' => $class->id,
+            'full_name' => $person->full_name,
+            'email' => $person->email,
+            'status' => 'active',
+        ]);
     }
 }

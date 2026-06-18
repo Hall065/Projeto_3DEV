@@ -28,10 +28,20 @@ class GridWorkflowService
     /**
      * @param  list<array{inventory_item_id: int, quantity: int}>  $inventoryItems
      */
-    public function assertInventoryLinesAvailable(array $inventoryItems): void
+    public function assertInventoryLinesAvailable(array $inventoryItems, ?GridTask $task = null): void
     {
         if ($inventoryItems === []) {
             return;
+        }
+
+        $reservedByTask = [];
+        if ($task && $task->column === 'em_andamento') {
+            $reservedByTask = GridInventoryReservation::query()
+                ->where('grid_task_id', $task->id)
+                ->where('status', 'reserved')
+                ->pluck('quantity', 'grid_inventory_item_id')
+                ->map(fn ($qty) => (int) $qty)
+                ->all();
         }
 
         $aggregated = [];
@@ -51,7 +61,9 @@ class GridWorkflowService
                 ]);
             }
 
-            if ($inventory->qty_available <= 0) {
+            $effectiveAvailable = $inventory->qty_available + ($reservedByTask[$itemId] ?? 0);
+
+            if ($effectiveAvailable <= 0) {
                 throw ValidationException::withMessages([
                     'inventory_items' => [
                         "\"{$inventory->title}\" está com estoque zerado. Não é possível incluir na solicitação.",
@@ -59,10 +71,10 @@ class GridWorkflowService
                 ]);
             }
 
-            if ($requestedQty > $inventory->qty_available) {
+            if ($requestedQty > $effectiveAvailable) {
                 throw ValidationException::withMessages([
                     'inventory_items' => [
-                        "Estoque insuficiente para \"{$inventory->title}\" (solicitado: {$requestedQty}, disponível: {$inventory->qty_available}).",
+                        "Estoque insuficiente para \"{$inventory->title}\" (solicitado: {$requestedQty}, disponível: {$effectiveAvailable}).",
                     ],
                 ]);
             }
@@ -170,12 +182,7 @@ class GridWorkflowService
             $ticket->started_at = now();
         }
 
-        $task = $this->ensurePrimaryTask($ticket, 'em_andamento');
-        $this->syncInventoryForTask($task, $task->column === 'em_andamento' ? null : $task->column, 'em_andamento');
-
-        if ($task->column !== 'em_andamento') {
-            $task = $this->handleTaskColumnChange($task, $task->column, 'em_andamento');
-        }
+        $this->ensurePrimaryTask($ticket, 'em_andamento');
 
         $ticket->status = self::LOCKED_TICKET_STATUS;
         $ticket->save();
@@ -422,7 +429,7 @@ class GridWorkflowService
 
     public function syncInventoryForTask(GridTask $task, ?string $previousColumn, string $newColumn): void
     {
-        if ($previousColumn === 'em_andamento' && $newColumn !== 'em_andamento') {
+        if ($previousColumn === 'em_andamento' && $newColumn !== 'em_andamento' && $newColumn !== 'concluidas') {
             $this->releaseReservations($task);
         }
 
@@ -444,6 +451,8 @@ class GridWorkflowService
             if ($task->column === 'em_andamento') {
                 $this->releaseReservations($task);
             }
+
+            $this->assertInventoryLinesAvailable($inventoryItems);
 
             $task->inventory_items = $inventoryItems;
             $task->save();

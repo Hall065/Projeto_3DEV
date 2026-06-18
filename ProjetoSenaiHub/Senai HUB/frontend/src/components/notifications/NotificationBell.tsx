@@ -6,6 +6,7 @@ import { useAppearance } from '../../contexts/AppearanceContext'
 import { useNotifications } from '../../contexts/NotificationContext'
 import { intlLocale, normalizeLocale } from '../../i18n'
 import type { HubNotification, NotificationModule } from '../../types/notification'
+import { resolveNotificationText } from '../../utils/notificationI18n'
 import type { WallpaperTone } from '../../utils/wallpaperTone'
 
 type NotificationBellVariant = 'hub' | 'connect' | 'grid' | 'safe' | 'chrome'
@@ -81,6 +82,7 @@ function NotificationItem({
 }) {
   const { t } = useTranslation()
   const styles = variantClasses(variant)
+  const { title, message } = resolveNotificationText(item, t)
 
   return (
     <div
@@ -97,8 +99,8 @@ function NotificationItem({
         className="min-w-0 flex-1 text-left"
         onClick={() => onOpen(item)}
       >
-        <p className={`text-sm font-semibold ${styles.title}`}>{item.title}</p>
-        <p className={`mt-0.5 line-clamp-2 text-xs ${styles.muted}`}>{item.message}</p>
+        <p className={`text-sm font-semibold ${styles.title}`}>{title}</p>
+        <p className={`mt-0.5 line-clamp-2 text-xs ${styles.muted}`}>{message}</p>
         <div className={`mt-1.5 flex flex-wrap items-center gap-2 text-[11px] ${styles.muted}`}>
           <span>{moduleLabel(item.module, t)}</span>
           <span>·</span>

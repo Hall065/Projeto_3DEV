@@ -9,6 +9,7 @@ use App\Services\Notification\NotificationService;
 use App\Support\NotificationPreferences;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class NotificationController extends Controller
 {
@@ -91,6 +92,7 @@ class NotificationController extends Controller
         $validated = $request->validate([
             'in_app' => ['sometimes', 'boolean'],
             'email' => ['sometimes', 'boolean'],
+            'locale' => ['sometimes', 'string', Rule::in(['pt', 'en', 'es'])],
             'modules' => ['sometimes', 'array'],
             'modules.hub' => ['sometimes', 'boolean'],
             'modules.connect' => ['sometimes', 'boolean'],

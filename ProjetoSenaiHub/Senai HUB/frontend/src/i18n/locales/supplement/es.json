@@ -1029,7 +1029,8 @@
     }
   },
   "reportPreview": {
-    "total": "Total: {{total}}"
+    "total": "Total: {{total}}",
+    "noData": "Sin datos para mostrar."
   },
   "settingsFooter": {
     "back": "Volver",
@@ -1239,7 +1240,9 @@
         "namePlaceholder": "Ej: Automatización Industrial",
         "areaPlaceholder": "Ej: Industria 4.0",
         "workloadPlaceholder": "Ej: 120 horas",
-        "descriptionPlaceholder": "Describa el curso, plan de estudios y objetivos..."
+        "descriptionPlaceholder": "Describa el curso, plan de estudios y objetivos...",
+        "workloadHint": "Usada en la planificación del semestre",
+        "startDateHint": "Las clases deben estar dentro de este período"
       }
     },
     "classes": {
@@ -1248,7 +1251,11 @@
         "semesterPlaceholder": "2025-1",
         "capacityPlaceholder": "Ej: 30",
         "descriptionPlaceholder": "Describa la clase, objetivos y observaciones...",
-        "periodHint": "Las clases deben estar dentro de este período"
+        "periodHint": "Las clases deben estar dentro de este período",
+        "semesterHint": "Ej: 2025-1",
+        "startDateHint": "Obligatorio para generar el calendario",
+        "teacherHint": "Evita conflictos de horario en el calendario",
+        "courseHint": "Opcional — vincule después"
       }
     }
   },

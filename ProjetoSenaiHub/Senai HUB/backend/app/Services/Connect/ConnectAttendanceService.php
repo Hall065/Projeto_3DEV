@@ -12,67 +12,110 @@ use Illuminate\Support\Collection;
 
 class ConnectAttendanceService
 {
+    public function __construct(
+        private readonly ConnectEnrollmentService $enrollment,
+    ) {}
+
     /**
      * Cria sessões de frequência (status open) para aulas sem chamada vinculada.
      *
-     * @return array{created: int, skipped: int}
+     * @return array{created: int, skipped: int, marks_added: int}
      */
     public function provisionSessionsForClass(ConnectClass $class, ?Collection $lessons = null): array
     {
-        $class->loadMissing(['students']);
+        $students = $this->enrollment->resolveClassConnectStudents($class);
+        if ($students->isEmpty()) {
+            return ['created' => 0, 'skipped' => 0, 'marks_added' => 0];
+        }
 
         $lessons ??= ConnectLessonSchedule::query()
             ->where('connect_class_id', $class->id)
             ->where('status', '!=', 'cancelled')
-            ->whereDoesntHave('attendanceSession')
             ->orderBy('scheduled_date')
             ->orderBy('start_time')
             ->get();
 
         $created = 0;
         $skipped = 0;
+        $marksAdded = 0;
 
         foreach ($lessons as $lesson) {
             if ($lesson->attendanceSession()->exists()) {
+                $session = $lesson->attendanceSession()->first();
+                if ($session) {
+                    $marksAdded += $this->ensureMarksForStudents($session, $class, $students);
+                }
                 $skipped++;
 
                 continue;
             }
 
-            $this->findOrCreateSession(
+            $session = $this->findOrCreateSession(
                 $class,
                 $lesson->scheduled_date?->format('Y-m-d') ?? now()->toDateString(),
                 (string) $lesson->subject,
                 $lesson,
+                students: $students,
             );
 
+            $marksAdded += $session->marks()->count();
             $created++;
         }
 
-        return compact('created', 'skipped');
+        return [
+            'created' => $created,
+            'skipped' => $skipped,
+            'marks_added' => $marksAdded,
+        ];
+    }
+
+    public function backfillMarksForClass(ConnectClass $class): int
+    {
+        $students = $this->enrollment->resolveClassConnectStudents($class);
+        if ($students->isEmpty()) {
+            return 0;
+        }
+
+        $added = 0;
+        $sessions = ConnectAttendanceSession::query()
+            ->where('connect_class_id', $class->id)
+            ->get();
+
+        foreach ($sessions as $session) {
+            $added += $this->ensureMarksForStudents($session, $class, $students);
+        }
+
+        return $added;
     }
 
     public function provisionSessionForLesson(ConnectLessonSchedule $lesson): ConnectAttendanceSession
     {
-        $lesson->loadMissing(['connectClass.students']);
+        $lesson->loadMissing(['connectClass']);
         $class = $lesson->connectClass;
+        $students = $this->enrollment->resolveClassConnectStudents($class);
 
         return $this->findOrCreateSession(
             $class,
             $lesson->scheduled_date?->format('Y-m-d') ?? now()->toDateString(),
             (string) $lesson->subject,
             $lesson,
+            students: $students,
         );
     }
 
+    /**
+     * @param  Collection<int, ConnectStudent>|null  $students
+     */
     public function findOrCreateSession(
         ConnectClass $class,
         string $sessionDate,
         string $subject,
         ?ConnectLessonSchedule $lesson = null,
         ?int $lessonsCount = null,
+        ?Collection $students = null,
     ): ConnectAttendanceSession {
-        $class->loadMissing(['students', 'teacher']);
+        $class->loadMissing(['teacher']);
+        $students ??= $this->enrollment->resolveClassConnectStudents($class);
 
         $lessonsCount ??= $lesson?->lessons_count ?? $class->default_lessons_per_day ?? 4;
         $teacherId = $lesson?->connect_teacher_id ?? $class->connect_teacher_id;
@@ -83,7 +126,9 @@ class ConnectAttendanceService
                 ->first();
 
             if ($byLesson) {
-                return $this->ensureMarksForStudents($byLesson, $class);
+                $this->ensureMarksForStudents($byLesson, $class, $students);
+
+                return $byLesson;
             }
         }
 
@@ -113,7 +158,9 @@ class ConnectAttendanceService
                 $session->refresh();
             }
 
-            return $this->ensureMarksForStudents($session, $class);
+            $this->ensureMarksForStudents($session, $class, $students);
+
+            return $session;
         }
 
         $session = ConnectAttendanceSession::query()->create([
@@ -126,16 +173,23 @@ class ConnectAttendanceService
             'status' => 'open',
         ]);
 
-        return $this->ensureMarksForStudents($session, $class);
+        $this->ensureMarksForStudents($session, $class, $students);
+
+        return $session;
     }
 
+    /**
+     * @param  Collection<int, ConnectStudent>  $students
+     */
     private function ensureMarksForStudents(
         ConnectAttendanceSession $session,
         ConnectClass $class,
-    ): ConnectAttendanceSession {
+        Collection $students,
+    ): int {
         $existingStudentIds = $session->marks()->pluck('connect_student_id');
+        $added = 0;
 
-        foreach ($class->students as $student) {
+        foreach ($students as $student) {
             if ($existingStudentIds->contains($student->id)) {
                 continue;
             }
@@ -146,9 +200,10 @@ class ConnectAttendanceService
                 'status' => 'present',
                 'missed_lessons' => 0,
             ]);
+            $added++;
         }
 
-        return $session;
+        return $added;
     }
 
     /**
@@ -191,7 +246,7 @@ class ConnectAttendanceService
         $justified = $allMarks->where('status', 'justified')->count();
         $absent = $allMarks->where('status', 'absent')->count();
 
-        $studentsCount = $class->students()->count();
+        $studentsCount = $this->enrollment->resolveClassConnectStudents($class)->count();
         $lessonsWithoutAttendance = max(0, $totalLessons - $sessions->count());
 
         return [

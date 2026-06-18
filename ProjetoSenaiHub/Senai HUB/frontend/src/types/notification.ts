@@ -15,12 +15,14 @@ export interface HubNotification {
   is_read: boolean
   read_at: string | null
   actor_name?: string | null
+  metadata?: Record<string, unknown> | null
   created_at: string
 }
 
 export interface NotificationPreferences {
   in_app: boolean
   email: boolean
+  locale?: 'pt' | 'en' | 'es'
   modules: {
     hub: boolean
     connect: boolean

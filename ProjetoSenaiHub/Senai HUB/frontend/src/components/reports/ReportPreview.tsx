@@ -92,10 +92,11 @@ function SimpleBarChart({ items, horizontal }: { items: ReportChartItem[]; horiz
 }
 
 function ReportDonutChart({ items }: { items: ReportChartItem[] }) {
+  const { t } = useTranslation()
   const total = items.reduce((sum, item) => sum + item.value, 0)
 
   if (total <= 0) {
-    return <p className="py-6 text-center text-sm text-hub-text-muted">Sem dados para exibir.</p>
+    return <p className="py-6 text-center text-sm text-hub-text-muted">{t('reportPreview.noData')}</p>
   }
 
   const segments: IsometricDonutSegmentInput[] = items.map((item, index) => ({
@@ -112,7 +113,7 @@ function ReportDonutChart({ items }: { items: ReportChartItem[] }) {
       segments={segments}
       centerValue={total.toLocaleString('pt-BR')}
       centerLabel="Total"
-      emptyMessage="Sem dados para exibir."
+      emptyMessage={t('reportPreview.noData')}
       ariaLabel="Distribuicao do relatorio"
     />
   )

@@ -273,7 +273,7 @@ export function SettingsPage() {
                 label={t('settings.moduleHub')}
                 description={t('settings.moduleHubDesc')}
                 checked={notificationPrefs.modules.hub}
-                disabled={savingNotifications || !notificationPrefs.in_app}
+                disabled={savingNotifications || (!notificationPrefs.in_app && !notificationPrefs.email)}
                 onChange={(value) =>
                   void updateNotificationPrefs({ modules: { ...notificationPrefs.modules, hub: value } })
                 }
@@ -282,7 +282,7 @@ export function SettingsPage() {
                 label={t('settings.moduleConnect')}
                 description={t('settings.moduleConnectDesc')}
                 checked={notificationPrefs.modules.connect}
-                disabled={savingNotifications || !notificationPrefs.in_app}
+                disabled={savingNotifications || (!notificationPrefs.in_app && !notificationPrefs.email)}
                 onChange={(value) =>
                   void updateNotificationPrefs({ modules: { ...notificationPrefs.modules, connect: value } })
                 }
@@ -291,7 +291,7 @@ export function SettingsPage() {
                 label={t('settings.moduleGrid')}
                 description={t('settings.moduleGridDesc')}
                 checked={notificationPrefs.modules.grid}
-                disabled={savingNotifications || !notificationPrefs.in_app}
+                disabled={savingNotifications || (!notificationPrefs.in_app && !notificationPrefs.email)}
                 onChange={(value) =>
                   void updateNotificationPrefs({ modules: { ...notificationPrefs.modules, grid: value } })
                 }
@@ -300,7 +300,7 @@ export function SettingsPage() {
                 label={t('settings.moduleSafe')}
                 description={t('settings.moduleSafeDesc')}
                 checked={notificationPrefs.modules.safe ?? true}
-                disabled={savingNotifications || !notificationPrefs.in_app}
+                disabled={savingNotifications || (!notificationPrefs.in_app && !notificationPrefs.email)}
                 onChange={(value) =>
                   void updateNotificationPrefs({ modules: { ...notificationPrefs.modules, safe: value } })
                 }

@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react'
 import { Check, Globe } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PrimaryButton } from '../connect/ConnectShared'
+import { notificationService } from '../../services/notificationService'
+import { useAuth } from '../../contexts/AuthContext'
 import { useCrudToast } from '../../hooks/useCrudToast'
 import { normalizeLocale, setLocale, supportedLocales, type LocaleCode } from '../../i18n'
 
 export function LanguageSwitcher() {
   const { t, i18n } = useTranslation()
   const crudToast = useCrudToast()
+  const { isAuthenticated } = useAuth()
   const activeLocale = normalizeLocale(i18n.language)
   const [draft, setDraft] = useState<LocaleCode>(activeLocale)
 
@@ -17,8 +20,15 @@ export function LanguageSwitcher() {
 
   const dirty = draft !== activeLocale
 
-  function handleApply() {
+  async function handleApply() {
     setLocale(draft)
+    if (isAuthenticated) {
+      try {
+        await notificationService.updatePreferences({ locale: draft })
+      } catch {
+        /* keep local locale even if sync fails */
+      }
+    }
     crudToast.notifySuccess(t('settings.languageApplied'))
   }
 

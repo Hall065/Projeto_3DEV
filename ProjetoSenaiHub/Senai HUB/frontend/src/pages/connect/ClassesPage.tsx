@@ -342,7 +342,7 @@ export function ClassesPage() {
               <option value="noite">{t('connect.shift.noite')}</option>
             </select>
           </FormField>
-          <FormField label={t('connect.classes.form.semester')} hint="Ex: 2025-1">
+          <FormField label={t('connect.classes.form.semester')} hint={t('connect.classes.form.semesterHint')}>
             <input
               className={inputClass}
               value={form.semester}
@@ -350,7 +350,7 @@ export function ClassesPage() {
               placeholder={t('connect.classes.form.placeholders.semester')}
             />
           </FormField>
-          <FormField label={t('connect.classes.form.startDate')} hint="Obrigatorio para gerar calendario">
+          <FormField label={t('connect.classes.form.startDate')} hint={t('connect.classes.form.startDateHint')}>
             <input type="date" className={inputClass} value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
           </FormField>
           <FormField label={t('connect.classes.form.endDate')} hint={t('connect.students.form.optional')}>
@@ -373,7 +373,7 @@ export function ClassesPage() {
               min={1}
             />
           </FormField>
-          <FormField label={t('connect.classes.form.teacher')} hint="Evita conflito de horario no calendario">
+          <FormField label={t('connect.classes.form.teacher')} hint={t('connect.classes.form.teacherHint')}>
             <select className={selectClass} value={form.connect_teacher_id} onChange={(e) => setForm({ ...form, connect_teacher_id: e.target.value })}>
               <option value="">Sem professor (definir depois)</option>
               {teachers.map((teacher) => (
@@ -383,7 +383,7 @@ export function ClassesPage() {
               ))}
             </select>
           </FormField>
-          <FormField label={t('connect.table.course')} hint="Opcional — vincule depois">
+          <FormField label={t('connect.table.course')} hint={t('connect.classes.form.courseHint')}>
             <select className={selectClass} value={form.connect_course_id} onChange={(e) => setForm({ ...form, connect_course_id: e.target.value })}>
               <option value="">Sem curso (definir depois)</option>
               {courses.map((c) => (

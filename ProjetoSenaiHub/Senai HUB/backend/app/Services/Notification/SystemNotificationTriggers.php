@@ -17,6 +17,7 @@ use App\Models\SpreadsheetImportLog;
 use App\Models\User;
 use App\Support\ConnectAttendanceStats;
 use App\Support\HubRole;
+use App\Support\NotificationI18n;
 
 class SystemNotificationTriggers
 {
@@ -38,7 +39,7 @@ class SystemNotificationTriggers
             'severity' => 'info',
         ]);
 
-        $this->notifications->notifyRole(HubRole::ADMIN, [
+        $this->notifications->notifyRole(HubRole::ADMIN, NotificationI18n::withParams([
             'module' => 'hub',
             'type' => 'hub.user.created_admin',
             'title' => 'Novo usuario cadastrado',
@@ -49,7 +50,10 @@ class SystemNotificationTriggers
             'actor_user_id' => $actor?->id,
             'except_user_id' => $actor?->id,
             'severity' => 'info',
-        ]);
+        ], [
+            'name' => $user->name,
+            'email' => $user->email,
+        ]));
     }
 
     public function userRoleUpdated(User $user, ?string $previousRole, ?User $actor = null): void
@@ -89,7 +93,7 @@ class SystemNotificationTriggers
             $summary .= " Organizacao: {$request->organization}.";
         }
 
-        $this->notifications->notifyRole(HubRole::ADMIN, [
+        $this->notifications->notifyRole(HubRole::ADMIN, NotificationI18n::withParams([
             'module' => 'hub',
             'type' => 'hub.access_request',
             'title' => 'Nova solicitacao de acesso',
@@ -102,7 +106,7 @@ class SystemNotificationTriggers
                 'email' => $request->email,
                 'organization' => $request->organization,
             ],
-        ]);
+        ], ['summary' => $summary]));
     }
 
     public function connectStudentEnrolled(ConnectStudent $student, ?User $actor = null): void
@@ -111,7 +115,7 @@ class SystemNotificationTriggers
         $class = $student->connectClass;
 
         if ($student->user_id) {
-            $this->notifications->notify((int) $student->user_id, [
+            $this->notifications->notify((int) $student->user_id, NotificationI18n::withParams([
                 'module' => 'connect',
                 'type' => 'connect.student.enrolled',
                 'title' => 'Matricula confirmada',
@@ -123,13 +127,15 @@ class SystemNotificationTriggers
                 'entity_id' => $student->id,
                 'actor_user_id' => $actor?->id,
                 'severity' => 'info',
-            ]);
+            ], [
+                'className' => $class?->name ?? '',
+            ]));
         }
 
         if ($class?->connect_teacher_id) {
             $teacherUserId = ConnectTeacher::query()->where('id', $class->connect_teacher_id)->value('user_id');
             if ($teacherUserId) {
-                $this->notifications->notify((int) $teacherUserId, [
+                $this->notifications->notify((int) $teacherUserId, NotificationI18n::withParams([
                     'module' => 'connect',
                     'type' => 'connect.student.enrolled_teacher',
                     'title' => 'Novo aluno na turma',
@@ -140,11 +146,14 @@ class SystemNotificationTriggers
                     'actor_user_id' => $actor?->id,
                     'except_user_id' => $actor?->id,
                     'severity' => 'info',
-                ]);
+                ], [
+                    'studentName' => $student->full_name,
+                    'className' => $class->name,
+                ]));
             }
         }
 
-        $this->notifications->notifyPermission('connect.students.manage', [
+        $this->notifications->notifyPermission('connect.students.manage', NotificationI18n::withParams([
             'module' => 'connect',
             'type' => 'connect.student.enrolled_staff',
             'title' => 'Aluno matriculado',
@@ -155,7 +164,10 @@ class SystemNotificationTriggers
             'actor_user_id' => $actor?->id,
             'except_user_id' => $actor?->id,
             'severity' => 'info',
-        ]);
+        ], [
+            'studentName' => $student->full_name,
+            'classSuffix' => $class ? "na turma {$class->name}" : '',
+        ]));
     }
 
     public function connectClassAssigned(ConnectClass $class, ?User $actor = null): void
@@ -545,11 +557,11 @@ class SystemNotificationTriggers
 
     public function gridInventoryLow(GridInventoryItem $item, ?User $actor = null): void
     {
-        if ($item->status !== 'baixo') {
+        if (! $item->isLowStock()) {
             return;
         }
 
-        $this->notifications->notifyPermission('grid.inventory.view', [
+        $this->notifications->notifyPermission('grid.inventory.view', NotificationI18n::withParams([
             'module' => 'grid',
             'type' => 'grid.inventory.low_stock',
             'title' => 'Estoque baixo',
@@ -560,7 +572,11 @@ class SystemNotificationTriggers
             'actor_user_id' => $actor?->id,
             'except_user_id' => $actor?->id,
             'severity' => 'warning',
-        ]);
+        ], [
+            'itemTitle' => $item->title,
+            'qtyAvailable' => $item->qty_available,
+            'qtyMin' => $item->qty_min,
+        ]));
     }
 
     public function spreadsheetImportFinished(SpreadsheetImportLog $log, ?User $actor = null): void

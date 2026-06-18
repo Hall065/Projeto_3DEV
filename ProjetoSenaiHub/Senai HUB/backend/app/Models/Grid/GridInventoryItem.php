@@ -35,15 +35,26 @@ class GridInventoryItem extends Model
 
     public function refreshStockStatus(): void
     {
-        if ($this->qty_reserved > 0) {
+        if ($this->qty_available <= $this->qty_min) {
+            $this->status = 'baixo';
+
             return;
         }
 
-        if ($this->qty_available <= $this->qty_min) {
-            $this->status = 'baixo';
-        } elseif (in_array($this->status, ['baixo', 'reservado'], true)) {
+        if ($this->qty_reserved > 0) {
+            $this->status = 'reservado';
+
+            return;
+        }
+
+        if (in_array($this->status, ['baixo', 'reservado'], true)) {
             $this->status = 'disponivel';
         }
+    }
+
+    public function isLowStock(): bool
+    {
+        return $this->qty_available <= $this->qty_min;
     }
 
     public function scopeSearch($query, ?string $search)

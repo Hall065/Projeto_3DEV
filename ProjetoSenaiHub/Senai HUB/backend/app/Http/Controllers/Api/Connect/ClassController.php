@@ -66,6 +66,7 @@ class ClassController extends Controller
             'weekly_patterns.*.lessons_count' => ['nullable', 'integer', 'min:1', 'max:5'],
             'weekly_patterns.*.subject' => ['nullable', 'string', 'max:255'],
             'generate_schedule' => ['nullable', 'boolean'],
+            'replace_future' => ['nullable', 'boolean'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
             'default_lessons_per_day' => ['nullable', 'integer', 'min:1', 'max:5'],
             'max_absences_allowed' => ['nullable', 'integer', 'min:1', 'max:999'],
@@ -138,6 +139,7 @@ class ClassController extends Controller
             'weekly_patterns.*.lessons_count' => ['nullable', 'integer', 'min:1', 'max:5'],
             'weekly_patterns.*.subject' => ['nullable', 'string', 'max:255'],
             'generate_schedule' => ['nullable', 'boolean'],
+            'replace_future' => ['nullable', 'boolean'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:200'],
             'default_lessons_per_day' => ['nullable', 'integer', 'min:1', 'max:5'],
             'max_absences_allowed' => ['nullable', 'integer', 'min:1', 'max:999'],
@@ -173,8 +175,11 @@ class ClassController extends Controller
         Request $request,
         bool $generateSchedule,
     ): void {
+        $patternsChanged = false;
+
         if (is_array($weeklyPatterns) && $weeklyPatterns !== []) {
             $this->schedule->syncWeeklyPatterns($class, $weeklyPatterns);
+            $patternsChanged = true;
         }
 
         $shouldGenerate = $request->has('generate_schedule')
@@ -182,7 +187,14 @@ class ClassController extends Controller
             : ($class->start_date && $class->end_date);
 
         if ($shouldGenerate) {
-            $this->schedule->ensureClassCalendar($class->fresh(['course', 'weeklyPatterns']));
+            $class = $class->fresh(['course', 'weeklyPatterns']);
+            $replaceFuture = $patternsChanged || $request->boolean('replace_future');
+
+            if ($patternsChanged) {
+                $this->schedule->generateFromPatterns($class, $replaceFuture);
+            } else {
+                $this->schedule->ensureClassCalendar($class, $replaceFuture);
+            }
         }
     }
 

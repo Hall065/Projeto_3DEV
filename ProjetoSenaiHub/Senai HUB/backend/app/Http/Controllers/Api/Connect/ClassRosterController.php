@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\Connect;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\HubPersonResource;
 use App\Models\Connect\ConnectClass;
-use App\Models\Connect\ConnectStudent;
 use App\Models\HubPerson;
+use App\Services\Connect\ConnectAttendanceService;
 use App\Services\Connect\ConnectEnrollmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,6 +15,7 @@ class ClassRosterController extends Controller
 {
     public function __construct(
         private readonly ConnectEnrollmentService $enrollment,
+        private readonly ConnectAttendanceService $attendance,
     ) {}
 
     public function index(ConnectClass $class): JsonResponse
@@ -42,16 +43,10 @@ class ClassRosterController extends Controller
         $this->enrollment->attachStudentToClass($person, $class);
         $this->enrollment->attachPersonToCourse($person, $class->course, 'student');
 
-        $student = ConnectStudent::query()->where('hub_person_id', $person->id)->first();
+        $student = $this->enrollment->ensureConnectStudentForPerson($person, $class);
         $triggers = app(\App\Services\Notification\SystemNotificationTriggers::class);
-        if ($student) {
-            if ($student->connect_class_id !== $class->id) {
-                $student->update(['connect_class_id' => $class->id]);
-            }
-            $triggers->connectStudentEnrolled($student->fresh(), $request->user());
-        } else {
-            $triggers->connectCourseRosterAdded($person, 'aluno', $class->course_id, $class->course->name, $request->user());
-        }
+        $triggers->connectStudentEnrolled($student->fresh(), $request->user());
+        $this->attendance->backfillMarksForClass($class->fresh());
 
         return response()->json([
             'message' => 'Aluno vinculado a turma e ao curso.',

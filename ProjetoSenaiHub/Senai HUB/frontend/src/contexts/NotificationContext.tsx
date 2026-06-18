@@ -27,7 +27,7 @@ interface NotificationContextValue {
 
 const NotificationContext = createContext<NotificationContextValue | null>(null)
 
-const POLL_INTERVAL_MS = 45_000
+const POLL_INTERVAL_MS = 15_000
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, isInitializing } = useAuth()
@@ -96,15 +96,21 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    void refreshUnreadCount()
-    pollRef.current = setInterval(() => {
-      void refreshUnreadCount()
-    }, POLL_INTERVAL_MS)
+    const poll = () => {
+      if (isOpen) {
+        void loadNotifications()
+      } else {
+        void refreshUnreadCount()
+      }
+    }
+
+    void poll()
+    pollRef.current = setInterval(poll, POLL_INTERVAL_MS)
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current)
     }
-  }, [isAuthenticated, isInitializing, refreshUnreadCount])
+  }, [isAuthenticated, isInitializing, isOpen, refreshUnreadCount, loadNotifications])
 
   useEffect(() => {
     if (isOpen && isAuthenticated) {

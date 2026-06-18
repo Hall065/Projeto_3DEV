@@ -14,6 +14,8 @@ import enSupplement from './locales/supplement/en.json'
 
 import esSupplement from './locales/supplement/es.json'
 
+import { notificationTypeLocales } from './notificationTypeLocales'
+
 import { mergeLocales } from './mergeLocales'
 
 import { intlLocale, normalizeLocale, type LocaleCode } from './locale'
@@ -48,11 +50,11 @@ const initial = normalizeLocale(saved ?? undefined)
 
 const resources = {
 
-  pt: { translation: mergeLocales(pt, ptSupplement) },
+  pt: { translation: mergeLocales(mergeLocales(pt, ptSupplement), notificationTypeLocales.pt) },
 
-  en: { translation: mergeLocales(en, enSupplement) },
+  en: { translation: mergeLocales(mergeLocales(en, enSupplement), notificationTypeLocales.en) },
 
-  es: { translation: mergeLocales(es, esSupplement) },
+  es: { translation: mergeLocales(mergeLocales(es, esSupplement), notificationTypeLocales.es) },
 
 }
 

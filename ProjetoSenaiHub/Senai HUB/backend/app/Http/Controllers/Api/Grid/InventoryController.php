@@ -150,7 +150,16 @@ class InventoryController extends Controller
         if ($validated['type'] === 'in') {
             $inventoryItem->qty_available += $validated['quantity'];
         } else {
-            $inventoryItem->qty_available = max(0, $inventoryItem->qty_available - $validated['quantity']);
+            $quantity = (int) $validated['quantity'];
+            if ($quantity > $inventoryItem->qty_available) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'quantity' => [
+                        "Saída inválida: disponível {$inventoryItem->qty_available}, solicitado {$quantity}.",
+                    ],
+                ]);
+            }
+
+            $inventoryItem->qty_available -= $quantity;
         }
 
         $inventoryItem->refreshStockStatus();

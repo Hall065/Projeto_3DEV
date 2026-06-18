@@ -6,6 +6,7 @@ use App\Models\HubNotification;
 use App\Models\User;
 use App\Services\Auth\PermissionService;
 use App\Support\HubRole;
+use App\Support\NotificationI18n;
 use App\Support\NotificationPreferences;
 use Illuminate\Support\Collection;
 
@@ -35,7 +36,7 @@ class NotificationService
         }
 
         if ($email) {
-            $this->mail->sendForUser($user, $payload);
+            $this->mail->sendForUser($user, NotificationI18n::localize($user, $payload));
         }
 
         if (! $inApp) {
