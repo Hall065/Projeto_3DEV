@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ConnectKpiSparkline } from './ConnectKpiSparkline'
 
 export type KpiCardVariant = 'blue' | 'coral' | 'green' | 'violet' | 'senai' | 'amber'
@@ -32,6 +33,8 @@ export function KpiCard({
   /** Rota ao clicar no ícone */
   to?: string
 }) {
+  const { t } = useTranslation()
+
   return (
     <article
       className={`relative flex min-h-[148px] flex-col overflow-hidden rounded-xl p-4 shadow-lg ring-1 ring-black/10 sm:min-h-[152px] sm:p-5 ${VARIANT_STYLES[variant]}`}
@@ -45,7 +48,7 @@ export function KpiCard({
         {to ? (
           <Link
             to={to}
-            aria-label={`Ir para ${label}`}
+            aria-label={t('common.goToPage', { label })}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm transition hover:bg-white/25 hover:ring-2 hover:ring-white/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             <Icon className="h-6 w-6 text-white" strokeWidth={1.75} />

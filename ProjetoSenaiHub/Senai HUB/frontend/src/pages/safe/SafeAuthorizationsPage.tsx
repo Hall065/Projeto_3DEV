@@ -186,7 +186,7 @@ export function SafeAuthorizationsPage() {
                     <td className="px-4 py-3 sm:px-6">{formatDateTime(auth.scheduled_at)}</td>
                     <td className="px-4 py-3 sm:px-6">
                       <div className="flex justify-end">
-                        <OutlineButton onClick={() => navigate(`/safe/autorizacoes/${auth.id}`)}>
+                        <OutlineButton aria-label={t('connect.common.view')} onClick={() => navigate(`/safe/autorizacoes/${auth.id}`)}>
                           <Eye className="h-4 w-4" />
                         </OutlineButton>
                       </div>

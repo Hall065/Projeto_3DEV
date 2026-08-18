@@ -157,6 +157,8 @@
     "notFoundBody": "La dirección ingresada no existe o fue movida. Vuelva al Hub para continuar navegando.",
     "accessDeniedTitle": "Acceso denegado",
     "accessDeniedBody": "No tiene permiso para acceder a esta página. Verifique su perfil o contacte al administrador.",
+    "boundaryTitle": "Algo salió mal en esta pantalla",
+    "boundaryBody": "Ocurrió un error inesperado. Intente recargar o vuelva al Hub.",
     "accessDeniedFrom": "Su perfil no tiene permiso para acceder a esta área{{from}}. Solicite al administrador si necesita este acceso.",
     "fromPath": " ({{path}})",
     "api": {
@@ -338,6 +340,7 @@
     "companyName": "Nombre de la empresa",
     "permissionsSection": "Pestañas y permisos",
     "permissionsHint": "Marque solo lo que este usuario puede ver. Los datos respetan el alcance del perfil.",
+    "resetPermissions": "Restaurar permisos predeterminados del perfil",
     "confirmDelete": "¿Eliminar al usuario {{name}}?",
     "errors": {
       "loadUsers": "No fue posible cargar usuarios.",
@@ -789,6 +792,7 @@
     }
   },
   "mapComponents": {
+    "simulationBadge": "Posiciones simuladas — datos reales de asistencia; la ubicacion en el mapa es demostrativa",
     "container": {
       "loading": "Cargando mapa...",
       "maximizeTitle": "Maximizar mapa",
@@ -796,6 +800,9 @@
       "fullscreenTitle": "Mapa del campus SENAI",
       "view3d": "Visualización 3D",
       "view2d": "Visualización 2D (modelos 3D no disponibles)",
+      "enable3d": "Vista 3D",
+      "enable3dTitle": "Activar mapa 3D interactivo",
+      "preparing3d": "Preparando 3D...",
       "close": "Cerrar"
     },
     "viewer3d": {
@@ -1029,8 +1036,17 @@
     }
   },
   "reportPreview": {
-    "total": "Total: {{total}}",
-    "noData": "Sin datos para mostrar."
+    "total": "Total",
+    "noData": "Sin datos para mostrar.",
+    "period": "Periodo:",
+    "until": "hasta",
+    "generatedAt": "Generado el:",
+    "records": "{{count}} registro(s)",
+    "emptyTable": "Ningun registro en el periodo / filtros seleccionados.",
+    "emptyPreview": "Seleccione un preset o configure las secciones y haga clic en \"Generar vista previa\".",
+    "footer": "{{module}} — documento generado el {{date}}",
+    "distributionAria": "Distribucion del informe",
+    "centerLabel": "Total"
   },
   "settingsFooter": {
     "back": "Volver",
@@ -1255,7 +1271,9 @@
         "semesterHint": "Ej: 2025-1",
         "startDateHint": "Obligatorio para generar el calendario",
         "teacherHint": "Evita conflictos de horario en el calendario",
-        "courseHint": "Opcional — vincule después"
+        "courseHint": "Opcional — vincule después",
+        "noTeacherLater": "Sin profesor (definir después)",
+        "noCourseLater": "Sin curso (definir después)"
       }
     }
   },

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { SidebarAppLogo } from '../layout/SidebarAppLogo'
 import { usePermissions } from '../../hooks/usePermissions'
+import { canAccessHubArchive } from '../../utils/archiveAccess'
 import { useSupportChat } from '../../contexts/SupportChatContext'
 
 interface HubSidebarProps {
@@ -14,11 +15,7 @@ export function HubSidebar({ collapsed }: HubSidebarProps) {
   const { isAdmin, canAny } = usePermissions()
   const { open: openSupportChat } = useSupportChat()
 
-  const showArchive =
-    isAdmin ||
-    canAny('connect.classes.view', 'connect.classes.manage') ||
-    canAny('grid.tickets.view', 'grid.tickets.manage') ||
-    canAny('safe.access', 'safe.authorizations.manage', 'safe.approve', 'safe.portaria')
+  const showArchive = canAccessHubArchive(isAdmin, canAny)
 
   return (
     <aside

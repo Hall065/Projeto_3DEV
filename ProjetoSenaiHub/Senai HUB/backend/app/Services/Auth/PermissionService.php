@@ -56,7 +56,10 @@ class PermissionService
     public function buildCustomPermissions(string $role, array $selected): array
     {
         $module = HubRole::moduleFor($role);
-        $permissions = array_values(array_unique($selected));
+        $permissions = array_values(array_unique(array_filter(
+            $selected,
+            fn ($key) => is_string($key) && is_string($module) && $module !== 'hub' && str_starts_with($key, $module.'.'),
+        )));
 
         if ($module === 'connect' && ! in_array('connect.access', $permissions, true)) {
             array_unshift($permissions, 'connect.access');

@@ -1,5 +1,5 @@
 import { Eye, Filter, MapPin, Pencil, User } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ConnectDrawer } from '../../components/connect/ConnectDrawer'
 import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityViewDrawer'
@@ -20,8 +20,9 @@ import {
 } from '../../components/connect/ConnectShared'
 import { UserAvatar } from '../../components/ui/UserAvatar'
 import { MapSimulationBadge } from '../../components/map/MapSimulationBadge'
+import { CampusMapSlot } from '../../contexts/CampusMapHostContext'
 import { usePublicConfig } from '../../hooks/usePublicConfig'
-import { CampusMapContainer } from '../../components/map/CampusMapContainer'
+import { usePermissions } from '../../hooks/usePermissions'
 import { connectService } from '../../services/connectService'
 import { buildCampusPeopleSimulation } from '../../utils/campusPeopleSimulation'
 import { parseApiError } from '../../utils/parseApiError'
@@ -38,8 +39,9 @@ type LocationTab = 'cursos' | 'alunos' | 'professores' | 'turmas'
 
 export function LocationPage() {
   const { t } = useTranslation()
+  const { canAny } = usePermissions()
   const mapConfig = usePublicConfig()
-  const [activeTab, setActiveTab] = useState<LocationTab>('alunos')
+  const [activeTab, setActiveTab] = useState<LocationTab | null>(null)
   const [locations, setLocations] = useState<ConnectStudentLocation[]>([])
   const [courses, setCourses] = useState<ConnectCourse[]>([])
   const [teachers, setTeachers] = useState<ConnectTeacher[]>([])
@@ -57,12 +59,31 @@ export function LocationPage() {
   const [mapPeopleLoading, setMapPeopleLoading] = useState(true)
   const [mapLoadError, setMapLoadError] = useState<string | null>(null)
 
-  const tabLabels: { key: LocationTab; label: string }[] = [
-    { key: 'cursos', label: t('connect.location.tabs.courses') },
-    { key: 'alunos', label: t('connect.location.tabs.students') },
-    { key: 'professores', label: t('connect.location.tabs.teachers') },
-    { key: 'turmas', label: t('connect.location.tabs.classes') },
-  ]
+  const canViewCourses = canAny('connect.courses.view', 'connect.courses.manage')
+  const canViewStudents = canAny('connect.students.view', 'connect.students.manage')
+  const canViewTeachers = canAny('connect.teachers.view', 'connect.teachers.manage')
+  const canViewClasses = canAny('connect.classes.view', 'connect.classes.manage')
+
+  const visibleTabs = useMemo(
+    () =>
+      (
+        [
+          { key: 'cursos' as const, label: t('connect.location.tabs.courses'), allowed: canViewCourses },
+          { key: 'alunos' as const, label: t('connect.location.tabs.students'), allowed: canViewStudents },
+          { key: 'professores' as const, label: t('connect.location.tabs.teachers'), allowed: canViewTeachers },
+          { key: 'turmas' as const, label: t('connect.location.tabs.classes'), allowed: canViewClasses },
+        ] as const
+      ).filter((tab) => tab.allowed),
+    [canViewClasses, canViewCourses, canViewStudents, canViewTeachers, t],
+  )
+
+  useEffect(() => {
+    if (visibleTabs.length === 0) {
+      setActiveTab(null)
+      return
+    }
+    setActiveTab((current) => (current && visibleTabs.some((tab) => tab.key === current) ? current : visibleTabs[0].key))
+  }, [visibleTabs])
 
   const statusLabel = (status: string) => {
     if (status === 'inside') return t('connect.location.filters.inside')
@@ -88,8 +109,12 @@ export function LocationPage() {
     }
 
     Promise.all([
-      connectService.getLocations({ page: 1, per_page: 100, status: 'inside' }),
-      connectService.getTeachers({ page: 1, per_page: 100 }),
+      canViewStudents
+        ? connectService.getLocations({ page: 1, per_page: 100, status: 'inside' })
+        : Promise.resolve({ data: [] as ConnectStudentLocation[] }),
+      canViewTeachers
+        ? connectService.getTeachers({ page: 1, per_page: 100 })
+        : Promise.resolve({ data: [] as ConnectTeacher[] }),
     ])
       .then(([locationsRes, teachersRes]) => {
         setMapPeople(
@@ -100,7 +125,7 @@ export function LocationPage() {
         )
       })
       .finally(() => setMapPeopleLoading(false))
-  }, [mapConfig?.campus_map_simulation, t])
+  }, [canViewStudents, canViewTeachers, mapConfig?.campus_map_simulation, t])
 
   useEffect(() => {
     setLoading(true)
@@ -108,6 +133,10 @@ export function LocationPage() {
   }, [activeTab])
 
   useEffect(() => {
+    if (!activeTab) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     const params: Record<string, string | number> = { page, per_page: 10 }
 
@@ -130,8 +159,10 @@ export function LocationPage() {
       finish(connectService.getCourses(params))
     } else if (activeTab === 'professores') {
       finish(connectService.getTeachers(params))
-    } else {
+    } else if (activeTab === 'turmas') {
       finish(connectService.getClasses(params))
+    } else {
+      setLoading(false)
     }
   }, [activeTab, page, search, statusFilter])
 
@@ -164,22 +195,30 @@ export function LocationPage() {
             </p>
           </div>
         </div>
-        {mapPeopleLoading ? (
-          <ConnectLoadingSpinner label={t('connect.location.loading.map')} className="min-h-[400px]" />
-        ) : mapLoadError ? (
-          <p className="min-h-[400px] px-4 py-12 text-center text-sm text-red-600">{mapLoadError}</p>
-        ) : (
-          <CampusMapContainer
-            people={campusPeople}
-            highlightPersonId={highlightedPersonId}
-            minHeight="400px"
-          />
-        )}
+        <div className="relative min-h-[400px]">
+          {mapLoadError ? (
+            <p className="min-h-[400px] px-4 py-12 text-center text-sm text-red-600">{mapLoadError}</p>
+          ) : (
+            <>
+              <CampusMapSlot
+                people={mapPeopleLoading ? [] : campusPeople}
+                highlightPersonId={highlightedPersonId}
+                minHeight="400px"
+              />
+              {mapPeopleLoading && (
+                <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded-lg bg-white/90 px-3 py-1.5 text-xs text-hub-text-muted shadow-sm">
+                  {t('connect.location.loading.map')}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </ConnectCard>
 
+      {visibleTabs.length > 0 && (
       <ConnectCard className="mb-4 p-4">
         <div className="mb-4 flex flex-wrap gap-3 border-b border-hub-border/60 pb-3 text-sm sm:gap-4">
-          {tabLabels.map(({ key, label }) => (
+          {visibleTabs.map(({ key, label }) => (
             <button
               key={key}
               type="button"
@@ -370,6 +409,7 @@ export function LocationPage() {
         </>
         )}
       </ConnectCard>
+      )}
 
       {activeTab === 'alunos' && (
         <div className="rounded-xl border border-hub-navy/20 bg-hub-navy/10 px-4 py-3 text-sm text-blue-800">

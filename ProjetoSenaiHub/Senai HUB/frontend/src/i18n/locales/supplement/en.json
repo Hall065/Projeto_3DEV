@@ -157,6 +157,8 @@
     "notFoundBody": "The address you entered does not exist or was moved. Return to the Hub to continue browsing.",
     "accessDeniedTitle": "Access denied",
     "accessDeniedBody": "You do not have permission to access this page. Check your profile or contact the administrator.",
+    "boundaryTitle": "Something went wrong on this screen",
+    "boundaryBody": "An unexpected error occurred. Try reloading or return to the Hub.",
     "accessDeniedFrom": "Your profile does not have permission to access this area{{from}}. Ask the administrator if you need this access.",
     "fromPath": " ({{path}})",
     "api": {
@@ -338,6 +340,7 @@
     "companyName": "Company name",
     "permissionsSection": "Tabs and permissions",
     "permissionsHint": "Select only what this user can see. Displayed data respects the role scope.",
+    "resetPermissions": "Restore role default permissions",
     "confirmDelete": "Delete user {{name}}?",
     "errors": {
       "loadUsers": "Could not load users.",
@@ -789,6 +792,7 @@
     }
   },
   "mapComponents": {
+    "simulationBadge": "Simulated positions — real attendance data; map location is for demonstration",
     "container": {
       "loading": "Loading map...",
       "maximizeTitle": "Maximize map",
@@ -796,6 +800,9 @@
       "fullscreenTitle": "SENAI campus map",
       "view3d": "3D view",
       "view2d": "2D view (3D models unavailable)",
+      "enable3d": "3D view",
+      "enable3dTitle": "Enable interactive 3D map",
+      "preparing3d": "Preparing 3D...",
       "close": "Close"
     },
     "viewer3d": {
@@ -1029,8 +1036,17 @@
     }
   },
   "reportPreview": {
-    "total": "Total: {{total}}",
-    "noData": "No data to display."
+    "total": "Total",
+    "noData": "No data to display.",
+    "period": "Period:",
+    "until": "to",
+    "generatedAt": "Generated at:",
+    "records": "{{count}} record(s)",
+    "emptyTable": "No records for the selected period / filters.",
+    "emptyPreview": "Select a preset or configure sections and click \"Generate preview\".",
+    "footer": "{{module}} — document generated on {{date}}",
+    "distributionAria": "Report distribution",
+    "centerLabel": "Total"
   },
   "settingsFooter": {
     "back": "Back",
@@ -1255,7 +1271,9 @@
         "semesterHint": "E.g. 2025-1",
         "startDateHint": "Required to generate the calendar",
         "teacherHint": "Avoids schedule conflicts in the calendar",
-        "courseHint": "Optional — link later"
+        "courseHint": "Optional — link later",
+        "noTeacherLater": "No teacher (assign later)",
+        "noCourseLater": "No course (assign later)"
       }
     }
   },

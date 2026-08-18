@@ -10,6 +10,7 @@ import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowAction
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
 import {
   ConnectCard,
+  ConnectEmptyTableRow,
   ConnectLoadingSpinner,
   ConnectPageHeader,
   ConnectPagination,
@@ -573,7 +574,10 @@ export function GridTicketsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {tickets.map((item) => (
+                      {tickets.length === 0 ? (
+                        <ConnectEmptyTableRow colSpan={10} message={t('grid.common.emptyList')} />
+                      ) : (
+                      tickets.map((item) => (
                         <tr key={item.id} className="border-t border-hub-border/40">
                           <td className="whitespace-nowrap px-4 py-3 font-medium">{item.code}</td>
                           <td className="px-4 py-3">{item.requester}</td>
@@ -602,7 +606,8 @@ export function GridTicketsPage() {
                             />
                           </td>
                         </tr>
-                      ))}
+                      ))
+                      )}
                     </tbody>
                   </table>
                 </ConnectTableScroll>

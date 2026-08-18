@@ -1,5 +1,6 @@
 import { ImagePlus, User } from 'lucide-react'
 import { useEffect, useState, type ReactElement } from 'react'
+import { useTranslation } from 'react-i18next'
 import { resolveMediaUrl } from '../../utils/mediaUrl'
 
 interface UserAvatarProps {
@@ -50,6 +51,7 @@ export function UserAvatar({
   onClick,
   interactive = false,
 }: UserAvatarProps) {
+  const { t } = useTranslation()
   const sizeClass = sizeClasses[size]
   const iconSize = iconSizes[size]
   const overlayIconSize = overlayIconSizes[size]
@@ -104,7 +106,7 @@ export function UserAvatar({
       className={`group relative shrink-0 rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-hub-red ${
         interactive ? 'cursor-pointer' : ''
       }`}
-      aria-label={name ? `Alterar foto de ${name}` : 'Alterar foto de perfil'}
+      aria-label={name ? t('common.changePhotoNamed', { name }) : t('common.changePhoto')}
     >
       {content}
       {interactive && (

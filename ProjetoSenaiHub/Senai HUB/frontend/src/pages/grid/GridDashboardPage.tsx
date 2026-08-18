@@ -25,6 +25,7 @@ import {
   ConnectPageHeader,
   ConnectTableScroll,
   OutlineButton,
+  QueryErrorBanner,
 } from '../../components/connect/ConnectShared'
 import { gridService } from '../../services/gridService'
 import { useCachedQuery } from '../../hooks/useCachedQuery'
@@ -38,7 +39,7 @@ export function GridDashboardPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [viewSnapshot, setViewSnapshot] = useState<GridTicket | null>(null)
-  const { data, loading, reload } = useCachedQuery<GridDashboardData>(
+  const { data, loading, error, reload } = useCachedQuery<GridDashboardData>(
     'grid-dashboard',
     () => gridService.getDashboard(),
     { ttlMs: 60_000 },
@@ -55,6 +56,10 @@ export function GridDashboardPage() {
         title={t('grid.dashboard.title')}
         subtitle={t('grid.dashboard.subtitle')}
       />
+
+      {error && (
+        <QueryErrorBanner message={error ?? t('grid.dashboard.loadError')} onRetry={() => reload(true)} />
+      )}
 
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {loading || !kpis ? (

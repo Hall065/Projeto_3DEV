@@ -1,5 +1,6 @@
 import { chartColorByIndex } from '../../constants/chartPalette'
 import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n'
 import { IsometricDistributionDonut, type IsometricDonutSegmentInput } from '../connect/ConnectCharts'
 import type { BuiltReport, ReportChartItem, ReportKpiItem, ReportSection } from '../../types/reports'
 
@@ -12,10 +13,17 @@ const kpiVariantClass: Record<string, string> = {
   senai: 'border-red-200 bg-red-50 text-red-900',
 }
 
+function reportNumberLocale() {
+  if (i18n.language === 'en') return 'en-US'
+  if (i18n.language === 'es') return 'es-ES'
+  return 'pt-BR'
+}
+
 function ChartPrintLegend({ items }: { items: ReportChartItem[] }) {
   const { t } = useTranslation()
   const total = items.reduce((sum, item) => sum + item.value, 0)
   const max = Math.max(...items.map((i) => i.value), 1)
+  const locale = reportNumberLocale()
 
   return (
     <div className="hidden print:block">
@@ -40,7 +48,7 @@ function ChartPrintLegend({ items }: { items: ReportChartItem[] }) {
       </ul>
       {total > 0 && (
         <p className="mt-3 border-t border-hub-border/40 pt-2 text-xs text-hub-text-muted">
-          {t('reportPreview.total')}: <strong className="text-hub-navy">{total.toLocaleString('pt-BR')}</strong>
+          {t('reportPreview.total')}: <strong className="text-hub-navy">{total.toLocaleString(locale)}</strong>
         </p>
       )}
     </div>
@@ -108,18 +116,22 @@ function ReportDonutChart({ items }: { items: ReportChartItem[] }) {
     count: item.value,
   }))
 
+  const locale = reportNumberLocale()
+
   return (
     <IsometricDistributionDonut
       segments={segments}
-      centerValue={total.toLocaleString('pt-BR')}
-      centerLabel="Total"
+      centerValue={total.toLocaleString(locale)}
+      centerLabel={t('reportPreview.centerLabel')}
       emptyMessage={t('reportPreview.noData')}
-      ariaLabel="Distribuicao do relatorio"
+      ariaLabel={t('reportPreview.distributionAria')}
     />
   )
 }
 
 function SectionBlock({ section, meta }: { section: ReportSection; meta: BuiltReport['meta'] }) {
+  const { t } = useTranslation()
+
   if (section.type === 'cover') {
     return (
       <div className="report-cover mb-8 rounded-2xl border border-hub-border bg-gradient-to-br from-[#002847] to-[#004a7c] p-8 text-white print:break-after-page print:rounded-none print:border-0 print:bg-[#002847] print:bg-none">
@@ -129,12 +141,12 @@ function SectionBlock({ section, meta }: { section: ReportSection; meta: BuiltRe
         <div className="mt-6 grid gap-2 text-sm text-white/80 sm:grid-cols-2">
           {(meta.from_date || meta.to_date) && (
             <p>
-              <span className="text-white/60">Periodo:</span>{' '}
-              {meta.from_date ?? '—'} ate {meta.to_date ?? '—'}
+              <span className="text-white/60">{t('reportPreview.period')}</span>{' '}
+              {meta.from_date ?? '—'} {t('reportPreview.until')} {meta.to_date ?? '—'}
             </p>
           )}
           <p>
-            <span className="text-white/60">Gerado em:</span> {meta.generated_at}
+            <span className="text-white/60">{t('reportPreview.generatedAt')}</span> {meta.generated_at}
           </p>
           {meta.filters.map((f) => (
             <p key={f.label}>
@@ -206,7 +218,7 @@ function SectionBlock({ section, meta }: { section: ReportSection; meta: BuiltRe
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <h3 className="text-lg font-semibold text-hub-navy print:text-base">{section.title}</h3>
           {section.total_rows != null && (
-            <span className="text-xs text-hub-text-muted">{section.total_rows} registro(s)</span>
+            <span className="text-xs text-hub-text-muted">{t('reportPreview.records', { count: section.total_rows })}</span>
           )}
         </div>
         <div className="overflow-x-auto rounded-xl border border-hub-border/60 print:overflow-visible print:rounded-none print:border-0">
@@ -226,7 +238,7 @@ function SectionBlock({ section, meta }: { section: ReportSection; meta: BuiltRe
               {(section.rows ?? []).length === 0 ? (
                 <tr>
                   <td colSpan={section.columns.length} className="px-3 py-8 text-center text-hub-text-muted">
-                    Nenhum registro no periodo / filtros selecionados.
+                    {t('reportPreview.emptyTable')}
                   </td>
                 </tr>
               ) : (
@@ -251,10 +263,12 @@ function SectionBlock({ section, meta }: { section: ReportSection; meta: BuiltRe
 }
 
 export function ReportPreview({ report, className = '' }: { report: BuiltReport | null; className?: string }) {
+  const { t } = useTranslation()
+
   if (!report) {
     return (
       <div className={`flex min-h-[320px] items-center justify-center rounded-xl border border-dashed border-hub-border text-sm text-hub-text-muted ${className}`}>
-        Selecione um preset ou configure as secoes e clique em &quot;Gerar preview&quot;.
+        {t('reportPreview.emptyPreview')}
       </div>
     )
   }
@@ -276,7 +290,7 @@ export function ReportPreview({ report, className = '' }: { report: BuiltReport 
         <SectionBlock key={section.id} section={section} meta={report.meta} />
       ))}
       <footer className="report-doc-footer mt-8 border-t border-hub-border/40 pt-4 text-center text-xs text-hub-text-muted print:mt-8 print:pb-2 print:text-[8.5px] print:break-inside-avoid">
-        {report.meta.module_label} — documento gerado em {report.meta.generated_at}
+        {t('reportPreview.footer', { module: report.meta.module_label, date: report.meta.generated_at })}
       </footer>
     </div>
   )

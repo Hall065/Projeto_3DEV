@@ -17,6 +17,7 @@ import {
   ConnectTableScroll,
   EMPTY,
   formatDateTime,
+  QueryErrorBanner,
   StatusBadge,
 } from '../../components/connect/ConnectShared'
 import { connectService } from '../../services/connectService'
@@ -27,7 +28,7 @@ import type { DashboardData } from '../../types/connect'
 export function ConnectOverviewPage() {
   const { t } = useTranslation()
   const [tab, setTab] = useState<'cadastros' | 'alertas'>('cadastros')
-  const { data, loading, reload } = useCachedQuery<DashboardData>(
+  const { data, loading, error, reload } = useCachedQuery<DashboardData>(
     'connect-dashboard',
     () => connectService.getDashboard(),
     { ttlMs: 60_000 },
@@ -47,6 +48,10 @@ export function ConnectOverviewPage() {
         title={t('connect.overview.title')}
         subtitle={t('connect.overview.subtitle')}
       />
+
+      {error && (
+        <QueryErrorBanner message={error ?? t('connect.overview.loadError')} onRetry={() => reload(true)} />
+      )}
 
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {loading || !kpis ? (

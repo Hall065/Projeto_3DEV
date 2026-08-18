@@ -4,6 +4,7 @@ import { Lightbulb, Loader2 } from 'lucide-react'
 import { ApplicationCard } from '../components/hub/ApplicationCard'
 import { PendingAccessPanel } from '../components/hub/PendingAccessPanel'
 import { useAuth } from '../contexts/AuthContext'
+import { usePermissions } from '../hooks/usePermissions'
 import { fetchApplications } from '../services/applicationService'
 import { parseApiError } from '../utils/parseApiError'
 import type { HubApplication } from '../types/application'
@@ -11,10 +12,14 @@ import type { HubApplication } from '../types/application'
 export function ApplicationHubPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
+  const { isAdmin } = usePermissions()
   const [applications, setApplications] = useState<HubApplication[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const visibleApplications = isAdmin
+    ? applications
+    : applications.filter((application) => user?.application_slugs?.includes(application.slug))
   const isUnassigned = user?.role === 'unassigned' || (user?.application_slugs?.length ?? 0) === 0
 
   useEffect(() => {
@@ -42,17 +47,17 @@ export function ApplicationHubPage() {
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
-      {!loading && !error && applications.length > 0 && (
+      {!loading && !error && visibleApplications.length > 0 && (
         <div className="grid gap-6 lg:grid-cols-2">
-          {applications.map((application) => (
+          {visibleApplications.map((application) => (
             <ApplicationCard key={application.id} application={application} />
           ))}
         </div>
       )}
 
-      {!loading && !error && applications.length === 0 && isUnassigned && <PendingAccessPanel />}
+      {!loading && !error && visibleApplications.length === 0 && isUnassigned && <PendingAccessPanel />}
 
-      {!loading && !error && applications.length === 0 && !isUnassigned && (
+      {!loading && !error && visibleApplications.length === 0 && !isUnassigned && (
         <p className="glass-panel rounded-xl border border-hub-border px-4 py-8 text-center text-sm text-hub-text-muted">
           {t('hub.noAppsForProfile')}
         </p>

@@ -182,6 +182,6 @@ class ContractController extends Controller
             return false;
         }
 
-        return UserAccessScope::connectContractQuery($user)->whereKey($contract->id)->exists();
+        return UserAccessScope::canAccessConnectContract($request->user(), $contract);
     }
 }

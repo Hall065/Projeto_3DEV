@@ -27,6 +27,7 @@ import {
   ConnectTableScroll,
   OutlineButton,
   PrimaryButton,
+  QueryErrorBanner,
 } from '../../components/connect/ConnectShared'
 import { gridService } from '../../services/gridService'
 import type { GridDashboardData, GridTicket } from '../../types/grid'
@@ -36,20 +37,24 @@ function GridReportsDashboard() {
   const [data, setData] = useState<GridDashboardData | null>(null)
   const [allTickets, setAllTickets] = useState<GridTicket[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
+    setLoadError(null)
     Promise.all([gridService.getDashboard(), gridService.getTickets({ per_page: 200 })])
       .then(([dashboard, ticketsRes]) => {
         setData(dashboard)
         setAllTickets(ticketsRes.data)
       })
+      .catch(() => setLoadError(t('grid.reports.loadError')))
       .finally(() => setLoading(false))
-  }, [])
+  }, [t])
 
   const report = data?.report_kpis
 
   return (
     <>
+      {loadError && <QueryErrorBanner message={loadError} />}
       <div className="mb-6 grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {loading || !report ? (
           Array.from({ length: 6 }).map((_, i) => <KpiCardSkeleton key={i} />)

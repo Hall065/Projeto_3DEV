@@ -19,7 +19,12 @@
     "delete": "Excluir",
     "confirmTitle": "Confirmar ação",
     "confirmDeleteTitle": "Confirmar exclusão",
-    "confirmAction": "Confirmar"
+    "confirmAction": "Confirmar",
+    "retry": "Tentar novamente",
+    "goToPage": "Ir para {{label}}",
+    "goToDashboard": "{{name}} — ir para o dashboard",
+    "changePhoto": "Alterar foto de perfil",
+    "changePhotoNamed": "Alterar foto de {{name}}"
   },
   "toast": {
     "created": "Criado com sucesso.",
@@ -35,6 +40,8 @@
     "loginSubtitle": "Informe seu e-mail e senha para continuar",
     "email": "E-mail",
     "password": "Senha",
+    "emailPlaceholder": "seu@email.com",
+    "passwordPlaceholder": "••••••••",
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
     "login": "Entrar",
@@ -252,7 +259,8 @@
       "system": "Sistema",
       "all": "Todos",
       "actions": "Ações",
-      "updatedAt": "Atualizado em {{date}}"
+      "updatedAt": "Atualizado em {{date}}",
+      "emptyList": "Nenhum registro encontrado."
     },
     "confirm": {
       "delete": "Tem certeza que deseja excluir {{entity}}? Esta ação não pode ser desfeita."
@@ -871,7 +879,8 @@
       "noTechnician": "Sem técnico",
       "noResponsible": "Sem responsável",
       "room": "Sala",
-      "block": "Bloco"
+      "block": "Bloco",
+      "emptyList": "Nenhum registro encontrado."
     },
     "kanban": {
       "confirmMove": {
@@ -886,6 +895,7 @@
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Visão geral da gestão de manutenção e infraestrutura.",
+      "loadError": "Não foi possível carregar o dashboard.",
       "kpis": {
         "openTickets": "Chamados abertos",
         "inProgress": "Em andamento",
@@ -1170,6 +1180,7 @@
         "builder": "Construtor"
       },
       "loading": "Carregando...",
+      "loadError": "Não foi possível carregar os relatórios.",
       "kpis": {
         "created": "Chamados criados",
         "pending": "Pendentes",

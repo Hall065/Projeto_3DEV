@@ -7,6 +7,7 @@ import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityV
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
 import {
   ConnectCard,
+  ConnectEmptyTableRow,
   ConnectPageHeader,
   ConnectLoadingSpinner,
   ConnectPagination,
@@ -262,7 +263,10 @@ export function ClassesPage() {
               </tr>
             </thead>
             <tbody>
-              {classes.map((turma) => (
+              {classes.length === 0 ? (
+                <ConnectEmptyTableRow colSpan={9} message={t('connect.common.emptyList')} />
+              ) : (
+              classes.map((turma) => (
                 <tr key={turma.id} className="border-t border-hub-border/40">
                   <td className="px-4 py-3 font-medium">{turma.name}</td>
                   <td className="px-4 py-3">{turma.course?.name ?? EMPTY}</td>
@@ -297,7 +301,8 @@ export function ClassesPage() {
                     />
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </ConnectTableScroll>
@@ -375,7 +380,7 @@ export function ClassesPage() {
           </FormField>
           <FormField label={t('connect.classes.form.teacher')} hint={t('connect.classes.form.teacherHint')}>
             <select className={selectClass} value={form.connect_teacher_id} onChange={(e) => setForm({ ...form, connect_teacher_id: e.target.value })}>
-              <option value="">Sem professor (definir depois)</option>
+              <option value="">{t('connect.classes.form.noTeacherLater')}</option>
               {teachers.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>
                   {teacher.full_name}
@@ -385,7 +390,7 @@ export function ClassesPage() {
           </FormField>
           <FormField label={t('connect.table.course')} hint={t('connect.classes.form.courseHint')}>
             <select className={selectClass} value={form.connect_course_id} onChange={(e) => setForm({ ...form, connect_course_id: e.target.value })}>
-              <option value="">Sem curso (definir depois)</option>
+              <option value="">{t('connect.classes.form.noCourseLater')}</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}

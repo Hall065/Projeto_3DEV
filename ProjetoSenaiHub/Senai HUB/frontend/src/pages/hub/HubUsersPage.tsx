@@ -208,6 +208,12 @@ export function HubUsersPage() {
           company_name: role === 'connect_empresa' ? form.company_name : null,
           custom_permissions: customPermissions ?? null,
         }
+        const roleDefaults = withoutAccessKeys(roles.find((r) => r.key === role)?.default_permissions ?? []).slice().sort()
+        const current = [...form.permissions].sort()
+        if (form.module && JSON.stringify(roleDefaults) === JSON.stringify(current)) {
+          payload.reset_permissions = true
+          payload.custom_permissions = null
+        }
         if (form.password) {
           payload.password = form.password
         }
@@ -419,6 +425,15 @@ export function HubUsersPage() {
                     <p className="mt-1 text-xs text-hub-text-muted">
                       {t('hubUsers.permissionsHint')}
                     </p>
+                    {editing && (
+                      <button
+                        type="button"
+                        className="mt-2 text-xs font-medium text-hub-red hover:underline"
+                        onClick={() => applyRoleDefaults(form.role)}
+                      >
+                        {t('hubUsers.resetPermissions')}
+                      </button>
+                    )}
                   </div>
 
                   {permissionGroups.map((group) => (

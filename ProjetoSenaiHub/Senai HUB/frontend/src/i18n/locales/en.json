@@ -19,7 +19,12 @@
     "delete": "Delete",
     "confirmTitle": "Confirm action",
     "confirmDeleteTitle": "Confirm deletion",
-    "confirmAction": "Confirm"
+    "confirmAction": "Confirm",
+    "retry": "Try again",
+    "goToPage": "Go to {{label}}",
+    "goToDashboard": "{{name}} — go to dashboard",
+    "changePhoto": "Change profile photo",
+    "changePhotoNamed": "Change photo for {{name}}"
   },
   "toast": {
     "created": "Created successfully.",
@@ -35,6 +40,8 @@
     "loginSubtitle": "Enter your email and password to continue",
     "email": "Email",
     "password": "Password",
+    "emailPlaceholder": "you@email.com",
+    "passwordPlaceholder": "••••••••",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "login": "Sign in",
@@ -168,9 +175,11 @@
     },
     "students": {
       "title": "Students",
-      "subtitle": "Students linked to the SAFE module.",
-      "newStudent": "New student",
-      "editStudent": "Edit student"
+      "subtitle": "Students from SENAI Connect available for SAFE authorizations.",
+      "searchPlaceholder": "Search by name, registration or class...",
+      "empty": "No students found in Connect.",
+      "connectHint": "Students are the same as registered in SENAI Connect. Changes to registration, class and status must be made there.",
+      "manageInConnect": "Manage in Connect"
     },
     "authorizations": {
       "title": "Authorizations",
@@ -250,7 +259,8 @@
       "system": "System",
       "all": "All",
       "actions": "Actions",
-      "updatedAt": "Updated on {{date}}"
+      "updatedAt": "Updated on {{date}}",
+      "emptyList": "No records found."
     },
     "confirm": {
       "delete": "Are you sure you want to delete {{entity}}? This action cannot be undone."
@@ -869,7 +879,8 @@
       "noTechnician": "No technician",
       "noResponsible": "Unassigned",
       "room": "Room",
-      "block": "Block"
+      "block": "Block",
+      "emptyList": "No records found."
     },
     "kanban": {
       "confirmMove": {
@@ -884,6 +895,7 @@
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Overview of maintenance and infrastructure management.",
+      "loadError": "Could not load the dashboard.",
       "kpis": {
         "openTickets": "Open tickets",
         "inProgress": "In progress",
@@ -1168,6 +1180,7 @@
         "builder": "Builder"
       },
       "loading": "Loading...",
+      "loadError": "Could not load reports.",
       "kpis": {
         "created": "Tickets created",
         "pending": "Pending",

@@ -41,7 +41,7 @@ class GlobalSearchService
 
         if ($this->permissions->can($user, 'grid.tickets.view')
             || $this->permissions->can($user, 'grid.tickets.manage')) {
-            $groups[] = $this->searchTickets($query, $limitPerGroup);
+            $groups[] = $this->searchTickets($user, $query, $limitPerGroup);
         }
 
         if ($this->permissions->can($user, 'grid.inventory.view')
@@ -116,7 +116,7 @@ class GlobalSearchService
     /**
      * @return array{module: string, label: string, items: list<array{id: string, title: string, subtitle: string, url: string, meta?: string}>}
      */
-    private function searchTickets(string $query, int $limit): array
+    private function searchTickets(User $user, string $query, int $limit): array
     {
         $normalized = Str::upper(trim($query));
         $codeQuery = $normalized;
@@ -128,7 +128,7 @@ class GlobalSearchService
         }
 
         $like = '%'.$query.'%';
-        $items = GridTicket::query()
+        $items = UserAccessScope::gridTicketQuery($user)
             ->where(function ($q) use ($like, $codeQuery) {
                 $q->where('title', 'like', $like)
                     ->orWhere('code', 'like', $like)

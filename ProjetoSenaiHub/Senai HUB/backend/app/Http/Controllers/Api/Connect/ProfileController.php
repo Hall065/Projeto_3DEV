@@ -17,12 +17,16 @@ use App\Models\Connect\ConnectSalaryRecord;
 use App\Models\Connect\ConnectStudent;
 use App\Models\Connect\ConnectTeacher;
 use App\Models\HubPerson;
+use App\Support\UserAccessScope;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProfileController extends Controller
 {
-    public function student(ConnectStudent $student): JsonResponse
+    public function student(Request $request, ConnectStudent $student): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessConnectStudent($request->user(), $student), 403);
+
         $student->load(['connectClass.course', 'connectClass.teacher', 'hubPerson', 'location']);
 
         $contracts = ConnectContract::query()
@@ -109,8 +113,10 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function teacher(ConnectTeacher $teacher): JsonResponse
+    public function teacher(Request $request, ConnectTeacher $teacher): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessConnectTeacher($request->user(), $teacher), 403);
+
         $teacher->load('hubPerson');
 
         $classes = ConnectClass::query()
@@ -144,8 +150,10 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function classProfile(ConnectClass $connectClass): JsonResponse
+    public function classProfile(Request $request, ConnectClass $connectClass): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessConnectClass($request->user(), $connectClass), 403);
+
         $connectClass->load(['course', 'teacher.hubPerson']);
         $connectClass->loadCount('students');
 
@@ -163,8 +171,10 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function course(ConnectCourse $course): JsonResponse
+    public function course(Request $request, ConnectCourse $course): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessConnectCourse($request->user(), $course), 403);
+
         $course->loadCount('classes');
 
         $classes = ConnectClass::query()
@@ -192,8 +202,10 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function person(HubPerson $person): JsonResponse
+    public function person(Request $request, HubPerson $person): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessHubPerson($request->user(), $person), 403);
+
         $person->load(['connectStudent.connectClass.course', 'connectTeacher']);
 
         return response()->json([
@@ -210,8 +222,10 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function contract(ConnectContract $contract): JsonResponse
+    public function contract(Request $request, ConnectContract $contract): JsonResponse
     {
+        abort_unless(UserAccessScope::canAccessConnectContract($request->user(), $contract), 403);
+
         $contract->load(['student.connectClass.course', 'student.hubPerson', 'attachments']);
 
         return response()->json([

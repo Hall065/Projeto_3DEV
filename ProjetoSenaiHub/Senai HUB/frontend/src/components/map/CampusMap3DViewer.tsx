@@ -1,9 +1,8 @@
 import { RotateCcw } from 'lucide-react'
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { CAMPUS_BLOCKS, type CampusBlockId } from '../../constants/campusBlocks'
 import type { CampusBlockStats } from '../../utils/campusBlockStats'
 import type { CampusPersonLocation } from '../../types/campusPeople'
@@ -19,6 +18,7 @@ import {
   disposePinMarkerGroup,
   type PinMarkerBlock,
 } from './campusPinMarker3d'
+import { cloneCampusBlock, loadCachedCampusBlocks } from '../../utils/campusMap3DCache'
 
 const DIMMED_OPACITY = 0.2
 const FULL_OPACITY = 1
@@ -55,17 +55,6 @@ interface MeshOpacityTarget {
   radius: number
 }
 
-function prepareMaterials(object: THREE.Object3D) {
-  object.traverse((child) => {
-    if (!(child instanceof THREE.Mesh)) return
-    if (Array.isArray(child.material)) {
-      child.material = child.material.map((material) => material.clone())
-    } else if (child.material) {
-      child.material = child.material.clone()
-    }
-  })
-}
-
 function applyMeshOpacity(mesh: THREE.Mesh, opacity: number) {
   const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
   for (const material of materials) {
@@ -79,16 +68,18 @@ function applyMeshOpacity(mesh: THREE.Mesh, opacity: number) {
 function collectMeshTargets(blocks: BlockGroup[]): MeshOpacityTarget[] {
   const targets: MeshOpacityTarget[] = []
   for (const block of blocks) {
+    const box = new THREE.Box3().setFromObject(block.group)
+    const center = box.getCenter(new THREE.Vector3())
+    const sphere = box.getBoundingSphere(new THREE.Sphere())
+    const radius = Math.max(sphere.radius, 1)
+
     block.group.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
-      const box = new THREE.Box3().setFromObject(child)
-      const center = box.getCenter(new THREE.Vector3())
-      const sphere = box.getBoundingSphere(new THREE.Sphere())
       targets.push({
         mesh: child,
         blockId: block.id,
         center,
-        radius: Math.max(sphere.radius, 1),
+        radius,
       })
     })
   }
@@ -331,7 +322,7 @@ export function CampusMap3DViewer({
     selectedTicketRef.current = selectedTicketId ?? null
   }, [selectedTicketId])
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const container = containerRef.current
     const host = canvasHostRef.current
     if (!container || !host) return
@@ -377,20 +368,7 @@ export function CampusMap3DViewer({
     scene.add(campusRoot)
     blocksRef.current = []
 
-    const loader = new GLTFLoader()
     let meshTargets: MeshOpacityTarget[] = []
-    const MODEL_LOAD_TIMEOUT_MS = 12_000
-
-    const loadModel = (url: string) =>
-      Promise.race([
-        loader.loadAsync(url),
-        new Promise<never>((_, reject) => {
-          window.setTimeout(
-            () => reject(new Error(i18n.t('mapComponents.viewer3d.modelTimeout', { url }))),
-            MODEL_LOAD_TIMEOUT_MS,
-          )
-        }),
-      ])
 
     const resize = () => {
       if (disposed) return
@@ -525,21 +503,22 @@ export function CampusMap3DViewer({
       const loaded: CampusBlockId[] = []
       const errors: string[] = []
 
-      for (const block of CAMPUS_BLOCKS) {
-        try {
-          const gltf = await loadModel(block.modelFile)
+      try {
+        const cachedBlocks = await loadCachedCampusBlocks()
+        if (disposed) return
+
+        for (const { id, template } of cachedBlocks) {
           if (disposed) return
 
-          const group = new THREE.Group()
-          group.name = block.name
-          group.userData.blockId = block.id
-          group.add(gltf.scene)
-          prepareMaterials(group)
+          const group = cloneCampusBlock(template)
+          group.userData.blockId = id
           campusRoot.add(group)
-          blocksRef.current.push({ id: block.id, group })
-          loaded.push(block.id)
-        } catch (error) {
-          console.error(`[CampusMap] Falha ao carregar ${block.name}:`, error)
+          blocksRef.current.push({ id, group })
+          loaded.push(id)
+        }
+      } catch (error) {
+        console.error('[CampusMap] Falha ao carregar blocos em cache:', error)
+        for (const block of CAMPUS_BLOCKS) {
           errors.push(block.name)
         }
       }
@@ -572,12 +551,19 @@ export function CampusMap3DViewer({
       controls.minDistance = Math.max(radius * 0.08, 3)
       controls.maxDistance = Math.max(radius * 4, 80)
 
-      meshTargets = collectMeshTargets(blocksRef.current)
       mapReadyRef.current = true
-
       syncMapMarkers()
-
       requestAnimationFrame(resize)
+
+      const buildMeshTargets = () => {
+        if (disposed) return
+        meshTargets = collectMeshTargets(blocksRef.current)
+      }
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(buildMeshTargets)
+      } else {
+        requestAnimationFrame(buildMeshTargets)
+      }
 
       if (errors.length > 0) {
         setLoadError(i18n.t('mapComponents.viewer3d.missingModels', { names: errors.join(', ') }))

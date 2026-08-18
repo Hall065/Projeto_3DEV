@@ -11,7 +11,7 @@ import {
 import { GridPriorityBadge, GridTicketStatusBadge } from '../../components/grid/GridBadges'
 import { MapSimulationBadge } from '../../components/map/MapSimulationBadge'
 import { usePublicConfig } from '../../hooks/usePublicConfig'
-import { CampusMapContainer } from '../../components/map/CampusMapContainer'
+import { CampusMapSlot } from '../../contexts/CampusMapHostContext'
 import { gridService } from '../../services/gridService'
 import type { GridTaskCard, GridTicket } from '../../types/grid'
 import { UserAvatar } from '../../components/ui/UserAvatar'
@@ -49,11 +49,12 @@ export function GridTaskMapPage() {
       {mapConfig?.campus_map_simulation !== false && <MapSimulationBadge className="mb-4" />}
 
       <ConnectCard className="mb-6 min-w-0 overflow-hidden p-4 sm:p-6">
-        <div className="mb-6">
-          {loading ? (
-            <ConnectLoadingSpinner label={t('grid.map.loading.map')} className="min-h-[420px]" />
-          ) : (
-            <CampusMapContainer ticketMarkers={ticketMarkers} minHeight="420px" />
+        <div className="relative mb-6 min-h-[420px]">
+          <CampusMapSlot ticketMarkers={loading ? [] : ticketMarkers} minHeight="420px" />
+          {loading && (
+            <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded-lg bg-white/90 px-3 py-1.5 text-xs text-hub-text-muted shadow-sm">
+              {t('grid.map.loading.map')}
+            </div>
           )}
         </div>
 

@@ -139,10 +139,10 @@ export function SafeDashboardPage() {
                 <table className="w-full min-w-[600px] text-sm">
                   <thead className="glass-thead text-hub-text-muted">
                     <tr>
-                      <th className="px-4 py-3 text-left sm:px-6">Protocolo</th>
-                      <th className="px-4 py-3 text-left sm:px-6">Aluno</th>
-                      <th className="px-4 py-3 text-left sm:px-6">Motivo</th>
-                      <th className="px-4 py-3 text-left sm:px-6">Agendado</th>
+                      <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.protocol')}</th>
+                      <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.student')}</th>
+                      <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.reason')}</th>
+                      <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.scheduled')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -191,10 +191,10 @@ export function SafeDashboardPage() {
                 <table className="w-full min-w-[600px] text-sm">
                   <thead className="glass-thead text-hub-text-muted">
                     <tr>
-                      <th className="px-4 py-3 text-left sm:px-6">Protocolo</th>
-                      <th className="px-4 py-3 text-left sm:px-6">Aluno</th>
-                      <th className="px-4 py-3 text-left sm:px-6">Professor</th>
-                      <th className="px-4 py-3 text-left sm:px-6">Agendado</th>
+                      <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.protocol')}</th>
+                      <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.student')}</th>
+                      <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.teacher')}</th>
+                      <th className="px-4 py-3 text-left sm:px-6">{t('safe.table.scheduled')}</th>
                     </tr>
                   </thead>
                   <tbody>

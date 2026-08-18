@@ -3,8 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 /*
-| Rotas web reservadas ao painel admin (Filament).
-| A interface principal do SaaS é o frontend React separado.
+| API Laravel — interface principal via frontend React (Vite).
 */
 
-Route::redirect('/', '/admin');
+Route::redirect('/', rtrim((string) env('FRONTEND_URL', 'http://127.0.0.1:5173'), '/'));

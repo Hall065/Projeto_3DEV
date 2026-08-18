@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface ConnectDrawerHeroCardProps {
   onBack: () => void
@@ -6,16 +7,18 @@ interface ConnectDrawerHeroCardProps {
 }
 
 export function ConnectDrawerHeroCard({ onBack, children }: ConnectDrawerHeroCardProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="relative flex flex-col items-center gap-4 rounded-2xl border border-hub-border/50 bg-hub-bg/40 p-6 pt-12 sm:flex-row sm:items-start">
       <button
         type="button"
         onClick={onBack}
         className="glass-input absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-hub-navy shadow-sm hover:bg-hub-bg"
-        aria-label="Voltar"
+        aria-label={t('common.back')}
       >
         <ArrowLeft className="h-4 w-4" />
-        Voltar
+        {t('common.back')}
       </button>
       {children}
     </div>

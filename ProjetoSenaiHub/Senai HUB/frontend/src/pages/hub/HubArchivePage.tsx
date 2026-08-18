@@ -21,6 +21,7 @@ import { SafeStatusBadge } from '../../components/safe/SafeStatusBadge'
 import { useCrudToast } from '../../hooks/useCrudToast'
 import { usePermissions } from '../../hooks/usePermissions'
 import { archiveService, type ArchiveModuleKey, type ArchiveSummary } from '../../services/archiveService'
+import { canAccessHubArchive } from '../../utils/archiveAccess'
 import type { ConnectClass, PaginatedMeta } from '../../types/connect'
 import type { GridTicket } from '../../types/grid'
 import type { SafeAuthorization } from '../../types/safe'
@@ -112,11 +113,7 @@ export function HubArchivePage() {
 
   const tabLabel = (key: TabKey) => t(`archive.tabs.${key}`)
 
-  const canSeeArchive =
-    isAdmin ||
-    canAny('connect.classes.view', 'connect.classes.manage') ||
-    canAny('grid.tickets.view', 'grid.tickets.manage') ||
-    canAny('safe.access', 'safe.authorizations.manage', 'safe.approve', 'safe.portaria')
+  const canSeeArchive = canAccessHubArchive(isAdmin, canAny)
 
   if (!canSeeArchive) {
     return (

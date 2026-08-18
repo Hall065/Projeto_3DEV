@@ -7,6 +7,7 @@ import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowAction
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
 import {
   ConnectCard,
+  ConnectEmptyTableRow,
   ConnectLoadingSpinner,
   ConnectPageHeader,
   ConnectPagination,
@@ -214,7 +215,10 @@ export function GridUsersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
+                  {users.length === 0 ? (
+                    <ConnectEmptyTableRow colSpan={10} message={t('grid.common.emptyList')} />
+                  ) : (
+                  users.map((u) => (
                     <tr
                       key={u.id}
                       className="cursor-pointer border-t border-hub-border/40 transition hover:bg-hub-bg/50"
@@ -246,7 +250,8 @@ export function GridUsersPage() {
                         />
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  )}
                 </tbody>
               </table>
             </ConnectTableScroll>

@@ -19,7 +19,12 @@
     "delete": "Eliminar",
     "confirmTitle": "Confirmar acción",
     "confirmDeleteTitle": "Confirmar eliminación",
-    "confirmAction": "Confirmar"
+    "confirmAction": "Confirmar",
+    "retry": "Intentar de nuevo",
+    "goToPage": "Ir a {{label}}",
+    "goToDashboard": "{{name}} — ir al panel",
+    "changePhoto": "Cambiar foto de perfil",
+    "changePhotoNamed": "Cambiar foto de {{name}}"
   },
   "toast": {
     "created": "Creado con exito.",
@@ -35,6 +40,8 @@
     "loginSubtitle": "Ingrese su correo y contraseña para continuar",
     "email": "Correo electrónico",
     "password": "Contraseña",
+    "emailPlaceholder": "tu@email.com",
+    "passwordPlaceholder": "••••••••",
     "showPassword": "Mostrar contraseña",
     "hidePassword": "Ocultar contraseña",
     "login": "Entrar",
@@ -168,9 +175,11 @@
     },
     "students": {
       "title": "Alumnos",
-      "subtitle": "Registro de alumnos vinculados al modulo SAFE.",
-      "newStudent": "Nuevo alumno",
-      "editStudent": "Editar alumno"
+      "subtitle": "Alumnos del SENAI Connect disponibles para autorizaciones en SAFE.",
+      "searchPlaceholder": "Buscar por nombre, matricula o curso...",
+      "empty": "Ningun alumno encontrado en Connect.",
+      "connectHint": "Los alumnos son los mismos registrados en SENAI Connect. Los cambios de matricula, curso y estado deben hacerse alli.",
+      "manageInConnect": "Gestionar en Connect"
     },
     "authorizations": {
       "title": "Autorizaciones",
@@ -250,7 +259,8 @@
       "system": "Sistema",
       "all": "Todos",
       "actions": "Acciones",
-      "updatedAt": "Actualizado el {{date}}"
+      "updatedAt": "Actualizado el {{date}}",
+      "emptyList": "Ningun registro encontrado."
     },
     "confirm": {
       "delete": "¿Está seguro de que desea eliminar {{entity}}? Esta acción no se puede deshacer."
@@ -869,7 +879,8 @@
       "noTechnician": "Sin técnico",
       "noResponsible": "Sin responsable",
       "room": "Sala",
-      "block": "Bloque"
+      "block": "Bloque",
+      "emptyList": "Ningun registro encontrado."
     },
     "kanban": {
       "confirmMove": {
@@ -884,6 +895,7 @@
     "dashboard": {
       "title": "Panel",
       "subtitle": "Visión general de la gestión de mantenimiento e infraestructura.",
+      "loadError": "No fue posible cargar el panel.",
       "kpis": {
         "openTickets": "Tickets abiertos",
         "inProgress": "En curso",
@@ -1168,6 +1180,7 @@
         "builder": "Constructor"
       },
       "loading": "Cargando...",
+      "loadError": "No fue posible cargar los informes.",
       "kpis": {
         "created": "Tickets creados",
         "pending": "Pendientes",

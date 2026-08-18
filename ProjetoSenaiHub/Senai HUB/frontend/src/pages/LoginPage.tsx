@@ -64,7 +64,7 @@ export function LoginPage() {
           label={t('auth.email')}
           type="email"
           icon={Mail}
-          placeholder="seu@email.com"
+          placeholder={t('auth.emailPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
@@ -75,7 +75,7 @@ export function LoginPage() {
           label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
           icon={Lock}
-          placeholder="........"
+          placeholder={t('auth.passwordPlaceholder')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"

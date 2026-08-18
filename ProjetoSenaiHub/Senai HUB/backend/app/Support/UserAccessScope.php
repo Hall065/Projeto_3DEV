@@ -11,6 +11,7 @@ use App\Models\Connect\ConnectStudent;
 use App\Models\Connect\ConnectTeacher;
 use App\Models\Grid\GridTask;
 use App\Models\Grid\GridTicket;
+use App\Models\HubPerson;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -199,5 +200,49 @@ class UserAccessScope
         }
 
         return self::gridTaskQuery($user)->whereKey($task->id)->exists();
+    }
+
+    public static function canAccessConnectStudent(User $user, ConnectStudent $student): bool
+    {
+        return self::connectStudentQuery($user)->whereKey($student->id)->exists();
+    }
+
+    public static function canAccessConnectTeacher(User $user, ConnectTeacher $teacher): bool
+    {
+        return self::connectTeacherQuery($user)->whereKey($teacher->id)->exists();
+    }
+
+    public static function canAccessConnectClass(User $user, ConnectClass $connectClass): bool
+    {
+        return self::connectClassQuery($user)->whereKey($connectClass->id)->exists();
+    }
+
+    public static function canAccessConnectCourse(User $user, ConnectCourse $course): bool
+    {
+        return self::connectCourseQuery($user)->whereKey($course->id)->exists();
+    }
+
+    public static function canAccessConnectContract(User $user, ConnectContract $contract): bool
+    {
+        return self::connectContractQuery($user)->whereKey($contract->id)->exists();
+    }
+
+    public static function canAccessHubPerson(User $user, HubPerson $person): bool
+    {
+        $person->loadMissing(['connectStudent', 'connectTeacher']);
+
+        if ($person->connectStudent) {
+            return self::canAccessConnectStudent($user, $person->connectStudent);
+        }
+
+        if ($person->connectTeacher) {
+            return self::canAccessConnectTeacher($user, $person->connectTeacher);
+        }
+
+        return ! in_array($user->role, [
+            HubRole::CONNECT_ALUNO,
+            HubRole::CONNECT_EMPRESA,
+            HubRole::CONNECT_PROFESSOR,
+        ], true);
     }
 }

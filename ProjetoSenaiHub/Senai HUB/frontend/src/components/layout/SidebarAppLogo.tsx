@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getSidebarBrandAssets, type SidebarAppSlug } from '../../utils/appBrandAssets'
 
 export function SidebarAppLogo({
@@ -10,6 +11,7 @@ export function SidebarAppLogo({
   collapsed: boolean
   onNavigate?: () => void
 }) {
+  const { t } = useTranslation()
   const assets = getSidebarBrandAssets(app)
   const src = collapsed ? assets.icon : assets.expanded
 
@@ -18,7 +20,7 @@ export function SidebarAppLogo({
       to={assets.dashboardTo}
       onClick={onNavigate}
       className={`block transition-opacity hover:opacity-90 ${collapsed ? 'mx-auto' : ''}`}
-      aria-label={`${assets.name} — ir para o dashboard`}
+      aria-label={t('common.goToDashboard', { name: assets.name })}
     >
       {collapsed ? (
         <span className="sidebar-app-logo-mark mx-auto flex h-12 w-12 items-center justify-center rounded-2xl">

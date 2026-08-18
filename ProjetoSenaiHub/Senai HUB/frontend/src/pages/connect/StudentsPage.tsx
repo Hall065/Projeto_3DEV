@@ -6,6 +6,7 @@ import { ConnectEntityViewDrawer } from '../../components/connect/ConnectEntityV
 import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowActionsMenu'
 import {
   ConnectCard,
+  ConnectEmptyTableRow,
   ConnectPageHeader,
   ConnectLoadingSpinner,
   ConnectPagination,
@@ -301,7 +302,10 @@ export function StudentsPage() {
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
+              {students.length === 0 ? (
+                <ConnectEmptyTableRow colSpan={8} message={t('connect.common.emptyList')} />
+              ) : (
+              students.map((student) => (
                 <tr key={student.id} className="border-t border-hub-border/40">
                   <td className="px-4 py-3">
                     <input
@@ -339,7 +343,8 @@ export function StudentsPage() {
                     />
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </ConnectTableScroll>

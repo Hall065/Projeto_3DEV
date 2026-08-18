@@ -6,6 +6,29 @@ import i18n from '../../i18n'
 
 export const EMPTY = '-'
 
+export function ConnectEmptyTableRow({ colSpan, message }: { colSpan: number; message: string }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="px-4 py-10 text-center text-sm text-hub-text-muted sm:px-6">
+        {message}
+      </td>
+    </tr>
+  )
+}
+
+export function QueryErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { t } = useTranslation()
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <span>{message}</span>
+      {onRetry && (
+        <OutlineButton onClick={onRetry}>{t('common.retry')}</OutlineButton>
+      )}
+    </div>
+  )
+}
+
 export interface KpiTrend {
   direction: 'up' | 'down' | 'neutral'
   value: string

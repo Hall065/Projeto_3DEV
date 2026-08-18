@@ -1,6 +1,7 @@
 import { Suspense, lazy, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { PageLoader } from '../components/ui/PageLoader'
+import { ErrorBoundary } from '../components/ui/ErrorBoundary'
 import { LandingPage } from '../pages/LandingPage'
 import { HubLayout } from '../layouts/HubLayout'
 import { ConnectLayout } from '../layouts/ConnectLayout'
@@ -24,6 +25,7 @@ import { ProfilePage } from '../pages/ProfilePage'
 import { ProtectedRoute } from './ProtectedRoute'
 import { ModuleAccessRoute } from './ModuleAccessRoute'
 import { PermissionRoute } from './PermissionRoute'
+import { ArchiveAccessRoute } from './ArchiveAccessRoute'
 import { AdminRoute } from './AdminRoute'
 import { HubUsersPage } from '../pages/hub/HubUsersPage'
 import { HubArchivePage } from '../pages/hub/HubArchivePage'
@@ -60,7 +62,11 @@ const SpreadsheetHubPage = lazy(() =>
 )
 
 function LazyPage({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<PageLoader />}>{children}</Suspense>
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>{children}</Suspense>
+    </ErrorBoundary>
+  )
 }
 
 export function AppRoutes() {
@@ -76,7 +82,9 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<HubLayout />}>
           <Route path="/hub" element={<ApplicationHubPage />} />
-          <Route path="/hub/arquivo" element={<HubArchivePage />} />
+          <Route element={<ArchiveAccessRoute />}>
+            <Route path="/hub/arquivo" element={<HubArchivePage />} />
+          </Route>
           <Route element={<AdminRoute />}>
             <Route path="/hub/usuarios" element={<HubUsersPage />} />
           </Route>

@@ -57,7 +57,7 @@ export function ForgotPasswordPage() {
           label={t('auth.email')}
           type="email"
           icon={Mail}
-          placeholder="seu@email.com"
+          placeholder={t('auth.emailPlaceholder')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"

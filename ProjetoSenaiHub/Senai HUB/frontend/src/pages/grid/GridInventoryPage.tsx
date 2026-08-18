@@ -8,6 +8,7 @@ import { ConnectRowActionsMenu } from '../../components/connect/ConnectRowAction
 import { KpiCard, KpiCardSkeleton } from '../../components/connect/ConnectKpiCard'
 import {
   ConnectCard,
+  ConnectEmptyTableRow,
   ConnectLoadingSpinner,
   ConnectPageHeader,
   ConnectPagination,
@@ -427,7 +428,10 @@ export function GridInventoryPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
+                  {items.length === 0 ? (
+                    <ConnectEmptyTableRow colSpan={11} message={t('grid.common.emptyList')} />
+                  ) : (
+                  items.map((item) => (
                     <tr
                       key={item.id}
                       className="cursor-pointer border-t border-hub-border/40 transition hover:bg-hub-bg/50"
@@ -468,7 +472,8 @@ export function GridInventoryPage() {
                         />
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  )}
                 </tbody>
               </table>
             </ConnectTableScroll>

@@ -2,12 +2,8 @@
 
 namespace App\Services\Auth;
 
-use App\Models\Application;
-use App\Models\Connect\ConnectStudent;
-use App\Models\HubPerson;
 use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -32,52 +28,6 @@ class AuthService
                 'email' => ['E-mail ou senha invalidos.'],
             ]);
         }
-
-        $token = $user->createToken('senai-hub-api')->plainTextToken;
-
-        return [
-            'user' => $user,
-            'token' => $token,
-        ];
-    }
-
-    /**
-     * @param  array{name: string, email: string, password: string}  $data
-     * @return array{user: User, token: string}
-     */
-    public function register(array $data): array
-    {
-        $user = DB::transaction(function () use ($data) {
-            $user = User::query()->create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => $data['password'],
-                'role' => 'connect_aluno',
-            ]);
-
-            $person = HubPerson::query()->create([
-                'kind' => 'student',
-                'user_id' => $user->id,
-                'full_name' => $data['name'],
-                'email' => $data['email'],
-                'status' => 'active',
-            ]);
-
-            ConnectStudent::query()->create([
-                'hub_person_id' => $person->id,
-                'user_id' => $user->id,
-                'full_name' => $data['name'],
-                'email' => $data['email'],
-                'status' => 'active',
-            ]);
-
-            $connect = Application::query()->where('slug', 'connect')->first();
-            if ($connect) {
-                $user->applications()->sync([$connect->id]);
-            }
-
-            return $user;
-        });
 
         $token = $user->createToken('senai-hub-api')->plainTextToken;
 

@@ -5,7 +5,7 @@ import type { CampusBlockId } from '../../constants/campusBlocks'
 import type { CampusPersonLocation } from '../../types/campusPeople'
 import type { CampusTicketMarker } from '../../types/campusTickets'
 import type { CampusBlockStats } from '../../utils/campusBlockStats'
-import { campusModelsAvailable } from '../../utils/campusMapAssets'
+import { prefetchCampusMap3DAssets } from '../../utils/campusMapAssets'
 import { CampusMap2DViewer } from './CampusMap2DViewer'
 import type { CampusMap3DViewerProps } from './CampusMap3DViewer'
 
@@ -21,6 +21,8 @@ export interface CampusMapContainerProps {
   className?: string
   minHeight?: string
   compact?: boolean
+  /** When set by CampusMapHostProvider, skips internal asset probing. */
+  use3d?: boolean | null
 }
 
 export function CampusMapContainer({
@@ -31,30 +33,36 @@ export function CampusMapContainer({
   className = '',
   minHeight = '360px',
   compact = false,
+  use3d: use3dProp = undefined,
 }: CampusMapContainerProps) {
   const { t } = useTranslation()
   const [selectedBlockId, setSelectedBlockId] = useState<CampusBlockId | null>(null)
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
-  const [use3d, setUse3d] = useState<boolean | null>(null)
+  const [internalUse3d, setInternalUse3d] = useState<boolean | null>(null)
+  const use3d = use3dProp !== undefined ? use3dProp : internalUse3d
 
   useEffect(() => {
+    if (use3dProp !== undefined) return
+
     let cancelled = false
-    campusModelsAvailable().then((available) => {
-      if (!cancelled) setUse3d(available)
+
+    void prefetchCampusMap3DAssets().then((available) => {
+      if (!cancelled) setInternalUse3d(available)
     })
+
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [use3dProp])
 
   useEffect(() => {
     if (!highlightPersonId || !people?.length) return
     const person = people.find((entry) => entry.id === highlightPersonId)
     if (!person) return
-    setSelectedPersonId(person.id)
-    setSelectedBlockId(person.blockId)
+    setSelectedPersonId((current) => (current === person.id ? current : person.id))
+    setSelectedBlockId((current) => (current === person.blockId ? current : person.blockId))
   }, [highlightPersonId, people])
 
   useEffect(() => {
